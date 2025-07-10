@@ -43,8 +43,8 @@ const Sidebar = ({ user, isOpen, onClose }) => {
         />
       )}
       
-      {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:static lg:inset-0`}>
+      {/* Sidebar - Fixed for PC */}
+      <div className="pc-sidebar-fixed">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center space-x-3">
@@ -65,8 +65,8 @@ const Sidebar = ({ user, isOpen, onClose }) => {
         </div>
 
         {/* Navigation */}
-        <nav className="p-4">
-          <ul className="space-y-2">
+        <nav className="p-4 flex-1">
+          <ul className="space-y-1">
             {filteredMenuItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
@@ -76,10 +76,10 @@ const Sidebar = ({ user, isOpen, onClose }) => {
                   <Link
                     to={item.path}
                     onClick={onClose}
-                    className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors duration-200 ${
+                    className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-sm ${
                       isActive 
-                        ? 'bg-primary-100 text-primary-700 font-medium' 
-                        : 'text-gray-700 hover:bg-gray-100'
+                        ? 'bg-primary-100 text-primary-700 font-medium shadow-sm' 
+                        : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                     }`}
                   >
                     <Icon className="w-5 h-5" />
@@ -91,16 +91,16 @@ const Sidebar = ({ user, isOpen, onClose }) => {
           </ul>
         </nav>
 
-        {/* User Info */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
+        {/* User Info - Compact for PC */}
+        <div className="p-4 border-t border-gray-200">
           <div className="bg-gray-50 rounded-lg p-3">
             <div className="flex items-center space-x-3">
               <div className="bg-primary-100 p-2 rounded-full">
                 <Stethoscope className="w-4 h-4 text-primary-600" />
               </div>
               <div>
-                <p className="font-medium text-gray-900">{user.name}</p>
-                <p className="text-sm text-gray-500 capitalize">{user.type}</p>
+                <p className="font-medium text-gray-900 text-sm">{user.name}</p>
+                <p className="text-xs text-gray-500 capitalize">{user.type}</p>
               </div>
             </div>
           </div>
