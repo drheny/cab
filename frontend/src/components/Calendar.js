@@ -16,6 +16,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 
 const Calendar = ({ user }) => {
+  const location = useLocation();
   const [appointments, setAppointments] = useState([]);
   const [patients, setPatients] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
