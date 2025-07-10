@@ -62,9 +62,22 @@ const Dashboard = ({ user }) => {
     }
   ]);
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
+  const handleAddPatient = () => {
+    // Naviguer vers la page patients avec un paramètre pour ouvrir le modal
+    navigate('/patients?action=add');
+  };
+
+  const handleNewAppointment = () => {
+    // Naviguer vers la page calendrier avec un paramètre pour ouvrir le modal
+    navigate('/calendar?action=add');
+  };
+
+  const handlePhoneReminders = () => {
+    // Afficher une notification avec les rappels téléphoniques
+    toast.success('Rappels téléphoniques : 2 patients à contacter aujourd\'hui');
+    // Optionnel: naviguer vers une page spécifique
+    // navigate('/patients?filter=reminders');
+  };
 
   const fetchDashboardData = async () => {
     try {
