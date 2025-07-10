@@ -37,7 +37,15 @@ const PatientsList = ({ user }) => {
 
   useEffect(() => {
     fetchPatients();
-  }, []);
+    
+    // Vérifier si on doit ouvrir le modal d'ajout automatiquement
+    const searchParams = new URLSearchParams(location.search);
+    if (searchParams.get('action') === 'add') {
+      openModal();
+      // Nettoyer l'URL
+      window.history.replaceState({}, '', '/patients');
+    }
+  }, [location]);
 
   const fetchPatients = async () => {
     try {
