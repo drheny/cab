@@ -210,7 +210,7 @@ const Administration = ({ user }) => {
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="font-medium text-gray-900">Dr. Médecin</h4>
+                      <h4 className="font-medium text-gray-900">Dr Heni Dridi</h4>
                       <p className="text-sm text-gray-500">Accès complet</p>
                     </div>
                     <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
