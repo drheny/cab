@@ -219,9 +219,9 @@ const Calendar = ({ user }) => {
         </button>
       </div>
 
-      {/* Appointments List */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-        <div className="p-6 border-b border-gray-200">
+      {/* Appointments List - PC Optimized Table */}
+      <div className="pc-table-container">
+        <div className="p-4 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900">
             Rendez-vous du {formatDate(selectedDate)}
           </h3>
@@ -230,87 +230,96 @@ const Calendar = ({ user }) => {
           </p>
         </div>
 
-        <div className="p-6">
+        <div className="overflow-x-auto">
           {appointments.length === 0 ? (
             <div className="text-center py-8">
               <CalendarIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500">Aucun rendez-vous pour cette date</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {appointments.sort((a, b) => a.heure.localeCompare(b.heure)).map((appointment) => (
-                <div
-                  key={appointment.id}
-                  className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <div className="flex items-center space-x-2">
-                          <Clock className="w-4 h-4 text-gray-400" />
-                          <span className="font-medium text-gray-900">{appointment.heure}</span>
-                        </div>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(appointment.statut)}`}>
-                          {getStatusText(appointment.statut)}
-                        </span>
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${
-                          appointment.type_rdv === 'visite' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
-                        }`}>
-                          {appointment.type_rdv === 'visite' ? 'Visite' : 'Contrôle'}
-                        </span>
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Heure</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Salle</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Motif</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {appointments.sort((a, b) => a.heure.localeCompare(b.heure)).map((appointment) => (
+                  <tr key={appointment.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <div className="flex items-center space-x-2">
+                        <Clock className="w-4 h-4 text-gray-400" />
+                        <span className="font-medium text-gray-900 text-sm">{appointment.heure}</span>
                       </div>
-
-                      <div className="flex items-center space-x-2 mb-2">
-                        <User className="w-4 h-4 text-gray-400" />
-                        <span className="font-medium text-gray-900">
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <div>
+                        <div className="font-medium text-gray-900 text-sm">
                           {appointment.patient?.prenom} {appointment.patient?.nom}
-                        </span>
-                        <span className="text-sm text-gray-500">
+                        </div>
+                        <div className="text-xs text-gray-500">
                           ({appointment.patient?.nom_parent})
-                        </span>
+                        </div>
                       </div>
-
-                      {appointment.motif && (
-                        <p className="text-sm text-gray-600 mb-2">
-                          Motif: {appointment.motif}
-                        </p>
-                      )}
-
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        appointment.type_rdv === 'visite' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+                      }`}>
+                        {appointment.type_rdv === 'visite' ? 'Visite' : 'Contrôle'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(appointment.statut)}`}>
+                        {getStatusText(appointment.statut)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
                       {appointment.salle && (
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
                           {appointment.salle === 'salle1' ? 'Salle 1' : 'Salle 2'}
                         </span>
                       )}
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      {appointment.patient?.telephone_parent && (
-                        <a
-                          href={getWhatsAppLink(appointment.patient.telephone_parent)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                    </td>
+                    <td className="px-4 py-3 max-w-xs truncate text-sm text-gray-600">
+                      {appointment.motif || '-'}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <div className="flex items-center space-x-1">
+                        {appointment.patient?.telephone_parent && (
+                          <a
+                            href={getWhatsAppLink(appointment.patient.telephone_parent)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                          </a>
+                        )}
+                        <button
+                          onClick={() => openModal(appointment)}
+                          className="p-1.5 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
                         >
-                          <MessageCircle className="w-4 h-4" />
-                        </a>
-                      )}
-                      <button
-                        onClick={() => openModal(appointment)}
-                        className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteAppointment(appointment.id)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteAppointment(appointment.id)}
+                          className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
         </div>
       </div>
