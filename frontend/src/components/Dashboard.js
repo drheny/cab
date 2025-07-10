@@ -192,7 +192,7 @@ const Dashboard = ({ user }) => {
         <StatCard
           icon={DollarSign}
           title="Recette du jour"
-          value={`${stats.recette_jour} DH`}
+          value={`${stats.recette_jour} TND`}
           color="text-purple-600"
           subtitle="Paiements encaissés"
         />
