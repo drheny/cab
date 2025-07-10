@@ -17,6 +17,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 
 const Dashboard = ({ user }) => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     total_rdv: 0,
     rdv_restants: 0,
