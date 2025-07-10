@@ -2,13 +2,14 @@ from fastapi import FastAPI, HTTPException, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pymongo import MongoClient
-from bson import ObjectId
+# Remove bson import and use uuid for ObjectId
+# from bson import ObjectId
+import uuid
 from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
 import os
 from dotenv import load_dotenv
-import uuid
 import json
 
 # Load environment variables
