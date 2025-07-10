@@ -110,8 +110,8 @@ const Dashboard = ({ user }) => {
         </p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Stats Grid - Optimized for PC */}
+      <div className="pc-grid-stats">
         <StatCard
           icon={Calendar}
           title="RDV Aujourd'hui"
@@ -140,23 +140,12 @@ const Dashboard = ({ user }) => {
           color="text-purple-600"
           subtitle="Paiements encaissés"
         />
-      </div>
-
-      {/* Second Row Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard
           icon={Users}
           title="Patients Restants"
           value={stats.rdv_restants}
           color="text-orange-600"
           subtitle="Non encore arrivés"
-        />
-        <StatCard
-          icon={TrendingUp}
-          title="En Consultation"
-          value={stats.rdv_en_cours}
-          color="text-indigo-600"
-          subtitle="Actuellement en cours"
         />
         <StatCard
           icon={Clock}
