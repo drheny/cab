@@ -200,10 +200,10 @@ const Dashboard = ({ user }) => {
 
       {/* Messages and Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Messages */}
+        {/* Rappels et alertes */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Messages & Rappels</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Rappels et alertes</h3>
             <span className="bg-red-100 text-red-600 text-xs px-2 py-1 rounded-full">
               {messages.filter(m => m.urgent).length} urgent
             </span>
