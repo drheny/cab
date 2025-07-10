@@ -238,7 +238,7 @@ const Consultation = ({ user }) => {
                           onClick={stopTimer}
                           className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-lg"
                         >
-                          <Stop className="w-4 h-4" />
+                          <Square className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
