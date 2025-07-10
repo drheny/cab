@@ -240,7 +240,10 @@ const Dashboard = ({ user }) => {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 responsive-padding">
           <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Actions Rapides</h3>
           <div className="space-y-2 sm:space-y-3">
-            <button className="w-full flex items-center justify-between p-2 sm:p-3 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors">
+            <button 
+              onClick={handleAddPatient}
+              className="w-full flex items-center justify-between p-2 sm:p-3 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors"
+            >
               <div className="flex items-center space-x-2 sm:space-x-3">
                 <Users className="w-4 h-4 sm:w-5 sm:h-5 text-primary-600" />
                 <span className="font-medium text-primary-900 responsive-text">Ajouter un patient</span>
@@ -248,7 +251,10 @@ const Dashboard = ({ user }) => {
               <div className="text-primary-600">→</div>
             </button>
             
-            <button className="w-full flex items-center justify-between p-2 sm:p-3 bg-secondary-50 hover:bg-secondary-100 rounded-lg transition-colors">
+            <button 
+              onClick={handleNewAppointment}
+              className="w-full flex items-center justify-between p-2 sm:p-3 bg-secondary-50 hover:bg-secondary-100 rounded-lg transition-colors"
+            >
               <div className="flex items-center space-x-2 sm:space-x-3">
                 <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-secondary-600" />
                 <span className="font-medium text-secondary-900 responsive-text">Nouveau RDV</span>
@@ -256,7 +262,10 @@ const Dashboard = ({ user }) => {
               <div className="text-secondary-600">→</div>
             </button>
             
-            <button className="w-full flex items-center justify-between p-2 sm:p-3 bg-green-50 hover:bg-green-100 rounded-lg transition-colors">
+            <button 
+              onClick={handlePhoneReminders}
+              className="w-full flex items-center justify-between p-2 sm:p-3 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
+            >
               <div className="flex items-center space-x-2 sm:space-x-3">
                 <Phone className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
                 <span className="font-medium text-green-900 responsive-text">Rappels téléphoniques</span>
