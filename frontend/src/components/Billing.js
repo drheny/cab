@@ -177,7 +177,7 @@ const Billing = ({ user }) => {
         <StatCard
           icon={TrendingUp}
           title="Recette annuelle"
-          value={`${stats.total_annee} DH`}
+          value={`${stats.total_annee} TND`}
           color="text-purple-600"
           subtitle="Total annuel"
         />
