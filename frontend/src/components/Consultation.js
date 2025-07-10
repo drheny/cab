@@ -9,7 +9,7 @@ import {
   Save,
   Play,
   Pause,
-  Stop
+  Square
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
