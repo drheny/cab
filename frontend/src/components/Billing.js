@@ -163,7 +163,7 @@ const Billing = ({ user }) => {
         <StatCard
           icon={DollarSign}
           title="Recette du jour"
-          value={`${stats.total_jour} DH`}
+          value={`${stats.total_jour} TND`}
           color="text-green-600"
           subtitle="Paiements encaissés aujourd'hui"
         />
