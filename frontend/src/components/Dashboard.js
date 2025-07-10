@@ -79,7 +79,9 @@ const Dashboard = ({ user }) => {
     // navigate('/patients?filter=reminders');
   };
 
-  const fetchDashboardData = async () => {
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
     try {
       const response = await axios.get('/api/dashboard');
       setStats(response.data);
