@@ -14,6 +14,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 
 const PatientsList = ({ user }) => {
+  const location = useLocation();
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
