@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   Users, 
   Calendar, 
@@ -14,6 +14,7 @@ import {
   PhoneCall
 } from 'lucide-react';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const Dashboard = ({ user }) => {
   const [stats, setStats] = useState({
