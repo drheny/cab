@@ -97,14 +97,14 @@ function App() {
         />
         
         {/* Main Content */}
-        <div className="pc-main-content">
+        <div className="responsive-main-content">
           <Header 
             user={user} 
             onLogout={handleLogout} 
             onToggleSidebar={toggleSidebar}
           />
           
-          <main className="p-6 max-w-7xl mx-auto">
+          <main className="responsive-padding max-w-7xl mx-auto">
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Dashboard user={user} />} />
