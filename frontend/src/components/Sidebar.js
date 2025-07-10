@@ -43,29 +43,29 @@ const Sidebar = ({ user, isOpen, onClose }) => {
         />
       )}
       
-      {/* Sidebar - Fixed for PC */}
-      <div className="pc-sidebar-fixed">
+      {/* Sidebar - Responsive */}
+      <div className={`responsive-sidebar ${isOpen ? 'translate-x-0' : 'responsive-sidebar-hidden'}`}>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <div className="flex items-center space-x-3">
-            <div className="bg-primary-500 p-2 rounded-lg">
-              <Stethoscope className="w-6 h-6 text-white" />
+        <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className="bg-primary-500 p-1.5 sm:p-2 rounded-lg">
+              <Stethoscope className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div>
-              <h1 className="font-bold text-gray-900">Cabinet</h1>
-              <p className="text-sm text-gray-500">Médical</p>
+              <h1 className="font-bold text-gray-900 text-sm sm:text-base">Cabinet</h1>
+              <p className="text-xs sm:text-sm text-gray-500">Médical</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-gray-100 lg:hidden"
+            className="p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 lg:hidden"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </div>
 
         {/* Navigation */}
-        <nav className="p-4 flex-1">
+        <nav className="p-3 sm:p-4 flex-1">
           <ul className="space-y-1">
             {filteredMenuItems.map((item) => {
               const Icon = item.icon;
@@ -76,14 +76,14 @@ const Sidebar = ({ user, isOpen, onClose }) => {
                   <Link
                     to={item.path}
                     onClick={onClose}
-                    className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-sm ${
+                    className={`flex items-center space-x-2 sm:space-x-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg transition-all duration-200 text-xs sm:text-sm ${
                       isActive 
                         ? 'bg-primary-100 text-primary-700 font-medium shadow-sm' 
                         : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                     }`}
                   >
-                    <Icon className="w-5 h-5" />
-                    <span>{item.label}</span>
+                    <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="hidden sm:inline lg:inline">{item.label}</span>
                   </Link>
                 </li>
               );
@@ -91,15 +91,15 @@ const Sidebar = ({ user, isOpen, onClose }) => {
           </ul>
         </nav>
 
-        {/* User Info - Compact for PC */}
-        <div className="p-4 border-t border-gray-200">
-          <div className="bg-gray-50 rounded-lg p-3">
-            <div className="flex items-center space-x-3">
-              <div className="bg-primary-100 p-2 rounded-full">
-                <Stethoscope className="w-4 h-4 text-primary-600" />
+        {/* User Info - Responsive */}
+        <div className="p-3 sm:p-4 border-t border-gray-200">
+          <div className="bg-gray-50 rounded-lg p-2 sm:p-3">
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <div className="bg-primary-100 p-1.5 sm:p-2 rounded-full">
+                <Stethoscope className="w-3 h-3 sm:w-4 sm:h-4 text-primary-600" />
               </div>
-              <div>
-                <p className="font-medium text-gray-900 text-sm">{user.name}</p>
+              <div className="hidden sm:block lg:block">
+                <p className="font-medium text-gray-900 text-xs sm:text-sm">{user.name}</p>
                 <p className="text-xs text-gray-500 capitalize">{user.type}</p>
               </div>
             </div>
