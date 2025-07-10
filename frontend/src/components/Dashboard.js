@@ -248,21 +248,21 @@ const Dashboard = ({ user }) => {
         </div>
       </div>
 
-      {/* Recent Activity */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Activité Récente</h3>
-        <div className="space-y-3">
-          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+      {/* Recent Activity - Responsive */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 responsive-padding">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Activité Récente</h3>
+        <div className="space-y-2 sm:space-y-3">
+          <div className="flex items-center space-x-2 sm:space-x-3 p-2 sm:p-3 bg-gray-50 rounded-lg">
             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span className="text-sm text-gray-700">Consultation terminée - Omar Tazi (14:30)</span>
+            <span className="text-xs sm:text-sm text-gray-700">Consultation terminée - Omar Tazi (14:30)</span>
           </div>
-          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+          <div className="flex items-center space-x-2 sm:space-x-3 p-2 sm:p-3 bg-gray-50 rounded-lg">
             <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-            <span className="text-sm text-gray-700">Paiement encaissé - 300 TND (14:35)</span>
+            <span className="text-xs sm:text-sm text-gray-700">Paiement encaissé - 300 TND (14:35)</span>
           </div>
-          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+          <div className="flex items-center space-x-2 sm:space-x-3 p-2 sm:p-3 bg-gray-50 rounded-lg">
             <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-            <span className="text-sm text-gray-700">Patient en attente - Yassine Ben Ahmed (Salle 1)</span>
+            <span className="text-xs sm:text-sm text-gray-700">Patient en attente - Yassine Ben Ahmed (Salle 1)</span>
           </div>
         </div>
       </div>
