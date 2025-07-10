@@ -30,18 +30,32 @@ const Dashboard = ({ user }) => {
   const [messages, setMessages] = useState([
     {
       id: 1,
-      type: 'info',
-      titre: 'Rappel vaccination',
-      message: 'Lina Alami - Rappel vaccin à 18 mois',
-      time: '10:30',
+      type: 'anniversaire',
+      titre: 'Anniversaire',
+      patient: 'Lina Alami',
+      patient_id: 'patient2',
+      message: 'Anniversaire aujourd\'hui - 6 ans',
+      time: '00:00',
       urgent: false
     },
     {
       id: 2,
-      type: 'urgent',
+      type: 'relance',
+      titre: 'Relance téléphonique',
+      patient: 'Omar Tazi',
+      patient_id: 'patient3',
+      message: 'Relance programmée pour contrôle',
+      time: '10:00',
+      urgent: false
+    },
+    {
+      id: 3,
+      type: 'retard',
       titre: 'Patient en retard',
-      message: 'RDV 09:00 - Yassine Ben Ahmed non arrivé',
-      time: '09:15',
+      patient: 'Yassine Ben Ahmed',
+      patient_id: 'patient1',
+      message: 'RDV 09:00 - Non arrivé (retard 30 min)',
+      time: '09:30',
       urgent: true
     }
   ]);
