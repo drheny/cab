@@ -200,17 +200,17 @@ const Dashboard = ({ user }) => {
         />
       </div>
 
-      {/* Messages and Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Messages and Quick Actions - Responsive */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
         {/* Rappels et alertes */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Rappels et alertes</h3>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 responsive-padding">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900">Rappels et alertes</h3>
             <span className="bg-red-100 text-red-600 text-xs px-2 py-1 rounded-full">
               {messages.filter(m => m.urgent).length} urgent
             </span>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             {messages.map((message) => (
               <MessageCard key={message.id} message={message} />
             ))}
@@ -218,29 +218,29 @@ const Dashboard = ({ user }) => {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Actions Rapides</h3>
-          <div className="space-y-3">
-            <button className="w-full flex items-center justify-between p-3 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors">
-              <div className="flex items-center space-x-3">
-                <Users className="w-5 h-5 text-primary-600" />
-                <span className="font-medium text-primary-900">Ajouter un patient</span>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 responsive-padding">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Actions Rapides</h3>
+          <div className="space-y-2 sm:space-y-3">
+            <button className="w-full flex items-center justify-between p-2 sm:p-3 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors">
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <Users className="w-4 h-4 sm:w-5 sm:h-5 text-primary-600" />
+                <span className="font-medium text-primary-900 responsive-text">Ajouter un patient</span>
               </div>
               <div className="text-primary-600">→</div>
             </button>
             
-            <button className="w-full flex items-center justify-between p-3 bg-secondary-50 hover:bg-secondary-100 rounded-lg transition-colors">
-              <div className="flex items-center space-x-3">
-                <Calendar className="w-5 h-5 text-secondary-600" />
-                <span className="font-medium text-secondary-900">Nouveau RDV</span>
+            <button className="w-full flex items-center justify-between p-2 sm:p-3 bg-secondary-50 hover:bg-secondary-100 rounded-lg transition-colors">
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-secondary-600" />
+                <span className="font-medium text-secondary-900 responsive-text">Nouveau RDV</span>
               </div>
               <div className="text-secondary-600">→</div>
             </button>
             
-            <button className="w-full flex items-center justify-between p-3 bg-green-50 hover:bg-green-100 rounded-lg transition-colors">
-              <div className="flex items-center space-x-3">
-                <Phone className="w-5 h-5 text-green-600" />
-                <span className="font-medium text-green-900">Rappels téléphoniques</span>
+            <button className="w-full flex items-center justify-between p-2 sm:p-3 bg-green-50 hover:bg-green-100 rounded-lg transition-colors">
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <Phone className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
+                <span className="font-medium text-green-900 responsive-text">Rappels téléphoniques</span>
               </div>
               <div className="text-green-600">→</div>
             </button>
