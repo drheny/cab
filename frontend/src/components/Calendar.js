@@ -35,7 +35,15 @@ const Calendar = ({ user }) => {
 
   useEffect(() => {
     fetchData();
-  }, [selectedDate]);
+    
+    // Vérifier si on doit ouvrir le modal de nouveau RDV automatiquement
+    const searchParams = new URLSearchParams(location.search);
+    if (searchParams.get('action') === 'add') {
+      openModal();
+      // Nettoyer l'URL
+      window.history.replaceState({}, '', '/calendar');
+    }
+  }, [selectedDate, location]);
 
   const fetchData = async () => {
     try {
