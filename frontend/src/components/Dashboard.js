@@ -82,6 +82,8 @@ const Dashboard = ({ user }) => {
   useEffect(() => {
     fetchDashboardData();
   }, []);
+
+  const fetchDashboardData = async () => {
     try {
       const response = await axios.get('/api/dashboard');
       setStats(response.data);
