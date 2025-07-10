@@ -181,52 +181,52 @@ const PatientsList = ({ user }) => {
         />
       </div>
 
-      {/* Patients Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Patients Grid - Optimized for PC */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {filteredPatients.map((patient) => (
-          <div key={patient.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-start justify-between mb-4">
+          <div key={patient.id} className="pc-card-compact hover:shadow-md transition-shadow">
+            <div className="flex items-start justify-between mb-3">
               <div className="flex items-center space-x-3">
                 <div className="bg-primary-100 p-2 rounded-full">
-                  <User className="w-5 h-5 text-primary-600" />
+                  <User className="w-4 h-4 text-primary-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">
+                  <h3 className="font-semibold text-gray-900 text-sm">
                     {patient.prenom} {patient.nom}
                   </h3>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-xs text-gray-500">
                     {calculateAge(patient.date_naissance)} ans • {patient.sexe === 'M' ? 'Garçon' : 'Fille'}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1">
                 <button
                   onClick={() => openModal(patient)}
-                  className="p-2 text-gray-400 hover:text-primary-600 rounded-lg hover:bg-primary-50"
+                  className="p-1.5 text-gray-400 hover:text-primary-600 rounded-lg hover:bg-primary-50"
                 >
-                  <Edit className="w-4 h-4" />
+                  <Edit className="w-3.5 h-3.5" />
                 </button>
                 <button
                   onClick={() => handleDeletePatient(patient.id)}
-                  className="p-2 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50"
+                  className="p-1.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
 
-            <div className="space-y-2 mb-4">
-              <div className="flex items-center space-x-2 text-sm">
-                <User className="w-4 h-4 text-gray-400" />
-                <span className="text-gray-600">Parent: {patient.nom_parent}</span>
+            <div className="space-y-1.5 mb-3">
+              <div className="flex items-center space-x-2 text-xs">
+                <User className="w-3.5 h-3.5 text-gray-400" />
+                <span className="text-gray-600 truncate">Parent: {patient.nom_parent}</span>
               </div>
-              <div className="flex items-center space-x-2 text-sm">
-                <Phone className="w-4 h-4 text-gray-400" />
+              <div className="flex items-center space-x-2 text-xs">
+                <Phone className="w-3.5 h-3.5 text-gray-400" />
                 <span className="text-gray-600">{patient.telephone_parent}</span>
               </div>
               {patient.assurance && (
-                <div className="flex items-center space-x-2 text-sm">
-                  <Calendar className="w-4 h-4 text-gray-400" />
+                <div className="flex items-center space-x-2 text-xs">
+                  <Calendar className="w-3.5 h-3.5 text-gray-400" />
                   <span className="text-gray-600">{patient.assurance}</span>
                 </div>
               )}
@@ -237,13 +237,13 @@ const PatientsList = ({ user }) => {
                 href={getWhatsAppLink(patient.telephone_parent)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 bg-green-500 hover:bg-green-600 text-white text-sm py-2 px-3 rounded-lg flex items-center justify-center space-x-2 transition-colors"
+                className="flex-1 bg-green-500 hover:bg-green-600 text-white text-xs py-1.5 px-2 rounded-lg flex items-center justify-center space-x-1 transition-colors"
               >
-                <MessageCircle className="w-4 h-4" />
+                <MessageCircle className="w-3.5 h-3.5" />
                 <span>WhatsApp</span>
               </a>
-              <button className="flex-1 bg-primary-500 hover:bg-primary-600 text-white text-sm py-2 px-3 rounded-lg flex items-center justify-center space-x-2 transition-colors">
-                <Calendar className="w-4 h-4" />
+              <button className="flex-1 bg-primary-500 hover:bg-primary-600 text-white text-xs py-1.5 px-2 rounded-lg flex items-center justify-center space-x-1 transition-colors">
+                <Calendar className="w-3.5 h-3.5" />
                 <span>RDV</span>
               </button>
             </div>
