@@ -170,7 +170,7 @@ const Billing = ({ user }) => {
         <StatCard
           icon={Calendar}
           title="Recette du mois"
-          value={`${stats.total_mois} DH`}
+          value={`${stats.total_mois} TND`}
           color="text-blue-600"
           subtitle="Total mensuel"
         />
