@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   Users, 
   Calendar, 
@@ -8,7 +9,9 @@ import {
   TrendingUp,
   MessageCircle,
   Phone,
-  AlertCircle
+  AlertCircle,
+  Gift,
+  PhoneCall
 } from 'lucide-react';
 import axios from 'axios';
 
