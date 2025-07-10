@@ -154,44 +154,44 @@ const PatientsList = ({ user }) => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* Header - Responsive */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Patients</h1>
-          <p className="text-gray-600">Gestion des fiches patients</p>
+          <h1 className="responsive-title font-bold text-gray-900">Patients</h1>
+          <p className="text-gray-600 responsive-text">Gestion des fiches patients</p>
         </div>
         <button
           onClick={() => openModal()}
-          className="btn-primary flex items-center space-x-2"
+          className="btn-primary flex items-center justify-center space-x-2 responsive-button"
         >
-          <Plus className="w-5 h-5" />
+          <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
           <span>Nouveau Patient</span>
         </button>
       </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+      {/* Search - Responsive */}
+      <div className="relative mb-4 sm:mb-6">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
         <input
           type="text"
           placeholder="Rechercher un patient..."
           value={searchTerm}
           onChange={handleSearch}
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="w-full pl-8 sm:pl-10 pr-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 responsive-text"
         />
       </div>
 
-      {/* Patients Grid - Optimized for PC */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      {/* Patients Grid - Responsive */}
+      <div className="responsive-card-grid">
         {filteredPatients.map((patient) => (
-          <div key={patient.id} className="pc-card-compact hover:shadow-md transition-shadow">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center space-x-3">
-                <div className="bg-primary-100 p-2 rounded-full">
-                  <User className="w-4 h-4 text-primary-600" />
+          <div key={patient.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4 hover:shadow-md transition-shadow">
+            <div className="flex items-start justify-between mb-2 sm:mb-3">
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <div className="bg-primary-100 p-1.5 sm:p-2 rounded-full">
+                  <User className="w-3 h-3 sm:w-4 sm:h-4 text-primary-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 text-sm">
+                  <h3 className="font-semibold text-gray-900 text-xs sm:text-sm">
                     {patient.prenom} {patient.nom}
                   </h3>
                   <p className="text-xs text-gray-500">
@@ -202,48 +202,49 @@ const PatientsList = ({ user }) => {
               <div className="flex items-center space-x-1">
                 <button
                   onClick={() => openModal(patient)}
-                  className="p-1.5 text-gray-400 hover:text-primary-600 rounded-lg hover:bg-primary-50"
+                  className="p-1 sm:p-1.5 text-gray-400 hover:text-primary-600 rounded-lg hover:bg-primary-50"
                 >
-                  <Edit className="w-3.5 h-3.5" />
+                  <Edit className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                 </button>
                 <button
                   onClick={() => handleDeletePatient(patient.id)}
-                  className="p-1.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50"
+                  className="p-1 sm:p-1.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                 </button>
               </div>
             </div>
 
-            <div className="space-y-1.5 mb-3">
-              <div className="flex items-center space-x-2 text-xs">
-                <User className="w-3.5 h-3.5 text-gray-400" />
+            <div className="space-y-1 sm:space-y-1.5 mb-2 sm:mb-3">
+              <div className="flex items-center space-x-1 sm:space-x-2 text-xs">
+                <User className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-400" />
                 <span className="text-gray-600 truncate">Parent: {patient.nom_parent}</span>
               </div>
-              <div className="flex items-center space-x-2 text-xs">
-                <Phone className="w-3.5 h-3.5 text-gray-400" />
+              <div className="flex items-center space-x-1 sm:space-x-2 text-xs">
+                <Phone className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-400" />
                 <span className="text-gray-600">{patient.telephone_parent}</span>
               </div>
               {patient.assurance && (
-                <div className="flex items-center space-x-2 text-xs">
-                  <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                <div className="flex items-center space-x-1 sm:space-x-2 text-xs">
+                  <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-400" />
                   <span className="text-gray-600">{patient.assurance}</span>
                 </div>
               )}
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1 sm:space-x-2">
               <a
                 href={getWhatsAppLink(patient.telephone_parent)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 bg-green-500 hover:bg-green-600 text-white text-xs py-1.5 px-2 rounded-lg flex items-center justify-center space-x-1 transition-colors"
+                className="flex-1 bg-green-500 hover:bg-green-600 text-white text-xs py-1 sm:py-1.5 px-1 sm:px-2 rounded-lg flex items-center justify-center space-x-1 transition-colors"
               >
-                <MessageCircle className="w-3.5 h-3.5" />
-                <span>WhatsApp</span>
+                <MessageCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                <span className="hidden sm:inline">WhatsApp</span>
+                <span className="sm:hidden">WA</span>
               </a>
-              <button className="flex-1 bg-primary-500 hover:bg-primary-600 text-white text-xs py-1.5 px-2 rounded-lg flex items-center justify-center space-x-1 transition-colors">
-                <Calendar className="w-3.5 h-3.5" />
+              <button className="flex-1 bg-primary-500 hover:bg-primary-600 text-white text-xs py-1 sm:py-1.5 px-1 sm:px-2 rounded-lg flex items-center justify-center space-x-1 transition-colors">
+                <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                 <span>RDV</span>
               </button>
             </div>
