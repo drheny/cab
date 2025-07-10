@@ -149,18 +149,20 @@ const Dashboard = ({ user }) => {
 
   return (
     <div className="space-y-6">
-      {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-primary-500 to-secondary-500 rounded-xl p-6 text-white">
-        <h1 className="text-2xl font-bold mb-2">
-          Bonjour {user.name} 👋
-        </h1>
-        <p className="text-primary-100">
-          Voici un aperçu de votre journée
-        </p>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
+        <div>
+          <h1 className="responsive-title font-bold text-gray-900">
+            Bonjour {user.name} 👋
+          </h1>
+          <p className="text-primary-100 responsive-text">
+            Voici un aperçu de votre journée
+          </p>
+        </div>
       </div>
 
-      {/* Stats Grid - Optimized for PC */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      {/* Stats Grid - Responsive */}
+      <div className="responsive-grid-stats mb-4 sm:mb-6">
         <StatCard
           icon={Calendar}
           title="RDV Aujourd'hui"
