@@ -97,14 +97,14 @@ function App() {
         />
         
         {/* Main Content */}
-        <div className={`transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-64'}`}>
+        <div className="pc-main-content">
           <Header 
             user={user} 
             onLogout={handleLogout} 
             onToggleSidebar={toggleSidebar}
           />
           
-          <main className="p-4 lg:p-6">
+          <main className="p-6 max-w-7xl mx-auto">
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Dashboard user={user} />} />
