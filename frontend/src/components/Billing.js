@@ -317,7 +317,7 @@ const Billing = ({ user }) => {
                       {payment.patient_id}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {payment.montant} DH
+                      {payment.montant} TND
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       <span className="capitalize">{payment.type_paiement}</span>
