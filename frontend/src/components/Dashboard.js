@@ -111,7 +111,7 @@ const Dashboard = ({ user }) => {
       </div>
 
       {/* Stats Grid - Optimized for PC */}
-      <div className="pc-grid-stats">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard
           icon={Calendar}
           title="RDV Aujourd'hui"
@@ -121,24 +121,10 @@ const Dashboard = ({ user }) => {
         />
         <StatCard
           icon={Clock}
-          title="En Attente"
+          title="Salle attente"
           value={stats.rdv_attente}
           color="text-yellow-600"
           subtitle="Patients en salle d'attente"
-        />
-        <StatCard
-          icon={CheckCircle}
-          title="Terminés"
-          value={stats.rdv_termines}
-          color="text-green-600"
-          subtitle="Consultations finalisées"
-        />
-        <StatCard
-          icon={DollarSign}
-          title="Recette Jour"
-          value={`${stats.recette_jour} DH`}
-          color="text-purple-600"
-          subtitle="Paiements encaissés"
         />
         <StatCard
           icon={Users}
@@ -149,10 +135,17 @@ const Dashboard = ({ user }) => {
         />
         <StatCard
           icon={Clock}
-          title="Attente Moyenne"
+          title="Temps d'attente"
           value={`${stats.duree_attente_moyenne} min`}
           color="text-teal-600"
           subtitle="Temps d'attente moyen"
+        />
+        <StatCard
+          icon={DollarSign}
+          title="Recette du jour"
+          value={`${stats.recette_jour} DH`}
+          color="text-purple-600"
+          subtitle="Paiements encaissés"
         />
       </div>
 
