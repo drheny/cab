@@ -143,7 +143,7 @@ const WaitingRoom = ({ user }) => {
               onClick={() => onPay(appointment.id, 300)}
               className="flex-1 bg-purple-500 hover:bg-purple-600 text-white text-sm py-1 px-2 rounded"
             >
-              Payer 300 DH
+              Payer 300 TND
             </button>
           )}
           
