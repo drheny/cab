@@ -50,7 +50,7 @@ function App() {
   const handleLogin = (userType) => {
     const userData = {
       type: userType,
-      name: userType === 'medecin' ? 'Dr. Médecin' : 'Secrétaire',
+      name: userType === 'medecin' ? 'Dr Heni Dridi' : 'Secrétaire',
       permissions: userType === 'medecin' ? ['all'] : ['patients', 'appointments', 'waiting_room', 'consultations']
     };
     
