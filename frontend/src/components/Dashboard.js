@@ -256,7 +256,7 @@ const Dashboard = ({ user }) => {
           </div>
           <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
             <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-            <span className="text-sm text-gray-700">Paiement encaissé - 300 DH (14:35)</span>
+            <span className="text-sm text-gray-700">Paiement encaissé - 300 TND (14:35)</span>
           </div>
           <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
             <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
