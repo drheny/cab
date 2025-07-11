@@ -127,7 +127,13 @@ const PatientsList = ({ user }) => {
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
-    // Le debounce s'occupera de déclencher la recherche API
+    // Maintain cursor position
+    const cursorPosition = e.target.selectionStart;
+    setTimeout(() => {
+      if (searchInputRef.current) {
+        searchInputRef.current.setSelectionRange(cursorPosition, cursorPosition);
+      }
+    }, 0);
   };
 
   const handleCreatePatient = async () => {
