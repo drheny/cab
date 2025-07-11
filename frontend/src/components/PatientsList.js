@@ -135,14 +135,17 @@ const PatientsList = ({ user }) => {
   };
 
   const handleSearch = (e) => {
-    setSearchTerm(e.target.value);
-    // Maintain cursor position
+    const value = e.target.value;
     const cursorPosition = e.target.selectionStart;
-    setTimeout(() => {
+    
+    setSearchTerm(value);
+    
+    // Preserve cursor position without causing re-render
+    requestAnimationFrame(() => {
       if (searchInputRef.current) {
         searchInputRef.current.setSelectionRange(cursorPosition, cursorPosition);
       }
-    }, 0);
+    });
   };
 
   const handleCreatePatient = async () => {
