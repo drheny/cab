@@ -371,7 +371,8 @@ class CabinetMedicalAPITest(unittest.TestCase):
         # Get all patients to use a valid patient_id
         response = requests.get(f"{self.base_url}/api/patients")
         self.assertEqual(response.status_code, 200)
-        patients = response.json()
+        patients_data = response.json()
+        patients = patients_data["patients"]
         self.assertTrue(len(patients) > 0, "No patients found for testing appointments")
         
         patient_id = patients[0]["id"]
