@@ -128,9 +128,9 @@ class CabinetMedicalAPITest(unittest.TestCase):
         self.assertIn("date_premiere_consultation", patient_data)
         self.assertIn("date_derniere_consultation", patient_data)
         
-        # Verify age calculation (should be around 4 years)
+        # Verify age calculation (should be around 4-5 years)
         age = patient_data["age"]
-        self.assertTrue("4 ans" in age or "3 ans" in age, f"Age calculation incorrect: {age}")
+        self.assertTrue("4 ans" in age or "5 ans" in age, f"Age calculation incorrect: {age}")
         
         # Verify WhatsApp link generation
         expected_whatsapp_link = "https://wa.me/21650987654"
