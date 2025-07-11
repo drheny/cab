@@ -115,7 +115,7 @@ const PatientsList = ({ user }) => {
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
-    setCurrentPage(1); // Reset to first page when searching
+    // Le debounce s'occupera de déclencher la recherche API
   };
 
   const handleCreatePatient = async () => {
