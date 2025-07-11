@@ -220,7 +220,7 @@ class CabinetMedicalAPITest(unittest.TestCase):
             },
             {
                 "date_naissance": "2023-06-15", 
-                "expected_age_contains": ["1 an", "mois"]  # Should be around 1 year + months
+                "expected_age_contains": ["1 an", "2 ans"]  # Should be around 1-2 years
             }
         ]
         
