@@ -498,7 +498,8 @@ class CabinetMedicalAPITest(unittest.TestCase):
         # Get patients and appointments to create a new payment
         patients_response = requests.get(f"{self.base_url}/api/patients")
         self.assertEqual(patients_response.status_code, 200)
-        patients = patients_response.json()
+        patients_data = patients_response.json()
+        patients = patients_data["patients"]
         
         appointments_response = requests.get(f"{self.base_url}/api/appointments/today")
         self.assertEqual(appointments_response.status_code, 200)
