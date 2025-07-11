@@ -447,6 +447,11 @@ async def get_patient(patient_id: str):
 async def create_patient(patient: Patient):
     """Create new patient"""
     patient_dict = patient.dict()
+    
+    # Update computed fields
+    patient_dict = update_patient_computed_fields(patient_dict)
+    
+    # Insert into database
     patients_collection.insert_one(patient_dict)
     return {"message": "Patient created successfully", "patient_id": patient.id}
 
@@ -455,6 +460,10 @@ async def update_patient(patient_id: str, patient: Patient):
     """Update patient"""
     patient_dict = patient.dict()
     patient_dict["updated_at"] = datetime.now()
+    
+    # Update computed fields
+    patient_dict = update_patient_computed_fields(patient_dict)
+    
     result = patients_collection.update_one(
         {"id": patient_id}, 
         {"$set": patient_dict}
