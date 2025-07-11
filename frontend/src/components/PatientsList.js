@@ -61,29 +61,8 @@ const PatientsList = ({ user }) => {
     allergies: ''
   });
 
-  useEffect(() => {
-    fetchPatients();
-    
-    // Vérifier si on doit ouvrir le modal d'ajout automatiquement
-    const searchParams = new URLSearchParams(location.search);
-    if (searchParams.get('action') === 'add') {
-      openModal();
-      // Nettoyer l'URL
-      window.history.replaceState({}, '', '/patients');
-    }
-  }, [location, currentPage, debouncedSearchTerm]);
-
-  // Debounce search term to avoid API calls on every keystroke
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-      setCurrentPage(1); // Reset to first page when searching
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
-
-  const fetchPatients = async () => {
+  // Optimized fetchPatients with useCallback
+  const fetchPatients = useCallback(async () => {
     try {
       setLoading(true);
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/patients`, {
@@ -102,7 +81,39 @@ const PatientsList = ({ user }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, debouncedSearchTerm]);
+
+  // Initial load and URL action handling
+  useEffect(() => {
+    fetchPatients();
+    
+    // Vérifier si on doit ouvrir le modal d'ajout automatiquement
+    const searchParams = new URLSearchParams(location.search);
+    if (searchParams.get('action') === 'add') {
+      openModal();
+      // Nettoyer l'URL
+      window.history.replaceState({}, '', '/patients');
+    }
+  }, [fetchPatients, location]);
+
+  // Debounce search term to avoid API calls on every keystroke
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setCurrentPage(1); // Reset to first page when searching
+    }, 300); // Reduced debounce time for better UX
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Maintain focus on search input after re-renders
+  useEffect(() => {
+    if (searchInputRef.current && document.activeElement !== searchInputRef.current && searchTerm) {
+      const cursorPosition = searchInputRef.current.selectionStart;
+      searchInputRef.current.focus();
+      searchInputRef.current.setSelectionRange(cursorPosition, cursorPosition);
+    }
+  }, [patients, searchTerm]);
 
   // Format date function
   const formatDate = (dateString) => {
