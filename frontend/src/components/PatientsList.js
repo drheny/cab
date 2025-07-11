@@ -19,7 +19,7 @@ import {
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
-const PatientsList = ({ user }) => {
+const PatientsListComponent = ({ user }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [patients, setPatients] = useState([]);
