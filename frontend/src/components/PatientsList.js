@@ -157,11 +157,6 @@ const PatientsList = ({ user }) => {
     }
   };
 
-  const openRdvModal = (patient) => {
-    // Naviguer directement vers la page calendrier avec le patient sélectionné
-    navigate(`/calendar?action=add&patient_id=${patient.id}`);
-  };
-
   const resetForm = () => {
     setFormData({
       nom: '',
