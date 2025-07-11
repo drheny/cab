@@ -389,10 +389,51 @@ async def get_dashboard():
     }
 
 @app.get("/api/patients")
-async def get_patients():
-    """Get all patients"""
-    patients = list(patients_collection.find({}, {"_id": 0}))
-    return patients
+async def get_patients(
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(10, ge=1, le=100, description="Items per page"),
+    search: str = Query("", description="Search by name or birth date")
+):
+    """Get patients with pagination and search"""
+    # Build search query
+    query = {}
+    if search:
+        search_regex = {"$regex": search, "$options": "i"}
+        query["$or"] = [
+            {"nom": search_regex},
+            {"prenom": search_regex},
+            {"date_naissance": search_regex}
+        ]
+    
+    # Count total documents
+    total_count = patients_collection.count_documents(query)
+    
+    # Calculate pagination
+    skip = (page - 1) * limit
+    
+    # Get patients with pagination
+    patients = list(patients_collection.find(query, {"_id": 0})
+                   .skip(skip)
+                   .limit(limit)
+                   .sort("nom", 1))
+    
+    # Update computed fields for each patient
+    for patient in patients:
+        patient = update_patient_computed_fields(patient)
+    
+    return {
+        "patients": patients,
+        "total_count": total_count,
+        "page": page,
+        "limit": limit,
+        "total_pages": (total_count + limit - 1) // limit
+    }
+
+@app.get("/api/patients/count")
+async def get_patients_count():
+    """Get total number of patients"""
+    count = patients_collection.count_documents({})
+    return {"count": count}
 
 @app.get("/api/patients/{patient_id}")
 async def get_patient(patient_id: str):
