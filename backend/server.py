@@ -118,6 +118,86 @@ class Payment(BaseModel):
     created_at: datetime = Field(default_factory=datetime.now)
 
 # Helper functions
+def calculate_age(date_naissance: str) -> str:
+    """Calculate age from birth date in format '2 ans, 3 mois, 15 jours'"""
+    if not date_naissance:
+        return ""
+    
+    try:
+        birth_date = datetime.strptime(date_naissance, "%Y-%m-%d")
+        today = datetime.now()
+        
+        # Calculate differences
+        years = today.year - birth_date.year
+        months = today.month - birth_date.month
+        days = today.day - birth_date.day
+        
+        # Adjust for negative days
+        if days < 0:
+            months -= 1
+            # Get last day of previous month
+            if today.month == 1:
+                last_month = 12
+                last_year = today.year - 1
+            else:
+                last_month = today.month - 1
+                last_year = today.year
+            
+            from calendar import monthrange
+            days += monthrange(last_year, last_month)[1]
+        
+        # Adjust for negative months
+        if months < 0:
+            years -= 1
+            months += 12
+        
+        # Format result
+        age_parts = []
+        if years > 0:
+            age_parts.append(f"{years} an{'s' if years > 1 else ''}")
+        if months > 0:
+            age_parts.append(f"{months} mois")
+        if days > 0:
+            age_parts.append(f"{days} jour{'s' if days > 1 else ''}")
+        
+        return ", ".join(age_parts) if age_parts else "0 jour"
+    except ValueError:
+        return ""
+
+def generate_whatsapp_link(numero: str) -> str:
+    """Generate WhatsApp link from phone number"""
+    if not numero:
+        return ""
+    
+    # Remove all non-digit characters
+    clean_number = ''.join(filter(str.isdigit, numero))
+    
+    # Validate Tunisia format (216xxxxxxxx)
+    if clean_number.startswith('216') and len(clean_number) == 11:
+        return f"https://wa.me/{clean_number}"
+    
+    return ""
+
+def update_patient_computed_fields(patient_dict: dict) -> dict:
+    """Update computed fields for patient"""
+    # Calculate age
+    if patient_dict.get('date_naissance'):
+        patient_dict['age'] = calculate_age(patient_dict['date_naissance'])
+    
+    # Generate WhatsApp link
+    if patient_dict.get('numero_whatsapp'):
+        patient_dict['lien_whatsapp'] = generate_whatsapp_link(patient_dict['numero_whatsapp'])
+    
+    # Update consultation dates
+    if patient_dict.get('consultations'):
+        dates = [c.get('date') for c in patient_dict['consultations'] if c.get('date')]
+        if dates:
+            sorted_dates = sorted(dates)
+            patient_dict['date_premiere_consultation'] = sorted_dates[0]
+            patient_dict['date_derniere_consultation'] = sorted_dates[-1]
+    
+    return patient_dict
+
 def create_demo_data():
     """Create demo data for testing"""
     
