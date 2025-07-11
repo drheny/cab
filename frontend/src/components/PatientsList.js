@@ -354,7 +354,7 @@ const PatientsList = ({ user }) => {
                     </h3>
                   </button>
                   <p className="text-sm text-gray-500">
-                    {patient.age || 'N/A'}
+                    {formatDate(patient.date_naissance)}
                   </p>
                 </div>
                 <div className="flex items-center space-x-1">
@@ -374,12 +374,16 @@ const PatientsList = ({ user }) => {
               </div>
               <div className="space-y-2 mb-3">
                 <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <MapPin className="w-4 h-4 text-gray-400" />
-                  <span className="truncate">{patient.adresse || 'N/A'}</span>
+                  <User className="w-4 h-4 text-gray-400" />
+                  <span>Mère: {patient.mere?.nom || 'N/A'}</span>
                 </div>
                 <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <User className="w-4 h-4 text-gray-400" />
-                  <span>Mère: {patient.mere?.nom || patient.nom_parent || 'N/A'}</span>
+                  <Phone className="w-4 h-4 text-gray-400" />
+                  <span>Tel mère: {patient.mere?.telephone || 'N/A'}</span>
+                </div>
+                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                  <MapPin className="w-4 h-4 text-gray-400" />
+                  <span className="truncate">{patient.adresse || 'N/A'}</span>
                 </div>
               </div>
               <div className="flex items-center space-x-2">
@@ -398,13 +402,6 @@ const PatientsList = ({ user }) => {
                     <span>Pas de WhatsApp</span>
                   </div>
                 )}
-                <button
-                  onClick={() => openRdvModal(patient)}
-                  className="flex-1 bg-primary-500 hover:bg-primary-600 text-white text-sm py-2 px-3 rounded-lg flex items-center justify-center space-x-1 transition-colors"
-                >
-                  <Calendar className="w-4 h-4" />
-                  <span>RDV</span>
-                </button>
               </div>
             </div>
           </div>
