@@ -441,7 +441,43 @@ async def get_patient(patient_id: str):
     patient = patients_collection.find_one({"id": patient_id}, {"_id": 0})
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
+    
+    # Update computed fields
+    patient = update_patient_computed_fields(patient)
+    
     return patient
+
+@app.get("/api/patients/{patient_id}/consultations")
+async def get_patient_consultations_full(patient_id: str):
+    """Get full consultation details for a patient"""
+    patient = patients_collection.find_one({"id": patient_id}, {"_id": 0})
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    
+    # Get consultations from consultations collection
+    consultations = list(consultations_collection.find({"patient_id": patient_id}, {"_id": 0}))
+    
+    # Get appointments to get type information
+    appointments = list(appointments_collection.find({"patient_id": patient_id}, {"_id": 0}))
+    
+    # Combine consultation and appointment data
+    result = []
+    for consultation in consultations:
+        appointment = next((a for a in appointments if a["id"] == consultation.get("appointment_id")), None)
+        result.append({
+            "id": consultation["id"],
+            "date": consultation["date"],
+            "type": appointment["type_rdv"] if appointment else "visite",
+            "duree": consultation.get("duree", 0),
+            "observations": consultation.get("observations", ""),
+            "traitement": consultation.get("traitement", ""),
+            "bilan": consultation.get("bilan", "")
+        })
+    
+    # Sort by date (most recent first)
+    result.sort(key=lambda x: x["date"], reverse=True)
+    
+    return result
 
 @app.post("/api/patients")
 async def create_patient(patient: Patient):
