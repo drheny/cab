@@ -89,7 +89,7 @@ const PatientsList = ({ user }) => {
         params: {
           page: currentPage,
           limit: 10,
-          search: searchTerm
+          search: debouncedSearchTerm
         }
       });
       setPatients(response.data.patients);
