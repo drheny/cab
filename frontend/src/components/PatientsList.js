@@ -287,9 +287,19 @@ const PatientsList = ({ user }) => {
                     </div>
                   </button>
                 </div>
-                <div className="col-span-1">
+                <div className="col-span-2">
                   <span className="text-sm text-gray-600">
-                    {patient.age || 'N/A'}
+                    {formatDate(patient.date_naissance)}
+                  </span>
+                </div>
+                <div className="col-span-2">
+                  <span className="text-sm text-gray-600">
+                    {patient.mere?.nom || 'N/A'}
+                  </span>
+                </div>
+                <div className="col-span-2">
+                  <span className="text-sm text-gray-600">
+                    {patient.mere?.telephone || 'N/A'}
                   </span>
                 </div>
                 <div className="col-span-2">
@@ -297,12 +307,7 @@ const PatientsList = ({ user }) => {
                     {patient.adresse || 'N/A'}
                   </span>
                 </div>
-                <div className="col-span-2">
-                  <span className="text-sm text-gray-600">
-                    {patient.mere?.nom || patient.nom_parent || 'N/A'}
-                  </span>
-                </div>
-                <div className="col-span-2">
+                <div className="col-span-1">
                   {patient.lien_whatsapp ? (
                     <a
                       href={patient.lien_whatsapp}
@@ -311,22 +316,13 @@ const PatientsList = ({ user }) => {
                       className="inline-flex items-center space-x-1 bg-green-500 hover:bg-green-600 text-white text-sm px-3 py-1 rounded-lg transition-colors"
                     >
                       <MessageCircle className="w-4 h-4" />
-                      <span>WhatsApp</span>
+                      <span>WA</span>
                     </a>
                   ) : (
                     <span className="text-sm text-gray-400">N/A</span>
                   )}
                 </div>
                 <div className="col-span-1">
-                  <button
-                    onClick={() => openRdvModal(patient)}
-                    className="inline-flex items-center space-x-1 bg-primary-500 hover:bg-primary-600 text-white text-sm px-3 py-1 rounded-lg transition-colors"
-                  >
-                    <Calendar className="w-4 h-4" />
-                    <span>RDV</span>
-                  </button>
-                </div>
-                <div className="col-span-2">
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={() => openModal(patient)}
