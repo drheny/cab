@@ -777,36 +777,6 @@ const PatientsList = ({ user }) => {
           </div>
         </div>
       )}
-
-      {/* Quick RDV Modal */}
-      {showRdvModal && selectedPatient && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-md w-full">
-            <div className="p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">
-                Nouveau RDV
-              </h2>
-              <p className="text-gray-600 mb-6">
-                Créer un rendez-vous pour <span className="font-medium">{selectedPatient.prenom} {selectedPatient.nom}</span>
-              </p>
-              <div className="flex justify-end space-x-3">
-                <button
-                  onClick={() => setShowRdvModal(false)}
-                  className="btn-outline"
-                >
-                  Annuler
-                </button>
-                <button
-                  onClick={handleCreateRdv}
-                  className="btn-primary"
-                >
-                  Créer RDV
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
