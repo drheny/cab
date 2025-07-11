@@ -833,4 +833,9 @@ const PatientsList = ({ user }) => {
   );
 };
 
+// Memoized component to prevent unnecessary re-renders
+const PatientsList = React.memo(({ user }) => {
+  return <PatientsListComponent user={user} />;
+});
+
 export default PatientsList;
