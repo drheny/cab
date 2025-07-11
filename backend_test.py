@@ -2,10 +2,18 @@ import requests
 import unittest
 import json
 from datetime import datetime
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv('/app/frontend/.env')
 
 class CabinetMedicalAPITest(unittest.TestCase):
     def setUp(self):
-        self.base_url = "http://localhost:8001"
+        # Use the correct backend URL from environment
+        backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://d4210c95-944d-4c06-b93f-bb8c2c6cfe69.preview.emergentagent.com')
+        self.base_url = backend_url
+        print(f"Testing backend at: {self.base_url}")
         # Initialize demo data before running tests
         self.init_demo_data()
     
