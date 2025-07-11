@@ -366,6 +366,8 @@ def create_demo_data():
     for patient in demo_patients:
         patient['created_at'] = datetime.now()
         patient['updated_at'] = datetime.now()
+        # Apply computed fields
+        patient = update_patient_computed_fields(patient)
         patients_collection.insert_one(patient)
 
     for appointment in demo_appointments:
