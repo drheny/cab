@@ -62,10 +62,16 @@ const PatientsList = ({ user }) => {
     allergies: ''
   });
 
-  // Optimized fetchPatients with useCallback
-  const fetchPatients = useCallback(async () => {
+  // Optimized fetchPatients with separated loading states
+  const fetchPatients = useCallback(async (isSearch = false) => {
     try {
-      setLoading(true);
+      // Use different loading state for search vs initial load
+      if (isSearch) {
+        setSearchLoading(true);
+      } else {
+        setLoading(true);
+      }
+      
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/patients`, {
         params: {
           page: currentPage,
@@ -80,13 +86,17 @@ const PatientsList = ({ user }) => {
       console.error('Error fetching patients:', error);
       toast.error('Erreur lors du chargement des patients');
     } finally {
-      setLoading(false);
+      if (isSearch) {
+        setSearchLoading(false);
+      } else {
+        setLoading(false);
+      }
     }
   }, [currentPage, debouncedSearchTerm]);
 
-  // Initial load and URL action handling
+  // Initial load only
   useEffect(() => {
-    fetchPatients();
+    fetchPatients(false);
     
     // Vérifier si on doit ouvrir le modal d'ajout automatiquement
     const searchParams = new URLSearchParams(location.search);
@@ -95,26 +105,24 @@ const PatientsList = ({ user }) => {
       // Nettoyer l'URL
       window.history.replaceState({}, '', '/patients');
     }
-  }, [fetchPatients, location]);
+  }, [location]);
 
-  // Debounce search term to avoid API calls on every keystroke
+  // Page change effect
+  useEffect(() => {
+    if (currentPage > 1 || debouncedSearchTerm) {
+      fetchPatients(true); // Use search loading for pagination/search
+    }
+  }, [currentPage, debouncedSearchTerm, fetchPatients]);
+
+  // Debounce search term - no loading state change here
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
-      setCurrentPage(1); // Reset to first page when searching
-    }, 300); // Reduced debounce time for better UX
+      setCurrentPage(1);
+    }, 250); // Even faster debounce
 
     return () => clearTimeout(timer);
   }, [searchTerm]);
-
-  // Maintain focus on search input after re-renders
-  useEffect(() => {
-    if (searchInputRef.current && document.activeElement !== searchInputRef.current && searchTerm) {
-      const cursorPosition = searchInputRef.current.selectionStart;
-      searchInputRef.current.focus();
-      searchInputRef.current.setSelectionRange(cursorPosition, cursorPosition);
-    }
-  }, [patients, searchTerm]);
 
   // Format date function
   const formatDate = (dateString) => {
