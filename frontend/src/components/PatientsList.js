@@ -201,12 +201,6 @@ const PatientsList = ({ user }) => {
     setShowModal(true);
   };
 
-  const handleCreateRdv = () => {
-    // Naviguer vers la page calendrier avec le patient sélectionné
-    navigate(`/calendar?action=add&patient_id=${selectedPatient.id}`);
-    setShowRdvModal(false);
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
