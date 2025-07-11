@@ -70,7 +70,17 @@ const PatientsList = ({ user }) => {
       // Nettoyer l'URL
       window.history.replaceState({}, '', '/patients');
     }
-  }, [location, currentPage, searchTerm]);
+  }, [location, currentPage, debouncedSearchTerm]);
+
+  // Debounce search term to avoid API calls on every keystroke
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setCurrentPage(1); // Reset to first page when searching
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const fetchPatients = async () => {
     try {
