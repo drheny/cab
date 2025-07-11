@@ -41,20 +41,40 @@ users_collection = db.users
 security = HTTPBearer()
 
 # Models
+class ParentInfo(BaseModel):
+    nom: str = ""
+    telephone: str = ""
+    fonction: str = ""
+
+class ConsultationInfo(BaseModel):
+    date: str
+    type: str  # "visite" ou "controle"
+    id_consultation: str
+
 class Patient(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     nom: str
     prenom: str
-    date_naissance: str
-    sexe: str
-    telephone: str
-    adresse: str
-    nom_parent: str
-    telephone_parent: str
+    date_naissance: str = ""
+    age: str = ""  # calculé automatiquement
+    adresse: str = ""
+    pere: ParentInfo = Field(default_factory=ParentInfo)
+    mere: ParentInfo = Field(default_factory=ParentInfo)
+    numero_whatsapp: str = ""
+    lien_whatsapp: str = ""  # généré automatiquement
+    notes: str = ""
+    antecedents: str = ""
+    consultations: List[ConsultationInfo] = []
+    date_premiere_consultation: str = ""
+    date_derniere_consultation: str = ""
+    # Garder les anciens champs pour compatibilité
+    sexe: str = ""
+    telephone: str = ""
+    nom_parent: str = ""
+    telephone_parent: str = ""
     assurance: str = ""
     numero_assurance: str = ""
     allergies: str = ""
-    antecedents: str = ""
     photo_url: str = ""
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
