@@ -134,19 +134,25 @@ const PatientsListComponent = ({ user }) => {
     return `${day}/${month}/${year}`;
   };
 
-  const handleSearch = (e) => {
+  // Handle search with completely isolated state management
+  const handleSearch = useCallback((e) => {
     const value = e.target.value;
-    const cursorPosition = e.target.selectionStart;
-    
     setSearchTerm(value);
     
-    // Preserve cursor position without causing re-render
-    requestAnimationFrame(() => {
-      if (searchInputRef.current) {
-        searchInputRef.current.setSelectionRange(cursorPosition, cursorPosition);
-      }
-    });
-  };
+    // Immediate visual feedback without triggering re-render
+    e.target.value = value;
+  }, []);
+
+  // Prevent any re-render during typing
+  const searchInputProps = useMemo(() => ({
+    ref: searchInputRef,
+    type: "text",
+    placeholder: "Rechercher par nom, prénom ou date de naissance...",
+    defaultValue: searchTerm,
+    onChange: handleSearch,
+    className: "w-full pl-8 sm:pl-10 pr-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 responsive-text",
+    key: "search-input" // Ensure stable key
+  }), [handleSearch, searchTerm]);
 
   const handleCreatePatient = async () => {
     try {
