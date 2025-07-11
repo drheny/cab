@@ -208,45 +208,113 @@ def create_demo_data():
             "nom": "Ben Ahmed",
             "prenom": "Yassine",
             "date_naissance": "2020-05-15",
+            "age": "",  # sera calculé
             "sexe": "M",
             "telephone": "0612345678",
-            "adresse": "123 Rue de la Paix, Casablanca",
+            "adresse": "123 Rue de la Paix, Tunis",
+            "pere": {
+                "nom": "Ahmed Ben Ahmed",
+                "telephone": "21650123456",
+                "fonction": "Ingénieur"
+            },
+            "mere": {
+                "nom": "Fatima Ben Ahmed",
+                "telephone": "21650123457",
+                "fonction": "Professeur"
+            },
+            "numero_whatsapp": "21650123456",
+            "lien_whatsapp": "",  # sera généré
+            "notes": "Enfant très actif",
+            "antecedents": "Aucun antécédent particulier",
+            "consultations": [
+                {
+                    "date": "2024-01-15",
+                    "type": "visite",
+                    "id_consultation": "cons1"
+                },
+                {
+                    "date": "2024-06-10",
+                    "type": "controle",
+                    "id_consultation": "cons2"
+                }
+            ],
+            "date_premiere_consultation": "",  # sera calculé
+            "date_derniere_consultation": "",  # sera calculé
             "nom_parent": "Ahmed Ben Ahmed",
             "telephone_parent": "0612345678",
             "assurance": "CNSS",
             "numero_assurance": "123456789",
-            "allergies": "Aucune",
-            "antecedents": "Aucun"
+            "allergies": "Aucune"
         },
         {
             "id": "patient2",
             "nom": "Alami",
             "prenom": "Lina",
             "date_naissance": "2019-03-22",
+            "age": "",  # sera calculé
             "sexe": "F",
             "telephone": "0687654321",
-            "adresse": "456 Avenue Mohammed V, Rabat",
+            "adresse": "456 Avenue Habib Bourguiba, Sousse",
+            "pere": {
+                "nom": "Karim Alami",
+                "telephone": "21654321098",
+                "fonction": "Médecin"
+            },
+            "mere": {
+                "nom": "Asma Alami",
+                "telephone": "21654321099",
+                "fonction": "Avocate"
+            },
+            "numero_whatsapp": "21654321098",
+            "lien_whatsapp": "",  # sera généré
+            "notes": "Enfant calme et sage",
+            "antecedents": "Eczéma léger",
+            "consultations": [
+                {
+                    "date": "2024-03-20",
+                    "type": "visite",
+                    "id_consultation": "cons3"
+                }
+            ],
+            "date_premiere_consultation": "",  # sera calculé
+            "date_derniere_consultation": "",  # sera calculé
             "nom_parent": "Fatima Alami",
             "telephone_parent": "0687654321",
             "assurance": "CNOPS",
             "numero_assurance": "987654321",
-            "allergies": "Pénicilline",
-            "antecedents": "Eczéma"
+            "allergies": "Pénicilline"
         },
         {
             "id": "patient3",
             "nom": "Tazi",
             "prenom": "Omar",
             "date_naissance": "2021-08-10",
+            "age": "",  # sera calculé
             "sexe": "M",
             "telephone": "0611223344",
-            "adresse": "789 Rue Hassan II, Fès",
+            "adresse": "789 Rue Hassan II, Sfax",
+            "pere": {
+                "nom": "Khalid Tazi",
+                "telephone": "21678901234",
+                "fonction": "Commerçant"
+            },
+            "mere": {
+                "nom": "Salma Tazi",
+                "telephone": "21678901235",
+                "fonction": "Infirmière"
+            },
+            "numero_whatsapp": "21678901234",
+            "lien_whatsapp": "",  # sera généré
+            "notes": "Premier enfant de la famille",
+            "antecedents": "Naissance prématurée",
+            "consultations": [],
+            "date_premiere_consultation": "",
+            "date_derniere_consultation": "",
             "nom_parent": "Khalid Tazi",
             "telephone_parent": "0611223344",
             "assurance": "",
             "numero_assurance": "",
-            "allergies": "",
-            "antecedents": ""
+            "allergies": ""
         }
     ]
 
