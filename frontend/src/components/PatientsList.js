@@ -32,6 +32,7 @@ const PatientsList = ({ user }) => {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [showPatientModal, setShowPatientModal] = useState(false);
+  const searchInputRef = useRef(null);
   const [formData, setFormData] = useState({
     nom: '',
     prenom: '',
