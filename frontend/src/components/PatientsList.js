@@ -31,7 +31,6 @@ const PatientsList = ({ user }) => {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [showPatientModal, setShowPatientModal] = useState(false);
-  const [showRdvModal, setShowRdvModal] = useState(false);
   const [formData, setFormData] = useState({
     nom: '',
     prenom: '',
