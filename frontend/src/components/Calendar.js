@@ -510,6 +510,7 @@ const Calendar = ({ user }) => {
           onRoomAssignment={handleRoomAssignment}
           onEdit={openModal}
           onDelete={handleDeleteAppointment}
+          onViewPatient={viewPatientDetails}
           selectedDate={selectedDate}
         />
       )}
