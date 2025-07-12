@@ -543,111 +543,15 @@ const Calendar = ({ user }) => {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-md w-full">
-            <div className="p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">
-                {selectedAppointment ? 'Modifier le rendez-vous' : 'Nouveau rendez-vous'}
-              </h2>
-
-              <form onSubmit={(e) => {
-                e.preventDefault();
-                selectedAppointment ? handleUpdateAppointment() : handleCreateAppointment();
-              }}>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Patient</label>
-                    <select
-                      value={formData.patient_id}
-                      onChange={(e) => setFormData({...formData, patient_id: e.target.value})}
-                      className="input-field"
-                      required
-                    >
-                      <option value="">Sélectionner un patient</option>
-                      {patients.map((patient) => (
-                        <option key={patient.id} value={patient.id}>
-                          {patient.prenom} {patient.nom} ({patient.nom_parent})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                    <input
-                      type="date"
-                      value={formData.date}
-                      onChange={(e) => setFormData({...formData, date: e.target.value})}
-                      className="input-field"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Heure</label>
-                    <input
-                      type="time"
-                      value={formData.heure}
-                      onChange={(e) => setFormData({...formData, heure: e.target.value})}
-                      className="input-field"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Type de RDV</label>
-                    <select
-                      value={formData.type_rdv}
-                      onChange={(e) => setFormData({...formData, type_rdv: e.target.value})}
-                      className="input-field"
-                    >
-                      <option value="visite">Visite payante</option>
-                      <option value="controle">Contrôle gratuit</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Motif</label>
-                    <input
-                      type="text"
-                      value={formData.motif}
-                      onChange={(e) => setFormData({...formData, motif: e.target.value})}
-                      className="input-field"
-                      placeholder="Motif de la consultation"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                    <textarea
-                      value={formData.notes}
-                      onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                      className="input-field"
-                      rows="3"
-                      placeholder="Notes supplémentaires"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex justify-end space-x-3 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => setShowModal(false)}
-                    className="btn-outline"
-                  >
-                    Annuler
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn-primary"
-                  >
-                    {selectedAppointment ? 'Modifier' : 'Créer'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
+        <AppointmentModal
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          appointment={selectedAppointment}
+          patients={patients}
+          formData={formData}
+          setFormData={setFormData}
+          onSave={selectedAppointment ? handleUpdateAppointment : handleCreateAppointment}
+        />
       )}
     </div>
   );
