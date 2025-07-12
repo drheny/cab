@@ -715,6 +715,7 @@ const AppointmentCard = ({
   onRoomAssignment, 
   onEdit, 
   onDelete, 
+  onViewPatient,
   isCompleted 
 }) => {
   const getStatusColor = (status) => {
