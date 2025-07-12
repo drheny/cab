@@ -619,7 +619,10 @@ const Calendar = ({ user }) => {
 };
 
 // Composant WeekView pour la vue semaine
-const WeekView = ({ weekData, onStatusUpdate, onRoomAssignment, onEdit, onDelete, onViewPatient, selectedDate }) => {
+const WeekView = ({ weekData, onStatusUpdate, onRoomAssignment, onEdit, onDelete, onViewPatient, selectedDate, onCreateAppointment }) => {
+  const [contextMenu, setContextMenu] = useState({ show: false, x: 0, y: 0, appointment: null });
+  const [hoveredSlot, setHoveredSlot] = useState(null);
+
   const timeSlots = [];
   for (let hour = 9; hour < 18; hour++) {
     for (let minute = 0; minute < 60; minute += 15) {
@@ -650,11 +653,80 @@ const WeekView = ({ weekData, onStatusUpdate, onRoomAssignment, onEdit, onDelete
     }
   };
 
+  const handleSlotClick = (date, time) => {
+    // Click sur créneau vide → Nouveau RDV avec date/heure pré-remplie
+    onCreateAppointment({
+      date: date,
+      heure: time
+    });
+  };
+
+  const handleAppointmentDoubleClick = (appointment) => {
+    // Double-click RDV → Edit rapide
+    onEdit(appointment);
+  };
+
+  const handleRightClick = (e, appointment) => {
+    e.preventDefault();
+    setContextMenu({
+      show: true,
+      x: e.clientX,
+      y: e.clientY,
+      appointment: appointment
+    });
+  };
+
+  const handleContextMenuAction = (action) => {
+    const { appointment } = contextMenu;
+    setContextMenu({ show: false, x: 0, y: 0, appointment: null });
+
+    switch (action) {
+      case 'edit':
+        onEdit(appointment);
+        break;
+      case 'delete':
+        onDelete(appointment.id);
+        break;
+      case 'duplicate':
+        // Créer un nouvel RDV avec les mêmes données
+        onCreateAppointment({
+          patient_id: appointment.patient_id,
+          date: appointment.date,
+          heure: appointment.heure,
+          type_rdv: appointment.type_rdv,
+          motif: appointment.motif,
+          notes: appointment.notes
+        });
+        break;
+      default:
+        break;
+    }
+  };
+
+  const getSlotDensityColor = (appointments) => {
+    const count = appointments.length;
+    if (count === 0) return 'bg-green-50 hover:bg-green-100'; // Libre
+    if (count <= 2) return 'bg-orange-50 hover:bg-orange-100'; // Normal
+    return 'bg-red-50 hover:bg-red-100'; // Saturé (3 RDV)
+  };
+
+  // Fermer le menu contextuel en cliquant ailleurs
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setContextMenu({ show: false, x: 0, y: 0, appointment: null });
+    };
+
+    if (contextMenu.show) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [contextMenu.show]);
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200">
       <div className="p-4 border-b border-gray-200">
         <h3 className="text-lg font-semibold text-gray-900">Vue Semaine</h3>
-        <p className="text-sm text-gray-600">Lundi → Samedi • 9h00 → 18h00</p>
+        <p className="text-sm text-gray-600">Lundi → Samedi • 9h00 → 18h00 • Click créneau vide pour nouveau RDV</p>
       </div>
 
       <div className="overflow-x-auto">
@@ -677,7 +749,7 @@ const WeekView = ({ weekData, onStatusUpdate, onRoomAssignment, onEdit, onDelete
           {/* Time slots grid */}
           <div className="max-h-96 overflow-y-auto">
             {timeSlots.map((time) => (
-              <div key={time} className="grid grid-cols-7 border-b border-gray-100 hover:bg-gray-50">
+              <div key={time} className="grid grid-cols-7 border-b border-gray-100">
                 {/* Time column */}
                 <div className="p-2 border-r border-gray-200 bg-gray-50">
                   <span className="text-xs text-gray-600 font-mono">{time}</span>
@@ -686,40 +758,74 @@ const WeekView = ({ weekData, onStatusUpdate, onRoomAssignment, onEdit, onDelete
                 {/* Days columns */}
                 {weekData.week_dates?.map((date) => {
                   const appointments = getAppointmentsForDateAndTime(date, time);
+                  const isSlotFull = appointments.length >= 3;
+                  
                   return (
-                    <div key={`${date}-${time}`} className="p-1 border-r border-gray-100 last:border-r-0 min-h-[50px]">
-                      {appointments.map((apt) => (
-                        <div
-                          key={apt.id}
-                          className={`text-xs p-1 rounded mb-1 border cursor-pointer hover:shadow-sm transition-all ${getStatusColor(apt.statut)}`}
-                          onClick={() => onEdit(apt)}
-                          title={`${apt.patient?.prenom} ${apt.patient?.nom} - ${apt.motif || 'Consultation'}`}
-                        >
-                          <div className="truncate">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onViewPatient(apt.patient_id);
-                              }}
-                              className="font-medium text-gray-900 hover:text-primary-600 transition-colors cursor-pointer underline"
-                            >
-                              {apt.patient?.prenom} {apt.patient?.nom}
-                            </button>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <span className={`px-1 py-0.5 rounded text-xs ${
-                              apt.type_rdv === 'visite' ? 'bg-blue-200 text-blue-800' : 'bg-green-200 text-green-800'
-                            }`}>
-                              {apt.type_rdv === 'visite' ? 'V' : 'C'}
-                            </span>
-                            {apt.salle && (
-                              <span className="px-1 py-0.5 rounded text-xs bg-purple-200 text-purple-800">
-                                {apt.salle === 'salle1' ? 'S1' : 'S2'}
+                    <div 
+                      key={`${date}-${time}`} 
+                      className={`p-1 border-r border-gray-100 last:border-r-0 min-h-[60px] cursor-pointer transition-colors ${getSlotDensityColor(appointments)}`}
+                      onClick={() => !isSlotFull && handleSlotClick(date, time)}
+                      onMouseEnter={() => setHoveredSlot({ date, time, appointments })}
+                      onMouseLeave={() => setHoveredSlot(null)}
+                      title={appointments.length === 0 ? 'Cliquer pour nouveau RDV' : `${appointments.length}/3 RDV`}
+                    >
+                      {/* Appointments dans le créneau (max 3) */}
+                      <div className="space-y-1">
+                        {appointments.slice(0, 3).map((apt, index) => (
+                          <div
+                            key={apt.id}
+                            className={`text-xs p-1 rounded border cursor-pointer hover:shadow-sm transition-all ${getStatusColor(apt.statut)}`}
+                            onDoubleClick={() => handleAppointmentDoubleClick(apt)}
+                            onContextMenu={(e) => handleRightClick(e, apt)}
+                            title={`Double-click: Modifier | Right-click: Menu`}
+                          >
+                            <div className="truncate">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onViewPatient(apt.patient_id);
+                                }}
+                                className="font-medium text-gray-900 hover:text-primary-600 transition-colors cursor-pointer underline"
+                              >
+                                {apt.patient?.prenom} {apt.patient?.nom}
+                              </button>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <span className={`px-1 py-0.5 rounded text-xs ${
+                                apt.type_rdv === 'visite' ? 'bg-blue-200 text-blue-800' : 'bg-green-200 text-green-800'
+                              }`}>
+                                {apt.type_rdv === 'visite' ? 'V' : 'C'}
                               </span>
-                            )}
+                              {apt.salle && (
+                                <span className="px-1 py-0.5 rounded text-xs bg-purple-200 text-purple-800">
+                                  {apt.salle === 'salle1' ? 'S1' : 'S2'}
+                                </span>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                        
+                        {/* Indicateur si plus de 3 RDV */}
+                        {appointments.length > 3 && (
+                          <div className="text-xs text-gray-500 font-medium">
+                            +{appointments.length - 3} autres...
+                          </div>
+                        )}
+                        
+                        {/* Indicateur créneau libre */}
+                        {appointments.length === 0 && (
+                          <div className="text-xs text-gray-400 italic">
+                            Cliquer pour RDV
+                          </div>
+                        )}
+                        
+                        {/* Indicateur places restantes */}
+                        {appointments.length > 0 && appointments.length < 3 && (
+                          <div className="text-xs text-gray-500">
+                            {3 - appointments.length} place{3 - appointments.length > 1 ? 's' : ''} libre{3 - appointments.length > 1 ? 's' : ''}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
@@ -729,6 +835,50 @@ const WeekView = ({ weekData, onStatusUpdate, onRoomAssignment, onEdit, onDelete
         </div>
       </div>
 
+      {/* Tooltip Hover */}
+      {hoveredSlot && (
+        <div className="fixed bg-black text-white text-sm p-2 rounded shadow-lg z-50 pointer-events-none"
+             style={{ 
+               left: '50%', 
+               top: '50%', 
+               transform: 'translate(-50%, -50%)'
+             }}>
+          <div className="font-medium">{hoveredSlot.date} à {hoveredSlot.time}</div>
+          <div>{hoveredSlot.appointments.length}/3 RDV programmés</div>
+          {hoveredSlot.appointments.length === 0 && (
+            <div className="text-green-300">Créneau libre - Cliquer pour nouveau RDV</div>
+          )}
+        </div>
+      )}
+
+      {/* Menu Contextuel */}
+      {contextMenu.show && (
+        <div 
+          className="fixed bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-2"
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+        >
+          <button
+            onClick={() => handleContextMenuAction('edit')}
+            className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
+          >
+            ✏️ Modifier
+          </button>
+          <button
+            onClick={() => handleContextMenuAction('duplicate')}
+            className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
+          >
+            📋 Dupliquer
+          </button>
+          <hr className="my-1" />
+          <button
+            onClick={() => handleContextMenuAction('delete')}
+            className="w-full text-left px-4 py-2 hover:bg-red-50 text-sm text-red-600"
+          >
+            🗑️ Supprimer
+          </button>
+        </div>
+      )}
+
       {/* Week Summary */}
       <div className="p-4 border-t border-gray-200 bg-gray-50">
         <div className="flex items-center justify-between text-sm">
@@ -737,20 +887,16 @@ const WeekView = ({ weekData, onStatusUpdate, onRoomAssignment, onEdit, onDelete
           </div>
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded bg-blue-100 border border-blue-200"></div>
-              <span className="text-gray-600">Programmé</span>
+              <div className="w-3 h-3 rounded bg-green-50 border border-green-200"></div>
+              <span className="text-gray-600">Libre</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded bg-green-100 border border-green-200"></div>
-              <span className="text-gray-600">Attente</span>
+              <div className="w-3 h-3 rounded bg-orange-50 border border-orange-200"></div>
+              <span className="text-gray-600">Normal (1-2)</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded bg-yellow-100 border border-yellow-200"></div>
-              <span className="text-gray-600">En cours</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded bg-gray-100 border border-gray-200"></div>
-              <span className="text-gray-600">Terminé</span>
+              <div className="w-3 h-3 rounded bg-red-50 border border-red-200"></div>
+              <span className="text-gray-600">Saturé (3)</span>
             </div>
           </div>
         </div>
