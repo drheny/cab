@@ -55,6 +55,35 @@ const Calendar = ({ user }) => {
 
   const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
+  const resetForm = () => {
+    setFormData({
+      patient_id: '',
+      date: selectedDate,
+      heure: '',
+      type_rdv: 'visite',
+      motif: '',
+      notes: ''
+    });
+    setSelectedAppointment(null);
+  };
+
+  const openModal = (appointment = null) => {
+    if (appointment) {
+      setSelectedAppointment(appointment);
+      setFormData({
+        patient_id: appointment.patient_id,
+        date: appointment.date,
+        heure: appointment.heure,
+        type_rdv: appointment.type_rdv,
+        motif: appointment.motif || '',
+        notes: appointment.notes || ''
+      });
+    } else {
+      resetForm();
+    }
+    setShowModal(true);
+  };
+
   useEffect(() => {
     fetchData();
     
