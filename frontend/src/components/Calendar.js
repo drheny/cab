@@ -612,7 +612,7 @@ const WeekView = ({ weekData, onStatusUpdate, onRoomAssignment, onEdit, onDelete
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                viewPatientDetails(apt.patient_id);
+                                onViewPatient(apt.patient_id);
                               }}
                               className="font-medium text-gray-900 hover:text-primary-600 transition-colors cursor-pointer underline"
                             >
