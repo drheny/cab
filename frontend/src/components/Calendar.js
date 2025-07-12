@@ -987,4 +987,298 @@ const AppointmentCard = ({
   );
 };
 
+// Modal de rendez-vous
+const AppointmentModal = ({ 
+  isOpen, 
+  onClose, 
+  appointment, 
+  patients, 
+  formData, 
+  setFormData, 
+  onSave, 
+  onOpenPatientModal 
+}) => {
+  const [isNewPatient, setIsNewPatient] = useState(false);
+  const [patientSearch, setPatientSearch] = useState('');
+  const [filteredPatients, setFilteredPatients] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [newPatientData, setNewPatientData] = useState({
+    nom: '',
+    prenom: '',
+    telephone: ''
+  });
+
+  useEffect(() => {
+    if (isOpen && appointment) {
+      // Si on modifie un appointment existant, trouver le nom du patient
+      const patient = patients.find(p => p.id === appointment.patient_id);
+      if (patient) {
+        setPatientSearch(`${patient.prenom} ${patient.nom}`);
+        setIsNewPatient(false);
+      }
+    } else if (isOpen) {
+      // Nouveau RDV
+      setPatientSearch('');
+      setIsNewPatient(false);
+      setNewPatientData({ nom: '', prenom: '', telephone: '' });
+    }
+  }, [isOpen, appointment, patients]);
+
+  useEffect(() => {
+    if (patientSearch && !isNewPatient) {
+      const filtered = patients.filter(patient =>
+        `${patient.prenom} ${patient.nom}`.toLowerCase().includes(patientSearch.toLowerCase()) ||
+        `${patient.nom} ${patient.prenom}`.toLowerCase().includes(patientSearch.toLowerCase())
+      );
+      setFilteredPatients(filtered);
+      setShowSuggestions(filtered.length > 0 && patientSearch.length > 1);
+    } else {
+      setFilteredPatients([]);
+      setShowSuggestions(false);
+    }
+  }, [patientSearch, patients, isNewPatient]);
+
+  const handlePatientSelect = (patient) => {
+    setPatientSearch(`${patient.prenom} ${patient.nom}`);
+    setFormData({ ...formData, patient_id: patient.id });
+    setShowSuggestions(false);
+  };
+
+  const handleNewPatientToggle = (checked) => {
+    setIsNewPatient(checked);
+    if (checked) {
+      setPatientSearch('');
+      setFormData({ ...formData, patient_id: '' });
+      setShowSuggestions(false);
+    } else {
+      setNewPatientData({ nom: '', prenom: '', telephone: '' });
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (isNewPatient) {
+      // Créer d'abord le nouveau patient
+      try {
+        const patientData = {
+          id: Date.now().toString(),
+          nom: newPatientData.nom,
+          prenom: newPatientData.prenom,
+          telephone: newPatientData.telephone,
+          date_naissance: '',
+          adresse: '',
+          pere: { nom: '', telephone: '', fonction: '' },
+          mere: { nom: '', telephone: '', fonction: '' },
+          numero_whatsapp: newPatientData.telephone,
+          notes: '',
+          antecedents: '',
+          consultations: []
+        };
+        
+        const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+        await axios.post(`${API_BASE_URL}/api/patients`, patientData);
+        
+        // Mettre à jour le formData avec le nouveau patient
+        setFormData({ ...formData, patient_id: patientData.id });
+        
+        // Créer le RDV avec le nouveau patient
+        const updatedFormData = { ...formData, patient_id: patientData.id };
+        await axios.post(`${API_BASE_URL}/api/appointments`, updatedFormData);
+        
+        toast.success('Patient et rendez-vous créés avec succès');
+        onClose();
+        // Refresh la page pour recharger les données
+        window.location.reload();
+        
+      } catch (error) {
+        console.error('Error creating patient and appointment:', error);
+        toast.error('Erreur lors de la création');
+      }
+    } else {
+      // RDV normal
+      onSave();
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-6">
+            {appointment ? 'Modifier le rendez-vous' : 'Nouveau rendez-vous'}
+          </h2>
+
+          <form onSubmit={handleSubmit}>
+            <div className="space-y-4">
+              {/* Case Nouveau Patient */}
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="newPatient"
+                  checked={isNewPatient}
+                  onChange={(e) => handleNewPatientToggle(e.target.checked)}
+                  className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500"
+                />
+                <label htmlFor="newPatient" className="ml-2 text-sm font-medium text-gray-700">
+                  Nouveau patient
+                </label>
+              </div>
+
+              {/* Patient Selection ou Nouveau Patient */}
+              {!isNewPatient ? (
+                <div className="relative">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Patient</label>
+                  <input
+                    type="text"
+                    value={patientSearch}
+                    onChange={(e) => setPatientSearch(e.target.value)}
+                    onFocus={() => setShowSuggestions(filteredPatients.length > 0)}
+                    className="input-field"
+                    placeholder="Tapez le nom du patient..."
+                    required={!isNewPatient}
+                  />
+                  
+                  {/* Suggestions dropdown */}
+                  {showSuggestions && (
+                    <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
+                      {filteredPatients.map((patient) => (
+                        <button
+                          key={patient.id}
+                          type="button"
+                          onClick={() => handlePatientSelect(patient)}
+                          className="w-full text-left px-3 py-2 hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
+                        >
+                          <div className="font-medium text-gray-900">
+                            {patient.prenom} {patient.nom}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {patient.telephone} {patient.date_naissance && `• ${patient.date_naissance}`}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* Champs Nouveau Patient */
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <h3 className="text-sm font-medium text-blue-900 mb-3">Informations du nouveau patient</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Nom</label>
+                      <input
+                        type="text"
+                        value={newPatientData.nom}
+                        onChange={(e) => setNewPatientData({...newPatientData, nom: e.target.value})}
+                        className="input-field"
+                        required={isNewPatient}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
+                      <input
+                        type="text"
+                        value={newPatientData.prenom}
+                        onChange={(e) => setNewPatientData({...newPatientData, prenom: e.target.value})}
+                        className="input-field"
+                        required={isNewPatient}
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
+                    <input
+                      type="tel"
+                      value={newPatientData.telephone}
+                      onChange={(e) => setNewPatientData({...newPatientData, telephone: e.target.value})}
+                      className="input-field"
+                      placeholder="216xxxxxxxx"
+                      required={isNewPatient}
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                <input
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) => setFormData({...formData, date: e.target.value})}
+                  className="input-field"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Heure</label>
+                <input
+                  type="time"
+                  value={formData.heure}
+                  onChange={(e) => setFormData({...formData, heure: e.target.value})}
+                  className="input-field"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Type de RDV</label>
+                <select
+                  value={formData.type_rdv}
+                  onChange={(e) => setFormData({...formData, type_rdv: e.target.value})}
+                  className="input-field"
+                >
+                  <option value="visite">Visite payante</option>
+                  <option value="controle">Contrôle gratuit</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Motif</label>
+                <input
+                  type="text"
+                  value={formData.motif}
+                  onChange={(e) => setFormData({...formData, motif: e.target.value})}
+                  className="input-field"
+                  placeholder="Motif de la consultation"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <textarea
+                  value={formData.notes}
+                  onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                  className="input-field"
+                  rows="3"
+                  placeholder="Notes supplémentaires"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                type="button"
+                onClick={onClose}
+                className="btn-outline"
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                className="btn-primary"
+              >
+                {appointment ? 'Modifier' : 'Créer'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default Calendar;
