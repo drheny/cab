@@ -29,6 +29,11 @@ const Dashboard = ({ user }) => {
     duree_attente_moyenne: 0
   });
   const [loading, setLoading] = useState(true);
+  
+  // Patient modal states
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [showPatientModal, setShowPatientModal] = useState(false);
+  
   const [messages, setMessages] = useState([
     {
       id: 1,
