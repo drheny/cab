@@ -265,6 +265,48 @@ const Calendar = ({ user }) => {
     });
   };
 
+  // Sort appointments by status priority for list view
+  const sortedAppointments = useMemo(() => {
+    if (!appointments) return [];
+    
+    const statusOrder = {
+      'programme': 1,
+      'attente': 2, 
+      'en_cours': 3,
+      'retard': 4,
+      'absent': 5,
+      'termine': 6
+    };
+    
+    return [...appointments].sort((a, b) => {
+      // First sort by status priority
+      const statusDiff = (statusOrder[a.statut] || 0) - (statusOrder[b.statut] || 0);
+      if (statusDiff !== 0) return statusDiff;
+      
+      // Then by time
+      return a.heure.localeCompare(b.heure);
+    });
+  }, [appointments]);
+
+  const groupedAppointments = useMemo(() => {
+    const groups = {
+      programme: [],
+      attente: [],
+      en_cours: [],
+      retard: [],
+      absent: [],
+      termine: []
+    };
+    
+    sortedAppointments.forEach(apt => {
+      if (groups[apt.statut]) {
+        groups[apt.statut].push(apt);
+      }
+    });
+    
+    return groups;
+  }, [sortedAppointments]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
