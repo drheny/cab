@@ -177,6 +177,17 @@ const Calendar = ({ user }) => {
     }
   };
 
+  const viewPatientDetails = async (patientId) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/patients/${patientId}`);
+      setSelectedPatient(response.data);
+      setShowPatientModal(true);
+    } catch (error) {
+      console.error('Error fetching patient details:', error);
+      toast.error('Erreur lors du chargement des détails du patient');
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'absent': return 'bg-gray-100 text-gray-800';
