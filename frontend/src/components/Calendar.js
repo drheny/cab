@@ -785,10 +785,17 @@ const WeekView = ({ weekData, onStatusUpdate, onRoomAssignment, onEdit, onDelete
                         {appointments.slice(0, 3).map((apt, index) => (
                           <div
                             key={apt.id}
-                            className={`text-xs p-1 rounded border cursor-pointer hover:shadow-sm transition-all ${getStatusColor(apt.statut)}`}
-                            onDoubleClick={() => handleAppointmentDoubleClick(apt)}
-                            onContextMenu={(e) => handleRightClick(e, apt)}
-                            title={`Double-click: Modifier | Right-click: Menu`}
+                            className={`text-xs p-1 rounded border cursor-pointer hover:shadow-sm transition-all relative ${getStatusColor(apt.statut)}`}
+                            onDoubleClick={(e) => {
+                              e.stopPropagation();
+                              handleAppointmentDoubleClick(apt);
+                            }}
+                            onContextMenu={(e) => {
+                              e.stopPropagation();
+                              handleRightClick(e, apt);
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            title={`${apt.patient?.prenom} ${apt.patient?.nom} - Double-click: Modifier | Right-click: Menu`}
                           >
                             <div className="truncate">
                               <button
