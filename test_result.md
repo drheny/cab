@@ -63,6 +63,85 @@
 
 **CALENDAR MODULE STATUS: PRODUCTION READY - ALL REQUIREMENTS FULFILLED**
 
+### Calendar Rectifications Testing ✅ COMPLETED
+**Status:** ALL CALENDAR RECTIFICATIONS TESTS PASSED - Both New Features Fully Validated
+
+**Test Results Summary (2025-07-12 - Calendar Rectifications Testing):**
+✅ **Clickable Patient Names** - Patient names are clickable and underlined in both List and Week views
+✅ **New Tab Navigation** - Clicking patient names correctly opens patient details in new tab with proper URL
+✅ **Updated Statistics Card** - 4th statistics card now shows "RDV restants" instead of "Présence"
+✅ **Clock Icon Implementation** - 4th card uses Clock icon (orange colored) instead of BarChart3
+✅ **Correct Calculation** - "RDV restants" shows count of appointments with "programme" + "retard" statuses
+✅ **Complete Interface Functionality** - All other calendar features remain working correctly
+
+**Detailed Test Results:**
+
+**RECTIFICATION 1 - Clickable Patient Names: ✅ FULLY WORKING**
+- ✅ **List View**: Patient names are clickable with underline styling and hover effects
+- ✅ **Week View**: Patient names are clickable with underline styling and hover effects  
+- ✅ **New Tab Navigation**: Clicking patient names opens patient details in new tab
+- ✅ **Correct URL**: New tabs navigate to `/patients?patient={patient_id}` format
+- ✅ **Multiple Clicks**: Tested multiple patient name clicks - all working consistently
+- ✅ **Visual Styling**: Patient names appear underlined and have hover color transitions
+
+**RECTIFICATION 2 - Updated Statistics Card: ✅ FULLY WORKING**
+- ✅ **4th Statistics Card**: Now displays "RDV restants" instead of "Présence"
+- ✅ **Clock Icon**: Uses Clock icon (orange colored) instead of BarChart3 icon
+- ✅ **Correct Calculation**: Shows count of 2 (programme + retard statuses)
+- ✅ **No "Présence" Text**: Confirmed "Présence" text completely removed
+- ✅ **Proper Layout**: 4th card maintains same styling and layout as other cards
+- ✅ **Real-time Data**: Count updates correctly based on appointment statuses
+
+**Statistics Cards Verification:**
+1. ✅ **Total RDV**: 4 (with Calendar icon)
+2. ✅ **Visites**: 2 (with User icon) 
+3. ✅ **Contrôles**: 2 (with CheckCircle icon)
+4. ✅ **RDV restants**: 2 (with Clock icon) - NEW IMPLEMENTATION
+
+**Complete Interface Testing Results:**
+- ✅ **View Toggle**: Liste/Semaine buttons working correctly
+- ✅ **Other Statistics**: Total RDV, Visites, Contrôles cards unchanged and working
+- ✅ **Appointment Interactions**: Status changes, room assignments working
+- ✅ **Navigation**: Date navigation and calendar functionality intact
+- ✅ **Modal Functionality**: Nouveau RDV modal working correctly
+- ✅ **All Existing Features**: No regressions detected in existing functionality
+
+**Navigation Testing Results:**
+- ✅ **Patient Details Navigation**: Clicking patient names opens correct patient page
+- ✅ **New Tab Functionality**: New tabs open properly without affecting main calendar
+- ✅ **URL Parameters**: Patient parameter correctly included in URL
+- ✅ **Multiple Navigation**: Multiple patient clicks work consistently
+
+**CALENDAR RECTIFICATIONS STATUS: PRODUCTION READY AND FULLY FUNCTIONAL**
+Both rectifications have been successfully implemented and tested. The clickable patient names feature works perfectly in both views, and the updated statistics card correctly shows "RDV restants" with the Clock icon and proper calculation. All existing functionality remains intact with no regressions detected.
+
+**Testing Agent → Main Agent (2025-07-12 - Calendar Rectifications Testing):**
+Comprehensive testing of Calendar rectifications completed successfully. Both requested features have been thoroughly validated:
+
+✅ **Clickable Patient Names Implementation:**
+- Patient names in both List view and Week view are properly clickable with underline styling
+- Clicking patient names successfully opens patient details in new tab
+- New tab navigation works correctly with proper URL format (/patients?patient={patient_id})
+- Tested multiple patient name clicks - all working consistently
+- Visual styling is appropriate with underline and hover effects
+
+✅ **Updated Statistics Card Implementation:**
+- 4th statistics card successfully changed from "Présence" to "RDV restants"
+- Clock icon properly implemented (orange colored) replacing BarChart3
+- Calculation is correct: shows count of appointments with "programme" + "retard" statuses (2 appointments)
+- "Présence" text completely removed from interface
+- Card maintains consistent styling with other statistics cards
+
+✅ **Complete Interface Verification:**
+- All other calendar functionality remains working correctly
+- View toggle (Liste/Semaine) working properly
+- Other statistics cards (Total RDV, Visites, Contrôles) unchanged and functional
+- Appointment interactions (status changes, room assignments) working
+- No regressions detected in existing features
+
+**BOTH CALENDAR RECTIFICATIONS: FULLY IMPLEMENTED AND PRODUCTION READY**
+All requirements from the review request have been successfully validated. The Calendar interface now includes both clickable patient names and the updated "RDV restants" statistics card as specified.
+
 ### Modal RDV Testing After Code Cleanup ✅ COMPLETED
 **Status:** ALL MODAL RDV TESTS PASSED - Updated Modal Functionality Fully Validated
 
