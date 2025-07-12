@@ -85,10 +85,11 @@ class Appointment(BaseModel):
     date: str
     heure: str
     type_rdv: str  # "visite" ou "controle"
-    statut: str = "absent"  # absent, attente, en_cours, termine
-    salle: str = ""  # salle1, salle2
+    statut: str = "programme"  # programme, attente, en_cours, termine, absent, retard
+    salle: str = ""  # salle1, salle2, ""
     motif: str = ""
     notes: str = ""
+    paye: bool = False  # statut de paiement
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
 
