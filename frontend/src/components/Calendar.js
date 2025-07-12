@@ -786,4 +786,205 @@ const WeekView = ({ weekData, onStatusUpdate, onRoomAssignment, onEdit, onDelete
   );
 };
 
+// Composant pour les sections d'appointments
+const AppointmentSection = ({ 
+  title, 
+  appointments, 
+  onStatusUpdate, 
+  onRoomAssignment, 
+  onEdit, 
+  onDelete, 
+  isCompleted = false 
+}) => {
+  return (
+    <div className={`bg-white rounded-xl shadow-sm border border-gray-200 ${isCompleted ? 'opacity-75' : ''}`}>
+      <div className="p-4 border-b border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+        <p className="text-sm text-gray-600">{appointments.length} rendez-vous</p>
+      </div>
+      
+      <div className="divide-y divide-gray-100">
+        {appointments.map((appointment) => (
+          <AppointmentCard
+            key={appointment.id}
+            appointment={appointment}
+            onStatusUpdate={onStatusUpdate}
+            onRoomAssignment={onRoomAssignment}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            isCompleted={isCompleted}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Composant pour une carte de rendez-vous
+const AppointmentCard = ({ 
+  appointment, 
+  onStatusUpdate, 
+  onRoomAssignment, 
+  onEdit, 
+  onDelete, 
+  isCompleted 
+}) => {
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'programme': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'attente': return 'bg-green-100 text-green-800 border-green-200';
+      case 'en_cours': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'termine': return 'bg-gray-100 text-gray-600 border-gray-200';
+      case 'absent': return 'bg-red-100 text-red-800 border-red-200';
+      case 'retard': return 'bg-orange-100 text-orange-800 border-orange-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const getWhatsAppLink = (numero) => {
+    if (!numero) return '#';
+    const cleanNumber = numero.replace(/\D/g, '');
+    return `https://wa.me/${cleanNumber}`;
+  };
+
+  const cycleStatus = () => {
+    const statusCycle = {
+      'programme': 'attente',
+      'attente': 'en_cours', 
+      'en_cours': 'termine',
+      'termine': 'programme',
+      'absent': 'programme',
+      'retard': 'attente'
+    };
+    onStatusUpdate(appointment.id, statusCycle[appointment.statut] || 'programme');
+  };
+
+  return (
+    <div className="p-4 hover:bg-gray-50 transition-colors">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4 flex-1">
+          {/* Time */}
+          <div className="flex items-center space-x-2 min-w-0">
+            <Clock className="w-4 h-4 text-gray-400" />
+            <span className="font-semibold text-gray-900">{appointment.heure}</span>
+          </div>
+          
+          {/* Patient Info */}
+          <div className="flex-1 min-w-0">
+            <div className="font-medium text-gray-900">
+              {appointment.patient?.prenom} {appointment.patient?.nom}
+            </div>
+            <div className="text-sm text-gray-500 truncate">
+              {appointment.motif || 'Consultation'}
+            </div>
+          </div>
+          
+          {/* Badges */}
+          <div className="flex items-center space-x-2">
+            {/* Type Badge */}
+            <span className={`px-2 py-1 rounded text-xs font-medium border ${
+              appointment.type_rdv === 'visite' 
+                ? 'bg-blue-50 text-blue-700 border-blue-200' 
+                : 'bg-green-50 text-green-700 border-green-200'
+            }`}>
+              {appointment.type_rdv === 'visite' ? 'V' : 'C'}
+            </span>
+            
+            {/* Status Badge - Clickable */}
+            <button
+              onClick={cycleStatus}
+              className={`px-2 py-1 rounded text-xs font-medium border transition-all hover:shadow-sm ${getStatusColor(appointment.statut)}`}
+            >
+              {appointment.statut === 'programme' ? 'Programmé' :
+               appointment.statut === 'attente' ? 'Attente' :
+               appointment.statut === 'en_cours' ? 'En cours' :
+               appointment.statut === 'termine' ? 'Terminé' :
+               appointment.statut === 'absent' ? 'Absent' :
+               appointment.statut === 'retard' ? 'Retard' : 'Programmé'}
+            </button>
+            
+            {/* Payment Badge */}
+            <span className={`px-2 py-1 rounded text-xs font-medium border ${
+              appointment.paye 
+                ? 'bg-green-50 text-green-700 border-green-200' 
+                : 'bg-red-50 text-red-700 border-red-200'
+            }`}>
+              {appointment.paye ? 'Payé' : 'Non payé'}
+            </span>
+            
+            {/* Room Badge */}
+            {appointment.salle && (
+              <span className="px-2 py-1 rounded text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">
+                {appointment.salle === 'salle1' ? 'Salle 1' : 'Salle 2'}
+              </span>
+            )}
+          </div>
+        </div>
+        
+        {/* Actions */}
+        <div className="flex items-center space-x-2 ml-4">
+          {/* WhatsApp */}
+          {appointment.patient?.lien_whatsapp && (
+            <a
+              href={appointment.patient.lien_whatsapp}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+              title="WhatsApp"
+            >
+              <MessageCircle className="w-4 h-4" />
+            </a>
+          )}
+          
+          {/* Room Assignment */}
+          {!isCompleted && (
+            <div className="flex space-x-1">
+              <button
+                onClick={() => onRoomAssignment(appointment.id, 'salle1')}
+                className={`px-2 py-1 text-xs rounded transition-colors ${
+                  appointment.salle === 'salle1' 
+                    ? 'bg-purple-100 text-purple-800' 
+                    : 'bg-gray-100 text-gray-600 hover:bg-purple-50'
+                }`}
+                title="Affecter à Salle 1"
+              >
+                S1
+              </button>
+              <button
+                onClick={() => onRoomAssignment(appointment.id, 'salle2')}
+                className={`px-2 py-1 text-xs rounded transition-colors ${
+                  appointment.salle === 'salle2' 
+                    ? 'bg-purple-100 text-purple-800' 
+                    : 'bg-gray-100 text-gray-600 hover:bg-purple-50'
+                }`}
+                title="Affecter à Salle 2"
+              >
+                S2
+              </button>
+            </div>
+          )}
+          
+          {/* Edit */}
+          <button
+            onClick={() => onEdit(appointment)}
+            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+            title="Modifier"
+          >
+            <Edit className="w-4 h-4" />
+          </button>
+          
+          {/* Delete */}
+          <button
+            onClick={() => onDelete(appointment.id)}
+            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            title="Supprimer"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default Calendar;
