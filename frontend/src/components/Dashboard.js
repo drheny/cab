@@ -312,6 +312,93 @@ const Dashboard = ({ user }) => {
           </div>
         </div>
       </div>
+
+      {/* Patient Details Modal */}
+      {showPatientModal && selectedPatient && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-900">
+                  Fiche Patient - {selectedPatient.prenom} {selectedPatient.nom}
+                </h2>
+                <button
+                  onClick={() => setShowPatientModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <span className="sr-only">Fermer</span>
+                  ×
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Informations personnelles</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-sm font-medium text-gray-700">Nom complet:</span>
+                      <p className="text-gray-900">{selectedPatient.prenom} {selectedPatient.nom}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-700">Âge:</span>
+                      <p className="text-gray-900">{selectedPatient.age || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-700">Date de naissance:</span>
+                      <p className="text-gray-900">{selectedPatient.date_naissance || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-700">Adresse:</span>
+                      <p className="text-gray-900">{selectedPatient.adresse || 'N/A'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Parents</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-medium text-gray-700">Père</h4>
+                      <p className="text-gray-900">{selectedPatient.pere?.nom || 'N/A'}</p>
+                      <p className="text-sm text-gray-600">{selectedPatient.pere?.telephone || 'N/A'}</p>
+                      <p className="text-sm text-gray-600">{selectedPatient.pere?.fonction || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-gray-700">Mère</h4>
+                      <p className="text-gray-900">{selectedPatient.mere?.nom || 'N/A'}</p>
+                      <p className="text-sm text-gray-600">{selectedPatient.mere?.telephone || 'N/A'}</p>
+                      <p className="text-sm text-gray-600">{selectedPatient.mere?.fonction || 'N/A'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="md:col-span-2">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Informations médicales</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-sm font-medium text-gray-700">Notes:</span>
+                      <p className="text-gray-900 mt-1">{selectedPatient.notes || 'Aucune note'}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-700">Antécédents:</span>
+                      <p className="text-gray-900 mt-1">{selectedPatient.antecedents || 'Aucun antécédent'}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={() => setShowPatientModal(false)}
+                  className="btn-outline"
+                >
+                  Fermer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
