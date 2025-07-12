@@ -29,10 +29,15 @@ const Calendar = ({ user }) => {
   const [appointments, setAppointments] = useState([]);
   const [patients, setPatients] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [viewMode, setViewMode] = useState('day'); // 'day' or 'week'
+  const [viewMode, setViewMode] = useState('list'); // 'list' or 'week'
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({});
   const [showModal, setShowModal] = useState(false);
+  const [showPatientModal, setShowPatientModal] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [weekData, setWeekData] = useState({ week_dates: [], appointments: [] });
+  
+  // Form states
   const [formData, setFormData] = useState({
     patient_id: '',
     date: '',
@@ -40,6 +45,12 @@ const Calendar = ({ user }) => {
     type_rdv: 'visite',
     motif: '',
     notes: ''
+  });
+  
+  const [newPatientData, setNewPatientData] = useState({
+    nom: '',
+    prenom: '',
+    telephone: ''
   });
 
   useEffect(() => {
