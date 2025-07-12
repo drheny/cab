@@ -367,6 +367,8 @@ def create_demo_data():
 
     # Demo appointments
     today = datetime.now()
+    tomorrow = today + timedelta(days=1)
+    
     demo_appointments = [
         {
             "id": "appt1",
@@ -377,7 +379,8 @@ def create_demo_data():
             "statut": "attente",
             "salle": "salle1",
             "motif": "Fièvre",
-            "notes": ""
+            "notes": "",
+            "paye": True
         },
         {
             "id": "appt2",
@@ -385,10 +388,11 @@ def create_demo_data():
             "date": today.strftime("%Y-%m-%d"),
             "heure": "10:30",
             "type_rdv": "controle",
-            "statut": "absent",
+            "statut": "programme",
             "salle": "",
             "motif": "Contrôle vaccination",
-            "notes": ""
+            "notes": "",
+            "paye": False
         },
         {
             "id": "appt3",
@@ -399,7 +403,44 @@ def create_demo_data():
             "statut": "termine",
             "salle": "salle2",
             "motif": "Consultation générale",
-            "notes": ""
+            "notes": "",
+            "paye": True
+        },
+        {
+            "id": "appt4",
+            "patient_id": "patient1",
+            "date": today.strftime("%Y-%m-%d"),
+            "heure": "15:30",
+            "type_rdv": "controle",
+            "statut": "programme",
+            "salle": "",
+            "motif": "Suivi vaccination",
+            "notes": "",
+            "paye": False
+        },
+        {
+            "id": "appt5",
+            "patient_id": "patient2",
+            "date": tomorrow.strftime("%Y-%m-%d"),
+            "heure": "09:30",
+            "type_rdv": "visite",
+            "statut": "programme",
+            "salle": "",
+            "motif": "Consultation de routine",
+            "notes": "",
+            "paye": False
+        },
+        {
+            "id": "appt6",
+            "patient_id": "patient3",
+            "date": tomorrow.strftime("%Y-%m-%d"),
+            "heure": "11:00",
+            "type_rdv": "controle",
+            "statut": "programme",
+            "salle": "",
+            "motif": "Contrôle croissance",
+            "notes": "",
+            "paye": False
         }
     ]
 
