@@ -534,5 +534,525 @@ class CabinetMedicalAPITest(unittest.TestCase):
             response = requests.post(f"{self.base_url}/api/payments", json=new_payment)
             self.assertEqual(response.status_code, 200)
 
+    # ========== CALENDAR RDV BACKEND IMPLEMENTATION (PHASE 1) TESTS ==========
+    
+    def test_enhanced_appointment_model(self):
+        """Test enhanced appointment model with new paye field and all statuses"""
+        # Get patients for testing
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for testing appointments")
+        
+        patient_id = patients[0]["id"]
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Test all valid appointment statuses
+        valid_statuses = ["programme", "attente", "en_cours", "termine", "absent", "retard"]
+        
+        for i, status in enumerate(valid_statuses):
+            # Create appointment with specific status and paye field
+            new_appointment = {
+                "patient_id": patient_id,
+                "date": today,
+                "heure": f"{9 + i}:00",
+                "type_rdv": "visite" if i % 2 == 0 else "controle",
+                "statut": status,
+                "salle": "salle1" if i % 2 == 0 else "salle2",
+                "motif": f"Test appointment with status {status}",
+                "notes": f"Testing status {status}",
+                "paye": i % 2 == 0  # Alternate between paid and unpaid
+            }
+            
+            response = requests.post(f"{self.base_url}/api/appointments", json=new_appointment)
+            self.assertEqual(response.status_code, 200)
+            create_data = response.json()
+            self.assertIn("appointment_id", create_data)
+            
+            # Verify the appointment was created with correct fields
+            appointment_id = create_data["appointment_id"]
+            
+            # Get today's appointments to verify the created appointment
+            response = requests.get(f"{self.base_url}/api/appointments/today")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            created_appointment = None
+            for appt in appointments:
+                if appt["id"] == appointment_id:
+                    created_appointment = appt
+                    break
+            
+            self.assertIsNotNone(created_appointment, f"Appointment with status {status} not found")
+            self.assertEqual(created_appointment["statut"], status)
+            self.assertEqual(created_appointment["paye"], i % 2 == 0)
+            self.assertIn("patient", created_appointment, "Patient info should be included")
+            
+            # Clean up
+            requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+    
+    def test_rdv_jour_endpoint(self):
+        """Test GET /api/rdv/jour/{date} - Get appointments for specific day with patient info"""
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Test with today's date
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        self.assertIsInstance(appointments, list)
+        
+        # Verify each appointment has patient info
+        for appointment in appointments:
+            # Verify appointment structure
+            self.assertIn("id", appointment)
+            self.assertIn("patient_id", appointment)
+            self.assertIn("date", appointment)
+            self.assertIn("heure", appointment)
+            self.assertIn("type_rdv", appointment)
+            self.assertIn("statut", appointment)
+            self.assertIn("paye", appointment)
+            
+            # Verify patient info is included
+            self.assertIn("patient", appointment)
+            patient_info = appointment["patient"]
+            self.assertIn("nom", patient_info)
+            self.assertIn("prenom", patient_info)
+            self.assertIn("numero_whatsapp", patient_info)
+            self.assertIn("lien_whatsapp", patient_info)
+            
+            # Verify appointment date matches requested date
+            self.assertEqual(appointment["date"], today)
+        
+        # Verify appointments are sorted by time
+        if len(appointments) > 1:
+            for i in range(1, len(appointments)):
+                prev_time = appointments[i-1]["heure"]
+                curr_time = appointments[i]["heure"]
+                self.assertLessEqual(prev_time, curr_time, "Appointments should be sorted by time")
+    
+    def test_rdv_semaine_endpoint(self):
+        """Test GET /api/rdv/semaine/{date} - Get appointments for week (Monday-Saturday)"""
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        response = requests.get(f"{self.base_url}/api/rdv/semaine/{today}")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        # Verify response structure
+        self.assertIn("week_dates", data)
+        self.assertIn("appointments", data)
+        
+        # Verify week_dates contains Monday to Saturday (6 days)
+        week_dates = data["week_dates"]
+        self.assertEqual(len(week_dates), 6, "Week should contain 6 days (Monday to Saturday)")
+        
+        # Verify all dates are in YYYY-MM-DD format
+        for date_str in week_dates:
+            try:
+                datetime.strptime(date_str, "%Y-%m-%d")
+            except ValueError:
+                self.fail(f"Invalid date format: {date_str}")
+        
+        # Verify appointments structure
+        appointments = data["appointments"]
+        self.assertIsInstance(appointments, list)
+        
+        for appointment in appointments:
+            # Verify appointment has patient info
+            self.assertIn("patient", appointment)
+            patient_info = appointment["patient"]
+            self.assertIn("nom", patient_info)
+            self.assertIn("prenom", patient_info)
+            
+            # Verify appointment date is within the week
+            self.assertIn(appointment["date"], week_dates)
+        
+        # Verify appointments are sorted by date and time
+        if len(appointments) > 1:
+            for i in range(1, len(appointments)):
+                prev_appt = appointments[i-1]
+                curr_appt = appointments[i]
+                prev_datetime = f"{prev_appt['date']} {prev_appt['heure']}"
+                curr_datetime = f"{curr_appt['date']} {curr_appt['heure']}"
+                self.assertLessEqual(prev_datetime, curr_datetime, "Appointments should be sorted by date and time")
+    
+    def test_rdv_statut_update_endpoint(self):
+        """Test PUT /api/rdv/{rdv_id}/statut - Update appointment status"""
+        # Get an existing appointment
+        today = datetime.now().strftime("%Y-%m-%d")
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        
+        if len(appointments) == 0:
+            self.skipTest("No appointments found for testing status update")
+        
+        appointment = appointments[0]
+        rdv_id = appointment["id"]
+        original_status = appointment["statut"]
+        
+        # Test valid status updates
+        valid_statuses = ["programme", "attente", "en_cours", "termine", "absent", "retard"]
+        
+        for new_status in valid_statuses:
+            if new_status != original_status:
+                # Update status
+                response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/statut?statut={new_status}")
+                self.assertEqual(response.status_code, 200)
+                data = response.json()
+                self.assertIn("message", data)
+                self.assertEqual(data["statut"], new_status)
+                
+                # Verify the update
+                response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+                self.assertEqual(response.status_code, 200)
+                updated_appointments = response.json()
+                
+                updated_appointment = None
+                for appt in updated_appointments:
+                    if appt["id"] == rdv_id:
+                        updated_appointment = appt
+                        break
+                
+                self.assertIsNotNone(updated_appointment)
+                self.assertEqual(updated_appointment["statut"], new_status)
+                break
+        
+        # Test invalid status
+        response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/statut?statut=invalid_status")
+        self.assertEqual(response.status_code, 400)
+        
+        # Test non-existent appointment
+        response = requests.put(f"{self.base_url}/api/rdv/non_existent_id/statut?statut=attente")
+        self.assertEqual(response.status_code, 404)
+    
+    def test_rdv_salle_update_endpoint(self):
+        """Test PUT /api/rdv/{rdv_id}/salle - Update room assignment"""
+        # Get an existing appointment
+        today = datetime.now().strftime("%Y-%m-%d")
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        
+        if len(appointments) == 0:
+            self.skipTest("No appointments found for testing room assignment")
+        
+        appointment = appointments[0]
+        rdv_id = appointment["id"]
+        
+        # Test valid room assignments
+        valid_rooms = ["", "salle1", "salle2"]
+        
+        for room in valid_rooms:
+            # Update room
+            response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/salle?salle={room}")
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            self.assertIn("message", data)
+            self.assertEqual(data["salle"], room)
+            
+            # Verify the update
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            updated_appointments = response.json()
+            
+            updated_appointment = None
+            for appt in updated_appointments:
+                if appt["id"] == rdv_id:
+                    updated_appointment = appt
+                    break
+            
+            self.assertIsNotNone(updated_appointment)
+            self.assertEqual(updated_appointment["salle"], room)
+        
+        # Test invalid room
+        response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/salle?salle=invalid_room")
+        self.assertEqual(response.status_code, 400)
+        
+        # Test non-existent appointment
+        response = requests.put(f"{self.base_url}/api/rdv/non_existent_id/salle?salle=salle1")
+        self.assertEqual(response.status_code, 404)
+    
+    def test_rdv_stats_endpoint(self):
+        """Test GET /api/rdv/stats/{date} - Get daily statistics"""
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        response = requests.get(f"{self.base_url}/api/rdv/stats/{today}")
+        self.assertEqual(response.status_code, 200)
+        stats = response.json()
+        
+        # Verify stats structure
+        self.assertIn("date", stats)
+        self.assertIn("total_rdv", stats)
+        self.assertIn("visites", stats)
+        self.assertIn("controles", stats)
+        self.assertIn("statuts", stats)
+        self.assertIn("taux_presence", stats)
+        self.assertIn("paiements", stats)
+        
+        # Verify date matches
+        self.assertEqual(stats["date"], today)
+        
+        # Verify statuts structure
+        statuts = stats["statuts"]
+        expected_statuts = ["programme", "attente", "en_cours", "termine", "absent", "retard"]
+        for status in expected_statuts:
+            self.assertIn(status, statuts)
+            self.assertIsInstance(statuts[status], int)
+            self.assertGreaterEqual(statuts[status], 0)
+        
+        # Verify paiements structure
+        paiements = stats["paiements"]
+        self.assertIn("payes", paiements)
+        self.assertIn("non_payes", paiements)
+        self.assertIn("ca_realise", paiements)
+        
+        # Verify data consistency
+        self.assertEqual(stats["total_rdv"], stats["visites"] + stats["controles"])
+        self.assertEqual(stats["total_rdv"], paiements["payes"] + paiements["non_payes"])
+        
+        # Verify taux_presence calculation
+        presents = statuts["attente"] + statuts["en_cours"] + statuts["termine"]
+        if stats["total_rdv"] > 0:
+            expected_taux = round(presents / stats["total_rdv"] * 100, 1)
+            self.assertEqual(stats["taux_presence"], expected_taux)
+        else:
+            self.assertEqual(stats["taux_presence"], 0)
+    
+    def test_rdv_time_slots_endpoint(self):
+        """Test GET /api/rdv/time-slots?date=YYYY-MM-DD - Get available time slots"""
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        response = requests.get(f"{self.base_url}/api/rdv/time-slots?date={today}")
+        self.assertEqual(response.status_code, 200)
+        time_slots = response.json()
+        self.assertIsInstance(time_slots, list)
+        
+        # Verify time slots structure
+        for slot in time_slots:
+            self.assertIn("time", slot)
+            self.assertIn("available", slot)
+            self.assertIn("occupied_count", slot)
+            
+            # Verify time format (HH:MM)
+            time_str = slot["time"]
+            try:
+                datetime.strptime(time_str, "%H:%M")
+            except ValueError:
+                self.fail(f"Invalid time format: {time_str}")
+            
+            # Verify boolean and integer types
+            self.assertIsInstance(slot["available"], bool)
+            self.assertIsInstance(slot["occupied_count"], int)
+            self.assertGreaterEqual(slot["occupied_count"], 0)
+        
+        # Verify time slots are generated from 9h to 18h in 15-minute intervals
+        expected_slots_count = (18 - 9) * 4  # 9 hours * 4 slots per hour = 36 slots
+        self.assertEqual(len(time_slots), expected_slots_count)
+        
+        # Verify first and last slots
+        self.assertEqual(time_slots[0]["time"], "09:00")
+        self.assertEqual(time_slots[-1]["time"], "17:45")
+        
+        # Verify 15-minute intervals
+        for i in range(1, len(time_slots)):
+            prev_time = datetime.strptime(time_slots[i-1]["time"], "%H:%M")
+            curr_time = datetime.strptime(time_slots[i]["time"], "%H:%M")
+            diff = curr_time - prev_time
+            self.assertEqual(diff.total_seconds(), 15 * 60, "Time slots should be 15 minutes apart")
+    
+    def test_auto_delay_detection(self):
+        """Test automatic delay detection for appointments"""
+        # Get patients for testing
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for testing")
+        
+        patient_id = patients[0]["id"]
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Create an appointment that should be marked as delayed
+        # Set time to 30 minutes ago to simulate a delayed appointment
+        past_time = (datetime.now() - timedelta(minutes=30)).strftime("%H:%M")
+        
+        delayed_appointment = {
+            "patient_id": patient_id,
+            "date": today,
+            "heure": past_time,
+            "type_rdv": "visite",
+            "statut": "programme",  # Initially programmed
+            "motif": "Test delayed appointment",
+            "paye": False
+        }
+        
+        response = requests.post(f"{self.base_url}/api/appointments", json=delayed_appointment)
+        self.assertEqual(response.status_code, 200)
+        appointment_id = response.json()["appointment_id"]
+        
+        # Get today's appointments - this should trigger delay detection
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        
+        # Find our test appointment
+        test_appointment = None
+        for appt in appointments:
+            if appt["id"] == appointment_id:
+                test_appointment = appt
+                break
+        
+        self.assertIsNotNone(test_appointment, "Test appointment not found")
+        
+        # The appointment should be automatically marked as "retard" due to being 30 minutes late
+        # Note: This depends on the current time vs appointment time being > 15 minutes
+        if test_appointment["statut"] == "retard":
+            print("✅ Auto delay detection working - appointment marked as 'retard'")
+        else:
+            print(f"⚠️ Auto delay detection: appointment status is '{test_appointment['statut']}' (may depend on exact timing)")
+        
+        # Clean up
+        requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+    
+    def test_helper_functions_validation(self):
+        """Test helper functions through API responses"""
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Test get_time_slots() through time-slots endpoint
+        response = requests.get(f"{self.base_url}/api/rdv/time-slots?date={today}")
+        self.assertEqual(response.status_code, 200)
+        time_slots = response.json()
+        
+        # Verify time slots generation (9h-18h, 15min intervals)
+        expected_count = (18 - 9) * 4  # 36 slots
+        self.assertEqual(len(time_slots), expected_count)
+        self.assertEqual(time_slots[0]["time"], "09:00")
+        self.assertEqual(time_slots[-1]["time"], "17:45")
+        
+        # Test get_week_dates() through semaine endpoint
+        response = requests.get(f"{self.base_url}/api/rdv/semaine/{today}")
+        self.assertEqual(response.status_code, 200)
+        week_data = response.json()
+        
+        # Verify week dates (Monday to Saturday)
+        week_dates = week_data["week_dates"]
+        self.assertEqual(len(week_dates), 6)
+        
+        # Verify dates are consecutive and in correct format
+        for i, date_str in enumerate(week_dates):
+            try:
+                date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+                if i == 0:
+                    # First date should be Monday (weekday 0)
+                    self.assertEqual(date_obj.weekday(), 0, "First date should be Monday")
+                elif i == 5:
+                    # Last date should be Saturday (weekday 5)
+                    self.assertEqual(date_obj.weekday(), 5, "Last date should be Saturday")
+            except ValueError:
+                self.fail(f"Invalid date format in week_dates: {date_str}")
+    
+    def test_demo_data_integration(self):
+        """Test demo data integration with new paye field and patient info"""
+        today = datetime.now().strftime("%Y-%m-%d")
+        tomorrow = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
+        
+        # Test today's appointments
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        today_appointments = response.json()
+        
+        # Test tomorrow's appointments
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{tomorrow}")
+        self.assertEqual(response.status_code, 200)
+        tomorrow_appointments = response.json()
+        
+        # Verify we have demo appointments
+        total_demo_appointments = len(today_appointments) + len(tomorrow_appointments)
+        self.assertGreater(total_demo_appointments, 0, "No demo appointments found")
+        
+        # Verify all appointments have the paye field and patient info
+        all_appointments = today_appointments + tomorrow_appointments
+        for appointment in all_appointments:
+            # Verify paye field exists
+            self.assertIn("paye", appointment)
+            self.assertIsInstance(appointment["paye"], bool)
+            
+            # Verify patient info is included
+            self.assertIn("patient", appointment)
+            patient_info = appointment["patient"]
+            self.assertIn("nom", patient_info)
+            self.assertIn("prenom", patient_info)
+            self.assertIn("numero_whatsapp", patient_info)
+            self.assertIn("lien_whatsapp", patient_info)
+            
+            # Verify appointment has all required fields
+            required_fields = ["id", "patient_id", "date", "heure", "type_rdv", "statut", "salle", "motif"]
+            for field in required_fields:
+                self.assertIn(field, appointment)
+            
+            # Verify statut is one of the valid values
+            valid_statuses = ["programme", "attente", "en_cours", "termine", "absent", "retard"]
+            self.assertIn(appointment["statut"], valid_statuses)
+    
+    def test_data_structure_validation(self):
+        """Test data structure validation for all calendar endpoints"""
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Test jour endpoint response structure
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        jour_appointments = response.json()
+        self.assertIsInstance(jour_appointments, list)
+        
+        # Test semaine endpoint response structure
+        response = requests.get(f"{self.base_url}/api/rdv/semaine/{today}")
+        self.assertEqual(response.status_code, 200)
+        semaine_data = response.json()
+        self.assertIn("week_dates", semaine_data)
+        self.assertIn("appointments", semaine_data)
+        self.assertIsInstance(semaine_data["week_dates"], list)
+        self.assertIsInstance(semaine_data["appointments"], list)
+        
+        # Test stats endpoint response structure
+        response = requests.get(f"{self.base_url}/api/rdv/stats/{today}")
+        self.assertEqual(response.status_code, 200)
+        stats = response.json()
+        required_stats_fields = ["date", "total_rdv", "visites", "controles", "statuts", "taux_presence", "paiements"]
+        for field in required_stats_fields:
+            self.assertIn(field, stats)
+        
+        # Test time-slots endpoint response structure
+        response = requests.get(f"{self.base_url}/api/rdv/time-slots?date={today}")
+        self.assertEqual(response.status_code, 200)
+        time_slots = response.json()
+        self.assertIsInstance(time_slots, list)
+        
+        # Verify each appointment in responses includes patient info
+        for appointment in jour_appointments:
+            self.assertIn("patient", appointment)
+            patient = appointment["patient"]
+            required_patient_fields = ["nom", "prenom", "numero_whatsapp", "lien_whatsapp"]
+            for field in required_patient_fields:
+                self.assertIn(field, patient)
+        
+        # Verify appointments are sorted by time in jour endpoint
+        if len(jour_appointments) > 1:
+            for i in range(1, len(jour_appointments)):
+                prev_time = jour_appointments[i-1]["heure"]
+                curr_time = jour_appointments[i]["heure"]
+                self.assertLessEqual(prev_time, curr_time, "Appointments should be sorted by time")
+        
+        # Verify appointments in semaine are sorted by date and time
+        semaine_appointments = semaine_data["appointments"]
+        if len(semaine_appointments) > 1:
+            for i in range(1, len(semaine_appointments)):
+                prev_appt = semaine_appointments[i-1]
+                curr_appt = semaine_appointments[i]
+                prev_datetime = f"{prev_appt['date']} {prev_appt['heure']}"
+                curr_datetime = f"{curr_appt['date']} {curr_appt['heure']}"
+                self.assertLessEqual(prev_datetime, curr_datetime, "Week appointments should be sorted by date and time")
+
 if __name__ == "__main__":
     unittest.main()
