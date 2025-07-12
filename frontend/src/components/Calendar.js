@@ -33,7 +33,6 @@ const Calendar = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({});
   const [showModal, setShowModal] = useState(false);
-  const [showPatientModal, setShowPatientModal] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [weekData, setWeekData] = useState({ week_dates: [], appointments: [] });
   
@@ -45,12 +44,6 @@ const Calendar = ({ user }) => {
     type_rdv: 'visite',
     motif: '',
     notes: ''
-  });
-  
-  const [newPatientData, setNewPatientData] = useState({
-    nom: '',
-    prenom: '',
-    telephone: ''
   });
 
   const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
