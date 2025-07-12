@@ -532,7 +532,7 @@ const Calendar = ({ user }) => {
 };
 
 // Composant WeekView pour la vue semaine
-const WeekView = ({ weekData, onStatusUpdate, onRoomAssignment, onEdit, onDelete, selectedDate }) => {
+const WeekView = ({ weekData, onStatusUpdate, onRoomAssignment, onEdit, onDelete, onViewPatient, selectedDate }) => {
   const timeSlots = [];
   for (let hour = 9; hour < 18; hour++) {
     for (let minute = 0; minute < 60; minute += 15) {
