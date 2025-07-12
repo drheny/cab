@@ -53,17 +53,18 @@ const Calendar = ({ user }) => {
     telephone: ''
   });
 
+  const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+
   useEffect(() => {
     fetchData();
     
-    // Vérifier si on doit ouvrir le modal de nouveau RDV automatiquement
+    // Auto-open modal from Dashboard quick action
     const searchParams = new URLSearchParams(location.search);
     if (searchParams.get('action') === 'add') {
       openModal();
-      // Nettoyer l'URL
       window.history.replaceState({}, '', '/calendar');
     }
-  }, [selectedDate, location]);
+  }, [selectedDate, viewMode]);
 
   const fetchData = async () => {
     try {
