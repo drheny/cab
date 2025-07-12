@@ -164,12 +164,12 @@ const Dashboard = ({ user }) => {
           <span className="text-xs text-gray-500">{message.time}</span>
         </div>
         <p className="mt-1 text-sm text-gray-700">
-          <Link 
-            to={`/patients`} 
-            className="font-medium text-primary-600 hover:text-primary-800 underline"
+          <button 
+            onClick={() => viewPatientDetails(message.patient_id)}
+            className="font-medium text-primary-600 hover:text-primary-800 underline cursor-pointer"
           >
             {message.patient}
-          </Link>
+          </button>
           {" - " + message.message.replace(message.patient + " - ", "")}
         </p>
       </div>
