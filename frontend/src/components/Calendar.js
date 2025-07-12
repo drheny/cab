@@ -75,6 +75,16 @@ const Calendar = ({ user }) => {
     setShowModal(true);
   };
 
+  const openModalWithDateTime = (dateTime = {}) => {
+    resetForm();
+    setFormData({
+      ...formData,
+      date: dateTime.date || selectedDate,
+      heure: dateTime.heure || ''
+    });
+    setShowModal(true);
+  };
+
   useEffect(() => {
     fetchData();
     
