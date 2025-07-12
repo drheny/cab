@@ -521,4 +521,137 @@ const Calendar = ({ user }) => {
   );
 };
 
+// Composant WeekView pour la vue semaine
+const WeekView = ({ weekData, onStatusUpdate, onRoomAssignment, onEdit, onDelete, selectedDate }) => {
+  const timeSlots = [];
+  for (let hour = 9; hour < 18; hour++) {
+    for (let minute = 0; minute < 60; minute += 15) {
+      timeSlots.push(`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
+    }
+  }
+
+  const dayNames = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+  
+  const getAppointmentsForDateAndTime = (date, time) => {
+    return weekData.appointments?.filter(apt => apt.date === date && apt.heure === time) || [];
+  };
+
+  const formatDateShort = (dateStr) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'programme': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'attente': return 'bg-green-100 text-green-800 border-green-200';
+      case 'en_cours': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'termine': return 'bg-gray-100 text-gray-600 border-gray-200';
+      case 'absent': return 'bg-red-100 text-red-800 border-red-200';
+      case 'retard': return 'bg-orange-100 text-orange-800 border-orange-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+      <div className="p-4 border-b border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-900">Vue Semaine</h3>
+        <p className="text-sm text-gray-600">Lundi → Samedi • 9h00 → 18h00</p>
+      </div>
+
+      <div className="overflow-x-auto">
+        <div className="min-w-[800px]">
+          {/* Header with days */}
+          <div className="grid grid-cols-7 border-b border-gray-200">
+            <div className="p-3 bg-gray-50 border-r border-gray-200">
+              <span className="text-sm font-medium text-gray-500">Heure</span>
+            </div>
+            {weekData.week_dates?.map((date, index) => (
+              <div key={date} className="p-3 bg-gray-50 border-r border-gray-200 last:border-r-0">
+                <div className="text-center">
+                  <div className="text-sm font-medium text-gray-900">{dayNames[index]}</div>
+                  <div className="text-xs text-gray-500">{formatDateShort(date)}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Time slots grid */}
+          <div className="max-h-96 overflow-y-auto">
+            {timeSlots.map((time) => (
+              <div key={time} className="grid grid-cols-7 border-b border-gray-100 hover:bg-gray-50">
+                {/* Time column */}
+                <div className="p-2 border-r border-gray-200 bg-gray-50">
+                  <span className="text-xs text-gray-600 font-mono">{time}</span>
+                </div>
+                
+                {/* Days columns */}
+                {weekData.week_dates?.map((date) => {
+                  const appointments = getAppointmentsForDateAndTime(date, time);
+                  return (
+                    <div key={`${date}-${time}`} className="p-1 border-r border-gray-100 last:border-r-0 min-h-[50px]">
+                      {appointments.map((apt) => (
+                        <div
+                          key={apt.id}
+                          className={`text-xs p-1 rounded mb-1 border cursor-pointer hover:shadow-sm transition-all ${getStatusColor(apt.statut)}`}
+                          onClick={() => onEdit(apt)}
+                          title={`${apt.patient?.prenom} ${apt.patient?.nom} - ${apt.motif || 'Consultation'}`}
+                        >
+                          <div className="truncate">
+                            <span className="font-medium">{apt.patient?.prenom} {apt.patient?.nom}</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <span className={`px-1 py-0.5 rounded text-xs ${
+                              apt.type_rdv === 'visite' ? 'bg-blue-200 text-blue-800' : 'bg-green-200 text-green-800'
+                            }`}>
+                              {apt.type_rdv === 'visite' ? 'V' : 'C'}
+                            </span>
+                            {apt.salle && (
+                              <span className="px-1 py-0.5 rounded text-xs bg-purple-200 text-purple-800">
+                                {apt.salle === 'salle1' ? 'S1' : 'S2'}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Week Summary */}
+      <div className="p-4 border-t border-gray-200 bg-gray-50">
+        <div className="flex items-center justify-between text-sm">
+          <div className="text-gray-600">
+            Total rendez-vous de la semaine: <span className="font-medium">{weekData.appointments?.length || 0}</span>
+          </div>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 rounded bg-blue-100 border border-blue-200"></div>
+              <span className="text-gray-600">Programmé</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 rounded bg-green-100 border border-green-200"></div>
+              <span className="text-gray-600">Attente</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 rounded bg-yellow-100 border border-yellow-200"></div>
+              <span className="text-gray-600">En cours</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 rounded bg-gray-100 border border-gray-200"></div>
+              <span className="text-gray-600">Terminé</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default Calendar;
