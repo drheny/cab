@@ -587,7 +587,15 @@ const WeekView = ({ weekData, onStatusUpdate, onRoomAssignment, onEdit, onDelete
                           title={`${apt.patient?.prenom} ${apt.patient?.nom} - ${apt.motif || 'Consultation'}`}
                         >
                           <div className="truncate">
-                            <span className="font-medium">{apt.patient?.prenom} {apt.patient?.nom}</span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(`/patients?patient=${apt.patient_id}`, '_blank');
+                              }}
+                              className="font-medium text-gray-900 hover:text-primary-600 transition-colors cursor-pointer underline"
+                            >
+                              {apt.patient?.prenom} {apt.patient?.nom}
+                            </button>
                           </div>
                           <div className="flex items-center space-x-1">
                             <span className={`px-1 py-0.5 rounded text-xs ${
