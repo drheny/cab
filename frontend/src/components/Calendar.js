@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { 
   Calendar as CalendarIcon, 
@@ -10,7 +10,16 @@ import {
   Phone,
   MessageCircle,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  MapPin,
+  BarChart3,
+  List,
+  Grid,
+  CheckCircle,
+  XCircle,
+  Pause,
+  AlertCircle,
+  UserPlus
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
