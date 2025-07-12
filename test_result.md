@@ -22,12 +22,37 @@
 
 ## Current Implementation Status
 
-### Phase 1: Backend - Patient Data Model Enhancement ✅ COMPLETED
-**Status:** ALL TESTS PASSED - Backend Implementation Complete
+### Phase 1: Backend - Calendar RDV Model & API ⏳ IN PROGRESS
+**Status:** Backend Implementation Complete - Ready for Testing
 
-### Phase 2: Frontend - Restructuration Interface ✅ COMPLETED  
-**Status:** Implementation Complete - Ready for Testing
-**Current Task:** Testing new frontend interface with list structure
+### Phase 2: Frontend - Vue Liste ⏳ PENDING
+
+#### Calendar Backend Changes Implemented:
+- ✅ **Enhanced Appointment Model** - Added `paye` field and updated statuts (programme, attente, en_cours, termine, absent, retard)
+- ✅ **Auto Delay Detection** - Function to automatically detect appointments 15+ minutes late
+- ✅ **Time Slots Generation** - Function to generate 15-minute intervals from 9h-18h
+- ✅ **Week Dates Calculation** - Function to get Monday-Saturday dates for week view
+- ✅ **New API Endpoints** - Calendar-specific endpoints for day/week views and statistics
+
+#### New API Endpoints Added:
+- GET /api/rdv/jour/{date} - Get appointments for specific day with patient info
+- GET /api/rdv/semaine/{date} - Get appointments for week (Monday-Saturday)
+- PUT /api/rdv/{rdv_id}/statut - Update appointment status
+- PUT /api/rdv/{rdv_id}/salle - Update room assignment
+- GET /api/rdv/stats/{date} - Get daily statistics
+- GET /api/rdv/time-slots - Get available time slots for date
+
+#### Helper Functions Added:
+- check_appointment_delay() - Auto-detect delayed appointments (15+ minutes)
+- get_time_slots() - Generate time slots for 9h-18h in 15min intervals
+- get_week_dates() - Get Monday-Saturday dates for week view
+
+#### Demo Data Updated:
+- Added appointments with new `paye` field
+- Added sample appointments for today and tomorrow
+- Updated statuses to use new statut values
+
+**Phase 1 Status: READY FOR BACKEND TESTING**
 
 #### Frontend Changes Implemented:
 - ✅ **Vue Liste** - Replaced card grid with table/list structure
