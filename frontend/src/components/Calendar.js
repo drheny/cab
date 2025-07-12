@@ -30,6 +30,10 @@ const Calendar = ({ user }) => {
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [weekData, setWeekData] = useState({ week_dates: [], appointments: [] });
   
+  // Patient modal states
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [showPatientModal, setShowPatientModal] = useState(false);
+  
   // Form states
   const [formData, setFormData] = useState({
     patient_id: '',
