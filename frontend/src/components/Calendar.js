@@ -727,9 +727,12 @@ const AppointmentCard = ({
           
           {/* Patient Info */}
           <div className="flex-1 min-w-0">
-            <div className="font-medium text-gray-900">
+            <button
+              onClick={() => window.open(`/patients?patient=${appointment.patient_id}`, '_blank')}
+              className="font-medium text-gray-900 hover:text-primary-600 transition-colors cursor-pointer underline"
+            >
               {appointment.patient?.prenom} {appointment.patient?.nom}
-            </div>
+            </button>
             <div className="text-sm text-gray-500 truncate">
               {appointment.motif || 'Consultation'}
             </div>
