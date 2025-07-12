@@ -633,6 +633,199 @@ async def delete_patient(patient_id: str):
         raise HTTPException(status_code=404, detail="Patient not found")
     return {"message": "Patient deleted successfully"}
 
+@app.get("/api/rdv/jour/{date}")
+async def get_rdv_jour(date: str):
+    """Get appointments for a specific day with patient info and auto status check"""
+    appointments = list(appointments_collection.find({"date": date}, {"_id": 0}))
+    
+    # Get patient info and check delays for each appointment
+    for appointment in appointments:
+        # Check for delays and update status if needed
+        current_status = check_appointment_delay(appointment)
+        if current_status != appointment["statut"]:
+            appointment["statut"] = current_status
+            # Update in database
+            appointments_collection.update_one(
+                {"id": appointment["id"]},
+                {"$set": {"statut": current_status, "updated_at": datetime.now()}}
+            )
+        
+        # Get patient info
+        patient = patients_collection.find_one({"id": appointment["patient_id"]}, {"_id": 0})
+        if patient:
+            appointment["patient"] = {
+                "nom": patient.get("nom", ""),
+                "prenom": patient.get("prenom", ""),
+                "numero_whatsapp": patient.get("numero_whatsapp", ""),
+                "lien_whatsapp": patient.get("lien_whatsapp", "")
+            }
+    
+    # Sort by time
+    appointments.sort(key=lambda x: x["heure"])
+    
+    return appointments
+
+@app.get("/api/rdv/semaine/{date}")
+async def get_rdv_semaine(date: str):
+    """Get appointments for the week containing the given date (Monday to Saturday)"""
+    week_dates = get_week_dates(date)
+    
+    if not week_dates:
+        raise HTTPException(status_code=400, detail="Invalid date format")
+    
+    # Get appointments for all days of the week
+    appointments = list(appointments_collection.find(
+        {"date": {"$in": week_dates}}, 
+        {"_id": 0}
+    ))
+    
+    # Add patient info for each appointment
+    for appointment in appointments:
+        # Check for delays and update status if needed
+        current_status = check_appointment_delay(appointment)
+        if current_status != appointment["statut"]:
+            appointment["statut"] = current_status
+            appointments_collection.update_one(
+                {"id": appointment["id"]},
+                {"$set": {"statut": current_status, "updated_at": datetime.now()}}
+            )
+        
+        patient = patients_collection.find_one({"id": appointment["patient_id"]}, {"_id": 0})
+        if patient:
+            appointment["patient"] = {
+                "nom": patient.get("nom", ""),
+                "prenom": patient.get("prenom", ""),
+                "numero_whatsapp": patient.get("numero_whatsapp", ""),
+                "lien_whatsapp": patient.get("lien_whatsapp", "")
+            }
+    
+    # Sort by date and time
+    appointments.sort(key=lambda x: (x["date"], x["heure"]))
+    
+    return {
+        "week_dates": week_dates,
+        "appointments": appointments
+    }
+
+@app.put("/api/rdv/{rdv_id}/statut")
+async def update_rdv_statut(rdv_id: str, statut: str):
+    """Update appointment status"""
+    valid_statuts = ["programme", "attente", "en_cours", "termine", "absent", "retard"]
+    if statut not in valid_statuts:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuts}")
+    
+    result = appointments_collection.update_one(
+        {"id": rdv_id},
+        {"$set": {"statut": statut, "updated_at": datetime.now()}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+    
+    return {"message": "Status updated successfully", "statut": statut}
+
+@app.put("/api/rdv/{rdv_id}/salle")
+async def update_rdv_salle(rdv_id: str, salle: str):
+    """Update appointment room assignment"""
+    valid_salles = ["", "salle1", "salle2"]
+    if salle not in valid_salles:
+        raise HTTPException(status_code=400, detail=f"Invalid room. Must be one of: {valid_salles}")
+    
+    result = appointments_collection.update_one(
+        {"id": rdv_id},
+        {"$set": {"salle": salle, "updated_at": datetime.now()}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+    
+    return {"message": "Room assignment updated successfully", "salle": salle}
+
+@app.get("/api/rdv/stats/{date}")
+async def get_rdv_stats(date: str):
+    """Get appointment statistics for a specific day"""
+    appointments = list(appointments_collection.find({"date": date}, {"_id": 0}))
+    
+    # Update statuses for any delayed appointments
+    for appointment in appointments:
+        current_status = check_appointment_delay(appointment)
+        if current_status != appointment["statut"]:
+            appointments_collection.update_one(
+                {"id": appointment["id"]},
+                {"$set": {"statut": current_status, "updated_at": datetime.now()}}
+            )
+            appointment["statut"] = current_status
+    
+    total_rdv = len(appointments)
+    visites = len([a for a in appointments if a["type_rdv"] == "visite"])
+    controles = len([a for a in appointments if a["type_rdv"] == "controle"])
+    
+    # Count by status
+    programme = len([a for a in appointments if a["statut"] == "programme"])
+    attente = len([a for a in appointments if a["statut"] == "attente"])
+    en_cours = len([a for a in appointments if a["statut"] == "en_cours"])
+    termine = len([a for a in appointments if a["statut"] == "termine"])
+    absent = len([a for a in appointments if a["statut"] == "absent"])
+    retard = len([a for a in appointments if a["statut"] == "retard"])
+    
+    # Calculate attendance rate
+    presents = attente + en_cours + termine
+    taux_presence = (presents / total_rdv * 100) if total_rdv > 0 else 0
+    
+    # Get payments for the day
+    payments = list(payments_collection.find({"date": date, "statut": "paye"}, {"_id": 0}))
+    ca_realise = sum([p["montant"] for p in payments])
+    
+    # Estimate CA based on paid/unpaid appointments
+    payes = len([a for a in appointments if a.get("paye", False)])
+    non_payes = total_rdv - payes
+    
+    return {
+        "date": date,
+        "total_rdv": total_rdv,
+        "visites": visites,
+        "controles": controles,
+        "statuts": {
+            "programme": programme,
+            "attente": attente,
+            "en_cours": en_cours,
+            "termine": termine,
+            "absent": absent,
+            "retard": retard
+        },
+        "taux_presence": round(taux_presence, 1),
+        "paiements": {
+            "payes": payes,
+            "non_payes": non_payes,
+            "ca_realise": ca_realise
+        }
+    }
+
+@app.get("/api/rdv/time-slots")
+async def get_available_time_slots(date: str = Query(...), exclude_id: str = Query(None)):
+    """Get available time slots for a given date"""
+    # Get all time slots
+    all_slots = get_time_slots()
+    
+    # Get existing appointments for the date
+    query = {"date": date}
+    if exclude_id:
+        query["id"] = {"$ne": exclude_id}
+    
+    existing_appointments = list(appointments_collection.find(query, {"heure": 1, "_id": 0}))
+    occupied_slots = [apt["heure"] for apt in existing_appointments]
+    
+    # Mark slots as available or occupied
+    time_slots = []
+    for slot in all_slots:
+        time_slots.append({
+            "time": slot,
+            "available": slot not in occupied_slots,
+            "occupied_count": occupied_slots.count(slot)  # Support double bookings
+        })
+    
+    return time_slots
+
 @app.get("/api/appointments")
 async def get_appointments(date: Optional[str] = None):
     """Get appointments, optionally filtered by date"""
