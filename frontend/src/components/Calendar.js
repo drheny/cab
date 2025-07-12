@@ -761,7 +761,7 @@ const AppointmentCard = ({
           {/* Patient Info */}
           <div className="flex-1 min-w-0">
             <button
-              onClick={() => viewPatientDetails(appointment.patient_id)}
+              onClick={() => onViewPatient(appointment.patient_id)}
               className="font-medium text-gray-900 hover:text-primary-600 transition-colors cursor-pointer underline"
             >
               {appointment.patient?.prenom} {appointment.patient?.nom}
