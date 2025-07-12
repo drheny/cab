@@ -179,7 +179,7 @@ const Calendar = ({ user }) => {
     }
   };
 
-  const handleCreatePatientExpress = async () => {
+  const navigateDate = (direction) => {
     try {
       const patientData = {
         id: Date.now().toString(),
