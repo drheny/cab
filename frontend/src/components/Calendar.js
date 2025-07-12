@@ -135,33 +135,61 @@ const Calendar = ({ user }) => {
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      patient_id: '',
-      date: selectedDate,
-      heure: '',
-      type_rdv: 'visite',
-      motif: '',
-      notes: ''
-    });
-    setSelectedAppointment(null);
+  const handleStatusUpdate = async (appointmentId, newStatus) => {
+    try {
+      await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/statut`, { statut: newStatus });
+      toast.success('Statut mis à jour');
+      fetchData();
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast.error('Erreur lors de la mise à jour du statut');
+    }
   };
 
-  const openModal = (appointment = null) => {
-    if (appointment) {
-      setSelectedAppointment(appointment);
-      setFormData({
-        patient_id: appointment.patient_id,
-        date: appointment.date,
-        heure: appointment.heure,
-        type_rdv: appointment.type_rdv,
-        motif: appointment.motif,
-        notes: appointment.notes
-      });
-    } else {
-      resetForm();
+  const handleRoomAssignment = async (appointmentId, salle) => {
+    try {
+      await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/salle`, { salle });
+      toast.success(`Affecté à ${salle === 'salle1' ? 'Salle 1' : salle === 'salle2' ? 'Salle 2' : 'aucune salle'}`);
+      fetchData();
+    } catch (error) {
+      console.error('Error updating room:', error);
+      toast.error('Erreur lors de l\'affectation de salle');
     }
-    setShowModal(true);
+  };
+
+  const handleCreatePatientExpress = async () => {
+    try {
+      const patientData = {
+        id: Date.now().toString(),
+        nom: newPatientData.nom,
+        prenom: newPatientData.prenom,
+        telephone: newPatientData.telephone,
+        date_naissance: '',
+        adresse: '',
+        pere: { nom: '', telephone: '', fonction: '' },
+        mere: { nom: '', telephone: '', fonction: '' },
+        numero_whatsapp: newPatientData.telephone,
+        notes: '',
+        antecedents: '',
+        consultations: []
+      };
+      
+      await axios.post(`${API_BASE_URL}/api/patients`, patientData);
+      
+      // Update form with new patient
+      setFormData({ ...formData, patient_id: patientData.id });
+      setShowPatientModal(false);
+      setNewPatientData({ nom: '', prenom: '', telephone: '' });
+      
+      // Refresh patients list
+      const patientsRes = await axios.get(`${API_BASE_URL}/api/patients`);
+      setPatients(patientsRes.data.patients || []);
+      
+      toast.success('Patient créé avec succès');
+    } catch (error) {
+      console.error('Error creating patient:', error);
+      toast.error('Erreur lors de la création du patient');
+    }
   };
 
   const getStatusColor = (status) => {
