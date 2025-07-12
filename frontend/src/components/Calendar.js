@@ -865,25 +865,26 @@ const WeekView = ({ weekData, onStatusUpdate, onRoomAssignment, onEdit, onDelete
       {/* Menu Contextuel */}
       {contextMenu.show && (
         <div 
-          className="fixed bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-2"
+          className="fixed bg-white border border-gray-200 rounded-lg shadow-xl z-[9999] py-2 min-w-[150px]"
           style={{ left: contextMenu.x, top: contextMenu.y }}
+          onClick={(e) => e.stopPropagation()}
         >
           <button
             onClick={() => handleContextMenuAction('edit')}
-            className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
+            className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm transition-colors"
           >
             ✏️ Modifier
           </button>
           <button
             onClick={() => handleContextMenuAction('duplicate')}
-            className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
+            className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm transition-colors"
           >
             📋 Dupliquer
           </button>
           <hr className="my-1" />
           <button
             onClick={() => handleContextMenuAction('delete')}
-            className="w-full text-left px-4 py-2 hover:bg-red-50 text-sm text-red-600"
+            className="w-full text-left px-4 py-2 hover:bg-red-50 text-sm text-red-600 transition-colors"
           >
             🗑️ Supprimer
           </button>
