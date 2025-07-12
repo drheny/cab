@@ -64,7 +64,7 @@ const Calendar = ({ user }) => {
       openModal();
       window.history.replaceState({}, '', '/calendar');
     }
-  }, [selectedDate, viewMode]);
+  }, [selectedDate, viewMode]); // openModal is defined later, will be handled by React
 
   const fetchData = async () => {
     setLoading(true);
