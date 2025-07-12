@@ -848,16 +848,19 @@ const WeekView = ({ weekData, onStatusUpdate, onRoomAssignment, onEdit, onDelete
 
       {/* Tooltip Hover */}
       {hoveredSlot && (
-        <div className="fixed bg-black text-white text-sm p-2 rounded shadow-lg z-50 pointer-events-none"
+        <div className="fixed bg-gray-900 text-white text-sm p-3 rounded-lg shadow-xl z-[9998] pointer-events-none max-w-xs"
              style={{ 
-               left: '50%', 
-               top: '50%', 
-               transform: 'translate(-50%, -50%)'
+               left: '20px', 
+               top: '20px'
              }}>
-          <div className="font-medium">{hoveredSlot.date} à {hoveredSlot.time}</div>
-          <div>{hoveredSlot.appointments.length}/3 RDV programmés</div>
-          {hoveredSlot.appointments.length === 0 && (
-            <div className="text-green-300">Créneau libre - Cliquer pour nouveau RDV</div>
+          <div className="font-medium">{hoveredSlot.time} - {formatDateShort(hoveredSlot.date)}</div>
+          <div className="text-gray-300">{hoveredSlot.appointments.length}/3 RDV programmés</div>
+          {hoveredSlot.appointments.length === 0 ? (
+            <div className="text-green-300 text-xs mt-1">✨ Créneau libre - Cliquer pour nouveau RDV</div>
+          ) : hoveredSlot.appointments.length < 3 ? (
+            <div className="text-blue-300 text-xs mt-1">📅 {3 - hoveredSlot.appointments.length} place{3 - hoveredSlot.appointments.length > 1 ? 's' : ''} disponible{3 - hoveredSlot.appointments.length > 1 ? 's' : ''}</div>
+          ) : (
+            <div className="text-red-300 text-xs mt-1">🚫 Créneau complet</div>
           )}
         </div>
       )}
