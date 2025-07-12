@@ -179,6 +179,52 @@ def generate_whatsapp_link(numero: str) -> str:
     
     return ""
 
+def check_appointment_delay(appointment: dict) -> str:
+    """Check if appointment is delayed and return appropriate status"""
+    if appointment["statut"] == "programme":
+        try:
+            appointment_datetime = datetime.strptime(
+                f"{appointment['date']} {appointment['heure']}", 
+                "%Y-%m-%d %H:%M"
+            )
+            now = datetime.now()
+            
+            # If 15 minutes past appointment time, mark as delayed
+            if now > appointment_datetime + timedelta(minutes=15):
+                return "retard"
+        except:
+            pass
+    return appointment["statut"]
+
+def get_time_slots(start_hour: int = 9, end_hour: int = 18, interval_minutes: int = 15) -> List[str]:
+    """Generate time slots for the day"""
+    slots = []
+    current_time = datetime.strptime(f"{start_hour:02d}:00", "%H:%M")
+    end_time = datetime.strptime(f"{end_hour:02d}:00", "%H:%M")
+    
+    while current_time < end_time:
+        slots.append(current_time.strftime("%H:%M"))
+        current_time += timedelta(minutes=interval_minutes)
+    
+    return slots
+
+def get_week_dates(date_str: str) -> List[str]:
+    """Get dates for the week containing the given date (Monday to Saturday)"""
+    try:
+        date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+        
+        # Get Monday of the week
+        monday = date_obj - timedelta(days=date_obj.weekday())
+        
+        # Generate dates from Monday to Saturday
+        week_dates = []
+        for i in range(6):  # Monday to Saturday
+            week_dates.append((monday + timedelta(days=i)).strftime("%Y-%m-%d"))
+        
+        return week_dates
+    except:
+        return []
+
 def update_patient_computed_fields(patient_dict: dict) -> dict:
     """Update computed fields for patient"""
     # Calculate age
