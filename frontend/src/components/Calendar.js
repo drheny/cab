@@ -180,38 +180,13 @@ const Calendar = ({ user }) => {
   };
 
   const navigateDate = (direction) => {
-    try {
-      const patientData = {
-        id: Date.now().toString(),
-        nom: newPatientData.nom,
-        prenom: newPatientData.prenom,
-        telephone: newPatientData.telephone,
-        date_naissance: '',
-        adresse: '',
-        pere: { nom: '', telephone: '', fonction: '' },
-        mere: { nom: '', telephone: '', fonction: '' },
-        numero_whatsapp: newPatientData.telephone,
-        notes: '',
-        antecedents: '',
-        consultations: []
-      };
-      
-      await axios.post(`${API_BASE_URL}/api/patients`, patientData);
-      
-      // Update form with new patient
-      setFormData({ ...formData, patient_id: patientData.id });
-      setShowPatientModal(false);
-      setNewPatientData({ nom: '', prenom: '', telephone: '' });
-      
-      // Refresh patients list
-      const patientsRes = await axios.get(`${API_BASE_URL}/api/patients`);
-      setPatients(patientsRes.data.patients || []);
-      
-      toast.success('Patient créé avec succès');
-    } catch (error) {
-      console.error('Error creating patient:', error);
-      toast.error('Erreur lors de la création du patient');
+    const currentDate = new Date(selectedDate);
+    if (direction === 'prev') {
+      currentDate.setDate(currentDate.getDate() - 1);
+    } else {
+      currentDate.setDate(currentDate.getDate() + 1);
     }
+    setSelectedDate(currentDate.toISOString().split('T')[0]);
   };
 
   const getStatusColor = (status) => {
