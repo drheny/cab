@@ -415,6 +415,7 @@ const Calendar = ({ user }) => {
               onRoomAssignment={handleRoomAssignment}
               onEdit={openModal}
               onDelete={handleDeleteAppointment}
+              onViewPatient={viewPatientDetails}
             />
           )}
           
@@ -427,6 +428,7 @@ const Calendar = ({ user }) => {
               onRoomAssignment={handleRoomAssignment}
               onEdit={openModal}
               onDelete={handleDeleteAppointment}
+              onViewPatient={viewPatientDetails}
             />
           )}
           
@@ -439,6 +441,7 @@ const Calendar = ({ user }) => {
               onRoomAssignment={handleRoomAssignment}
               onEdit={openModal}
               onDelete={handleDeleteAppointment}
+              onViewPatient={viewPatientDetails}
             />
           )}
           
@@ -451,6 +454,7 @@ const Calendar = ({ user }) => {
               onRoomAssignment={handleRoomAssignment}
               onEdit={openModal}
               onDelete={handleDeleteAppointment}
+              onViewPatient={viewPatientDetails}
             />
           )}
           
@@ -463,6 +467,7 @@ const Calendar = ({ user }) => {
               onRoomAssignment={handleRoomAssignment}
               onEdit={openModal}
               onDelete={handleDeleteAppointment}
+              onViewPatient={viewPatientDetails}
             />
           )}
           
@@ -475,6 +480,7 @@ const Calendar = ({ user }) => {
               onRoomAssignment={handleRoomAssignment}
               onEdit={openModal}
               onDelete={handleDeleteAppointment}
+              onViewPatient={viewPatientDetails}
               isCompleted
             />
           )}
