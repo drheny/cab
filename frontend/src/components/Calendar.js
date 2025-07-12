@@ -680,6 +680,7 @@ const AppointmentSection = ({
   onRoomAssignment, 
   onEdit, 
   onDelete, 
+  onViewPatient,
   isCompleted = false 
 }) => {
   return (
@@ -698,6 +699,7 @@ const AppointmentSection = ({
             onRoomAssignment={onRoomAssignment}
             onEdit={onEdit}
             onDelete={onDelete}
+            onViewPatient={onViewPatient}
             isCompleted={isCompleted}
           />
         ))}
