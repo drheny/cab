@@ -281,13 +281,41 @@ const Calendar = ({ user }) => {
           <h1 className="text-2xl font-bold text-gray-900">Calendrier</h1>
           <p className="text-gray-600">Gestion des rendez-vous</p>
         </div>
-        <button
-          onClick={() => openModal()}
-          className="btn-primary flex items-center space-x-2"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Nouveau RDV</span>
-        </button>
+        <div className="flex items-center space-x-3">
+          {/* View Mode Toggle */}
+          <div className="flex bg-white border border-gray-200 rounded-lg p-1">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                viewMode === 'list' 
+                  ? 'bg-primary-500 text-white' 
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <List className="w-4 h-4" />
+              <span>Liste</span>
+            </button>
+            <button
+              onClick={() => setViewMode('week')}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                viewMode === 'week' 
+                  ? 'bg-primary-500 text-white' 
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Grid className="w-4 h-4" />
+              <span>Semaine</span>
+            </button>
+          </div>
+          
+          <button
+            onClick={() => openModal()}
+            className="btn-primary flex items-center space-x-2"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Nouveau RDV</span>
+          </button>
+        </div>
       </div>
 
       {/* Date Navigation */}
