@@ -179,16 +179,6 @@ const Calendar = ({ user }) => {
     }
   };
 
-  const navigateDate = (direction) => {
-    const currentDate = new Date(selectedDate);
-    if (direction === 'prev') {
-      currentDate.setDate(currentDate.getDate() - 1);
-    } else {
-      currentDate.setDate(currentDate.getDate() + 1);
-    }
-    setSelectedDate(currentDate.toISOString().split('T')[0]);
-  };
-
   const getStatusColor = (status) => {
     switch (status) {
       case 'absent': return 'bg-gray-100 text-gray-800';
