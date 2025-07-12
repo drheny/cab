@@ -349,110 +349,143 @@ const Calendar = ({ user }) => {
         </button>
       </div>
 
-      {/* Appointments List - PC Optimized Table */}
-      <div className="pc-table-container">
-        <div className="p-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">
-            Rendez-vous du {formatDate(selectedDate)}
-          </h3>
-          <p className="text-sm text-gray-600 mt-1">
-            {appointments.length} rendez-vous programmés
-          </p>
-        </div>
-
-        <div className="overflow-x-auto">
-          {appointments.length === 0 ? (
-            <div className="text-center py-8">
-              <CalendarIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">Aucun rendez-vous pour cette date</p>
+      {/* Statistics for List View */}
+      {viewMode === 'list' && stats && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+            <div className="flex items-center space-x-3">
+              <CalendarIcon className="w-8 h-8 text-blue-500" />
+              <div>
+                <p className="text-sm text-gray-600">Total RDV</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.total_rdv || 0}</p>
+              </div>
             </div>
-          ) : (
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Heure</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Salle</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Motif</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {appointments.sort((a, b) => a.heure.localeCompare(b.heure)).map((appointment) => (
-                  <tr key={appointment.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="flex items-center space-x-2">
-                        <Clock className="w-4 h-4 text-gray-400" />
-                        <span className="font-medium text-gray-900 text-sm">{appointment.heure}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <div>
-                        <div className="font-medium text-gray-900 text-sm">
-                          {appointment.patient?.prenom} {appointment.patient?.nom}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          ({appointment.patient?.nom_parent})
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${
-                        appointment.type_rdv === 'visite' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
-                      }`}>
-                        {appointment.type_rdv === 'visite' ? 'Visite' : 'Contrôle'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(appointment.statut)}`}>
-                        {getStatusText(appointment.statut)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      {appointment.salle && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
-                          {appointment.salle === 'salle1' ? 'Salle 1' : 'Salle 2'}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 max-w-xs truncate text-sm text-gray-600">
-                      {appointment.motif || '-'}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="flex items-center space-x-1">
-                        {appointment.patient?.telephone_parent && (
-                          <a
-                            href={getWhatsAppLink(appointment.patient.telephone_parent)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                          >
-                            <MessageCircle className="w-4 h-4" />
-                          </a>
-                        )}
-                        <button
-                          onClick={() => openModal(appointment)}
-                          className="p-1.5 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteAppointment(appointment.id)}
-                          className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          </div>
+          
+          <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+            <div className="flex items-center space-x-3">
+              <User className="w-8 h-8 text-green-500" />
+              <div>
+                <p className="text-sm text-gray-600">Visites</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.visites || 0}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+            <div className="flex items-center space-x-3">
+              <CheckCircle className="w-8 h-8 text-purple-500" />
+              <div>
+                <p className="text-sm text-gray-600">Contrôles</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.controles || 0}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+            <div className="flex items-center space-x-3">
+              <BarChart3 className="w-8 h-8 text-orange-500" />
+              <div>
+                <p className="text-sm text-gray-600">Présence</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.taux_presence || 0}%</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* List View */}
+      {viewMode === 'list' && (
+        <div className="space-y-6">
+          {/* À venir (Bleu ciel) */}
+          {groupedAppointments.programme.length > 0 && (
+            <AppointmentSection
+              title="À venir"
+              appointments={groupedAppointments.programme}
+              onStatusUpdate={handleStatusUpdate}
+              onRoomAssignment={handleRoomAssignment}
+              onEdit={openModal}
+              onDelete={handleDeleteAppointment}
+            />
+          )}
+          
+          {/* En salle d'attente (Vert) */}
+          {groupedAppointments.attente.length > 0 && (
+            <AppointmentSection
+              title="En salle d'attente"
+              appointments={groupedAppointments.attente}
+              onStatusUpdate={handleStatusUpdate}
+              onRoomAssignment={handleRoomAssignment}
+              onEdit={openModal}
+              onDelete={handleDeleteAppointment}
+            />
+          )}
+          
+          {/* En cours (Jaune) */}
+          {groupedAppointments.en_cours.length > 0 && (
+            <AppointmentSection
+              title="En cours"
+              appointments={groupedAppointments.en_cours}
+              onStatusUpdate={handleStatusUpdate}
+              onRoomAssignment={handleRoomAssignment}
+              onEdit={openModal}
+              onDelete={handleDeleteAppointment}
+            />
+          )}
+          
+          {/* En retard (Orange) */}
+          {groupedAppointments.retard.length > 0 && (
+            <AppointmentSection
+              title="En retard"
+              appointments={groupedAppointments.retard}
+              onStatusUpdate={handleStatusUpdate}
+              onRoomAssignment={handleRoomAssignment}
+              onEdit={openModal}
+              onDelete={handleDeleteAppointment}
+            />
+          )}
+          
+          {/* Absents (Rouge) */}
+          {groupedAppointments.absent.length > 0 && (
+            <AppointmentSection
+              title="Absents"
+              appointments={groupedAppointments.absent}
+              onStatusUpdate={handleStatusUpdate}
+              onRoomAssignment={handleRoomAssignment}
+              onEdit={openModal}
+              onDelete={handleDeleteAppointment}
+            />
+          )}
+          
+          {/* Terminés (Gris, en bas) */}
+          {groupedAppointments.termine.length > 0 && (
+            <AppointmentSection
+              title="Terminés"
+              appointments={groupedAppointments.termine}
+              onStatusUpdate={handleStatusUpdate}
+              onRoomAssignment={handleRoomAssignment}
+              onEdit={openModal}
+              onDelete={handleDeleteAppointment}
+              isCompleted
+            />
+          )}
+          
+          {/* Empty state */}
+          {appointments.length === 0 && (
+            <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-200">
+              <CalendarIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500 text-lg">Aucun rendez-vous pour cette date</p>
+              <button
+                onClick={() => openModal()}
+                className="mt-4 btn-primary inline-flex items-center space-x-2"
+              >
+                <Plus className="w-5 h-5" />
+                <span>Créer un rendez-vous</span>
+              </button>
+            </div>
           )}
         </div>
-      </div>
+      )}
 
       {/* Week View */}
       {viewMode === 'week' && (
