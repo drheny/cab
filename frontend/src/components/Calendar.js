@@ -397,6 +397,18 @@ const Calendar = ({ user }) => {
         </div>
       </div>
 
+      {/* Week View */}
+      {viewMode === 'week' && (
+        <WeekView
+          weekData={weekData}
+          onStatusUpdate={handleStatusUpdate}
+          onRoomAssignment={handleRoomAssignment}
+          onEdit={openModal}
+          onDelete={handleDeleteAppointment}
+          selectedDate={selectedDate}
+        />
+      )}
+
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
