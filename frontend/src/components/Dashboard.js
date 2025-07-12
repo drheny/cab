@@ -94,8 +94,21 @@ const Dashboard = ({ user }) => {
       setStats(response.data);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
+      toast.error('Erreur lors du chargement des données');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const viewPatientDetails = async (patientId) => {
+    try {
+      const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+      const response = await axios.get(`${API_BASE_URL}/api/patients/${patientId}`);
+      setSelectedPatient(response.data);
+      setShowPatientModal(true);
+    } catch (error) {
+      console.error('Error fetching patient details:', error);
+      toast.error('Erreur lors du chargement des détails du patient');
     }
   };
 
