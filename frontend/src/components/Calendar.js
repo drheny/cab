@@ -378,10 +378,10 @@ const Calendar = ({ user }) => {
           
           <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
             <div className="flex items-center space-x-3">
-              <BarChart3 className="w-8 h-8 text-orange-500" />
+              <Clock className="w-8 h-8 text-orange-500" />
               <div>
-                <p className="text-sm text-gray-600">Présence</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.taux_presence || 0}%</p>
+                <p className="text-sm text-gray-600">RDV restants</p>
+                <p className="text-2xl font-bold text-gray-900">{(stats.statuts?.programme || 0) + (stats.statuts?.retard || 0)}</p>
               </div>
             </div>
           </div>
