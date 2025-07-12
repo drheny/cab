@@ -67,13 +67,27 @@ const Calendar = ({ user }) => {
   }, [selectedDate, viewMode]);
 
   const fetchData = async () => {
+    setLoading(true);
     try {
-      const [appointmentsRes, patientsRes] = await Promise.all([
-        axios.get(`/api/appointments?date=${selectedDate}`),
-        axios.get('/api/patients')
-      ]);
-      setAppointments(appointmentsRes.data);
-      setPatients(patientsRes.data);
+      if (viewMode === 'list') {
+        // Fetch data for day view
+        const [appointmentsRes, patientsRes, statsRes] = await Promise.all([
+          axios.get(`${API_BASE_URL}/api/rdv/jour/${selectedDate}`),
+          axios.get(`${API_BASE_URL}/api/patients`),
+          axios.get(`${API_BASE_URL}/api/rdv/stats/${selectedDate}`)
+        ]);
+        setAppointments(appointmentsRes.data || []);
+        setPatients(patientsRes.data.patients || []);
+        setStats(statsRes.data || {});
+      } else {
+        // Fetch data for week view
+        const [weekRes, patientsRes] = await Promise.all([
+          axios.get(`${API_BASE_URL}/api/rdv/semaine/${selectedDate}`),
+          axios.get(`${API_BASE_URL}/api/patients`)
+        ]);
+        setWeekData(weekRes.data || { week_dates: [], appointments: [] });
+        setPatients(patientsRes.data.patients || []);
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Erreur lors du chargement des données');
