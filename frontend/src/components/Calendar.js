@@ -605,7 +605,7 @@ const WeekView = ({ weekData, onStatusUpdate, onRoomAssignment, onEdit, onDelete
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                window.open(`/patients?patient=${apt.patient_id}`, '_blank');
+                                viewPatientDetails(apt.patient_id);
                               }}
                               className="font-medium text-gray-900 hover:text-primary-600 transition-colors cursor-pointer underline"
                             >
