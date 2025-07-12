@@ -98,7 +98,7 @@ const Calendar = ({ user }) => {
 
   const handleCreateAppointment = async () => {
     try {
-      await axios.post('/api/appointments', formData);
+      await axios.post(`${API_BASE_URL}/api/appointments`, formData);
       toast.success('Rendez-vous créé avec succès');
       setShowModal(false);
       resetForm();
@@ -111,7 +111,7 @@ const Calendar = ({ user }) => {
 
   const handleUpdateAppointment = async () => {
     try {
-      await axios.put(`/api/appointments/${selectedAppointment.id}`, formData);
+      await axios.put(`${API_BASE_URL}/api/appointments/${selectedAppointment.id}`, formData);
       toast.success('Rendez-vous mis à jour avec succès');
       setShowModal(false);
       resetForm();
@@ -125,7 +125,7 @@ const Calendar = ({ user }) => {
   const handleDeleteAppointment = async (appointmentId) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce rendez-vous ?')) {
       try {
-        await axios.delete(`/api/appointments/${appointmentId}`);
+        await axios.delete(`${API_BASE_URL}/api/appointments/${appointmentId}`);
         toast.success('Rendez-vous supprimé avec succès');
         fetchData();
       } catch (error) {
