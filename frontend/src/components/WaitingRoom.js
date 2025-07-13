@@ -595,6 +595,9 @@ Merci de votre patience ! 🙏`;
                           onMoveToSalle={onMoveToSalle}
                           index={index}
                           isDragging={snapshot.isDragging}
+                          whatsappStates={whatsappStates}
+                          onSendWhatsApp={onSendWhatsApp}
+                          onPreviewWhatsApp={onPreviewWhatsApp}
                         />
                       </div>
                     )}
