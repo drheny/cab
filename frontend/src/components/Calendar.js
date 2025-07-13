@@ -433,13 +433,14 @@ const Calendar = ({ user }) => {
       {/* List View */}
       {viewMode === 'list' && (
         <div className="space-y-6">
-          {/* À venir (Bleu ciel) */}
+          {/* À venir (Bleu) */}
           {groupedAppointments.programme.length > 0 && (
             <AppointmentSection
               title="À venir"
               appointments={groupedAppointments.programme}
               onStatusUpdate={handleStatusUpdate}
               onRoomAssignment={handleRoomAssignment}
+              onPatientArrival={handlePatientArrival}
               onEdit={openModal}
               onDelete={handleDeleteAppointment}
               onViewPatient={viewPatientDetails}
