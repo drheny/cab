@@ -128,14 +128,18 @@ const Calendar = ({ user }) => {
 
   const handleCreateAppointment = async () => {
     try {
-      await axios.post(`${API_BASE_URL}/api/appointments`, formData);
+      console.log('Creating appointment with formData:', formData);
+      const response = await axios.post(`${API_BASE_URL}/api/appointments`, formData);
+      console.log('Appointment created successfully:', response.data);
       toast.success('Rendez-vous créé avec succès');
       setShowModal(false);
       resetForm();
-      fetchData();
+      // Rafraîchir les données du calendrier
+      await fetchData();
     } catch (error) {
       console.error('Error creating appointment:', error);
-      toast.error('Erreur lors de la création du rendez-vous');
+      console.error('Error details:', error.response?.data);
+      toast.error('Erreur lors de la création du rendez-vous: ' + (error.response?.data?.detail || error.message));
     }
   };
 
