@@ -2167,7 +2167,8 @@ class CabinetMedicalAPITest(unittest.TestCase):
             self.assertEqual(updated_appointment["salle"], "salle1")  # Room should remain
             
             # Step 5: Test consultation completion
-            response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/statut?statut=termine")
+            status_data = {"statut": "termine"}
+            response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/statut", json=status_data)
             self.assertEqual(response.status_code, 200)
             
             # Verify final state
