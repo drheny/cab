@@ -48,15 +48,21 @@ const WaitingRoom = ({ user }) => {
       const response = await axios.get(`${API_BASE_URL}/api/rdv/jour/${today}`);
       const appointmentsData = response.data.rdv || [];
       
+      console.log('Fetched appointments:', appointmentsData); // Debug log
+      
       setAppointments(appointmentsData);
       
       // Séparer les patients par salle (seulement ceux en attente ou en consultation)
-      const salle1Patients = appointmentsData.filter(apt => 
-        apt.salle === 'salle1' && ['attente', 'en_cours'].includes(apt.statut)
-      );
+      const salle1Patients = appointmentsData.filter(apt => {
+        console.log(`Patient ${apt.patient?.prenom}: statut=${apt.statut}, salle=${apt.salle}`); // Debug log
+        return apt.salle === 'salle1' && ['attente', 'en_cours'].includes(apt.statut);
+      });
       const salle2Patients = appointmentsData.filter(apt => 
         apt.salle === 'salle2' && ['attente', 'en_cours'].includes(apt.statut)
       );
+      
+      console.log('Salle1 patients:', salle1Patients); // Debug log
+      console.log('Salle2 patients:', salle2Patients); // Debug log
       
       setSalle1(salle1Patients);
       setSalle2(salle2Patients);
