@@ -2152,7 +2152,8 @@ class CabinetMedicalAPITest(unittest.TestCase):
             self.assertTrue(len(patient_info["prenom"]) > 0)
             
             # Step 4: Test WaitingRoom workflow - consultation starts
-            response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/statut?statut=en_cours")
+            status_data = {"statut": "en_cours"}
+            response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/statut", json=status_data)
             self.assertEqual(response.status_code, 200)
             
             # Verify status change is reflected
