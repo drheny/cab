@@ -972,6 +972,7 @@ const AppointmentSection = ({
             appointment={appointment}
             onStatusUpdate={onStatusUpdate}
             onRoomAssignment={onRoomAssignment}
+            onPatientArrival={onPatientArrival}
             onEdit={onEdit}
             onDelete={onDelete}
             onViewPatient={onViewPatient}
