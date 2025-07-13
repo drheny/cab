@@ -540,6 +540,7 @@ const Calendar = ({ user }) => {
           formData={formData}
           setFormData={setFormData}
           onSave={selectedAppointment ? handleUpdateAppointment : handleCreateAppointment}
+          onRefresh={fetchData}
         />
       )}
 
