@@ -123,6 +123,47 @@ const WaitingRoom = ({ user }) => {
     updateAppointmentStatus(appointmentId, 'absent');
   };
 
+  // **PHASE 2: Drag & Drop Logic**
+  const handleDragEnd = async (result) => {
+    const { destination, source, draggableId } = result;
+
+    // Pas de destination = drag annulé
+    if (!destination) {
+      return;
+    }
+
+    // Pas de changement
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    ) {
+      return;
+    }
+
+    try {
+      // Déplacement entre salles
+      if (source.droppableId !== destination.droppableId) {
+        const appointmentId = draggableId;
+        const targetSalle = destination.droppableId; // 'salle1' ou 'salle2'
+        
+        await updateAppointmentRoom(appointmentId, targetSalle);
+        toast.success(`Patient déplacé vers ${targetSalle === 'salle1' ? 'Salle 1' : 'Salle 2'}`);
+      } 
+      // Réorganisation dans la même salle (priorité)
+      else {
+        const appointmentId = draggableId;
+        const newPosition = destination.index + 1; // Position 1-based
+        
+        // TODO: Implémenter l'API pour la gestion des priorités
+        // Pour l'instant, on simule juste un message
+        toast.info(`Patient repositionné en position ${newPosition} dans ${source.droppableId === 'salle1' ? 'Salle 1' : 'Salle 2'}`);
+      }
+    } catch (error) {
+      console.error('Error in drag and drop:', error);
+      toast.error('Erreur lors du déplacement');
+    }
+  };
+
   // Calculer le temps d'attente estimé
   const calculateWaitingTime = (patients, currentPatientId) => {
     const currentIndex = patients.findIndex(p => p.id === currentPatientId);
