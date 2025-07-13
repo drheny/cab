@@ -3493,5 +3493,380 @@ class CabinetMedicalAPITest(unittest.TestCase):
             "controle_count": controle_count
         }
 
+    # ========== SIMPLIFIED WAITING ROOM FUNCTIONALITY TESTS ==========
+    
+    def test_waiting_room_core_apis(self):
+        """Test core waiting room APIs: GET /api/rdv/jour/{today} and PUT /api/rdv/{rdv_id}/statut"""
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Test 1: GET /api/rdv/jour/{today} - Fetch today's appointments with patient info
+        print("\n=== Testing GET /api/rdv/jour/{today} ===")
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        self.assertIsInstance(appointments, list)
+        
+        print(f"✅ Found {len(appointments)} appointments for today")
+        
+        # Verify each appointment has required waiting room data structure
+        for appointment in appointments:
+            # Core appointment fields
+            self.assertIn("id", appointment)
+            self.assertIn("patient_id", appointment)
+            self.assertIn("date", appointment)
+            self.assertIn("heure", appointment)
+            self.assertIn("type_rdv", appointment)
+            self.assertIn("statut", appointment)
+            self.assertIn("salle", appointment)
+            
+            # Verify patient information is included
+            self.assertIn("patient", appointment)
+            patient_info = appointment["patient"]
+            self.assertIn("nom", patient_info)
+            self.assertIn("prenom", patient_info)
+            
+            # Verify status is valid waiting room status
+            valid_statuses = ["programme", "attente", "en_cours", "termine", "absent", "retard"]
+            self.assertIn(appointment["statut"], valid_statuses)
+            
+            # Verify type_rdv is valid
+            valid_types = ["visite", "controle"]
+            self.assertIn(appointment["type_rdv"], valid_types)
+            
+            print(f"✅ Appointment {appointment['id'][:8]}... - Patient: {patient_info['prenom']} {patient_info['nom']} - Status: {appointment['statut']} - Room: {appointment['salle']} - Type: {appointment['type_rdv']}")
+        
+        # Test 2: PUT /api/rdv/{rdv_id}/statut - Update appointment status
+        if len(appointments) > 0:
+            print("\n=== Testing PUT /api/rdv/{rdv_id}/statut ===")
+            test_appointment = appointments[0]
+            rdv_id = test_appointment["id"]
+            original_status = test_appointment["statut"]
+            
+            # Test status updates for waiting room workflow
+            waiting_room_statuses = ["attente", "en_cours", "termine", "absent"]
+            
+            for new_status in waiting_room_statuses:
+                # Update status
+                status_data = {"statut": new_status}
+                response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/statut", json=status_data)
+                self.assertEqual(response.status_code, 200)
+                
+                update_result = response.json()
+                self.assertEqual(update_result["statut"], new_status)
+                
+                # Verify the update by fetching appointments again
+                response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+                self.assertEqual(response.status_code, 200)
+                updated_appointments = response.json()
+                
+                updated_appointment = next((a for a in updated_appointments if a["id"] == rdv_id), None)
+                self.assertIsNotNone(updated_appointment)
+                self.assertEqual(updated_appointment["statut"], new_status)
+                
+                print(f"✅ Status updated to '{new_status}' for appointment {rdv_id[:8]}...")
+            
+            # Restore original status
+            status_data = {"statut": original_status}
+            requests.put(f"{self.base_url}/api/rdv/{rdv_id}/statut", json=status_data)
+        
+        print("✅ Core waiting room APIs test completed successfully")
+    
+    def test_waiting_room_data_structure_validation(self):
+        """Test data structure validation for waiting room functionality"""
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        print("\n=== Testing Waiting Room Data Structure Validation ===")
+        
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        
+        for appointment in appointments:
+            # Verify appointments include patient information (nom, prenom)
+            self.assertIn("patient", appointment)
+            patient = appointment["patient"]
+            self.assertIn("nom", patient)
+            self.assertIn("prenom", patient)
+            self.assertTrue(len(patient["nom"]) > 0, "Patient nom should not be empty")
+            self.assertTrue(len(patient["prenom"]) > 0, "Patient prenom should not be empty")
+            
+            # Check that salle assignments (salle1, salle2) are working
+            salle = appointment["salle"]
+            valid_salles = ["", "salle1", "salle2"]
+            self.assertIn(salle, valid_salles, f"Invalid salle assignment: {salle}")
+            
+            # Validate statut field values (attente, en_cours, termine, absent)
+            statut = appointment["statut"]
+            valid_statuts = ["programme", "attente", "en_cours", "termine", "absent", "retard"]
+            self.assertIn(statut, valid_statuts, f"Invalid statut: {statut}")
+            
+            # Confirm type_rdv field (visite, controle)
+            type_rdv = appointment["type_rdv"]
+            valid_types = ["visite", "controle"]
+            self.assertIn(type_rdv, valid_types, f"Invalid type_rdv: {type_rdv}")
+            
+            print(f"✅ Data structure valid for {patient['prenom']} {patient['nom']} - Salle: {salle}, Status: {statut}, Type: {type_rdv}")
+        
+        print("✅ Data structure validation completed successfully")
+    
+    def test_waiting_room_basic_workflow(self):
+        """Test basic waiting room workflow"""
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        print("\n=== Testing Basic Waiting Room Workflow ===")
+        
+        # Get all appointments
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        all_appointments = response.json()
+        
+        # Test 1: Retrieve appointments filtered by room (salle1, salle2)
+        salle1_appointments = [a for a in all_appointments if a["salle"] == "salle1"]
+        salle2_appointments = [a for a in all_appointments if a["salle"] == "salle2"]
+        unassigned_appointments = [a for a in all_appointments if a["salle"] == ""]
+        
+        print(f"✅ Room filtering - Salle1: {len(salle1_appointments)}, Salle2: {len(salle2_appointments)}, Unassigned: {len(unassigned_appointments)}")
+        
+        # Test 2: Update patient status from attente → en_cours → termine
+        if len(all_appointments) > 0:
+            test_appointment = all_appointments[0]
+            rdv_id = test_appointment["id"]
+            patient_name = f"{test_appointment['patient']['prenom']} {test_appointment['patient']['nom']}"
+            
+            print(f"\n--- Testing workflow for patient: {patient_name} ---")
+            
+            # Step 1: Set to attente
+            status_data = {"statut": "attente"}
+            response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/statut", json=status_data)
+            self.assertEqual(response.status_code, 200)
+            print("✅ Step 1: Patient set to 'attente' (waiting)")
+            
+            # Step 2: Move to en_cours
+            status_data = {"statut": "en_cours"}
+            response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/statut", json=status_data)
+            self.assertEqual(response.status_code, 200)
+            print("✅ Step 2: Patient moved to 'en_cours' (in consultation)")
+            
+            # Step 3: Complete to termine
+            status_data = {"statut": "termine"}
+            response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/statut", json=status_data)
+            self.assertEqual(response.status_code, 200)
+            print("✅ Step 3: Patient completed to 'termine' (finished)")
+            
+            # Verify final status
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            updated_appointments = response.json()
+            updated_appointment = next((a for a in updated_appointments if a["id"] == rdv_id), None)
+            self.assertIsNotNone(updated_appointment)
+            self.assertEqual(updated_appointment["statut"], "termine")
+            
+        # Test 3: Mark patients as absent
+        if len(all_appointments) > 1:
+            test_appointment = all_appointments[1]
+            rdv_id = test_appointment["id"]
+            patient_name = f"{test_appointment['patient']['prenom']} {test_appointment['patient']['nom']}"
+            
+            print(f"\n--- Testing absent marking for patient: {patient_name} ---")
+            
+            status_data = {"statut": "absent"}
+            response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/statut", json=status_data)
+            self.assertEqual(response.status_code, 200)
+            print("✅ Patient marked as 'absent'")
+            
+            # Verify absent status
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            updated_appointments = response.json()
+            updated_appointment = next((a for a in updated_appointments if a["id"] == rdv_id), None)
+            self.assertIsNotNone(updated_appointment)
+            self.assertEqual(updated_appointment["statut"], "absent")
+        
+        # Test 4: Verify room assignments are maintained
+        print("\n--- Testing room assignment maintenance ---")
+        if len(all_appointments) > 0:
+            test_appointment = all_appointments[0]
+            rdv_id = test_appointment["id"]
+            
+            # Assign to salle1
+            status_data = {"statut": "attente", "salle": "salle1"}
+            response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/statut", json=status_data)
+            self.assertEqual(response.status_code, 200)
+            
+            # Verify room assignment is maintained
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            updated_appointments = response.json()
+            updated_appointment = next((a for a in updated_appointments if a["id"] == rdv_id), None)
+            self.assertIsNotNone(updated_appointment)
+            self.assertEqual(updated_appointment["salle"], "salle1")
+            print("✅ Room assignment maintained during status update")
+        
+        print("✅ Basic workflow testing completed successfully")
+    
+    def test_waiting_room_edge_cases(self):
+        """Test edge cases for waiting room functionality"""
+        today = datetime.now().strftime("%Y-%m-%d")
+        tomorrow = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
+        
+        print("\n=== Testing Waiting Room Edge Cases ===")
+        
+        # Test 1: Empty waiting rooms (future date with no appointments)
+        future_date = (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{future_date}")
+        self.assertEqual(response.status_code, 200)
+        future_appointments = response.json()
+        self.assertIsInstance(future_appointments, list)
+        print(f"✅ Empty waiting room test - Future date ({future_date}) returned {len(future_appointments)} appointments")
+        
+        # Test 2: Patients without assigned rooms
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        
+        unassigned_patients = [a for a in appointments if a["salle"] == ""]
+        print(f"✅ Patients without assigned rooms: {len(unassigned_patients)}")
+        
+        for appointment in unassigned_patients:
+            patient_name = f"{appointment['patient']['prenom']} {appointment['patient']['nom']}"
+            print(f"   - {patient_name} (Status: {appointment['statut']})")
+        
+        # Test 3: Invalid status updates
+        if len(appointments) > 0:
+            test_appointment = appointments[0]
+            rdv_id = test_appointment["id"]
+            
+            print("\n--- Testing invalid status updates ---")
+            
+            # Test invalid status
+            invalid_status_data = {"statut": "invalid_status"}
+            response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/statut", json=invalid_status_data)
+            self.assertEqual(response.status_code, 400)
+            print("✅ Invalid status rejected (400 error)")
+            
+            # Test non-existent appointment
+            response = requests.put(f"{self.base_url}/api/rdv/non_existent_id/statut", json={"statut": "attente"})
+            self.assertEqual(response.status_code, 404)
+            print("✅ Non-existent appointment rejected (404 error)")
+        
+        # Test 4: Missing patient information
+        print("\n--- Testing missing patient information handling ---")
+        
+        # Create appointment with non-existent patient_id to test missing patient info
+        test_appointment_data = {
+            "patient_id": "non_existent_patient_123",
+            "date": today,
+            "heure": "23:00",
+            "type_rdv": "visite",
+            "statut": "programme",
+            "motif": "Test missing patient info"
+        }
+        
+        response = requests.post(f"{self.base_url}/api/appointments", json=test_appointment_data)
+        if response.status_code == 200:
+            test_appointment_id = response.json()["appointment_id"]
+            
+            # Get appointments and check how missing patient info is handled
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            test_appointment = next((a for a in appointments if a["id"] == test_appointment_id), None)
+            if test_appointment:
+                # Check how missing patient info is handled
+                if "patient" in test_appointment:
+                    patient_info = test_appointment["patient"]
+                    print(f"✅ Missing patient info handled - Patient fields: nom='{patient_info.get('nom', '')}', prenom='{patient_info.get('prenom', '')}'")
+                else:
+                    print("✅ Missing patient info handled - No patient field in response")
+            
+            # Clean up
+            requests.delete(f"{self.base_url}/api/appointments/{test_appointment_id}")
+        
+        print("✅ Edge cases testing completed successfully")
+    
+    def test_waiting_room_realistic_workflow(self):
+        """Test realistic waiting room workflow with today's data"""
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        print("\n=== Testing Realistic Waiting Room Workflow ===")
+        
+        # Get current appointments
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        
+        print(f"Starting with {len(appointments)} appointments for today")
+        
+        # Simulate realistic waiting room scenarios
+        if len(appointments) >= 2:
+            # Scenario 1: Patient arrives and goes to waiting room
+            patient1 = appointments[0]
+            patient1_name = f"{patient1['patient']['prenom']} {patient1['patient']['nom']}"
+            
+            print(f"\n--- Scenario 1: {patient1_name} arrives ---")
+            
+            # Patient arrives - set to attente and assign room
+            status_data = {"statut": "attente", "salle": "salle1"}
+            response = requests.put(f"{self.base_url}/api/rdv/{patient1['id']}/statut", json=status_data)
+            self.assertEqual(response.status_code, 200)
+            print(f"✅ {patient1_name} checked in to waiting room (salle1)")
+            
+            # Scenario 2: Another patient arrives to different room
+            patient2 = appointments[1]
+            patient2_name = f"{patient2['patient']['prenom']} {patient2['patient']['nom']}"
+            
+            print(f"\n--- Scenario 2: {patient2_name} arrives ---")
+            
+            status_data = {"statut": "attente", "salle": "salle2"}
+            response = requests.put(f"{self.base_url}/api/rdv/{patient2['id']}/statut", json=status_data)
+            self.assertEqual(response.status_code, 200)
+            print(f"✅ {patient2_name} checked in to waiting room (salle2)")
+            
+            # Scenario 3: First patient called for consultation
+            print(f"\n--- Scenario 3: {patient1_name} called for consultation ---")
+            
+            status_data = {"statut": "en_cours"}
+            response = requests.put(f"{self.base_url}/api/rdv/{patient1['id']}/statut", json=status_data)
+            self.assertEqual(response.status_code, 200)
+            print(f"✅ {patient1_name} moved to consultation (en_cours)")
+            
+            # Verify current state
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            current_appointments = response.json()
+            
+            # Count patients by status and room
+            salle1_waiting = len([a for a in current_appointments if a["salle"] == "salle1" and a["statut"] == "attente"])
+            salle2_waiting = len([a for a in current_appointments if a["salle"] == "salle2" and a["statut"] == "attente"])
+            in_consultation = len([a for a in current_appointments if a["statut"] == "en_cours"])
+            
+            print(f"\n--- Current Waiting Room Status ---")
+            print(f"Salle 1 waiting: {salle1_waiting}")
+            print(f"Salle 2 waiting: {salle2_waiting}")
+            print(f"In consultation: {in_consultation}")
+            
+            # Scenario 4: Complete consultation
+            print(f"\n--- Scenario 4: {patient1_name} completes consultation ---")
+            
+            status_data = {"statut": "termine"}
+            response = requests.put(f"{self.base_url}/api/rdv/{patient1['id']}/statut", json=status_data)
+            self.assertEqual(response.status_code, 200)
+            print(f"✅ {patient1_name} consultation completed (termine)")
+            
+            # Final verification
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            final_appointments = response.json()
+            
+            completed = len([a for a in final_appointments if a["statut"] == "termine"])
+            still_waiting = len([a for a in final_appointments if a["statut"] == "attente"])
+            
+            print(f"\n--- Final Status ---")
+            print(f"Completed consultations: {completed}")
+            print(f"Still waiting: {still_waiting}")
+            
+        print("✅ Realistic workflow testing completed successfully")
+
 if __name__ == "__main__":
     unittest.main()
