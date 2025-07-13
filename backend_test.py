@@ -1620,7 +1620,8 @@ class CabinetMedicalAPITest(unittest.TestCase):
             # Test status transitions
             status_transitions = ["attente", "en_cours", "termine", "absent"]
             for new_status in status_transitions:
-                response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/statut?statut={new_status}")
+                status_data = {"statut": new_status}
+                response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/statut", json=status_data)
                 self.assertEqual(response.status_code, 200)
                 data = response.json()
                 self.assertEqual(data["statut"], new_status)
