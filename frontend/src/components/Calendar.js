@@ -988,7 +988,8 @@ const AppointmentSection = ({
 const AppointmentCard = ({ 
   appointment, 
   onStatusUpdate, 
-  onRoomAssignment, 
+  onRoomAssignment,
+  onPatientArrival,
   onEdit, 
   onDelete, 
   onViewPatient,
