@@ -1148,6 +1148,7 @@ const AppointmentModal = ({
   formData, 
   setFormData, 
   onSave, 
+  onRefresh,
   onOpenPatientModal 
 }) => {
   const [isNewPatient, setIsNewPatient] = useState(false);
