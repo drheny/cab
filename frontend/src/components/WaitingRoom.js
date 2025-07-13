@@ -423,6 +423,11 @@ Merci de votre patience ! 🙏`;
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPaymentAppointment, setSelectedPaymentAppointment] = useState(null);
 
+  const openPaymentModal = (appointment) => {
+    setSelectedPaymentAppointment(appointment);
+    setShowPaymentModal(true);
+  };
+
   // **PHASE 7: Bouton ajout RDV urgents**
   const [showUrgentModal, setShowUrgentModal] = useState(false);
   const [urgentFormData, setUrgentFormData] = useState({
