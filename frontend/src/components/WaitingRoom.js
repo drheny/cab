@@ -343,12 +343,74 @@ Merci de votre patience ! 🙏`;
     setShowWhatsAppPreview(true);
   };
 
-  const confirmSendWhatsApp = () => {
-    if (previewData) {
-      sendWhatsAppMessage(previewData.appointment, previewData.salle);
-      setShowWhatsAppPreview(false);
-      setPreviewData(null);
+  // **PHASE 5: Module Paiement Integration**
+  const [paymentStates, setPaymentStates] = useState({}); // Tracking payment status
+
+  // Calculer le montant du paiement selon le type
+  const calculatePaymentAmount = (appointment) => {
+    if (appointment.type_rdv === 'controle') return 0; // Contrôle gratuit
+    
+    // Pour les visites payantes
+    const baseAmount = 300; // TND
+    
+    // TODO: Ajouter logique assurance si nécessaire
+    // if (appointment.assurance) return 50; // Ticket modérateur
+    
+    return baseAmount;
+  };
+
+  // Mettre à jour le statut de paiement
+  const updatePaymentStatus = async (appointmentId, isPaid, amount = 0, paymentMethod = 'espece') => {
+    try {
+      const updateData = {
+        paye: isPaid,
+        montant_paye: amount,
+        methode_paiement: paymentMethod,
+        date_paiement: isPaid ? new Date().toISOString() : null
+      };
+
+      await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/paiement`, updateData);
+      
+      // Mettre à jour l'état local
+      setPaymentStates(prev => ({
+        ...prev,
+        [appointmentId]: {
+          paid: isPaid,
+          amount: amount,
+          method: paymentMethod,
+          timestamp: isPaid ? new Date().toLocaleString('fr-FR') : null
+        }
+      }));
+
+      toast.success(isPaid ? `Paiement de ${amount} TND enregistré` : 'Paiement annulé');
+      
+      // Rafraîchir les données
+      fetchTodayAppointments();
+      
+    } catch (error) {
+      console.error('Error updating payment:', error);
+      toast.error('Erreur lors de la mise à jour du paiement');
     }
+  };
+
+  // Marquer comme payé
+  const markAsPaid = (appointment, paymentMethod = 'espece') => {
+    const amount = calculatePaymentAmount(appointment);
+    updatePaymentStatus(appointment.id, true, amount, paymentMethod);
+  };
+
+  // Marquer comme non payé
+  const markAsUnpaid = (appointment) => {
+    updatePaymentStatus(appointment.id, false, 0);
+  };
+
+  // Ouvrir le modal de paiement détaillé
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedPaymentAppointment, setSelectedPaymentAppointment] = useState(null);
+
+  const openPaymentModal = (appointment) => {
+    setSelectedPaymentAppointment(appointment);
+    setShowPaymentModal(true);
   };
 
   const PatientCard = ({ 
