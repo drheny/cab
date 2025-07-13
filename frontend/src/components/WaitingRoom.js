@@ -318,13 +318,29 @@ Merci de votre patience ! 🙏`;
   };
 
   // Fonction pour prévisualiser le message
+  const [showWhatsAppPreview, setShowWhatsAppPreview] = useState(false);
+  const [previewData, setPreviewData] = useState(null);
+
   const previewWhatsAppMessage = (appointment, salle) => {
     const patients = salle === 'salle1' ? salle1 : salle2;
     const waitingTime = calculateWaitingTime(patients, appointment.id);
     const message = generateWhatsAppMessage(appointment.patient, waitingTime, salle);
     
-    // Afficher le message dans une alerte ou modal
-    alert(`Aperçu du message WhatsApp:\n\n${message}`);
+    setPreviewData({
+      appointment,
+      salle,
+      waitingTime,
+      message
+    });
+    setShowWhatsAppPreview(true);
+  };
+
+  const confirmSendWhatsApp = () => {
+    if (previewData) {
+      sendWhatsAppMessage(previewData.appointment, previewData.salle);
+      setShowWhatsAppPreview(false);
+      setPreviewData(null);
+    }
   };
 
   const PatientCard = ({ appointment, patients, onStart, onFinish, onMarkAbsent, onMoveToSalle, index, isDragging }) => {
