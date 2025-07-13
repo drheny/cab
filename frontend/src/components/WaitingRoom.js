@@ -473,8 +473,8 @@ const WaitingRoom = ({ user }) => {
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Stats avec temps d'attente moyen */}
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div className="bg-white p-4 rounded-lg shadow-sm border">
             <div className="flex items-center space-x-2">
               <Users className="w-5 h-5 text-blue-500" />
@@ -495,6 +495,13 @@ const WaitingRoom = ({ user }) => {
               <span className="text-sm font-medium">En cours</span>
             </div>
             <p className="text-2xl font-bold text-yellow-600">{stats.enCoursCount}</p>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow-sm border">
+            <div className="flex items-center space-x-2">
+              <Clock className="w-5 h-5 text-orange-500" />
+              <span className="text-sm font-medium">Attente moyenne</span>
+            </div>
+            <p className="text-2xl font-bold text-orange-600">{averageWaitingTime} min</p>
           </div>
           <div className="bg-white p-4 rounded-lg shadow-sm border">
             <div className="flex items-center space-x-2">
