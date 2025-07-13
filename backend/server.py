@@ -782,6 +782,88 @@ async def update_rdv_salle(rdv_id: str, salle: str):
     
     return {"message": "Room assignment updated successfully", "salle": salle}
 
+@app.put("/api/rdv/{rdv_id}/paiement")
+async def update_rdv_paiement(rdv_id: str, payment_data: dict):
+    """Update appointment payment status"""
+    try:
+        # Extract payment data
+        paye = payment_data.get("paye", False)
+        montant_paye = payment_data.get("montant_paye", 0)
+        methode_paiement = payment_data.get("methode_paiement", "espece")
+        date_paiement = payment_data.get("date_paiement")
+        
+        # Validate payment method
+        valid_methods = ["espece", "carte", "cheque", "virement"]
+        if methode_paiement not in valid_methods:
+            raise HTTPException(status_code=400, detail=f"Invalid payment method. Must be one of: {valid_methods}")
+        
+        # Update appointment
+        update_data = {
+            "paye": paye,
+            "updated_at": datetime.now()
+        }
+        
+        # Add payment details if paid
+        if paye:
+            update_data.update({
+                "montant_paye": montant_paye,
+                "methode_paiement": methode_paiement,
+                "date_paiement": date_paiement
+            })
+        else:
+            # Clear payment details if unpaid
+            update_data.update({
+                "montant_paye": 0,
+                "methode_paiement": "",
+                "date_paiement": None
+            })
+        
+        result = appointments_collection.update_one(
+            {"id": rdv_id},
+            {"$set": update_data}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Appointment not found")
+        
+        # Also create/update payment record
+        if paye and montant_paye > 0:
+            payment_record = {
+                "id": str(uuid.uuid4()),
+                "patient_id": "",  # Will be filled from appointment
+                "appointment_id": rdv_id,
+                "montant": montant_paye,
+                "type_paiement": methode_paiement,
+                "statut": "paye",
+                "date": datetime.now().strftime("%Y-%m-%d"),
+                "created_at": datetime.now()
+            }
+            
+            # Get patient_id from appointment
+            appointment = appointments_collection.find_one({"id": rdv_id})
+            if appointment:
+                payment_record["patient_id"] = appointment.get("patient_id", "")
+            
+            # Insert or update payment record
+            payments_collection.update_one(
+                {"appointment_id": rdv_id},
+                {"$set": payment_record},
+                upsert=True
+            )
+        else:
+            # Remove payment record if unpaid
+            payments_collection.delete_one({"appointment_id": rdv_id})
+        
+        return {
+            "message": "Payment status updated successfully", 
+            "paye": paye,
+            "montant_paye": montant_paye,
+            "methode_paiement": methode_paiement
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating payment: {str(e)}")
+
 @app.get("/api/rdv/stats/{date}")
 async def get_rdv_stats(date: str):
     """Get appointment statistics for a specific day"""
