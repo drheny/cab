@@ -710,6 +710,84 @@ Merci de votre patience ! 🙏`;
         >
           <Plus className="w-6 h-6" />
         </button>
+
+        {/* Modal de prévisualisation WhatsApp */}
+        {showWhatsAppPreview && previewData && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-2">
+                    <MessageCircle className="w-6 h-6 text-green-600" />
+                    <h2 className="text-xl font-bold text-gray-900">Aperçu Message WhatsApp</h2>
+                  </div>
+                  <button
+                    onClick={() => setShowWhatsAppPreview(false)}
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* Informations patient */}
+                <div className="bg-gray-50 p-3 rounded-lg mb-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold text-gray-900">
+                        {previewData.appointment.patient.prenom} {previewData.appointment.patient.nom}
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        📞 {previewData.appointment.patient.numero_whatsapp || previewData.appointment.patient.telephone}
+                      </p>
+                    </div>
+                    <div className="text-right text-sm">
+                      <div className="font-medium">{previewData.salle === 'salle1' ? 'Salle 1' : 'Salle 2'}</div>
+                      <div className="text-gray-500">Position #{previewData.waitingTime.position}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Aperçu du message */}
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                  <div className="text-sm font-medium text-green-800 mb-2">Message à envoyer:</div>
+                  <div className="bg-white p-3 rounded border text-sm whitespace-pre-wrap font-mono">
+                    {previewData.message}
+                  </div>
+                </div>
+
+                {/* Statistiques temps d'attente */}
+                <div className="grid grid-cols-2 gap-3 mb-6">
+                  <div className="bg-blue-50 p-3 rounded-lg text-center">
+                    <div className="text-2xl font-bold text-blue-600">{previewData.waitingTime.minutes}</div>
+                    <div className="text-xs text-blue-800">Minutes d'attente</div>
+                  </div>
+                  <div className="bg-orange-50 p-3 rounded-lg text-center">
+                    <div className="text-2xl font-bold text-orange-600">{previewData.waitingTime.patientsAhead}</div>
+                    <div className="text-xs text-orange-800">Patients avant</div>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => setShowWhatsAppPreview(false)}
+                    className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded-lg transition-colors"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    onClick={confirmSendWhatsApp}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
+                  >
+                    <Send className="w-4 h-4" />
+                    <span>Envoyer</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </DragDropContext>
   );
