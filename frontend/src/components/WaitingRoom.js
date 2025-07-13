@@ -423,9 +423,96 @@ Merci de votre patience ! 🙏`;
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPaymentAppointment, setSelectedPaymentAppointment] = useState(null);
 
-  const openPaymentModal = (appointment) => {
-    setSelectedPaymentAppointment(appointment);
-    setShowPaymentModal(true);
+  // **PHASE 7: Bouton ajout RDV urgents**
+  const [showUrgentModal, setShowUrgentModal] = useState(false);
+  const [urgentFormData, setUrgentFormData] = useState({
+    patient_nom: '',
+    patient_prenom: '',
+    patient_telephone: '',
+    type_rdv: 'visite',
+    salle: 'salle1',
+    notes: ''
+  });
+
+  const handleUrgentRDV = () => {
+    setShowUrgentModal(true);
+    // Pré-remplir avec heure actuelle
+    const now = new Date();
+    const currentTime = now.toLocaleTimeString('fr-FR', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+    
+    setUrgentFormData(prev => ({
+      ...prev,
+      heure: currentTime
+    }));
+  };
+
+  const createUrgentAppointment = async () => {
+    try {
+      if (!urgentFormData.patient_nom || !urgentFormData.patient_prenom || !urgentFormData.patient_telephone) {
+        toast.error('Veuillez remplir tous les champs obligatoires');
+        return;
+      }
+
+      // Créer le patient d'urgence
+      const patientId = 'urgent_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      
+      const patientData = {
+        id: patientId,
+        nom: urgentFormData.patient_nom,
+        prenom: urgentFormData.patient_prenom,
+        telephone: urgentFormData.patient_telephone,
+        date_naissance: '',
+        adresse: '',
+        pere: { nom: '', telephone: '', fonction: '' },
+        mere: { nom: '', telephone: '', fonction: '' },
+        numero_whatsapp: urgentFormData.patient_telephone,
+        notes: 'Patient urgent - créé depuis salle d\'attente',
+        antecedents: '',
+        consultations: []
+      };
+
+      // Créer le patient
+      await axios.post(`${API_BASE_URL}/api/patients`, patientData);
+
+      // Créer le RDV urgent
+      const appointmentData = {
+        id: 'rdv_urgent_' + Date.now(),
+        patient_id: patientId,
+        date: new Date().toISOString().split('T')[0],
+        heure: urgentFormData.heure || new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+        statut: 'attente', // Directement en attente
+        type_rdv: urgentFormData.type_rdv,
+        salle: urgentFormData.salle,
+        paye: false,
+        notes_rdv: `URGENT - ${urgentFormData.notes}`,
+        rappel_envoye: false
+      };
+
+      await axios.post(`${API_BASE_URL}/api/rdv`, appointmentData);
+
+      toast.success(`RDV urgent créé pour ${urgentFormData.patient_prenom} ${urgentFormData.patient_nom}`);
+      
+      // Reset form et fermer modal
+      setUrgentFormData({
+        patient_nom: '',
+        patient_prenom: '',
+        patient_telephone: '',
+        type_rdv: 'visite',
+        salle: 'salle1',
+        notes: ''
+      });
+      setShowUrgentModal(false);
+      
+      // Rafraîchir les données
+      fetchTodayAppointments();
+      
+    } catch (error) {
+      console.error('Error creating urgent appointment:', error);
+      toast.error('Erreur lors de la création du RDV urgent');
+    }
   };
 
   const PatientCard = ({ 
