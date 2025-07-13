@@ -435,7 +435,11 @@ Merci de votre patience ! 🙏`;
     isDragging,
     whatsappStates,
     onSendWhatsApp,
-    onPreviewWhatsApp
+    onPreviewWhatsApp,
+    paymentStates,
+    onMarkPaid,
+    onMarkUnpaid,
+    onOpenPaymentModal
   }) => {
     const waitingTime = calculateWaitingTime(patients, appointment.id);
     
