@@ -8,7 +8,7 @@ import LoginPage from './components/LoginPage';
 import Dashboard from './components/Dashboard';
 import PatientsList from './components/PatientsList';
 import Calendar from './components/Calendar';
-import WaitingRoom from './components/WaitingRoom';
+
 import Consultation from './components/Consultation';
 import Billing from './components/Billing';
 import Administration from './components/Administration';
