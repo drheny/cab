@@ -509,74 +509,70 @@ const Calendar = ({ user }) => {
             />
           )}
           
-          {/* En salle d'attente (Vert) */}
-          {groupedAppointments.attente.length > 0 && (
-            <AppointmentSection
-              title="En salle d'attente"
-              appointments={groupedAppointments.attente}
-              onStatusUpdate={handleStatusUpdate}
-              onRoomAssignment={handleRoomAssignment}
-              onPatientArrival={handlePatientArrival}
-              onEdit={openModal}
-              onDelete={handleDeleteAppointment}
-              onViewPatient={viewPatientDetails}
-            />
-          )}
-          
-          {/* En cours (Jaune) */}
+          {/* 2. En consultation */}
           {groupedAppointments.en_cours.length > 0 && (
-            <AppointmentSection
-              title="En cours"
+            <WorkflowSection
+              title="🔵 En consultation"
               appointments={groupedAppointments.en_cours}
+              sectionType="en_cours"
               onStatusUpdate={handleStatusUpdate}
               onRoomAssignment={handleRoomAssignment}
-              onPatientArrival={handlePatientArrival}
+              onTypeToggle={handleTypeToggle}
+              onPaymentUpdate={handlePaymentUpdate}
+              onFinishConsultation={handleFinishConsultation}
               onEdit={openModal}
               onDelete={handleDeleteAppointment}
               onViewPatient={viewPatientDetails}
             />
           )}
           
-          {/* En retard (Orange) */}
-          {groupedAppointments.retard.length > 0 && (
-            <AppointmentSection
-              title="En retard"
-              appointments={groupedAppointments.retard}
-              onStatusUpdate={handleStatusUpdate}
-              onRoomAssignment={handleRoomAssignment}
-              onPatientArrival={handlePatientArrival}
-              onEdit={openModal}
-              onDelete={handleDeleteAppointment}
-              onViewPatient={viewPatientDetails}
-            />
-          )}
-          
-          {/* Absents (Rouge) */}
+          {/* 3. Absents non encore venus */}
           {groupedAppointments.absent.length > 0 && (
-            <AppointmentSection
-              title="Absents"
+            <WorkflowSection
+              title="🔴 Absents non encore venus"
               appointments={groupedAppointments.absent}
+              sectionType="absent"
               onStatusUpdate={handleStatusUpdate}
               onRoomAssignment={handleRoomAssignment}
-              onPatientArrival={handlePatientArrival}
+              onTypeToggle={handleTypeToggle}
+              onPaymentUpdate={handlePaymentUpdate}
               onEdit={openModal}
               onDelete={handleDeleteAppointment}
               onViewPatient={viewPatientDetails}
             />
           )}
           
-          {/* Terminés (Gris, en bas) */}
-          {groupedAppointments.termine.length > 0 && (
-            <AppointmentSection
-              title="Terminés"
-              appointments={groupedAppointments.termine}
+          {/* 4. En retard */}
+          {groupedAppointments.retard.length > 0 && (
+            <WorkflowSection
+              title="🟠 En retard"
+              appointments={groupedAppointments.retard}
+              sectionType="retard"
               onStatusUpdate={handleStatusUpdate}
               onRoomAssignment={handleRoomAssignment}
-              onPatientArrival={handlePatientArrival}
+              onTypeToggle={handleTypeToggle}
+              onPaymentUpdate={handlePaymentUpdate}
+              onStartConsultation={handleStartConsultation}
               onEdit={openModal}
               onDelete={handleDeleteAppointment}
               onViewPatient={viewPatientDetails}
-              isCompleted
+            />
+          )}
+          
+          {/* 5. Terminé (en bas) */}
+          {groupedAppointments.termine.length > 0 && (
+            <WorkflowSection
+              title="✅ Terminé"
+              appointments={groupedAppointments.termine}
+              sectionType="termine"
+              onStatusUpdate={handleStatusUpdate}
+              onRoomAssignment={handleRoomAssignment}
+              onTypeToggle={handleTypeToggle}
+              onPaymentUpdate={handlePaymentUpdate}
+              onEdit={openModal}
+              onDelete={handleDeleteAppointment}
+              onViewPatient={viewPatientDetails}
+              isCompleted={true}
             />
           )}
           
