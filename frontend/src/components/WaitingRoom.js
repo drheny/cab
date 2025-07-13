@@ -15,7 +15,10 @@ import {
   GripVertical,
   MessageCircle,
   Eye,
-  Send
+  Send,
+  Euro,
+  Banknote,
+  Smartphone
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
