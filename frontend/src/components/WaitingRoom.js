@@ -384,7 +384,7 @@ Merci de votre patience ! 🙏`;
           </div>
         </div>
 
-        {/* Temps d'attente amélioré */}
+        {/* Temps d'attente amélioré avec WhatsApp */}
         {appointment.statut === 'attente' && (
           <div className="bg-white bg-opacity-50 p-3 rounded mb-3 border-l-4 border-blue-400">
             <div className="grid grid-cols-2 gap-4 text-sm">
@@ -418,6 +418,36 @@ Merci de votre patience ! 🙏`;
                     width: `${Math.max(10, 100 - (waitingTime.minutes / 60) * 100)}%` 
                   }}
                 ></div>
+              </div>
+            </div>
+            
+            {/* Section WhatsApp */}
+            <div className="mt-3 pt-2 border-t border-gray-200">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-gray-600">📱 Communication patient</span>
+                {whatsappStates[appointment.id]?.sent && (
+                  <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">
+                    ✅ Envoyé {whatsappStates[appointment.id].timestamp}
+                  </span>
+                )}
+              </div>
+              <div className="flex space-x-2 mt-2">
+                <button
+                  onClick={() => previewWhatsAppMessage(appointment, appointment.salle)}
+                  className="flex-1 bg-gray-500 hover:bg-gray-600 text-white text-xs py-1 px-2 rounded transition-colors flex items-center justify-center space-x-1"
+                  title="Prévisualiser le message"
+                >
+                  <Eye className="w-3 h-3" />
+                  <span>Aperçu</span>
+                </button>
+                <button
+                  onClick={() => sendWhatsAppMessage(appointment, appointment.salle)}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs py-1 px-2 rounded transition-colors flex items-center justify-center space-x-1"
+                  title="Envoyer message WhatsApp avec temps d'attente"
+                >
+                  <MessageCircle className="w-3 h-3" />
+                  <span>WhatsApp</span>
+                </button>
               </div>
             </div>
           </div>
