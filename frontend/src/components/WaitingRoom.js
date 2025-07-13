@@ -416,6 +416,14 @@ Merci de votre patience ! 🙏`;
     setShowPaymentModal(true);
   };
 
+  const confirmSendWhatsApp = () => {
+    if (previewData) {
+      sendWhatsAppMessage(previewData.appointment, previewData.salle);
+      setShowWhatsAppPreview(false);
+      setPreviewData(null);
+    }
+  };
+
   const PatientCard = ({ 
     appointment, 
     patients, 
