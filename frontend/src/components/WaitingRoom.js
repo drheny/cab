@@ -164,17 +164,75 @@ const WaitingRoom = ({ user }) => {
     }
   };
 
-  // Calculer le temps d'attente estimé
+  // **PHASE 3: Calcul temps d'attente en temps réel amélioré**
   const calculateWaitingTime = (patients, currentPatientId) => {
     const currentIndex = patients.findIndex(p => p.id === currentPatientId);
+    if (currentIndex === -1) return { minutes: 0, patientsAhead: 0, position: 0, estimatedTime: null };
+    
+    // Filtrer seulement les patients en attente avant le patient actuel
     const patientsAhead = patients.slice(0, currentIndex).filter(p => p.statut === 'attente');
-    const estimatedMinutes = patientsAhead.length * 15; // 15 min par patient
+    
+    // Calculer le temps estimé (15 min par patient en attente + temps pour patient en cours)
+    let estimatedMinutes = patientsAhead.length * 15;
+    
+    // Ajouter du temps si un patient est actuellement en consultation
+    const patientInConsultation = patients.find(p => p.statut === 'en_cours');
+    if (patientInConsultation) {
+      // Estimer qu'il reste 10 minutes en moyenne pour le patient en cours
+      estimatedMinutes += 10;
+    }
+    
+    // Calculer l'heure estimée
+    const now = new Date();
+    const estimatedTime = new Date(now.getTime() + estimatedMinutes * 60000);
     
     return {
       minutes: estimatedMinutes,
       patientsAhead: patientsAhead.length,
-      position: currentIndex + 1
+      position: currentIndex + 1,
+      estimatedTime: estimatedTime,
+      timeString: estimatedTime.toLocaleTimeString('fr-FR', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      })
     };
+  };
+
+  // Calcul global du temps d'attente moyen pour les statistiques
+  const calculateAverageWaitingTime = () => {
+    const allWaitingPatients = [...salle1, ...salle2].filter(p => p.statut === 'attente');
+    if (allWaitingPatients.length === 0) return 0;
+    
+    const totalWaitingTime = allWaitingPatients.reduce((total, patient, index) => {
+      const waitingTime = calculateWaitingTime(allWaitingPatients, patient.id);
+      return total + waitingTime.minutes;
+    }, 0);
+    
+    return Math.round(totalWaitingTime / allWaitingPatients.length);
+  };
+
+  // État pour le temps d'attente moyen
+  const [averageWaitingTime, setAverageWaitingTime] = useState(0);
+
+  // Mise à jour temps réel toutes les minutes
+  useEffect(() => {
+    const updateWaitingTimes = () => {
+      const avgTime = calculateAverageWaitingTime();
+      setAverageWaitingTime(avgTime);
+    };
+
+    // Calculer immédiatement
+    updateWaitingTimes();
+
+    // Mettre à jour toutes les minutes
+    const interval = setInterval(updateWaitingTimes, 60000);
+    return () => clearInterval(interval);
+  }, [salle1, salle2]);
+
+  // Fonction pour obtenir la prochaine position disponible dans une salle
+  const getNextAvailablePosition = (salle) => {
+    const patients = salle === 'salle1' ? salle1 : salle2;
+    return patients.length + 1;
   };
 
   const PatientCard = ({ appointment, patients, onStart, onFinish, onMarkAbsent, onMoveToSalle, index, isDragging }) => {
