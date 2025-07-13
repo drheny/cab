@@ -712,7 +712,7 @@ class CabinetMedicalAPITest(unittest.TestCase):
             
             for new_status in valid_statuses:
                 # Update status
-                response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/statut?statut={new_status}")
+                response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/statut", json={"statut": new_status})
                 self.assertEqual(response.status_code, 200)
                 data = response.json()
                 self.assertIn("message", data)
