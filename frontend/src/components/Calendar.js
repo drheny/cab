@@ -1012,33 +1012,54 @@ const WeekView = ({ weekData, onStatusUpdate, onRoomAssignment, onEdit, onDelete
   );
 };
 
-// Composant pour les sections d'appointments
-const AppointmentSection = ({ 
+// ====== NOUVEAUX COMPOSANTS WORKFLOW OPTIMISÉS ======
+
+// Composant WorkflowSection pour les 5 sections du workflow
+const WorkflowSection = ({ 
   title, 
   appointments, 
+  sectionType,
   onStatusUpdate, 
   onRoomAssignment,
-  onPatientArrival,
+  onTypeToggle,
+  onPaymentUpdate,
+  onStartConsultation,
+  onFinishConsultation,
   onEdit, 
   onDelete, 
   onViewPatient,
   isCompleted = false 
 }) => {
+  const getSectionColor = () => {
+    switch (sectionType) {
+      case 'attente': return 'border-green-200 bg-green-50';
+      case 'en_cours': return 'border-blue-200 bg-blue-50';
+      case 'absent': return 'border-red-200 bg-red-50';
+      case 'retard': return 'border-orange-200 bg-orange-50';
+      case 'termine': return 'border-gray-200 bg-gray-50';
+      default: return 'border-gray-200 bg-white';
+    }
+  };
+
   return (
-    <div className={`bg-white rounded-xl shadow-sm border border-gray-200 ${isCompleted ? 'opacity-75' : ''}`}>
+    <div className={`rounded-xl shadow-sm border-2 ${getSectionColor()} ${isCompleted ? 'opacity-75' : ''}`}>
       <div className="p-4 border-b border-gray-200">
         <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-        <p className="text-sm text-gray-600">{appointments.length} rendez-vous</p>
+        <p className="text-sm text-gray-600">{appointments.length} patient(s)</p>
       </div>
       
       <div className="divide-y divide-gray-100">
         {appointments.map((appointment) => (
-          <AppointmentCard
+          <WorkflowCard
             key={appointment.id}
             appointment={appointment}
+            sectionType={sectionType}
             onStatusUpdate={onStatusUpdate}
             onRoomAssignment={onRoomAssignment}
-            onPatientArrival={onPatientArrival}
+            onTypeToggle={onTypeToggle}
+            onPaymentUpdate={onPaymentUpdate}
+            onStartConsultation={onStartConsultation}
+            onFinishConsultation={onFinishConsultation}
             onEdit={onEdit}
             onDelete={onDelete}
             onViewPatient={onViewPatient}
@@ -1050,28 +1071,46 @@ const AppointmentSection = ({
   );
 };
 
-// Composant pour une carte de rendez-vous
-const AppointmentCard = ({ 
+// Composant WorkflowCard optimisé avec badges interactifs
+const WorkflowCard = ({ 
   appointment, 
+  sectionType,
   onStatusUpdate, 
   onRoomAssignment,
-  onPatientArrival,
+  onTypeToggle,
+  onPaymentUpdate,
+  onStartConsultation,
+  onFinishConsultation,
   onEdit, 
   onDelete, 
   onViewPatient,
   isCompleted 
 }) => {
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'programme': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'attente': return 'bg-green-100 text-green-800 border-green-200';
-      case 'en_cours': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'termine': return 'bg-gray-100 text-gray-600 border-gray-200';
-      case 'absent': return 'bg-red-100 text-red-800 border-red-200';
-      case 'retard': return 'bg-orange-100 text-orange-800 border-orange-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  const [showRoomDropdown, setShowRoomDropdown] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [waitingTime, setWaitingTime] = useState(0);
+
+  // Calculer temps d'attente pour patients en attente
+  useEffect(() => {
+    if (sectionType === 'attente') {
+      const startTime = new Date(`2025-01-01 ${appointment.heure}`);
+      const now = new Date();
+      const currentTime = new Date(`2025-01-01 ${now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`);
+      const diffMinutes = Math.max(0, Math.floor((currentTime - startTime) / 60000));
+      setWaitingTime(diffMinutes);
+      
+      // Mettre à jour toutes les minutes
+      const interval = setInterval(() => {
+        const newNow = new Date();
+        const newCurrentTime = new Date(`2025-01-01 ${newNow.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`);
+        const newDiffMinutes = Math.max(0, Math.floor((newCurrentTime - startTime) / 60000));
+        setWaitingTime(newDiffMinutes);
+      }, 60000);
+      
+      return () => clearInterval(interval);
     }
-  };
+  }, [sectionType, appointment.heure]);
 
   const getWhatsAppLink = (numero) => {
     if (!numero) return '#';
@@ -1079,25 +1118,318 @@ const AppointmentCard = ({
     return `https://wa.me/${cleanNumber}`;
   };
 
-  const cycleStatus = () => {
-    const statusCycle = {
-      'programme': 'attente',
-      'attente': 'en_cours', 
-      'en_cours': 'termine',
-      'termine': 'programme',
-      'absent': 'programme',
-      'retard': 'attente'
-    };
-    onStatusUpdate(appointment.id, statusCycle[appointment.statut] || 'programme');
+  const handleStatusChange = (newStatus) => {
+    onStatusUpdate(appointment.id, newStatus);
+    setShowStatusDropdown(false);
+  };
+
+  const handleRoomChange = (room) => {
+    onRoomAssignment(appointment.id, room);
+    setShowRoomDropdown(false);
+  };
+
+  const getPaymentStatus = () => {
+    if (appointment.type_rdv === 'controle') return { status: 'gratuit', text: 'Gratuit', color: 'bg-green-100 text-green-800' };
+    if (appointment.paye) return { status: 'paye', text: 'Payé', color: 'bg-green-100 text-green-800' };
+    return { status: 'non_paye', text: 'Non payé', color: 'bg-red-100 text-red-800' };
+  };
+
+  const paymentStatus = getPaymentStatus();
+
+  return (
+    <div className="p-4 hover:bg-white/50 transition-colors">
+      <div className="flex items-center justify-between">
+        {/* Partie gauche - Info patient */}
+        <div className="flex items-center space-x-4 flex-1">
+          {/* Heure */}
+          <div className="flex items-center space-x-2 min-w-0">
+            <Clock className="w-4 h-4 text-gray-400" />
+            <span className="text-sm font-medium text-gray-700">{appointment.heure}</span>
+          </div>
+
+          {/* Nom patient cliquable */}
+          <div className="flex-1 min-w-0">
+            <button
+              onClick={() => onViewPatient(appointment.patient_id)}
+              className="font-semibold text-gray-900 hover:text-primary-600 transition-colors cursor-pointer underline text-left"
+            >
+              {appointment.patient?.prenom} {appointment.patient?.nom}
+            </button>
+            
+            {/* Compteur durée d'attente pour patients en attente */}
+            {sectionType === 'attente' && (
+              <div className="text-xs text-orange-600 font-medium mt-1">
+                ⏱️ En attente depuis {waitingTime} min
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Badges interactifs */}
+        <div className="flex items-center space-x-2">
+          {/* Badge C/V - Cliquable pour basculer */}
+          <button
+            onClick={() => onTypeToggle(appointment.id, appointment.type_rdv)}
+            className={`px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer hover:opacity-80 ${
+              appointment.type_rdv === 'visite' 
+                ? 'bg-blue-100 text-blue-800 hover:bg-blue-200' 
+                : 'bg-green-100 text-green-800 hover:bg-green-200'
+            }`}
+            title={`Cliquer pour changer vers ${appointment.type_rdv === 'visite' ? 'Contrôle' : 'Visite'}`}
+          >
+            {appointment.type_rdv === 'visite' ? 'V' : 'C'}
+          </button>
+
+          {/* Badge Statut - Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+              className="px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors cursor-pointer"
+              title="Cliquer pour changer le statut"
+            >
+              {appointment.statut}
+            </button>
+            
+            {showStatusDropdown && (
+              <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[120px]">
+                {['attente', 'en_cours', 'termine', 'absent'].map(status => (
+                  <button
+                    key={status}
+                    onClick={() => handleStatusChange(status)}
+                    className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 transition-colors"
+                  >
+                    {status}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Badge Salle - Apparaît seulement si en attente */}
+          {sectionType === 'attente' && (
+            <div className="relative">
+              <button
+                onClick={() => setShowRoomDropdown(!showRoomDropdown)}
+                className={`px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer ${
+                  appointment.salle 
+                    ? 'bg-purple-100 text-purple-800 hover:bg-purple-200' 
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+                title="Affecter à une salle"
+              >
+                {appointment.salle === 'salle1' ? 'S1' : appointment.salle === 'salle2' ? 'S2' : 'Salle?'}
+              </button>
+              
+              {showRoomDropdown && (
+                <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[100px]">
+                  <button
+                    onClick={() => handleRoomChange('salle1')}
+                    className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 transition-colors"
+                  >
+                    Salle 1
+                  </button>
+                  <button
+                    onClick={() => handleRoomChange('salle2')}
+                    className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 transition-colors"
+                  >
+                    Salle 2
+                  </button>
+                  <button
+                    onClick={() => handleRoomChange('')}
+                    className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 transition-colors text-gray-500"
+                  >
+                    Aucune
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Badge Paiement - Cliquable pour modal */}
+          <button
+            onClick={() => setShowPaymentModal(true)}
+            className={`px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer hover:opacity-80 ${paymentStatus.color}`}
+            title="Cliquer pour gérer le paiement"
+          >
+            {paymentStatus.text}
+          </button>
+
+          {/* Bouton ENTRER pour patients en attente */}
+          {sectionType === 'attente' && (
+            <button
+              onClick={() => onStartConsultation(appointment.id)}
+              className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded font-medium transition-colors"
+              title="Démarrer la consultation"
+            >
+              ENTRER
+            </button>
+          )}
+
+          {/* Bouton WhatsApp */}
+          <a
+            href={getWhatsAppLink(appointment.patient?.numero_whatsapp || appointment.patient?.telephone)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-1 text-green-600 hover:bg-green-100 rounded transition-colors"
+            title="Envoyer WhatsApp"
+          >
+            <MessageCircle className="w-4 h-4" />
+          </a>
+
+          {/* Bouton Edit */}
+          <button
+            onClick={() => onEdit(appointment)}
+            className="p-1 text-blue-600 hover:bg-blue-100 rounded transition-colors"
+            title="Modifier"
+          >
+            <Edit className="w-4 h-4" />
+          </button>
+
+          {/* Bouton Supprimer */}
+          <button
+            onClick={() => onDelete(appointment.id)}
+            className="p-1 text-red-600 hover:bg-red-100 rounded transition-colors"
+            title="Supprimer"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Modal Paiement */}
+      {showPaymentModal && (
+        <PaymentModal
+          appointment={appointment}
+          onClose={() => setShowPaymentModal(false)}
+          onUpdate={onPaymentUpdate}
+        />
+      )}
+    </div>
+  );
+};
+
+// Modal de paiement
+const PaymentModal = ({ appointment, onClose, onUpdate }) => {
+  const [paymentData, setPaymentData] = useState({
+    paye: appointment.paye || false,
+    montant: appointment.type_rdv === 'visite' ? 300 : 0,
+    gratuit: appointment.type_rdv === 'controle',
+    assure: false,
+    methode_paiement: 'espece'
+  });
+
+  const handleSubmit = () => {
+    onUpdate(appointment.id, paymentData);
+    onClose();
   };
 
   return (
-    <div className="p-4 hover:bg-gray-50 transition-colors">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4 flex-1">
-          {/* Time */}
-          <div className="flex items-center space-x-2 min-w-0">
-            <Clock className="w-4 h-4 text-gray-400" />
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Gestion Paiement</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            ✕
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Patient: {appointment.patient?.prenom} {appointment.patient?.nom}
+            </label>
+          </div>
+
+          <div className="flex items-center space-x-4">
+            <label className="flex items-center">
+              <input
+                type="radio"
+                checked={paymentData.paye}
+                onChange={() => setPaymentData(prev => ({ ...prev, paye: true, gratuit: false }))}
+                className="mr-2"
+              />
+              Payé
+            </label>
+            <label className="flex items-center">
+              <input
+                type="radio"
+                checked={!paymentData.paye && !paymentData.gratuit}
+                onChange={() => setPaymentData(prev => ({ ...prev, paye: false, gratuit: false }))}
+                className="mr-2"
+              />
+              Non payé
+            </label>
+            <label className="flex items-center">
+              <input
+                type="radio"
+                checked={paymentData.gratuit}
+                onChange={() => setPaymentData(prev => ({ ...prev, gratuit: true, paye: false }))}
+                className="mr-2"
+              />
+              Gratuit
+            </label>
+          </div>
+
+          {paymentData.paye && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Montant (TND)
+                </label>
+                <input
+                  type="number"
+                  value={paymentData.montant}
+                  onChange={(e) => setPaymentData(prev => ({ ...prev, montant: parseInt(e.target.value) }))}
+                  className="w-full border border-gray-300 rounded px-3 py-2"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Méthode de paiement
+                </label>
+                <select
+                  value={paymentData.methode_paiement}
+                  onChange={(e) => setPaymentData(prev => ({ ...prev, methode_paiement: e.target.value }))}
+                  className="w-full border border-gray-300 rounded px-3 py-2"
+                >
+                  <option value="espece">Espèces</option>
+                  <option value="carte">Carte bancaire</option>
+                  <option value="cheque">Chèque</option>
+                </select>
+              </div>
+
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={paymentData.assure}
+                  onChange={(e) => setPaymentData(prev => ({ ...prev, assure: e.target.checked }))}
+                  className="mr-2"
+                />
+                Patient assuré
+              </label>
+            </>
+          )}
+        </div>
+
+        <div className="flex space-x-3 mt-6">
+          <button
+            onClick={onClose}
+            className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded transition-colors"
+          >
+            Annuler
+          </button>
+          <button
+            onClick={handleSubmit}
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded transition-colors"
+          >
+            Enregistrer
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
             <span className="font-semibold text-gray-900">{appointment.heure}</span>
           </div>
           
