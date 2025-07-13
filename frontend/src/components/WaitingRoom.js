@@ -531,7 +531,19 @@ Merci de votre patience ! 🙏`;
     );
   };
 
-  const SalleColumn = ({ title, patients, color, onStart, onFinish, onMarkAbsent, onMoveToSalle, salleId }) => {
+  const SalleColumn = ({ 
+    title, 
+    patients, 
+    color, 
+    onStart, 
+    onFinish, 
+    onMarkAbsent, 
+    onMoveToSalle, 
+    salleId,
+    whatsappStates,
+    onSendWhatsApp,
+    onPreviewWhatsApp
+  }) => {
     return (
       <div className="bg-white rounded-xl shadow-sm border p-6">
         <div className="flex items-center justify-between mb-4">
