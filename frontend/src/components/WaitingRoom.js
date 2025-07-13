@@ -12,7 +12,10 @@ import {
   Phone,
   CreditCard,
   Calendar,
-  GripVertical
+  GripVertical,
+  MessageCircle,
+  Eye,
+  Send
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
