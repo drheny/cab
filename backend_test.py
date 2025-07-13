@@ -1073,5 +1073,483 @@ class CabinetMedicalAPITest(unittest.TestCase):
                 curr_datetime = f"{curr_appt['date']} {curr_appt['heure']}"
                 self.assertLessEqual(prev_datetime, curr_datetime, "Week appointments should be sorted by date and time")
 
+    # ========== MODAL FUNCTIONALITY FOR NEW PATIENT APPOINTMENTS TESTS ==========
+    
+    def test_modal_new_patient_creation_api(self):
+        """Test POST /api/patients endpoint with modal data structure (nom, prenom, telephone)"""
+        # Test creating a new patient with minimal data as used by the modal
+        modal_patient_data = {
+            "nom": "Test Patient",
+            "prenom": "Modal",
+            "telephone": "21612345678"
+        }
+        
+        response = requests.post(f"{self.base_url}/api/patients", json=modal_patient_data)
+        self.assertEqual(response.status_code, 200)
+        create_data = response.json()
+        self.assertIn("patient_id", create_data)
+        patient_id = create_data["patient_id"]
+        
+        # Verify the patient was created correctly
+        response = requests.get(f"{self.base_url}/api/patients/{patient_id}")
+        self.assertEqual(response.status_code, 200)
+        patient_data = response.json()
+        
+        # Verify required fields from modal
+        self.assertEqual(patient_data["nom"], "Test Patient")
+        self.assertEqual(patient_data["prenom"], "Modal")
+        self.assertEqual(patient_data["telephone"], "21612345678")
+        
+        # Verify optional fields are empty/default
+        self.assertEqual(patient_data["date_naissance"], "")
+        self.assertEqual(patient_data["adresse"], "")
+        self.assertEqual(patient_data["notes"], "")
+        self.assertEqual(patient_data["antecedents"], "")
+        
+        # Verify computed fields work with minimal data
+        self.assertEqual(patient_data["age"], "")  # No birth date, so no age
+        self.assertEqual(patient_data["lien_whatsapp"], "")  # No WhatsApp number in numero_whatsapp field
+        
+        # Clean up
+        requests.delete(f"{self.base_url}/api/patients/{patient_id}")
+        return patient_id
+    
+    def test_modal_appointment_creation_with_new_patient(self):
+        """Test POST /api/appointments endpoint with patient_id from newly created patient"""
+        # First create a new patient using modal data structure
+        modal_patient_data = {
+            "nom": "Appointment Test",
+            "prenom": "Patient",
+            "telephone": "21612345679"
+        }
+        
+        response = requests.post(f"{self.base_url}/api/patients", json=modal_patient_data)
+        self.assertEqual(response.status_code, 200)
+        patient_id = response.json()["patient_id"]
+        
+        try:
+            # Now create an appointment for this new patient
+            today = datetime.now().strftime("%Y-%m-%d")
+            appointment_data = {
+                "patient_id": patient_id,
+                "date": today,
+                "heure": "16:00",
+                "type_rdv": "visite",
+                "motif": "Consultation nouvelle patient",
+                "notes": "Créé via modal nouveau patient"
+            }
+            
+            response = requests.post(f"{self.base_url}/api/appointments", json=appointment_data)
+            self.assertEqual(response.status_code, 200)
+            appointment_create_data = response.json()
+            self.assertIn("appointment_id", appointment_create_data)
+            appointment_id = appointment_create_data["appointment_id"]
+            
+            # Verify the appointment was created correctly
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            # Find our created appointment
+            created_appointment = None
+            for appt in appointments:
+                if appt["id"] == appointment_id:
+                    created_appointment = appt
+                    break
+            
+            self.assertIsNotNone(created_appointment, "Created appointment not found")
+            self.assertEqual(created_appointment["patient_id"], patient_id)
+            self.assertEqual(created_appointment["motif"], "Consultation nouvelle patient")
+            
+            # Verify patient info is included in appointment response
+            self.assertIn("patient", created_appointment)
+            patient_info = created_appointment["patient"]
+            self.assertEqual(patient_info["nom"], "Appointment Test")
+            self.assertEqual(patient_info["prenom"], "Patient")
+            
+            # Clean up appointment
+            requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+            
+        finally:
+            # Clean up patient
+            requests.delete(f"{self.base_url}/api/patients/{patient_id}")
+    
+    def test_modal_integration_workflow(self):
+        """Test complete workflow: create new patient + appointment + verify retrieval"""
+        # Step 1: Create new patient with minimal modal data
+        modal_patient_data = {
+            "nom": "Integration Test",
+            "prenom": "Workflow",
+            "telephone": "21612345680"
+        }
+        
+        response = requests.post(f"{self.base_url}/api/patients", json=modal_patient_data)
+        self.assertEqual(response.status_code, 200)
+        patient_id = response.json()["patient_id"]
+        
+        try:
+            # Step 2: Create appointment for this new patient
+            today = datetime.now().strftime("%Y-%m-%d")
+            appointment_data = {
+                "patient_id": patient_id,
+                "date": today,
+                "heure": "17:00",
+                "type_rdv": "visite",
+                "motif": "Premier rendez-vous",
+                "notes": "Patient créé via modal"
+            }
+            
+            response = requests.post(f"{self.base_url}/api/appointments", json=appointment_data)
+            self.assertEqual(response.status_code, 200)
+            appointment_id = response.json()["appointment_id"]
+            
+            # Step 3: Verify both patient and appointment can be retrieved
+            
+            # Verify patient retrieval
+            response = requests.get(f"{self.base_url}/api/patients/{patient_id}")
+            self.assertEqual(response.status_code, 200)
+            patient_data = response.json()
+            self.assertEqual(patient_data["nom"], "Integration Test")
+            self.assertEqual(patient_data["prenom"], "Workflow")
+            
+            # Verify appointment retrieval via day endpoint
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            found_appointment = None
+            for appt in appointments:
+                if appt["id"] == appointment_id:
+                    found_appointment = appt
+                    break
+            
+            self.assertIsNotNone(found_appointment, "Appointment not found in day view")
+            self.assertEqual(found_appointment["patient_id"], patient_id)
+            self.assertEqual(found_appointment["motif"], "Premier rendez-vous")
+            
+            # Verify patient info is properly linked in appointment
+            self.assertIn("patient", found_appointment)
+            patient_info = found_appointment["patient"]
+            self.assertEqual(patient_info["nom"], "Integration Test")
+            self.assertEqual(patient_info["prenom"], "Workflow")
+            
+            # Verify appointment retrieval via general appointments endpoint
+            response = requests.get(f"{self.base_url}/api/appointments?date={today}")
+            self.assertEqual(response.status_code, 200)
+            all_appointments = response.json()
+            
+            found_in_general = None
+            for appt in all_appointments:
+                if appt["id"] == appointment_id:
+                    found_in_general = appt
+                    break
+            
+            self.assertIsNotNone(found_in_general, "Appointment not found in general endpoint")
+            self.assertIn("patient", found_in_general)
+            
+            # Clean up appointment
+            requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+            
+        finally:
+            # Clean up patient
+            requests.delete(f"{self.base_url}/api/patients/{patient_id}")
+    
+    def test_modal_edge_cases_missing_required_fields(self):
+        """Test edge cases: missing required fields for new patient"""
+        # Test missing nom
+        invalid_patient_1 = {
+            "prenom": "Test",
+            "telephone": "21612345681"
+        }
+        
+        response = requests.post(f"{self.base_url}/api/patients", json=invalid_patient_1)
+        # Should fail due to missing required field 'nom'
+        self.assertNotEqual(response.status_code, 200)
+        
+        # Test missing prenom
+        invalid_patient_2 = {
+            "nom": "Test",
+            "telephone": "21612345682"
+        }
+        
+        response = requests.post(f"{self.base_url}/api/patients", json=invalid_patient_2)
+        # Should fail due to missing required field 'prenom'
+        self.assertNotEqual(response.status_code, 200)
+        
+        # Test with both required fields present (should work)
+        valid_patient = {
+            "nom": "Valid",
+            "prenom": "Patient"
+        }
+        
+        response = requests.post(f"{self.base_url}/api/patients", json=valid_patient)
+        self.assertEqual(response.status_code, 200)
+        patient_id = response.json()["patient_id"]
+        
+        # Clean up
+        requests.delete(f"{self.base_url}/api/patients/{patient_id}")
+    
+    def test_modal_edge_cases_invalid_phone_format(self):
+        """Test edge cases: invalid phone number format"""
+        # Test with invalid phone number formats
+        test_cases = [
+            {
+                "nom": "Phone Test 1",
+                "prenom": "Invalid",
+                "telephone": "123456789"  # Too short
+            },
+            {
+                "nom": "Phone Test 2", 
+                "prenom": "Invalid",
+                "telephone": "abcdefghijk"  # Non-numeric
+            },
+            {
+                "nom": "Phone Test 3",
+                "prenom": "Invalid", 
+                "telephone": "21612345678901234"  # Too long
+            }
+        ]
+        
+        for i, test_case in enumerate(test_cases):
+            response = requests.post(f"{self.base_url}/api/patients", json=test_case)
+            # Patient creation should still work (phone validation is not enforced at API level)
+            self.assertEqual(response.status_code, 200)
+            patient_id = response.json()["patient_id"]
+            
+            # Verify patient was created but WhatsApp link is empty due to invalid format
+            response = requests.get(f"{self.base_url}/api/patients/{patient_id}")
+            self.assertEqual(response.status_code, 200)
+            patient_data = response.json()
+            
+            # WhatsApp link should be empty for invalid phone formats
+            self.assertEqual(patient_data["lien_whatsapp"], "")
+            
+            # Clean up
+            requests.delete(f"{self.base_url}/api/patients/{patient_id}")
+    
+    def test_modal_edge_cases_invalid_patient_id(self):
+        """Test edge cases: appointment creation with invalid patient_id"""
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Test with non-existent patient_id
+        invalid_appointment = {
+            "patient_id": "non_existent_patient_id",
+            "date": today,
+            "heure": "18:00",
+            "type_rdv": "visite",
+            "motif": "Test with invalid patient"
+        }
+        
+        response = requests.post(f"{self.base_url}/api/appointments", json=invalid_appointment)
+        # Appointment creation should work (foreign key constraint not enforced at API level)
+        self.assertEqual(response.status_code, 200)
+        appointment_id = response.json()["appointment_id"]
+        
+        # However, when retrieving the appointment, patient info should be missing/empty
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        
+        found_appointment = None
+        for appt in appointments:
+            if appt["id"] == appointment_id:
+                found_appointment = appt
+                break
+        
+        self.assertIsNotNone(found_appointment, "Appointment with invalid patient_id not found")
+        
+        # Patient info should be empty or have default values since patient doesn't exist
+        if "patient" in found_appointment:
+            patient_info = found_appointment["patient"]
+            # All patient fields should be empty since patient doesn't exist
+            self.assertEqual(patient_info.get("nom", ""), "")
+            self.assertEqual(patient_info.get("prenom", ""), "")
+        
+        # Clean up
+        requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+    
+    def test_modal_data_validation_patient_structure(self):
+        """Test data validation: verify patient data structure matches frontend expectations"""
+        # Create patient with modal data
+        modal_patient_data = {
+            "nom": "Structure Test",
+            "prenom": "Validation",
+            "telephone": "21612345683"
+        }
+        
+        response = requests.post(f"{self.base_url}/api/patients", json=modal_patient_data)
+        self.assertEqual(response.status_code, 200)
+        patient_id = response.json()["patient_id"]
+        
+        try:
+            # Get patient and verify structure matches frontend expectations
+            response = requests.get(f"{self.base_url}/api/patients/{patient_id}")
+            self.assertEqual(response.status_code, 200)
+            patient_data = response.json()
+            
+            # Verify all expected fields are present (even if empty)
+            expected_fields = [
+                "id", "nom", "prenom", "date_naissance", "age", "adresse",
+                "pere", "mere", "numero_whatsapp", "lien_whatsapp", "notes", 
+                "antecedents", "consultations", "date_premiere_consultation",
+                "date_derniere_consultation", "telephone", "created_at", "updated_at"
+            ]
+            
+            for field in expected_fields:
+                self.assertIn(field, patient_data, f"Missing expected field: {field}")
+            
+            # Verify parent info structure
+            self.assertIsInstance(patient_data["pere"], dict)
+            self.assertIsInstance(patient_data["mere"], dict)
+            
+            # Verify parent fields
+            for parent in ["pere", "mere"]:
+                parent_info = patient_data[parent]
+                self.assertIn("nom", parent_info)
+                self.assertIn("telephone", parent_info)
+                self.assertIn("fonction", parent_info)
+            
+            # Verify consultations is a list
+            self.assertIsInstance(patient_data["consultations"], list)
+            
+            # Verify data types
+            self.assertIsInstance(patient_data["nom"], str)
+            self.assertIsInstance(patient_data["prenom"], str)
+            self.assertIsInstance(patient_data["telephone"], str)
+            
+        finally:
+            # Clean up
+            requests.delete(f"{self.base_url}/api/patients/{patient_id}")
+    
+    def test_modal_data_validation_appointment_patient_linkage(self):
+        """Test data validation: verify appointment includes proper patient_id linkage"""
+        # Create patient
+        modal_patient_data = {
+            "nom": "Linkage Test",
+            "prenom": "Patient",
+            "telephone": "21612345684"
+        }
+        
+        response = requests.post(f"{self.base_url}/api/patients", json=modal_patient_data)
+        self.assertEqual(response.status_code, 200)
+        patient_id = response.json()["patient_id"]
+        
+        try:
+            # Create appointment
+            today = datetime.now().strftime("%Y-%m-%d")
+            appointment_data = {
+                "patient_id": patient_id,
+                "date": today,
+                "heure": "19:00",
+                "type_rdv": "visite",
+                "motif": "Test linkage"
+            }
+            
+            response = requests.post(f"{self.base_url}/api/appointments", json=appointment_data)
+            self.assertEqual(response.status_code, 200)
+            appointment_id = response.json()["appointment_id"]
+            
+            # Verify appointment has proper patient_id linkage
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            found_appointment = None
+            for appt in appointments:
+                if appt["id"] == appointment_id:
+                    found_appointment = appt
+                    break
+            
+            self.assertIsNotNone(found_appointment, "Appointment not found")
+            
+            # Verify patient_id linkage
+            self.assertEqual(found_appointment["patient_id"], patient_id)
+            
+            # Verify patient info is properly included
+            self.assertIn("patient", found_appointment)
+            patient_info = found_appointment["patient"]
+            self.assertEqual(patient_info["nom"], "Linkage Test")
+            self.assertEqual(patient_info["prenom"], "Patient")
+            
+            # Verify patient info structure in appointment
+            expected_patient_fields = ["nom", "prenom", "numero_whatsapp", "lien_whatsapp"]
+            for field in expected_patient_fields:
+                self.assertIn(field, patient_info, f"Missing patient field in appointment: {field}")
+            
+            # Clean up appointment
+            requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+            
+        finally:
+            # Clean up patient
+            requests.delete(f"{self.base_url}/api/patients/{patient_id}")
+    
+    def test_modal_patient_lookup_after_creation(self):
+        """Test patient lookup after creation via different endpoints"""
+        # Create patient with modal data
+        modal_patient_data = {
+            "nom": "Lookup Test",
+            "prenom": "Patient",
+            "telephone": "21612345685"
+        }
+        
+        response = requests.post(f"{self.base_url}/api/patients", json=modal_patient_data)
+        self.assertEqual(response.status_code, 200)
+        patient_id = response.json()["patient_id"]
+        
+        try:
+            # Test 1: Direct patient lookup by ID
+            response = requests.get(f"{self.base_url}/api/patients/{patient_id}")
+            self.assertEqual(response.status_code, 200)
+            patient_data = response.json()
+            self.assertEqual(patient_data["nom"], "Lookup Test")
+            self.assertEqual(patient_data["prenom"], "Patient")
+            
+            # Test 2: Patient lookup via paginated list
+            response = requests.get(f"{self.base_url}/api/patients?page=1&limit=100")
+            self.assertEqual(response.status_code, 200)
+            patients_list = response.json()
+            
+            found_in_list = False
+            for patient in patients_list["patients"]:
+                if patient["id"] == patient_id:
+                    found_in_list = True
+                    self.assertEqual(patient["nom"], "Lookup Test")
+                    self.assertEqual(patient["prenom"], "Patient")
+                    break
+            
+            self.assertTrue(found_in_list, "Patient not found in paginated list")
+            
+            # Test 3: Patient lookup via search
+            response = requests.get(f"{self.base_url}/api/patients?search=Lookup Test")
+            self.assertEqual(response.status_code, 200)
+            search_results = response.json()
+            
+            found_in_search = False
+            for patient in search_results["patients"]:
+                if patient["id"] == patient_id:
+                    found_in_search = True
+                    self.assertEqual(patient["nom"], "Lookup Test")
+                    self.assertEqual(patient["prenom"], "Patient")
+                    break
+            
+            self.assertTrue(found_in_search, "Patient not found in search results")
+            
+            # Test 4: Patient lookup via search by prenom
+            response = requests.get(f"{self.base_url}/api/patients?search=Patient")
+            self.assertEqual(response.status_code, 200)
+            prenom_search_results = response.json()
+            
+            found_by_prenom = False
+            for patient in prenom_search_results["patients"]:
+                if patient["id"] == patient_id:
+                    found_by_prenom = True
+                    break
+            
+            self.assertTrue(found_by_prenom, "Patient not found in prenom search")
+            
+        finally:
+            # Clean up
+            requests.delete(f"{self.base_url}/api/patients/{patient_id}")
+
 if __name__ == "__main__":
     unittest.main()
