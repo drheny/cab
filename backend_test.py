@@ -2124,7 +2124,8 @@ class CabinetMedicalAPITest(unittest.TestCase):
             self.assertEqual(response.status_code, 200)
             
             # Update status when patient arrives (Calendar → WaitingRoom transition)
-            response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/statut?statut=attente")
+            status_data = {"statut": "attente"}
+            response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/statut", json=status_data)
             self.assertEqual(response.status_code, 200)
             
             # Step 3: Verify WaitingRoom can display the appointment correctly
