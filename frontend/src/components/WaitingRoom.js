@@ -461,7 +461,7 @@ Merci de votre patience ! 🙏`;
               </div>
               <div className="flex space-x-2 mt-2">
                 <button
-                  onClick={() => previewWhatsAppMessage(appointment, appointment.salle)}
+                  onClick={() => onPreviewWhatsApp(appointment, appointment.salle)}
                   className="flex-1 bg-gray-500 hover:bg-gray-600 text-white text-xs py-1 px-2 rounded transition-colors flex items-center justify-center space-x-1"
                   title="Prévisualiser le message"
                 >
@@ -469,7 +469,7 @@ Merci de votre patience ! 🙏`;
                   <span>Aperçu</span>
                 </button>
                 <button
-                  onClick={() => sendWhatsAppMessage(appointment, appointment.salle)}
+                  onClick={() => onSendWhatsApp(appointment, appointment.salle)}
                   className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs py-1 px-2 rounded transition-colors flex items-center justify-center space-x-1"
                   title="Envoyer message WhatsApp avec temps d'attente"
                 >
