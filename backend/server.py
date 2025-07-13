@@ -864,6 +864,36 @@ async def update_rdv_paiement(rdv_id: str, payment_data: dict):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating payment: {str(e)}")
 
+@app.put("/api/rdv/{rdv_id}/whatsapp")
+async def update_rdv_whatsapp(rdv_id: str, whatsapp_data: dict):
+    """Update appointment WhatsApp status"""
+    try:
+        whatsapp_envoye = whatsapp_data.get("whatsapp_envoye", False)
+        whatsapp_timestamp = whatsapp_data.get("whatsapp_timestamp", "")
+        
+        update_data = {
+            "whatsapp_envoye": whatsapp_envoye,
+            "whatsapp_timestamp": whatsapp_timestamp,
+            "updated_at": datetime.now()
+        }
+        
+        result = appointments_collection.update_one(
+            {"id": rdv_id},
+            {"$set": update_data}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Appointment not found")
+        
+        return {
+            "message": "WhatsApp status updated successfully",
+            "whatsapp_envoye": whatsapp_envoye,
+            "whatsapp_timestamp": whatsapp_timestamp
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating WhatsApp status: {str(e)}")
+
 @app.get("/api/rdv/stats/{date}")
 async def get_rdv_stats(date: str):
     """Get appointment statistics for a specific day"""
