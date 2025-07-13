@@ -343,7 +343,19 @@ Merci de votre patience ! 🙏`;
     }
   };
 
-  const PatientCard = ({ appointment, patients, onStart, onFinish, onMarkAbsent, onMoveToSalle, index, isDragging }) => {
+  const PatientCard = ({ 
+    appointment, 
+    patients, 
+    onStart, 
+    onFinish, 
+    onMarkAbsent, 
+    onMoveToSalle, 
+    index, 
+    isDragging,
+    whatsappStates,
+    onSendWhatsApp,
+    onPreviewWhatsApp
+  }) => {
     const waitingTime = calculateWaitingTime(patients, appointment.id);
     
     const getStatusColor = (status) => {
