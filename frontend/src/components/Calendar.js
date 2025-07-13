@@ -1105,26 +1105,40 @@ const AppointmentCard = ({
           {!isCompleted && (
             <div className="flex space-x-1">
               <button
-                onClick={() => onRoomAssignment(appointment.id, 'salle1')}
+                onClick={() => {
+                  // Si le patient n'est pas encore arrivé, le marquer comme arrivé
+                  if (appointment.statut === 'programme') {
+                    onPatientArrival(appointment.id, 'salle1');
+                  } else {
+                    onRoomAssignment(appointment.id, 'salle1');
+                  }
+                }}
                 className={`px-2 py-1 text-xs rounded transition-colors ${
                   appointment.salle === 'salle1' 
                     ? 'bg-purple-100 text-purple-800' 
                     : 'bg-gray-100 text-gray-600 hover:bg-purple-50'
                 }`}
-                title="Affecter à Salle 1"
+                title={appointment.statut === 'programme' ? 'Patient arrivé → Salle 1' : 'Affecter à Salle 1'}
               >
-                S1
+                {appointment.statut === 'programme' ? '🚪→S1' : 'S1'}
               </button>
               <button
-                onClick={() => onRoomAssignment(appointment.id, 'salle2')}
+                onClick={() => {
+                  // Si le patient n'est pas encore arrivé, le marquer comme arrivé
+                  if (appointment.statut === 'programme') {
+                    onPatientArrival(appointment.id, 'salle2');
+                  } else {
+                    onRoomAssignment(appointment.id, 'salle2');
+                  }
+                }}
                 className={`px-2 py-1 text-xs rounded transition-colors ${
                   appointment.salle === 'salle2' 
                     ? 'bg-purple-100 text-purple-800' 
                     : 'bg-gray-100 text-gray-600 hover:bg-purple-50'
                 }`}
-                title="Affecter à Salle 2"
+                title={appointment.statut === 'programme' ? 'Patient arrivé → Salle 2' : 'Affecter à Salle 2'}
               >
-                S2
+                {appointment.statut === 'programme' ? '🚪→S2' : 'S2'}
               </button>
             </div>
           )}
