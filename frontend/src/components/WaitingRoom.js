@@ -496,24 +496,15 @@ Merci de votre patience ! 🙏`;
             <span className="text-sm font-medium capitalize">{appointment.statut}</span>
           </div>
         </div>
+      </div>
+    );
+  };
 
-  const PatientCard = ({ 
-    appointment, 
-    patients, 
-    onStart, 
-    onFinish, 
-    onMarkAbsent, 
-    onMoveToSalle, 
-    index, 
-    isDragging,
-    whatsappStates,
-    onSendWhatsApp,
-    onPreviewWhatsApp,
-    paymentStates,
-    onMarkPaid,
-    onMarkUnpaid,
-    onOpenPaymentModal
-  }) => {
+  // Calculer le montant du paiement selon le type
+  const calculatePaymentAmount = (appointment) => {
+    if (appointment.type_rdv === 'controle') return 0; // Contrôle gratuit
+    return 300; // TND pour visite payante
+  };
     const waitingTime = calculateWaitingTime(patients, appointment.id);
     const paymentAmount = calculatePaymentAmount(appointment);
     
