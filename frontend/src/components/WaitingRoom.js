@@ -294,7 +294,7 @@ const WaitingRoom = ({ user }) => {
     );
   };
 
-  const SalleColumn = ({ title, patients, color, onStart, onFinish, onMarkAbsent, onMoveToSalle }) => {
+  const SalleColumn = ({ title, patients, color, onStart, onFinish, onMarkAbsent, onMoveToSalle, salleId }) => {
     return (
       <div className="bg-white rounded-xl shadow-sm border p-6">
         <div className="flex items-center justify-between mb-4">
@@ -304,26 +304,58 @@ const WaitingRoom = ({ user }) => {
           </span>
         </div>
         
-        <div className="space-y-3">
-          {patients.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <Users className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-              <p>Aucun patient en attente</p>
+        <Droppable droppableId={salleId}>
+          {(provided, snapshot) => (
+            <div
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+              className={`space-y-3 min-h-32 transition-colors duration-200 ${
+                snapshot.isDraggingOver 
+                  ? 'bg-blue-50 border-2 border-dashed border-blue-300 rounded-lg p-2' 
+                  : ''
+              }`}
+            >
+              {patients.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Users className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p>Aucun patient en attente</p>
+                  {snapshot.isDraggingOver && (
+                    <p className="text-blue-600 font-medium mt-2">Déposer le patient ici</p>
+                  )}
+                </div>
+              ) : (
+                patients.map((appointment, index) => (
+                  <Draggable 
+                    key={appointment.id} 
+                    draggableId={appointment.id} 
+                    index={index}
+                    isDragDisabled={appointment.statut === 'en_cours'} // Pas de drag si en consultation
+                  >
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                      >
+                        <PatientCard
+                          appointment={appointment}
+                          patients={patients}
+                          onStart={onStart}
+                          onFinish={onFinish}
+                          onMarkAbsent={onMarkAbsent}
+                          onMoveToSalle={onMoveToSalle}
+                          index={index}
+                          isDragging={snapshot.isDragging}
+                        />
+                      </div>
+                    )}
+                  </Draggable>
+                ))
+              )}
+              {provided.placeholder}
             </div>
-          ) : (
-            patients.map((appointment) => (
-              <PatientCard
-                key={appointment.id}
-                appointment={appointment}
-                patients={patients}
-                onStart={onStart}
-                onFinish={onFinish}
-                onMarkAbsent={onMarkAbsent}
-                onMoveToSalle={onMoveToSalle}
-              />
-            ))
           )}
-        </div>
+        </Droppable>
       </div>
     );
   };
