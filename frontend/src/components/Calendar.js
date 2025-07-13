@@ -468,6 +468,7 @@ const Calendar = ({ user }) => {
               appointments={groupedAppointments.en_cours}
               onStatusUpdate={handleStatusUpdate}
               onRoomAssignment={handleRoomAssignment}
+              onPatientArrival={handlePatientArrival}
               onEdit={openModal}
               onDelete={handleDeleteAppointment}
               onViewPatient={viewPatientDetails}
