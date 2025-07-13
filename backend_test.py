@@ -2189,5 +2189,892 @@ class CabinetMedicalAPITest(unittest.TestCase):
             # Clean up
             requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
 
+    # ========== PHASE 2: DRAG & DROP FUNCTIONALITY TESTS ==========
+    
+    def test_drag_drop_api_support_room_changes(self):
+        """Test PUT /api/rdv/{id}/salle - Room changes via drag & drop"""
+        # Create test appointments in different rooms
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for testing")
+        
+        patient_id = patients[0]["id"]
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Create multiple appointments for drag & drop testing
+        test_appointments = []
+        for i in range(3):
+            appointment_data = {
+                "patient_id": patient_id,
+                "date": today,
+                "heure": f"{10 + i}:00",
+                "type_rdv": "visite",
+                "statut": "attente",
+                "salle": "salle1",  # Start all in salle1
+                "motif": f"Drag drop test {i+1}",
+                "paye": False
+            }
+            
+            response = requests.post(f"{self.base_url}/api/appointments", json=appointment_data)
+            self.assertEqual(response.status_code, 200)
+            appointment_id = response.json()["appointment_id"]
+            test_appointments.append(appointment_id)
+        
+        try:
+            # Test drag & drop room changes
+            for i, appointment_id in enumerate(test_appointments):
+                target_room = "salle2" if i % 2 == 0 else "salle1"
+                
+                # Simulate drag & drop room change
+                response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/salle?salle={target_room}")
+                self.assertEqual(response.status_code, 200)
+                data = response.json()
+                self.assertEqual(data["salle"], target_room)
+                
+                # Verify the change persisted
+                response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+                self.assertEqual(response.status_code, 200)
+                appointments = response.json()
+                
+                updated_appointment = None
+                for appt in appointments:
+                    if appt["id"] == appointment_id:
+                        updated_appointment = appt
+                        break
+                
+                self.assertIsNotNone(updated_appointment)
+                self.assertEqual(updated_appointment["salle"], target_room)
+            
+            print("✅ Drag & Drop API Support - Room changes working correctly")
+            
+        finally:
+            # Clean up
+            for appointment_id in test_appointments:
+                requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+    
+    def test_drag_drop_bulk_operations(self):
+        """Test bulk operations for multiple drag & drop actions"""
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) >= 2, "Need at least 2 patients for bulk testing")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Create multiple appointments for bulk operations
+        bulk_appointments = []
+        for i in range(5):
+            patient_id = patients[i % len(patients)]["id"]
+            appointment_data = {
+                "patient_id": patient_id,
+                "date": today,
+                "heure": f"{9 + i}:30",
+                "type_rdv": "visite",
+                "statut": "attente",
+                "salle": "salle1",
+                "motif": f"Bulk test {i+1}",
+                "paye": False
+            }
+            
+            response = requests.post(f"{self.base_url}/api/appointments", json=appointment_data)
+            self.assertEqual(response.status_code, 200)
+            appointment_id = response.json()["appointment_id"]
+            bulk_appointments.append(appointment_id)
+        
+        try:
+            # Simulate bulk drag & drop operations (rapid successive calls)
+            import time
+            start_time = time.time()
+            
+            for i, appointment_id in enumerate(bulk_appointments):
+                target_room = "salle2" if i < 3 else "salle1"
+                response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/salle?salle={target_room}")
+                self.assertEqual(response.status_code, 200)
+            
+            end_time = time.time()
+            bulk_operation_time = end_time - start_time
+            
+            # Verify all changes were applied correctly
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            # Count appointments in each room
+            salle1_count = 0
+            salle2_count = 0
+            for appt in appointments:
+                if appt["id"] in bulk_appointments:
+                    if appt["salle"] == "salle1":
+                        salle1_count += 1
+                    elif appt["salle"] == "salle2":
+                        salle2_count += 1
+            
+            self.assertEqual(salle2_count, 3, "Expected 3 appointments in salle2")
+            self.assertEqual(salle1_count, 2, "Expected 2 appointments in salle1")
+            
+            # Performance check - bulk operations should complete quickly
+            self.assertLess(bulk_operation_time, 5.0, f"Bulk operations took too long: {bulk_operation_time}s")
+            
+            print(f"✅ Bulk Operations - 5 room changes completed in {bulk_operation_time:.2f}s")
+            
+        finally:
+            # Clean up
+            for appointment_id in bulk_appointments:
+                requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+    
+    def test_drag_drop_concurrent_room_assignments(self):
+        """Test concurrent room assignment changes"""
+        import threading
+        import time
+        
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for testing")
+        
+        patient_id = patients[0]["id"]
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Create appointments for concurrent testing
+        concurrent_appointments = []
+        for i in range(4):
+            appointment_data = {
+                "patient_id": patient_id,
+                "date": today,
+                "heure": f"{14 + i}:15",
+                "type_rdv": "visite",
+                "statut": "attente",
+                "salle": "salle1",
+                "motif": f"Concurrent test {i+1}",
+                "paye": False
+            }
+            
+            response = requests.post(f"{self.base_url}/api/appointments", json=appointment_data)
+            self.assertEqual(response.status_code, 200)
+            appointment_id = response.json()["appointment_id"]
+            concurrent_appointments.append(appointment_id)
+        
+        try:
+            # Function to perform room assignment
+            def assign_room(appointment_id, target_room, results, index):
+                try:
+                    response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/salle?salle={target_room}")
+                    results[index] = {
+                        'status_code': response.status_code,
+                        'appointment_id': appointment_id,
+                        'target_room': target_room,
+                        'success': response.status_code == 200
+                    }
+                except Exception as e:
+                    results[index] = {
+                        'status_code': 500,
+                        'appointment_id': appointment_id,
+                        'target_room': target_room,
+                        'success': False,
+                        'error': str(e)
+                    }
+            
+            # Perform concurrent room assignments
+            threads = []
+            results = [None] * len(concurrent_appointments)
+            
+            for i, appointment_id in enumerate(concurrent_appointments):
+                target_room = "salle2" if i % 2 == 0 else "salle1"
+                thread = threading.Thread(
+                    target=assign_room,
+                    args=(appointment_id, target_room, results, i)
+                )
+                threads.append(thread)
+            
+            # Start all threads simultaneously
+            start_time = time.time()
+            for thread in threads:
+                thread.start()
+            
+            # Wait for all threads to complete
+            for thread in threads:
+                thread.join()
+            
+            end_time = time.time()
+            concurrent_time = end_time - start_time
+            
+            # Verify all concurrent operations succeeded
+            successful_operations = sum(1 for result in results if result and result['success'])
+            self.assertEqual(successful_operations, len(concurrent_appointments), 
+                           f"Only {successful_operations}/{len(concurrent_appointments)} concurrent operations succeeded")
+            
+            # Verify final room assignments
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            for i, appointment_id in enumerate(concurrent_appointments):
+                expected_room = "salle2" if i % 2 == 0 else "salle1"
+                found_appointment = None
+                for appt in appointments:
+                    if appt["id"] == appointment_id:
+                        found_appointment = appt
+                        break
+                
+                self.assertIsNotNone(found_appointment)
+                self.assertEqual(found_appointment["salle"], expected_room)
+            
+            print(f"✅ Concurrent Operations - {len(concurrent_appointments)} simultaneous room assignments completed in {concurrent_time:.2f}s")
+            
+        finally:
+            # Clean up
+            for appointment_id in concurrent_appointments:
+                requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+    
+    def test_room_transfer_testing(self):
+        """Test dragging patients between rooms with edge cases"""
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) >= 2, "Need at least 2 patients for room transfer testing")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Create patients in salle1
+        salle1_appointments = []
+        for i in range(3):
+            patient_id = patients[i]["id"]
+            appointment_data = {
+                "patient_id": patient_id,
+                "date": today,
+                "heure": f"{11 + i}:00",
+                "type_rdv": "visite",
+                "statut": "attente",
+                "salle": "salle1",
+                "motif": f"Room transfer test {i+1}",
+                "paye": False
+            }
+            
+            response = requests.post(f"{self.base_url}/api/appointments", json=appointment_data)
+            self.assertEqual(response.status_code, 200)
+            appointment_id = response.json()["appointment_id"]
+            salle1_appointments.append(appointment_id)
+        
+        try:
+            # Verify initial state - all in salle1
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            salle1_initial_count = 0
+            for appt in appointments:
+                if appt["id"] in salle1_appointments and appt["salle"] == "salle1":
+                    salle1_initial_count += 1
+            
+            self.assertEqual(salle1_initial_count, 3, "All appointments should start in salle1")
+            
+            # Move patients to salle2 via API calls
+            for appointment_id in salle1_appointments:
+                response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/salle?salle=salle2")
+                self.assertEqual(response.status_code, 200)
+            
+            # Verify room assignments updated correctly
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            salle2_final_count = 0
+            for appt in appointments:
+                if appt["id"] in salle1_appointments and appt["salle"] == "salle2":
+                    salle2_final_count += 1
+            
+            self.assertEqual(salle2_final_count, 3, "All appointments should now be in salle2")
+            
+            # Test edge case: moving non-existent patient
+            response = requests.put(f"{self.base_url}/api/rdv/non_existent_appointment/salle?salle=salle1")
+            self.assertEqual(response.status_code, 404, "Should return 404 for non-existent appointment")
+            
+            # Test edge case: invalid room
+            response = requests.put(f"{self.base_url}/api/rdv/{salle1_appointments[0]}/salle?salle=invalid_room")
+            self.assertEqual(response.status_code, 400, "Should return 400 for invalid room")
+            
+            # Test moving back to empty room (salle1)
+            response = requests.put(f"{self.base_url}/api/rdv/{salle1_appointments[0]}/salle?salle=")
+            self.assertEqual(response.status_code, 200, "Should allow moving to empty room")
+            
+            print("✅ Room Transfer Testing - All scenarios working correctly")
+            
+        finally:
+            # Clean up
+            for appointment_id in salle1_appointments:
+                requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+    
+    def test_priority_reordering_simulation(self):
+        """Test groundwork for priority management - multiple patients in same room"""
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) >= 3, "Need at least 3 patients for priority testing")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Create multiple patients in the same room with different times
+        same_room_appointments = []
+        appointment_times = ["08:00", "08:15", "08:30", "08:45", "09:00"]
+        
+        for i, time_slot in enumerate(appointment_times):
+            patient_id = patients[i % len(patients)]["id"]
+            appointment_data = {
+                "patient_id": patient_id,
+                "date": today,
+                "heure": time_slot,
+                "type_rdv": "visite",
+                "statut": "attente",
+                "salle": "salle1",  # All in same room
+                "motif": f"Priority test {i+1}",
+                "paye": False
+            }
+            
+            response = requests.post(f"{self.base_url}/api/appointments", json=appointment_data)
+            self.assertEqual(response.status_code, 200)
+            appointment_id = response.json()["appointment_id"]
+            same_room_appointments.append({
+                'id': appointment_id,
+                'time': time_slot,
+                'patient_id': patient_id
+            })
+        
+        try:
+            # Verify they can be retrieved in order
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            # Filter appointments for our test
+            test_appointments = []
+            for appt in appointments:
+                for test_appt in same_room_appointments:
+                    if appt["id"] == test_appt['id']:
+                        test_appointments.append(appt)
+                        break
+            
+            # Verify appointments are sorted by time (natural ordering for priority)
+            self.assertEqual(len(test_appointments), len(same_room_appointments))
+            
+            for i in range(1, len(test_appointments)):
+                prev_time = test_appointments[i-1]["heure"]
+                curr_time = test_appointments[i]["heure"]
+                self.assertLessEqual(prev_time, curr_time, "Appointments should be sorted by time")
+            
+            # Test data structure supports position/priority concepts
+            for i, appt in enumerate(test_appointments):
+                # Verify all required fields for priority management are present
+                self.assertIn("heure", appt)  # Time-based ordering
+                self.assertIn("salle", appt)  # Room grouping
+                self.assertIn("statut", appt)  # Status-based filtering
+                self.assertIn("patient", appt)  # Patient info for display
+                
+                # Verify patient info structure
+                patient_info = appt["patient"]
+                self.assertIn("nom", patient_info)
+                self.assertIn("prenom", patient_info)
+                
+                # Simulate priority position (0-based index within room)
+                priority_position = i
+                self.assertGreaterEqual(priority_position, 0)
+                self.assertLess(priority_position, len(test_appointments))
+            
+            # Test filtering by room (essential for priority management within rooms)
+            salle1_appointments = [appt for appt in test_appointments if appt["salle"] == "salle1"]
+            self.assertEqual(len(salle1_appointments), len(same_room_appointments))
+            
+            print(f"✅ Priority Reordering Simulation - {len(test_appointments)} appointments in same room, properly ordered")
+            
+        finally:
+            # Clean up
+            for appt_data in same_room_appointments:
+                requests.delete(f"{self.base_url}/api/appointments/{appt_data['id']}")
+    
+    def test_status_based_drag_restrictions(self):
+        """Test drag restrictions based on appointment status"""
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) >= 3, "Need at least 3 patients for status testing")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Create appointments with different statuses
+        status_test_appointments = []
+        test_statuses = ["attente", "en_cours", "termine"]
+        
+        for i, status in enumerate(test_statuses):
+            patient_id = patients[i]["id"]
+            appointment_data = {
+                "patient_id": patient_id,
+                "date": today,
+                "heure": f"{13 + i}:00",
+                "type_rdv": "visite",
+                "statut": status,
+                "salle": "salle1",
+                "motif": f"Status restriction test - {status}",
+                "paye": False
+            }
+            
+            response = requests.post(f"{self.base_url}/api/appointments", json=appointment_data)
+            self.assertEqual(response.status_code, 200)
+            appointment_id = response.json()["appointment_id"]
+            status_test_appointments.append({
+                'id': appointment_id,
+                'status': status,
+                'patient_id': patient_id
+            })
+        
+        try:
+            # Test drag restrictions based on status
+            for appt_data in status_test_appointments:
+                appointment_id = appt_data['id']
+                status = appt_data['status']
+                
+                # Attempt to move to salle2
+                response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/salle?salle=salle2")
+                
+                if status == "en_cours":
+                    # In a real implementation, en_cours patients might be restricted from room changes
+                    # For now, the API allows it, but we document the expected behavior
+                    self.assertEqual(response.status_code, 200)
+                    print(f"⚠️  'en_cours' patient moved (API allows, but UI should restrict)")
+                elif status == "attente":
+                    # Attente patients should be freely movable
+                    self.assertEqual(response.status_code, 200)
+                    print(f"✅ 'attente' patient moved freely")
+                elif status == "termine":
+                    # Termine patients might be restricted in UI, but API allows
+                    self.assertEqual(response.status_code, 200)
+                    print(f"⚠️  'termine' patient moved (API allows, but UI might restrict)")
+            
+            # Verify all moves were processed (API level)
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            moved_count = 0
+            for appt in appointments:
+                for test_appt in status_test_appointments:
+                    if appt["id"] == test_appt['id'] and appt["salle"] == "salle2":
+                        moved_count += 1
+                        break
+            
+            self.assertEqual(moved_count, len(status_test_appointments), 
+                           "All appointments should be moved at API level")
+            
+            # Test status transitions during room changes
+            for appt_data in status_test_appointments:
+                appointment_id = appt_data['id']
+                
+                # Change status while in room
+                response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/statut?statut=attente")
+                self.assertEqual(response.status_code, 200)
+                
+                # Verify status change persisted
+                response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+                self.assertEqual(response.status_code, 200)
+                appointments = response.json()
+                
+                found_appointment = None
+                for appt in appointments:
+                    if appt["id"] == appointment_id:
+                        found_appointment = appt
+                        break
+                
+                self.assertIsNotNone(found_appointment)
+                self.assertEqual(found_appointment["statut"], "attente")
+                self.assertEqual(found_appointment["salle"], "salle2")  # Room should remain unchanged
+            
+            print("✅ Status-Based Drag Restrictions - All scenarios tested")
+            
+        finally:
+            # Clean up
+            for appt_data in status_test_appointments:
+                requests.delete(f"{self.base_url}/api/appointments/{appt_data['id']}")
+    
+    def test_concurrent_operations_data_consistency(self):
+        """Test data consistency during rapid drag & drop operations"""
+        import threading
+        import time
+        import random
+        
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) >= 2, "Need at least 2 patients for concurrent testing")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Create appointments for concurrent operations testing
+        concurrent_test_appointments = []
+        for i in range(6):
+            patient_id = patients[i % len(patients)]["id"]
+            appointment_data = {
+                "patient_id": patient_id,
+                "date": today,
+                "heure": f"{15 + i}:00",
+                "type_rdv": "visite",
+                "statut": "attente",
+                "salle": "salle1",
+                "motif": f"Concurrent consistency test {i+1}",
+                "paye": False
+            }
+            
+            response = requests.post(f"{self.base_url}/api/appointments", json=appointment_data)
+            self.assertEqual(response.status_code, 200)
+            appointment_id = response.json()["appointment_id"]
+            concurrent_test_appointments.append(appointment_id)
+        
+        try:
+            # Function to perform random operations
+            def perform_random_operations(appointment_ids, results, thread_id):
+                operations_performed = []
+                try:
+                    for _ in range(5):  # 5 operations per thread
+                        appointment_id = random.choice(appointment_ids)
+                        operation_type = random.choice(['room_change', 'status_change'])
+                        
+                        if operation_type == 'room_change':
+                            target_room = random.choice(['salle1', 'salle2', ''])
+                            response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/salle?salle={target_room}")
+                            operations_performed.append({
+                                'type': 'room_change',
+                                'appointment_id': appointment_id,
+                                'target_room': target_room,
+                                'success': response.status_code == 200
+                            })
+                        else:  # status_change
+                            target_status = random.choice(['attente', 'en_cours', 'termine'])
+                            response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/statut?statut={target_status}")
+                            operations_performed.append({
+                                'type': 'status_change',
+                                'appointment_id': appointment_id,
+                                'target_status': target_status,
+                                'success': response.status_code == 200
+                            })
+                        
+                        time.sleep(0.1)  # Small delay between operations
+                    
+                    results[thread_id] = operations_performed
+                except Exception as e:
+                    results[thread_id] = {'error': str(e)}
+            
+            # Perform concurrent operations with multiple threads
+            threads = []
+            results = {}
+            num_threads = 3
+            
+            for i in range(num_threads):
+                thread = threading.Thread(
+                    target=perform_random_operations,
+                    args=(concurrent_test_appointments, results, i)
+                )
+                threads.append(thread)
+            
+            # Start all threads
+            start_time = time.time()
+            for thread in threads:
+                thread.start()
+            
+            # Wait for completion
+            for thread in threads:
+                thread.join()
+            
+            end_time = time.time()
+            total_time = end_time - start_time
+            
+            # Analyze results
+            total_operations = 0
+            successful_operations = 0
+            
+            for thread_id, thread_results in results.items():
+                if isinstance(thread_results, list):
+                    total_operations += len(thread_results)
+                    successful_operations += sum(1 for op in thread_results if op.get('success', False))
+                else:
+                    print(f"Thread {thread_id} error: {thread_results.get('error', 'Unknown error')}")
+            
+            # Verify data consistency after concurrent operations
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            final_appointments = response.json()
+            
+            # Check that all our test appointments still exist and have valid data
+            found_appointments = 0
+            for appt in final_appointments:
+                if appt["id"] in concurrent_test_appointments:
+                    found_appointments += 1
+                    
+                    # Verify data integrity
+                    self.assertIn("patient", appt)
+                    self.assertIn("nom", appt["patient"])
+                    self.assertIn("prenom", appt["patient"])
+                    self.assertIn(appt["statut"], ["programme", "attente", "en_cours", "termine", "absent", "retard"])
+                    self.assertIn(appt["salle"], ["", "salle1", "salle2"])
+            
+            self.assertEqual(found_appointments, len(concurrent_test_appointments), 
+                           "All test appointments should still exist after concurrent operations")
+            
+            success_rate = (successful_operations / total_operations * 100) if total_operations > 0 else 0
+            
+            print(f"✅ Concurrent Operations Data Consistency - {total_operations} operations, {success_rate:.1f}% success rate in {total_time:.2f}s")
+            
+            # Expect high success rate for data consistency
+            self.assertGreater(success_rate, 80, f"Success rate too low: {success_rate:.1f}%")
+            
+        finally:
+            # Clean up
+            for appointment_id in concurrent_test_appointments:
+                requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+    
+    def test_performance_under_load_rapid_assignments(self):
+        """Test drag & drop performance under load"""
+        import time
+        
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for performance testing")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Create a larger number of appointments for performance testing
+        performance_appointments = []
+        for i in range(20):  # 20 appointments for load testing
+            patient_id = patients[i % len(patients)]["id"]
+            appointment_data = {
+                "patient_id": patient_id,
+                "date": today,
+                "heure": f"{7 + (i // 4)}:{(i % 4) * 15:02d}",  # Spread across time slots
+                "type_rdv": "visite",
+                "statut": "attente",
+                "salle": "salle1",
+                "motif": f"Performance test {i+1}",
+                "paye": False
+            }
+            
+            response = requests.post(f"{self.base_url}/api/appointments", json=appointment_data)
+            self.assertEqual(response.status_code, 200)
+            appointment_id = response.json()["appointment_id"]
+            performance_appointments.append(appointment_id)
+        
+        try:
+            # Test rapid room assignments
+            start_time = time.time()
+            
+            for i, appointment_id in enumerate(performance_appointments):
+                target_room = "salle2" if i % 2 == 0 else "salle1"
+                response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/salle?salle={target_room}")
+                self.assertEqual(response.status_code, 200)
+            
+            rapid_assignment_time = time.time() - start_time
+            
+            # Test response times for room assignment operations
+            individual_times = []
+            for i in range(5):  # Test 5 individual operations
+                appointment_id = performance_appointments[i]
+                target_room = "salle1" if i % 2 == 0 else "salle2"
+                
+                start_individual = time.time()
+                response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/salle?salle={target_room}")
+                end_individual = time.time()
+                
+                self.assertEqual(response.status_code, 200)
+                individual_times.append(end_individual - start_individual)
+            
+            avg_individual_time = sum(individual_times) / len(individual_times)
+            max_individual_time = max(individual_times)
+            
+            # Test large number of patients in rooms retrieval performance
+            start_retrieval = time.time()
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            end_retrieval = time.time()
+            
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            retrieval_time = end_retrieval - start_retrieval
+            
+            # Count our test appointments in the response
+            test_appointments_found = sum(1 for appt in appointments if appt["id"] in performance_appointments)
+            self.assertEqual(test_appointments_found, len(performance_appointments))
+            
+            # Performance assertions
+            self.assertLess(rapid_assignment_time, 10.0, f"Rapid assignments took too long: {rapid_assignment_time:.2f}s")
+            self.assertLess(avg_individual_time, 1.0, f"Average individual assignment too slow: {avg_individual_time:.3f}s")
+            self.assertLess(max_individual_time, 2.0, f"Slowest individual assignment too slow: {max_individual_time:.3f}s")
+            self.assertLess(retrieval_time, 2.0, f"Data retrieval too slow: {retrieval_time:.3f}s")
+            
+            # Calculate operations per second
+            ops_per_second = len(performance_appointments) / rapid_assignment_time
+            
+            print(f"✅ Performance Under Load:")
+            print(f"   - {len(performance_appointments)} rapid assignments: {rapid_assignment_time:.2f}s ({ops_per_second:.1f} ops/sec)")
+            print(f"   - Average individual assignment: {avg_individual_time:.3f}s")
+            print(f"   - Data retrieval with {len(appointments)} appointments: {retrieval_time:.3f}s")
+            
+        finally:
+            # Clean up
+            for appointment_id in performance_appointments:
+                requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+    
+    def test_data_validation_drag_drop_integrity(self):
+        """Test data integrity during drag & drop operations"""
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for data validation testing")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Create appointment with complete data for integrity testing
+        patient_id = patients[0]["id"]
+        original_appointment_data = {
+            "patient_id": patient_id,
+            "date": today,
+            "heure": "16:30",
+            "type_rdv": "visite",
+            "statut": "attente",
+            "salle": "salle1",
+            "motif": "Data integrity test - original motif",
+            "notes": "Original notes for integrity testing",
+            "paye": True
+        }
+        
+        response = requests.post(f"{self.base_url}/api/appointments", json=original_appointment_data)
+        self.assertEqual(response.status_code, 200)
+        appointment_id = response.json()["appointment_id"]
+        
+        try:
+            # Get initial appointment data
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            initial_appointment = None
+            for appt in appointments:
+                if appt["id"] == appointment_id:
+                    initial_appointment = appt
+                    break
+            
+            self.assertIsNotNone(initial_appointment)
+            
+            # Store initial data for comparison
+            initial_patient_info = initial_appointment["patient"].copy()
+            initial_motif = initial_appointment["motif"]
+            initial_notes = initial_appointment["notes"]
+            initial_paye = initial_appointment["paye"]
+            initial_type_rdv = initial_appointment["type_rdv"]
+            initial_date = initial_appointment["date"]
+            initial_heure = initial_appointment["heure"]
+            
+            # Perform multiple room changes
+            room_changes = ["salle2", "", "salle1", "salle2"]
+            for target_room in room_changes:
+                response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/salle?salle={target_room}")
+                self.assertEqual(response.status_code, 200)
+                
+                # Verify data integrity after each room change
+                response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+                self.assertEqual(response.status_code, 200)
+                appointments = response.json()
+                
+                updated_appointment = None
+                for appt in appointments:
+                    if appt["id"] == appointment_id:
+                        updated_appointment = appt
+                        break
+                
+                self.assertIsNotNone(updated_appointment)
+                
+                # Verify room assignment updated
+                self.assertEqual(updated_appointment["salle"], target_room)
+                
+                # Verify all other data remained intact
+                self.assertEqual(updated_appointment["patient"], initial_patient_info, "Patient info should remain unchanged")
+                self.assertEqual(updated_appointment["motif"], initial_motif, "Motif should remain unchanged")
+                self.assertEqual(updated_appointment["notes"], initial_notes, "Notes should remain unchanged")
+                self.assertEqual(updated_appointment["paye"], initial_paye, "Payment status should remain unchanged")
+                self.assertEqual(updated_appointment["type_rdv"], initial_type_rdv, "Type RDV should remain unchanged")
+                self.assertEqual(updated_appointment["date"], initial_date, "Date should remain unchanged")
+                self.assertEqual(updated_appointment["heure"], initial_heure, "Time should remain unchanged")
+                self.assertEqual(updated_appointment["patient_id"], patient_id, "Patient ID should remain unchanged")
+            
+            # Test status changes don't affect other data
+            status_changes = ["en_cours", "termine", "attente"]
+            for target_status in status_changes:
+                response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/statut?statut={target_status}")
+                self.assertEqual(response.status_code, 200)
+                
+                # Verify data integrity after status change
+                response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+                self.assertEqual(response.status_code, 200)
+                appointments = response.json()
+                
+                updated_appointment = None
+                for appt in appointments:
+                    if appt["id"] == appointment_id:
+                        updated_appointment = appt
+                        break
+                
+                self.assertIsNotNone(updated_appointment)
+                
+                # Verify status updated
+                self.assertEqual(updated_appointment["statut"], target_status)
+                
+                # Verify all other data remained intact (including room assignment)
+                self.assertEqual(updated_appointment["salle"], "salle2", "Room should remain unchanged during status change")
+                self.assertEqual(updated_appointment["patient"], initial_patient_info, "Patient info should remain unchanged")
+                self.assertEqual(updated_appointment["motif"], initial_motif, "Motif should remain unchanged")
+                self.assertEqual(updated_appointment["notes"], initial_notes, "Notes should remain unchanged")
+                self.assertEqual(updated_appointment["paye"], initial_paye, "Payment status should remain unchanged")
+            
+            # Test appointment data consistency across different endpoints
+            endpoints_to_test = [
+                f"/api/rdv/jour/{today}",
+                f"/api/appointments?date={today}",
+                f"/api/rdv/stats/{today}"
+            ]
+            
+            for endpoint in endpoints_to_test:
+                response = requests.get(f"{self.base_url}{endpoint}")
+                self.assertEqual(response.status_code, 200)
+                
+                if endpoint.endswith("/stats"):
+                    # Stats endpoint - verify appointment is counted
+                    stats = response.json()
+                    self.assertGreater(stats["total_rdv"], 0, "Appointment should be counted in stats")
+                else:
+                    # Appointment list endpoints - verify data consistency
+                    appointments = response.json()
+                    if isinstance(appointments, dict) and "appointments" in appointments:
+                        appointments = appointments["appointments"]
+                    
+                    found_appointment = None
+                    for appt in appointments:
+                        if appt["id"] == appointment_id:
+                            found_appointment = appt
+                            break
+                    
+                    if found_appointment:  # Some endpoints might not include all appointments
+                        self.assertEqual(found_appointment["salle"], "salle2", f"Room inconsistent in {endpoint}")
+                        self.assertEqual(found_appointment["statut"], "attente", f"Status inconsistent in {endpoint}")
+            
+            print("✅ Data Validation - All appointment data remained intact during drag & drop operations")
+            
+        finally:
+            # Clean up
+            requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+
 if __name__ == "__main__":
     unittest.main()
