@@ -807,7 +807,7 @@ async def update_rdv_paiement(rdv_id: str, payment_data: dict):
         date_paiement = payment_data.get("date_paiement")
         
         # Validate payment method
-        valid_methods = ["espece", "carte", "cheque", "virement"]
+        valid_methods = ["", "espece", "carte", "cheque", "virement"]
         if methode_paiement not in valid_methods:
             raise HTTPException(status_code=400, detail=f"Invalid payment method. Must be one of: {valid_methods}")
         
