@@ -46,7 +46,7 @@ const WaitingRoom = ({ user }) => {
     try {
       const today = new Date().toISOString().split('T')[0];
       const response = await axios.get(`${API_BASE_URL}/api/rdv/jour/${today}`);
-      const appointmentsData = response.data.rdv || [];
+      const appointmentsData = response.data || [];
       
       console.log('Fetched appointments:', appointmentsData); // Debug log
       
