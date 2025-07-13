@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { 
   Clock, 
   Users, 
@@ -10,7 +11,8 @@ import {
   AlertCircle,
   Phone,
   CreditCard,
-  Calendar
+  Calendar,
+  GripVertical
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
