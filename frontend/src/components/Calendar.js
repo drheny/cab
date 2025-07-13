@@ -191,6 +191,19 @@ const Calendar = ({ user }) => {
     }
   };
 
+  const handlePatientArrival = async (appointmentId, salle) => {
+    try {
+      // Marquer le patient comme arrivé et l'affecter à la salle
+      await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/statut`, { statut: 'attente' });
+      await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/salle`, { salle });
+      toast.success(`Patient arrivé et affecté à ${salle === 'salle1' ? 'Salle 1' : 'Salle 2'}`);
+      fetchData();
+    } catch (error) {
+      console.error('Error handling patient arrival:', error);
+      toast.error('Erreur lors de la prise en charge du patient');
+    }
+  };
+
   const viewPatientDetails = async (patientId) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/api/patients/${patientId}`);
