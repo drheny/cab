@@ -4198,7 +4198,7 @@ class CabinetMedicalAPITest(unittest.TestCase):
             # Test room assignments
             rooms = ["salle1", "salle2", ""]
             for room in rooms:
-                response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/salle", json={"salle": room})
+                response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/salle?salle={room}")
                 self.assertEqual(response.status_code, 200)
                 print(f"✅ Room assignment to '{room}' successful")
             
