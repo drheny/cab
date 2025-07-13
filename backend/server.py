@@ -749,15 +749,29 @@ async def get_rdv_semaine(date: str):
     }
 
 @app.put("/api/rdv/{rdv_id}/statut")
-async def update_rdv_statut(rdv_id: str, statut: str):
+async def update_rdv_statut(rdv_id: str, status_data: dict):
     """Update appointment status"""
+    # Handle both direct string and object formats
+    if isinstance(status_data, dict):
+        statut = status_data.get("statut")
+        salle = status_data.get("salle", "")
+    else:
+        statut = status_data
+        salle = ""
+    
     valid_statuts = ["programme", "attente", "en_cours", "termine", "absent", "retard"]
     if statut not in valid_statuts:
         raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuts}")
     
+    update_data = {"statut": statut, "updated_at": datetime.now()}
+    if salle:
+        valid_salles = ["", "salle1", "salle2"]
+        if salle in valid_salles:
+            update_data["salle"] = salle
+    
     result = appointments_collection.update_one(
         {"id": rdv_id},
-        {"$set": {"statut": statut, "updated_at": datetime.now()}}
+        {"$set": update_data}
     )
     
     if result.matched_count == 0:
