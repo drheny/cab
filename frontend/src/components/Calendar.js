@@ -1255,8 +1255,10 @@ const AppointmentModal = ({
         
         toast.success('Patient et rendez-vous créés avec succès');
         onClose();
-        // Appeler la fonction onSave avec les données mises à jour pour recharger les données
-        onSave();
+        // Rafraîchir les données du calendrier
+        if (onRefresh) {
+          await onRefresh();
+        }
         
       } catch (error) {
         console.error('Error creating patient and appointment:', error);
