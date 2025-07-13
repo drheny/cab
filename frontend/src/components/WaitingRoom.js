@@ -1049,16 +1049,146 @@ Merci de votre patience ! 🙏`;
           )}
         </div>
 
-        {/* Bouton flottant pour ajouter un RDV */}
+        {/* Bouton flottant pour ajouter un RDV urgent */}
         <button
-          onClick={() => {
-            // TODO: Ouvrir le modal d'ajout de RDV
-            toast.info('Fonctionnalité d\'ajout de RDV - à implémenter dans Phase 7');
-          }}
-          className="fixed bottom-6 right-6 bg-primary-500 hover:bg-primary-600 text-white p-4 rounded-full shadow-lg transition-colors z-10"
+          onClick={handleUrgentRDV}
+          className="fixed bottom-6 right-6 bg-red-500 hover:bg-red-600 text-white p-4 rounded-full shadow-lg transition-colors z-10 pulse-animation"
+          title="Ajouter un RDV urgent"
         >
           <Plus className="w-6 h-6" />
         </button>
+
+        {/* Modal RDV Urgent */}
+        {showUrgentModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-xl max-w-md w-full">
+              <div className="p-6">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                    <h2 className="text-xl font-bold text-gray-900">RDV Urgent</h2>
+                  </div>
+                  <button
+                    onClick={() => setShowUrgentModal(false)}
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* Alert */}
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                  <p className="text-red-800 text-sm">
+                    ⚡ Création rapide d'un RDV pour un patient sans rendez-vous
+                  </p>
+                </div>
+
+                {/* Form */}
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Prénom *
+                      </label>
+                      <input
+                        type="text"
+                        value={urgentFormData.patient_prenom}
+                        onChange={(e) => setUrgentFormData(prev => ({ ...prev, patient_prenom: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                        placeholder="Prénom"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Nom *
+                      </label>
+                      <input
+                        type="text"
+                        value={urgentFormData.patient_nom}
+                        onChange={(e) => setUrgentFormData(prev => ({ ...prev, patient_nom: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                        placeholder="Nom"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Téléphone *
+                    </label>
+                    <input
+                      type="tel"
+                      value={urgentFormData.patient_telephone}
+                      onChange={(e) => setUrgentFormData(prev => ({ ...prev, patient_telephone: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                      placeholder="21612345678"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Type RDV
+                      </label>
+                      <select
+                        value={urgentFormData.type_rdv}
+                        onChange={(e) => setUrgentFormData(prev => ({ ...prev, type_rdv: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                      >
+                        <option value="visite">💰 Visite</option>
+                        <option value="controle">🆓 Contrôle</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Salle
+                      </label>
+                      <select
+                        value={urgentFormData.salle}
+                        onChange={(e) => setUrgentFormData(prev => ({ ...prev, salle: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                      >
+                        <option value="salle1">Salle 1</option>
+                        <option value="salle2">Salle 2</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Notes
+                    </label>
+                    <textarea
+                      value={urgentFormData.notes}
+                      onChange={(e) => setUrgentFormData(prev => ({ ...prev, notes: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                      rows="2"
+                      placeholder="Raison de l'urgence..."
+                    />
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex space-x-3 mt-6">
+                  <button
+                    onClick={() => setShowUrgentModal(false)}
+                    className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded-lg transition-colors"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    onClick={createUrgentAppointment}
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Créer RDV Urgent</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Modal de prévisualisation WhatsApp */}
         {showWhatsAppPreview && previewData && (
