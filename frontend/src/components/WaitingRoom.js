@@ -661,48 +661,76 @@ Merci de votre patience ! 🙏`;
           </div>
         )}
         
-        {/* Actions principales */}
+        {/* Actions principales avec logique contextuelle avancée */}
         <div className="flex space-x-2">
+          {/* Actions selon le statut - PHASE 6: Workflow intelligent */}
           {appointment.statut === 'attente' && (
-            <button
-              onClick={() => onStart(appointment.id)}
-              className="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-sm py-2 px-3 rounded transition-colors"
-            >
-              🚀 Démarrer consultation
-            </button>
+            <>
+              <button
+                onClick={() => onStart(appointment.id)}
+                className="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-sm py-2 px-3 rounded transition-colors flex items-center justify-center space-x-1"
+                title="Commencer la consultation"
+              >
+                <Users className="w-4 h-4" />
+                <span>🚀 Démarrer consultation</span>
+              </button>
+              
+              {/* Actions secondaires pour patients en attente */}
+              <button
+                onClick={() => onMoveToSalle(appointment.id, appointment.salle === 'salle1' ? 'salle2' : 'salle1')}
+                className="bg-purple-500 hover:bg-purple-600 text-white text-sm py-2 px-3 rounded transition-colors"
+                title={`Déplacer vers ${appointment.salle === 'salle1' ? 'Salle 2' : 'Salle 1'}`}
+              >
+                {appointment.salle === 'salle1' ? '→ S2' : '→ S1'}
+              </button>
+            </>
           )}
           
           {appointment.statut === 'en_cours' && (
-            <button
-              onClick={() => onFinish(appointment.id)}
-              className="flex-1 bg-green-500 hover:bg-green-600 text-white text-sm py-2 px-3 rounded transition-colors"
-            >
-              ✅ Terminer consultation
-            </button>
+            <>
+              <button
+                onClick={() => onFinish(appointment.id)}
+                className="flex-1 bg-green-500 hover:bg-green-600 text-white text-sm py-2 px-3 rounded transition-colors flex items-center justify-center space-x-1"
+                title="Terminer la consultation"
+              >
+                <CheckCircle className="w-4 h-4" />
+                <span>✅ Terminer consultation</span>
+              </button>
+              
+              {/* Indicateur consultation en cours */}
+              <div className="bg-blue-100 text-blue-800 text-sm py-2 px-3 rounded flex items-center space-x-1">
+                <Clock className="w-4 h-4 animate-pulse" />
+                <span>En consultation</span>
+              </div>
+            </>
           )}
           
-          {/* Bouton pour déplacer vers l'autre salle (manuel) */}
-          {appointment.salle === 'salle1' && (
-            <button
-              onClick={() => onMoveToSalle(appointment.id, 'salle2')}
-              className="bg-green-500 hover:bg-green-600 text-white text-sm py-2 px-3 rounded transition-colors"
-            >
-              → Salle 2
-            </button>
+          {appointment.statut === 'termine' && (
+            <>
+              {/* Patient terminé - Actions post-consultation */}
+              <div className="flex-1 bg-gray-100 text-gray-600 text-sm py-2 px-3 rounded flex items-center justify-center space-x-1">
+                <CheckCircle className="w-4 h-4" />
+                <span>Consultation terminée</span>
+              </div>
+              
+              {appointment.type_rdv === 'visite' && !appointment.paye && !paymentStates[appointment.id]?.paid && (
+                <button
+                  onClick={() => onMarkPaid(appointment, 'espece')}
+                  className="bg-green-600 hover:bg-green-700 text-white text-sm py-2 px-3 rounded transition-colors flex items-center space-x-1"
+                  title="Finaliser le paiement"
+                >
+                  <DollarSign className="w-4 h-4" />
+                  <span>Paiement</span>
+                </button>
+              )}
+            </>
           )}
           
-          {appointment.salle === 'salle2' && (
-            <button
-              onClick={() => onMoveToSalle(appointment.id, 'salle1')}
-              className="bg-blue-500 hover:bg-blue-600 text-white text-sm py-2 px-3 rounded transition-colors"
-            >
-              → Salle 1
-            </button>
-          )}
-          
+          {/* Action commune: Marquer absent */}
           <button
             onClick={() => onMarkAbsent(appointment.id)}
             className="p-2 text-red-500 hover:bg-red-100 rounded transition-colors"
+            title="Marquer comme absent"
           >
             <Trash2 className="w-4 h-4" />
           </button>
