@@ -710,6 +710,9 @@ Merci de votre patience ! 🙏`;
             onFinish={finishConsultation}
             onMarkAbsent={markAsAbsent}
             onMoveToSalle={updateAppointmentRoom}
+            whatsappStates={whatsappStates}
+            onSendWhatsApp={sendWhatsAppMessage}
+            onPreviewWhatsApp={previewWhatsAppMessage}
           />
 
           {/* Salle 2 - Visible uniquement si elle a des patients */}
@@ -723,6 +726,9 @@ Merci de votre patience ! 🙏`;
               onFinish={finishConsultation}
               onMarkAbsent={markAsAbsent}
               onMoveToSalle={updateAppointmentRoom}
+              whatsappStates={whatsappStates}
+              onSendWhatsApp={sendWhatsAppMessage}
+              onPreviewWhatsApp={previewWhatsAppMessage}
             />
           )}
         </div>
