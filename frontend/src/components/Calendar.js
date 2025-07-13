@@ -204,6 +204,63 @@ const Calendar = ({ user }) => {
     }
   };
 
+  // ====== NOUVELLES FONCTIONS WORKFLOW ======
+  
+  // Basculer entre Contrôle/Visite
+  const handleTypeToggle = async (appointmentId, currentType) => {
+    try {
+      const newType = currentType === 'visite' ? 'controle' : 'visite';
+      await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}`, { type_rdv: newType });
+      toast.success(`Type changé vers ${newType === 'visite' ? 'Visite' : 'Contrôle'}`);
+      fetchData();
+    } catch (error) {
+      console.error('Error toggling type:', error);
+      toast.error('Erreur lors du changement de type');
+    }
+  };
+
+  // Démarrer consultation (attente → en_cours)
+  const handleStartConsultation = async (appointmentId) => {
+    try {
+      await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/statut`, { statut: 'en_cours' });
+      toast.success('Consultation démarrée');
+      fetchData();
+    } catch (error) {
+      console.error('Error starting consultation:', error);
+      toast.error('Erreur lors du démarrage de la consultation');
+    }
+  };
+
+  // Terminer consultation (en_cours → termine)
+  const handleFinishConsultation = async (appointmentId) => {
+    try {
+      await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/statut`, { statut: 'termine' });
+      toast.success('Consultation terminée');
+      fetchData();
+    } catch (error) {
+      console.error('Error finishing consultation:', error);
+      toast.error('Erreur lors de la fin de consultation');
+    }
+  };
+
+  // Gestion des paiements
+  const handlePaymentUpdate = async (appointmentId, paymentData) => {
+    try {
+      await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/paiement`, paymentData);
+      toast.success('Paiement mis à jour');
+      fetchData();
+    } catch (error) {
+      console.error('Error updating payment:', error);
+      toast.error('Erreur lors de la mise à jour du paiement');
+    }
+  };
+
+  // États pour les modales
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState(null);
+  const [showStatusDropdown, setShowStatusDropdown] = useState(null);
+  const [showRoomDropdown, setShowRoomDropdown] = useState(null);
+
   const viewPatientDetails = async (patientId) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/api/patients/${patientId}`);
