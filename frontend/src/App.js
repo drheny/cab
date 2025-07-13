@@ -51,7 +51,7 @@ function App() {
     const userData = {
       type: userType,
       name: userType === 'medecin' ? 'Dr Heni Dridi' : 'Secrétaire',
-      permissions: userType === 'medecin' ? ['all'] : ['patients', 'appointments', 'waiting_room', 'consultations']
+      permissions: userType === 'medecin' ? ['all'] : ['patients', 'appointments', 'consultations']
     };
     
     setUser(userData);
