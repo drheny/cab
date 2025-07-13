@@ -177,7 +177,7 @@ const WaitingRoom = ({ user }) => {
     };
   };
 
-  const PatientCard = ({ appointment, patients, onStart, onFinish, onMarkAbsent, onMoveToSalle }) => {
+  const PatientCard = ({ appointment, patients, onStart, onFinish, onMarkAbsent, onMoveToSalle, index, isDragging }) => {
     const waitingTime = calculateWaitingTime(patients, appointment.id);
     
     const getStatusColor = (status) => {
@@ -199,23 +199,36 @@ const WaitingRoom = ({ user }) => {
     };
 
     return (
-      <div className={`p-4 rounded-lg border-2 ${getStatusColor(appointment.statut)} mb-3 transition-all duration-200`}>
+      <div className={`p-4 rounded-lg border-2 ${getStatusColor(appointment.statut)} mb-3 transition-all duration-200 ${
+        isDragging ? 'shadow-lg rotate-2 scale-105' : 'shadow-sm'
+      }`}>
+        {/* Header avec icône de drag */}
         <div className="flex items-center justify-between mb-3">
-          <div className="flex-1">
-            <h3 className="font-semibold text-lg">
-              {appointment.patient?.prenom} {appointment.patient?.nom}
-            </h3>
-            <div className="flex items-center space-x-4 text-sm opacity-75 mt-1">
-              <span>📅 {appointment.heure}</span>
-              <span className={`px-2 py-1 rounded ${appointment.type_rdv === 'visite' ? 'bg-yellow-200 text-yellow-800' : 'bg-green-200 text-green-800'}`}>
-                {appointment.type_rdv === 'visite' ? '💰 Visite' : '🆓 Contrôle'}
-              </span>
-              <span className={`px-2 py-1 rounded ${appointment.paye ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}`}>
-                {appointment.paye ? '✅ Payé' : '❌ Non payé'}
-              </span>
+          <div className="flex items-center space-x-3 flex-1">
+            {/* Icône drag */}
+            <GripVertical className="w-4 h-4 text-gray-400 cursor-grab" />
+            
+            <div className="flex-1">
+              <h3 className="font-semibold text-lg">
+                {appointment.patient?.prenom} {appointment.patient?.nom}
+              </h3>
+              <div className="flex items-center space-x-4 text-sm opacity-75 mt-1">
+                <span>📅 {appointment.heure}</span>
+                <span className={`px-2 py-1 rounded ${appointment.type_rdv === 'visite' ? 'bg-yellow-200 text-yellow-800' : 'bg-green-200 text-green-800'}`}>
+                  {appointment.type_rdv === 'visite' ? '💰 Visite' : '🆓 Contrôle'}
+                </span>
+                <span className={`px-2 py-1 rounded ${appointment.paye ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}`}>
+                  {appointment.paye ? '✅ Payé' : '❌ Non payé'}
+                </span>
+              </div>
             </div>
           </div>
+          
           <div className="flex items-center space-x-2">
+            {/* Position dans la queue */}
+            <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs font-medium">
+              #{index + 1}
+            </span>
             {getStatusIcon(appointment.statut)}
             <span className="text-sm font-medium capitalize">{appointment.statut}</span>
           </div>
@@ -251,7 +264,7 @@ const WaitingRoom = ({ user }) => {
             </button>
           )}
           
-          {/* Bouton pour déplacer vers l'autre salle */}
+          {/* Bouton pour déplacer vers l'autre salle (manuel) */}
           {appointment.salle === 'salle1' && (
             <button
               onClick={() => onMoveToSalle(appointment.id, 'salle2')}
