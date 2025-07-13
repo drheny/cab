@@ -3077,5 +3077,421 @@ class CabinetMedicalAPITest(unittest.TestCase):
             # Clean up
             requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
 
+    # ========== WAITING ROOM WHATSAPP INTEGRATION TEST DATA CREATION ==========
+    
+    def test_create_waiting_room_whatsapp_test_data(self):
+        """Create comprehensive test data for Waiting Room WhatsApp integration testing"""
+        print("\n🔧 Creating Waiting Room WhatsApp Integration Test Data...")
+        
+        # Step 1: Create patients with proper WhatsApp numbers in Tunisia format
+        test_patients = [
+            {
+                "nom": "Ben Salah",
+                "prenom": "Amira",
+                "date_naissance": "2019-03-15",
+                "telephone": "21650111222",
+                "numero_whatsapp": "21650111222",
+                "adresse": "15 Avenue Habib Bourguiba, Tunis",
+                "pere": {
+                    "nom": "Mohamed Ben Salah",
+                    "telephone": "21650111222",
+                    "fonction": "Ingénieur"
+                },
+                "mere": {
+                    "nom": "Fatima Ben Salah",
+                    "telephone": "21650111223",
+                    "fonction": "Professeur"
+                },
+                "notes": "Enfant très actif, aime les jeux",
+                "antecedents": "Aucun antécédent particulier"
+            },
+            {
+                "nom": "Trabelsi",
+                "prenom": "Youssef",
+                "date_naissance": "2020-07-22",
+                "telephone": "21651222333",
+                "numero_whatsapp": "21651222333",
+                "adresse": "42 Rue de la République, Sousse",
+                "pere": {
+                    "nom": "Ahmed Trabelsi",
+                    "telephone": "21651222333",
+                    "fonction": "Médecin"
+                },
+                "mere": {
+                    "nom": "Leila Trabelsi",
+                    "telephone": "21651222334",
+                    "fonction": "Avocate"
+                },
+                "notes": "Enfant calme, bon appétit",
+                "antecedents": "Allergie légère aux arachides"
+            },
+            {
+                "nom": "Khelifi",
+                "prenom": "Nour",
+                "date_naissance": "2021-01-10",
+                "telephone": "21652333444",
+                "numero_whatsapp": "21652333444",
+                "adresse": "78 Boulevard 14 Janvier, Sfax",
+                "pere": {
+                    "nom": "Karim Khelifi",
+                    "telephone": "21652333444",
+                    "fonction": "Commerçant"
+                },
+                "mere": {
+                    "nom": "Sonia Khelifi",
+                    "telephone": "21652333445",
+                    "fonction": "Infirmière"
+                },
+                "notes": "Premier enfant de la famille",
+                "antecedents": "Naissance prématurée, suivi régulier"
+            },
+            {
+                "nom": "Mansouri",
+                "prenom": "Ines",
+                "date_naissance": "2018-11-05",
+                "telephone": "21653444555",
+                "numero_whatsapp": "21653444555",
+                "adresse": "23 Rue Ibn Khaldoun, Monastir",
+                "pere": {
+                    "nom": "Slim Mansouri",
+                    "telephone": "21653444555",
+                    "fonction": "Pharmacien"
+                },
+                "mere": {
+                    "nom": "Rim Mansouri",
+                    "telephone": "21653444556",
+                    "fonction": "Dentiste"
+                },
+                "notes": "Enfant sociable, aime dessiner",
+                "antecedents": "Eczéma léger traité"
+            }
+        ]
+        
+        created_patient_ids = []
+        
+        # Create patients
+        for patient_data in test_patients:
+            response = requests.post(f"{self.base_url}/api/patients", json=patient_data)
+            self.assertEqual(response.status_code, 200)
+            patient_id = response.json()["patient_id"]
+            created_patient_ids.append(patient_id)
+            print(f"✅ Created patient: {patient_data['prenom']} {patient_data['nom']} (ID: {patient_id})")
+        
+        # Step 2: Create today's appointments with proper statuses and room assignments
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        test_appointments = [
+            # Patient 1: Amira Ben Salah - In salle1, waiting
+            {
+                "patient_id": created_patient_ids[0],
+                "date": today,
+                "heure": "09:00",
+                "type_rdv": "visite",
+                "statut": "attente",
+                "salle": "salle1",
+                "motif": "Consultation de routine",
+                "notes": "Premier RDV de la journée",
+                "paye": False
+            },
+            # Patient 2: Youssef Trabelsi - In salle1, waiting
+            {
+                "patient_id": created_patient_ids[1],
+                "date": today,
+                "heure": "09:30",
+                "type_rdv": "controle",
+                "statut": "attente",
+                "salle": "salle1",
+                "motif": "Contrôle vaccination",
+                "notes": "Suivi vaccination obligatoire",
+                "paye": True
+            },
+            # Patient 3: Nour Khelifi - In salle2, waiting
+            {
+                "patient_id": created_patient_ids[2],
+                "date": today,
+                "heure": "10:00",
+                "type_rdv": "visite",
+                "statut": "attente",
+                "salle": "salle2",
+                "motif": "Consultation pédiatrique",
+                "notes": "Suivi croissance",
+                "paye": False
+            },
+            # Patient 4: Ines Mansouri - In salle1, currently in consultation
+            {
+                "patient_id": created_patient_ids[3],
+                "date": today,
+                "heure": "10:30",
+                "type_rdv": "controle",
+                "statut": "en_cours",
+                "salle": "salle1",
+                "motif": "Contrôle dermatologique",
+                "notes": "Suivi eczéma",
+                "paye": True
+            },
+            # Additional appointment with 'programme' status (not yet assigned to room)
+            {
+                "patient_id": created_patient_ids[0],
+                "date": today,
+                "heure": "14:00",
+                "type_rdv": "visite",
+                "statut": "programme",
+                "salle": "",
+                "motif": "Consultation de suivi",
+                "notes": "RDV programmé pour l'après-midi",
+                "paye": False
+            }
+        ]
+        
+        created_appointment_ids = []
+        
+        # Create appointments
+        for appointment_data in test_appointments:
+            response = requests.post(f"{self.base_url}/api/appointments", json=appointment_data)
+            self.assertEqual(response.status_code, 200)
+            appointment_id = response.json()["appointment_id"]
+            created_appointment_ids.append(appointment_id)
+            
+            # Get patient name for logging
+            patient_response = requests.get(f"{self.base_url}/api/patients/{appointment_data['patient_id']}")
+            if patient_response.status_code == 200:
+                patient = patient_response.json()
+                patient_name = f"{patient['prenom']} {patient['nom']}"
+            else:
+                patient_name = "Unknown"
+            
+            print(f"✅ Created appointment: {patient_name} - {appointment_data['heure']} - {appointment_data['statut']} - {appointment_data['salle']}")
+        
+        # Step 3: Verify API endpoints return correct data
+        print("\n🔍 Testing Waiting Room API Endpoints...")
+        
+        # Test GET /api/rdv/jour/{today}
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        
+        print(f"✅ GET /api/rdv/jour/{today} returned {len(appointments)} appointments")
+        
+        # Verify appointments have patient info with WhatsApp data
+        waiting_patients_salle1 = []
+        waiting_patients_salle2 = []
+        en_cours_patients = []
+        
+        for appointment in appointments:
+            self.assertIn("patient", appointment, "Appointment should include patient info")
+            patient_info = appointment["patient"]
+            
+            # Verify required fields
+            self.assertIn("nom", patient_info)
+            self.assertIn("prenom", patient_info)
+            self.assertIn("numero_whatsapp", patient_info)
+            self.assertIn("lien_whatsapp", patient_info)
+            
+            # Verify WhatsApp number format
+            whatsapp_number = patient_info["numero_whatsapp"]
+            if whatsapp_number:
+                self.assertTrue(whatsapp_number.startswith("216"), f"WhatsApp number should start with 216: {whatsapp_number}")
+                self.assertEqual(len(whatsapp_number), 11, f"WhatsApp number should be 11 digits: {whatsapp_number}")
+                
+                # Verify WhatsApp link
+                expected_link = f"https://wa.me/{whatsapp_number}"
+                self.assertEqual(patient_info["lien_whatsapp"], expected_link)
+            
+            # Categorize patients by status and room
+            if appointment["statut"] == "attente":
+                if appointment["salle"] == "salle1":
+                    waiting_patients_salle1.append(appointment)
+                elif appointment["salle"] == "salle2":
+                    waiting_patients_salle2.append(appointment)
+            elif appointment["statut"] == "en_cours":
+                en_cours_patients.append(appointment)
+        
+        print(f"✅ Salle 1 waiting patients: {len(waiting_patients_salle1)}")
+        print(f"✅ Salle 2 waiting patients: {len(waiting_patients_salle2)}")
+        print(f"✅ En cours patients: {len(en_cours_patients)}")
+        
+        # Step 4: Verify room assignments and statuses
+        self.assertGreater(len(waiting_patients_salle1), 0, "Should have patients waiting in salle1")
+        self.assertGreater(len(waiting_patients_salle2), 0, "Should have patients waiting in salle2")
+        self.assertGreater(len(en_cours_patients), 0, "Should have patients en_cours")
+        
+        # Step 5: Test WhatsApp field validation
+        print("\n📱 Testing WhatsApp Field Validation...")
+        
+        for appointment in appointments:
+            patient_info = appointment["patient"]
+            whatsapp_number = patient_info.get("numero_whatsapp", "")
+            whatsapp_link = patient_info.get("lien_whatsapp", "")
+            
+            if whatsapp_number:
+                # Verify Tunisia format
+                self.assertTrue(whatsapp_number.startswith("216"), f"Invalid WhatsApp format: {whatsapp_number}")
+                self.assertEqual(len(whatsapp_number), 11, f"Invalid WhatsApp length: {whatsapp_number}")
+                
+                # Verify link generation
+                expected_link = f"https://wa.me/{whatsapp_number}"
+                self.assertEqual(whatsapp_link, expected_link, f"Invalid WhatsApp link: {whatsapp_link}")
+                
+                print(f"✅ WhatsApp validation passed for {patient_info['prenom']} {patient_info['nom']}: {whatsapp_number}")
+        
+        # Step 6: Test data structure verification
+        print("\n📋 Testing Data Structure Verification...")
+        
+        for appointment in appointments:
+            # Verify appointment structure
+            required_appointment_fields = ["id", "statut", "salle", "heure", "type_rdv", "paye", "patient_id", "date", "motif"]
+            for field in required_appointment_fields:
+                self.assertIn(field, appointment, f"Missing appointment field: {field}")
+            
+            # Verify patient info structure
+            patient_info = appointment["patient"]
+            required_patient_fields = ["nom", "prenom", "numero_whatsapp", "lien_whatsapp"]
+            for field in required_patient_fields:
+                self.assertIn(field, patient_info, f"Missing patient field: {field}")
+        
+        print("✅ Data structure verification completed")
+        
+        # Step 7: Display summary for manual testing
+        print("\n📊 WAITING ROOM WHATSAPP INTEGRATION TEST DATA SUMMARY:")
+        print("=" * 60)
+        print(f"📅 Date: {today}")
+        print(f"👥 Total appointments created: {len(created_appointment_ids)}")
+        print(f"🏥 Salle 1 (attente): {len(waiting_patients_salle1)} patients")
+        print(f"🏥 Salle 2 (attente): {len(waiting_patients_salle2)} patients")
+        print(f"⚕️  En cours: {len(en_cours_patients)} patients")
+        print("\n📱 WhatsApp Integration Ready:")
+        
+        for appointment in appointments:
+            if appointment["statut"] in ["attente", "en_cours"]:
+                patient = appointment["patient"]
+                status_emoji = "⏳" if appointment["statut"] == "attente" else "🔄"
+                room_info = f"({appointment['salle']})" if appointment['salle'] else "(no room)"
+                print(f"  {status_emoji} {patient['prenom']} {patient['nom']} - {appointment['heure']} {room_info}")
+                print(f"      📱 WhatsApp: {patient['numero_whatsapp']} -> {patient['lien_whatsapp']}")
+        
+        print("\n✅ Test data creation completed successfully!")
+        print("🔗 Use GET /api/rdv/jour/{} to access the test data".format(today))
+        print("📱 All patients have valid Tunisia WhatsApp numbers (216xxxxxxxx)")
+        print("🏥 Room assignments: salle1, salle2 with proper statuses")
+        
+        # Return created IDs for potential cleanup
+        return {
+            "patient_ids": created_patient_ids,
+            "appointment_ids": created_appointment_ids,
+            "test_date": today
+        }
+    
+    def test_waiting_room_api_endpoints_validation(self):
+        """Test and validate all Waiting Room API endpoints with created test data"""
+        print("\n🔍 Testing Waiting Room API Endpoints Validation...")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Test 1: GET /api/rdv/jour/{today} - Main endpoint for waiting room
+        print("\n1️⃣ Testing GET /api/rdv/jour/{today}")
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        self.assertIsInstance(appointments, list)
+        
+        print(f"   ✅ Returned {len(appointments)} appointments")
+        
+        # Verify each appointment has complete structure
+        for appointment in appointments:
+            # Test appointment fields
+            required_fields = ["id", "patient_id", "date", "heure", "type_rdv", "statut", "salle", "motif", "paye"]
+            for field in required_fields:
+                self.assertIn(field, appointment, f"Missing field {field} in appointment")
+            
+            # Test patient info nested structure
+            self.assertIn("patient", appointment, "Patient info should be nested in appointment")
+            patient = appointment["patient"]
+            patient_fields = ["nom", "prenom", "numero_whatsapp", "lien_whatsapp"]
+            for field in patient_fields:
+                self.assertIn(field, patient, f"Missing field {field} in patient info")
+        
+        print("   ✅ All appointments have complete data structure")
+        
+        # Test 2: Room assignment verification
+        print("\n2️⃣ Testing Room Assignment Data")
+        salle1_patients = [a for a in appointments if a["salle"] == "salle1"]
+        salle2_patients = [a for a in appointments if a["salle"] == "salle2"]
+        attente_patients = [a for a in appointments if a["statut"] == "attente"]
+        en_cours_patients = [a for a in appointments if a["statut"] == "en_cours"]
+        
+        print(f"   🏥 Salle 1: {len(salle1_patients)} patients")
+        print(f"   🏥 Salle 2: {len(salle2_patients)} patients")
+        print(f"   ⏳ Attente: {len(attente_patients)} patients")
+        print(f"   🔄 En cours: {len(en_cours_patients)} patients")
+        
+        # Verify we have the expected distribution
+        self.assertGreater(len(salle1_patients), 0, "Should have patients in salle1")
+        self.assertGreater(len(salle2_patients), 0, "Should have patients in salle2")
+        self.assertGreater(len(attente_patients), 0, "Should have patients waiting")
+        
+        # Test 3: WhatsApp data validation
+        print("\n3️⃣ Testing WhatsApp Data Validation")
+        whatsapp_valid_count = 0
+        
+        for appointment in appointments:
+            patient = appointment["patient"]
+            whatsapp_number = patient.get("numero_whatsapp", "")
+            whatsapp_link = patient.get("lien_whatsapp", "")
+            
+            if whatsapp_number:
+                # Validate Tunisia format
+                self.assertTrue(whatsapp_number.startswith("216"), 
+                              f"WhatsApp number should start with 216: {whatsapp_number}")
+                self.assertEqual(len(whatsapp_number), 11, 
+                               f"WhatsApp number should be 11 digits: {whatsapp_number}")
+                
+                # Validate link format
+                expected_link = f"https://wa.me/{whatsapp_number}"
+                self.assertEqual(whatsapp_link, expected_link, 
+                               f"Invalid WhatsApp link: {whatsapp_link}")
+                
+                whatsapp_valid_count += 1
+        
+        print(f"   📱 {whatsapp_valid_count} patients have valid WhatsApp numbers")
+        self.assertGreater(whatsapp_valid_count, 0, "Should have patients with WhatsApp numbers")
+        
+        # Test 4: Status and room combination validation
+        print("\n4️⃣ Testing Status and Room Combinations")
+        
+        # Check that waiting patients are assigned to rooms
+        waiting_with_rooms = [a for a in appointments if a["statut"] == "attente" and a["salle"]]
+        waiting_without_rooms = [a for a in appointments if a["statut"] == "attente" and not a["salle"]]
+        
+        print(f"   ⏳ Waiting patients with rooms: {len(waiting_with_rooms)}")
+        print(f"   ⏳ Waiting patients without rooms: {len(waiting_without_rooms)}")
+        
+        # For WhatsApp integration, we need patients in waiting rooms
+        self.assertGreater(len(waiting_with_rooms), 0, "Should have waiting patients assigned to rooms")
+        
+        # Test 5: Appointment types validation
+        print("\n5️⃣ Testing Appointment Types")
+        visite_count = len([a for a in appointments if a["type_rdv"] == "visite"])
+        controle_count = len([a for a in appointments if a["type_rdv"] == "controle"])
+        
+        print(f"   🏥 Visites: {visite_count}")
+        print(f"   🔍 Contrôles: {controle_count}")
+        
+        # Verify we have both types as requested
+        self.assertGreater(visite_count, 0, "Should have 'visite' appointments")
+        self.assertGreater(controle_count, 0, "Should have 'controle' appointments")
+        
+        print("\n✅ All Waiting Room API endpoint validations passed!")
+        
+        return {
+            "total_appointments": len(appointments),
+            "salle1_count": len(salle1_patients),
+            "salle2_count": len(salle2_patients),
+            "attente_count": len(attente_patients),
+            "en_cours_count": len(en_cours_patients),
+            "whatsapp_valid_count": whatsapp_valid_count,
+            "visite_count": visite_count,
+            "controle_count": controle_count
+        }
+
 if __name__ == "__main__":
     unittest.main()
