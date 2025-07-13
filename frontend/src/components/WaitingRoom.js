@@ -229,10 +229,99 @@ const WaitingRoom = ({ user }) => {
     return () => clearInterval(interval);
   }, [salle1, salle2]);
 
-  // Fonction pour obtenir la prochaine position disponible dans une salle
-  const getNextAvailablePosition = (salle) => {
+  // **PHASE 4: WhatsApp Integration**
+  const [whatsappStates, setWhatsappStates] = useState({}); // Tracking WhatsApp sent status
+
+  // Template de message WhatsApp
+  const generateWhatsAppMessage = (patient, waitingTime, salle) => {
+    const salleText = salle === 'salle1' ? 'Salle 1' : 'Salle 2';
+    const message = `🏥 *Cabinet Dr. [Nom Docteur]*
+
+Bonjour ${patient.prenom},
+
+📍 *Votre statut*
+• Salle d'attente: ${salleText}
+• Position dans la file: #${waitingTime.position}
+
+⏱️ *Temps d'attente estimé*
+• Environ ${waitingTime.minutes} minutes
+• Heure prévue: vers ${waitingTime.timeString}
+
+👥 *File d'attente*
+${waitingTime.patientsAhead === 0 
+  ? '🎯 Vous êtes le prochain patient !'
+  : `• ${waitingTime.patientsAhead} patient(s) avant vous`
+}
+
+💡 *Informations utiles*
+• Merci de rester disponible
+• Votre tour approche
+• En cas d'urgence: appelez le cabinet
+
+Merci de votre patience ! 🙏`;
+
+    return message;
+  };
+
+  // Envoi du message WhatsApp
+  const sendWhatsAppMessage = async (appointment, salle) => {
+    try {
+      // Calculer les temps d'attente actuels
+      const patients = salle === 'salle1' ? salle1 : salle2;
+      const waitingTime = calculateWaitingTime(patients, appointment.id);
+      
+      // Générer le message
+      const message = generateWhatsAppMessage(appointment.patient, waitingTime, salle);
+      
+      // Encoder le message pour URL
+      const encodedMessage = encodeURIComponent(message);
+      
+      // Générer le lien WhatsApp
+      const phoneNumber = appointment.patient.numero_whatsapp || appointment.patient.telephone;
+      const formattedPhone = phoneNumber.startsWith('216') ? phoneNumber : `216${phoneNumber}`;
+      const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodedMessage}`;
+      
+      // Ouvrir WhatsApp dans un nouvel onglet
+      window.open(whatsappUrl, '_blank');
+      
+      // Marquer comme envoyé avec horodatage
+      const timestamp = new Date().toLocaleString('fr-FR');
+      setWhatsappStates(prev => ({
+        ...prev,
+        [appointment.id]: {
+          sent: true,
+          timestamp: timestamp,
+          message: message
+        }
+      }));
+      
+      // Optionnel: Enregistrer l'envoi dans la base de données
+      try {
+        await axios.put(`${API_BASE_URL}/api/rdv/${appointment.id}/whatsapp`, {
+          whatsapp_envoye: true,
+          whatsapp_timestamp: timestamp
+        });
+      } catch (dbError) {
+        console.log('Could not save WhatsApp status to database:', dbError);
+        // Continuer quand même, l'envoi WhatsApp a réussi
+      }
+      
+      toast.success(`Message WhatsApp envoyé à ${appointment.patient.prenom}`);
+      
+    } catch (error) {
+      console.error('Error sending WhatsApp message:', error);
+      toast.error('Erreur lors de l\'envoi du message WhatsApp');
+    }
+  };
+
+  // Fonction pour prévisualiser le message
+  const previewWhatsAppMessage = (appointment, salle) => {
     const patients = salle === 'salle1' ? salle1 : salle2;
-    return patients.length + 1;
+    const waitingTime = calculateWaitingTime(patients, appointment.id);
+    const message = generateWhatsAppMessage(appointment.patient, waitingTime, salle);
+    
+    // Afficher le message dans une alerte ou modal
+    alert(`Aperçu du message WhatsApp:\n\n${message}`);
   };
 
   const PatientCard = ({ appointment, patients, onStart, onFinish, onMarkAbsent, onMoveToSalle, index, isDragging }) => {
