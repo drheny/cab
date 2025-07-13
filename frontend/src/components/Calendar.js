@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import AppointmentModal from './AppointmentModal';
 
 const Calendar = ({ user }) => {
   const location = useLocation();
