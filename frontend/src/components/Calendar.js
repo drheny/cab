@@ -433,14 +433,17 @@ const Calendar = ({ user }) => {
       {/* List View - Workflow Optimisé */}
       {viewMode === 'list' && (
         <div className="space-y-6">
-          {/* À venir (Bleu) */}
-          {groupedAppointments.programme.length > 0 && (
-            <AppointmentSection
-              title="À venir"
-              appointments={groupedAppointments.programme}
+          {/* 1. Salle d'attente (en haut) */}
+          {groupedAppointments.attente.length > 0 && (
+            <WorkflowSection
+              title="🟢 Salle d'attente"
+              appointments={groupedAppointments.attente}
+              sectionType="attente"
               onStatusUpdate={handleStatusUpdate}
               onRoomAssignment={handleRoomAssignment}
-              onPatientArrival={handlePatientArrival}
+              onTypeToggle={handleTypeToggle}
+              onPaymentUpdate={handlePaymentUpdate}
+              onStartConsultation={handleStartConsultation}
               onEdit={openModal}
               onDelete={handleDeleteAppointment}
               onViewPatient={viewPatientDetails}
