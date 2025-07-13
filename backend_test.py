@@ -3061,10 +3061,11 @@ class CabinetMedicalAPITest(unittest.TestCase):
                         appointments = appointments["appointments"]
                     
                     found_appointment = None
-                    for appt in appointments:
-                        if appt["id"] == appointment_id:
-                            found_appointment = appt
-                            break
+                    if isinstance(appointments, list):
+                        for appt in appointments:
+                            if isinstance(appt, dict) and appt.get("id") == appointment_id:
+                                found_appointment = appt
+                                break
                     
                     if found_appointment:  # Some endpoints might not include all appointments
                         self.assertEqual(found_appointment["salle"], "salle2", f"Room inconsistent in {endpoint}")
