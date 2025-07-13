@@ -292,12 +292,41 @@ const WaitingRoom = ({ user }) => {
           </div>
         </div>
 
-        {/* Temps d'attente */}
+        {/* Temps d'attente amélioré */}
         {appointment.statut === 'attente' && (
-          <div className="bg-white bg-opacity-50 p-2 rounded mb-3">
-            <div className="flex items-center justify-between text-sm">
-              <span>⏱️ Temps d'attente estimé: ~{waitingTime.minutes} min</span>
-              <span>👥 Position: {waitingTime.position} ({waitingTime.patientsAhead} avant)</span>
+          <div className="bg-white bg-opacity-50 p-3 rounded mb-3 border-l-4 border-blue-400">
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="font-medium text-gray-700">⏱️ Temps estimé:</span>
+                <div className="text-lg font-bold text-blue-600">~{waitingTime.minutes} min</div>
+                <div className="text-xs text-gray-500">Vers {waitingTime.timeString}</div>
+              </div>
+              <div>
+                <span className="font-medium text-gray-700">👥 File d'attente:</span>
+                <div className="text-lg font-bold text-gray-600">Position #{waitingTime.position}</div>
+                <div className="text-xs text-gray-500">
+                  {waitingTime.patientsAhead === 0 
+                    ? 'Prochain patient !' 
+                    : `${waitingTime.patientsAhead} patient(s) avant`
+                  }
+                </div>
+              </div>
+            </div>
+            
+            {/* Barre de progression visuelle */}
+            <div className="mt-2">
+              <div className="flex justify-between text-xs text-gray-500 mb-1">
+                <span>Attente</span>
+                <span>Consultation</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-blue-500 h-2 rounded-full transition-all duration-500"
+                  style={{ 
+                    width: `${Math.max(10, 100 - (waitingTime.minutes / 60) * 100)}%` 
+                  }}
+                ></div>
+              </div>
             </div>
           </div>
         )}
