@@ -4527,7 +4527,7 @@ class CabinetMedicalAPITest(unittest.TestCase):
             print(f"✅ Type toggle from '{original_type}' to '{new_type}' successful")
             
             # Test room reassignment
-            response = requests.put(f"{self.base_url}/api/rdv/{rdv_id_2}/salle", json={"salle": "salle1"})
+            response = requests.put(f"{self.base_url}/api/rdv/{rdv_id_2}/salle?salle=salle1")
             self.assertEqual(response.status_code, 200)
             print("✅ Room reassignment successful")
             
