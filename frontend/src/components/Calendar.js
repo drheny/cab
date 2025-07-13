@@ -430,7 +430,7 @@ const Calendar = ({ user }) => {
         </div>
       )}
 
-      {/* List View */}
+      {/* List View - Workflow Optimisé */}
       {viewMode === 'list' && (
         <div className="space-y-6">
           {/* À venir (Bleu) */}
