@@ -18,7 +18,7 @@ const Sidebar = ({ user, isOpen, onClose }) => {
     { id: 'dashboard', label: 'Tableau de bord', icon: Home, path: '/dashboard', permission: 'all' },
     { id: 'patients', label: 'Patients', icon: Users, path: '/patients', permission: 'patients' },
     { id: 'calendar', label: 'Calendrier', icon: Calendar, path: '/calendar', permission: 'appointments' },
-    { id: 'waiting-room', label: 'Salles d\'attente', icon: Clock, path: '/waiting-room', permission: 'waiting_room' },
+
     { id: 'consultation', label: 'Consultation', icon: Stethoscope, path: '/consultation', permission: 'consultations' },
     { id: 'billing', label: 'Facturation', icon: CreditCard, path: '/billing', permission: 'billing' },
     { id: 'administration', label: 'Administration', icon: Settings, path: '/administration', permission: 'admin' }
