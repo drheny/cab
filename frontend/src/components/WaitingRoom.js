@@ -372,89 +372,105 @@ const WaitingRoom = ({ user }) => {
   const isSalle2Empty = salle2.length === 0;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Salles d'attente</h1>
-          <p className="text-gray-600">Gestion des patients en attente</p>
+    <DragDropContext onDragEnd={handleDragEnd}>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Salles d'attente</h1>
+            <p className="text-gray-600">Gestion des patients en attente • Glisser-déposer pour réorganiser</p>
+          </div>
+          <div className="text-right">
+            <div className="text-sm text-gray-500">Dernière mise à jour</div>
+            <div className="text-sm font-medium">{new Date().toLocaleTimeString()}</div>
+          </div>
         </div>
-        <div className="text-right">
-          <div className="text-sm text-gray-500">Dernière mise à jour</div>
-          <div className="text-sm font-medium">{new Date().toLocaleTimeString()}</div>
-        </div>
-      </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-lg shadow-sm border">
-          <div className="flex items-center space-x-2">
-            <Users className="w-5 h-5 text-blue-500" />
-            <span className="text-sm font-medium">Salle 1</span>
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-white p-4 rounded-lg shadow-sm border">
+            <div className="flex items-center space-x-2">
+              <Users className="w-5 h-5 text-blue-500" />
+              <span className="text-sm font-medium">Salle 1</span>
+            </div>
+            <p className="text-2xl font-bold text-blue-600">{stats.salle1Count}</p>
           </div>
-          <p className="text-2xl font-bold text-blue-600">{stats.salle1Count}</p>
-        </div>
-        <div className="bg-white p-4 rounded-lg shadow-sm border">
-          <div className="flex items-center space-x-2">
-            <Users className="w-5 h-5 text-green-500" />
-            <span className="text-sm font-medium">Salle 2</span>
+          <div className="bg-white p-4 rounded-lg shadow-sm border">
+            <div className="flex items-center space-x-2">
+              <Users className="w-5 h-5 text-green-500" />
+              <span className="text-sm font-medium">Salle 2</span>
+            </div>
+            <p className="text-2xl font-bold text-green-600">{stats.salle2Count}</p>
           </div>
-          <p className="text-2xl font-bold text-green-600">{stats.salle2Count}</p>
-        </div>
-        <div className="bg-white p-4 rounded-lg shadow-sm border">
-          <div className="flex items-center space-x-2">
-            <Clock className="w-5 h-5 text-yellow-500" />
-            <span className="text-sm font-medium">En cours</span>
+          <div className="bg-white p-4 rounded-lg shadow-sm border">
+            <div className="flex items-center space-x-2">
+              <Clock className="w-5 h-5 text-yellow-500" />
+              <span className="text-sm font-medium">En cours</span>
+            </div>
+            <p className="text-2xl font-bold text-yellow-600">{stats.enCoursCount}</p>
           </div>
-          <p className="text-2xl font-bold text-yellow-600">{stats.enCoursCount}</p>
-        </div>
-        <div className="bg-white p-4 rounded-lg shadow-sm border">
-          <div className="flex items-center space-x-2">
-            <DollarSign className="w-5 h-5 text-purple-500" />
-            <span className="text-sm font-medium">Recettes</span>
+          <div className="bg-white p-4 rounded-lg shadow-sm border">
+            <div className="flex items-center space-x-2">
+              <DollarSign className="w-5 h-5 text-purple-500" />
+              <span className="text-sm font-medium">Recettes</span>
+            </div>
+            <p className="text-2xl font-bold text-purple-600">{stats.totalRecettes} TND</p>
           </div>
-          <p className="text-2xl font-bold text-purple-600">{stats.totalRecettes} TND</p>
         </div>
-      </div>
 
-      {/* Salles - Layout adaptatif */}
-      <div className={`grid ${isSalle2Empty ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'} gap-6 transition-all duration-300`}>
-        {/* Salle 1 - Toujours visible */}
-        <SalleColumn
-          title="Salle 1"
-          patients={salle1}
-          color="blue"
-          onStart={startConsultation}
-          onFinish={finishConsultation}
-          onMarkAbsent={markAsAbsent}
-          onMoveToSalle={updateAppointmentRoom}
-        />
+        {/* Instructions Drag & Drop */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center space-x-2 text-blue-800">
+            <GripVertical className="w-5 h-5" />
+            <span className="font-medium">Drag & Drop activé</span>
+          </div>
+          <p className="text-blue-700 text-sm mt-1">
+            Glissez les patients entre les salles ou réorganisez l'ordre de priorité. 
+            Les patients en consultation ne peuvent pas être déplacés.
+          </p>
+        </div>
 
-        {/* Salle 2 - Visible uniquement si elle a des patients */}
-        {!isSalle2Empty && (
+        {/* Salles - Layout adaptatif avec Drag & Drop */}
+        <div className={`grid ${isSalle2Empty ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'} gap-6 transition-all duration-300`}>
+          {/* Salle 1 - Toujours visible */}
           <SalleColumn
-            title="Salle 2"
-            patients={salle2}
-            color="green"
+            title="Salle 1"
+            patients={salle1}
+            color="blue"
+            salleId="salle1"
             onStart={startConsultation}
             onFinish={finishConsultation}
             onMarkAbsent={markAsAbsent}
             onMoveToSalle={updateAppointmentRoom}
           />
-        )}
-      </div>
 
-      {/* Bouton flottant pour ajouter un RDV */}
-      <button
-        onClick={() => {
-          // TODO: Ouvrir le modal d'ajout de RDV
-          toast.info('Fonctionnalité d\'ajout de RDV - à implémenter dans Phase 7');
-        }}
-        className="fixed bottom-6 right-6 bg-primary-500 hover:bg-primary-600 text-white p-4 rounded-full shadow-lg transition-colors z-10"
-      >
-        <Plus className="w-6 h-6" />
-      </button>
-    </div>
+          {/* Salle 2 - Visible uniquement si elle a des patients */}
+          {!isSalle2Empty && (
+            <SalleColumn
+              title="Salle 2"
+              patients={salle2}
+              color="green"
+              salleId="salle2"
+              onStart={startConsultation}
+              onFinish={finishConsultation}
+              onMarkAbsent={markAsAbsent}
+              onMoveToSalle={updateAppointmentRoom}
+            />
+          )}
+        </div>
+
+        {/* Bouton flottant pour ajouter un RDV */}
+        <button
+          onClick={() => {
+            // TODO: Ouvrir le modal d'ajout de RDV
+            toast.info('Fonctionnalité d\'ajout de RDV - à implémenter dans Phase 7');
+          }}
+          className="fixed bottom-6 right-6 bg-primary-500 hover:bg-primary-600 text-white p-4 rounded-full shadow-lg transition-colors z-10"
+        >
+          <Plus className="w-6 h-6" />
+        </button>
+      </div>
+    </DragDropContext>
   );
 };
 
