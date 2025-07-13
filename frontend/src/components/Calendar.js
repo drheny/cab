@@ -1206,10 +1206,19 @@ const AppointmentModal = ({
     e.preventDefault();
     
     if (isNewPatient) {
+      // Validation des champs requis
+      if (!newPatientData.nom || !newPatientData.prenom || !newPatientData.telephone) {
+        toast.error('Veuillez remplir tous les champs du nouveau patient');
+        return;
+      }
+      
       // Créer d'abord le nouveau patient
       try {
+        // Générer un UUID simple pour le nouveau patient
+        const patientId = 'patient_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        
         const patientData = {
-          id: Date.now().toString(),
+          id: patientId,
           nom: newPatientData.nom,
           prenom: newPatientData.prenom,
           telephone: newPatientData.telephone,
@@ -1224,25 +1233,37 @@ const AppointmentModal = ({
         };
         
         const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
-        await axios.post(`${API_BASE_URL}/api/patients`, patientData);
         
-        // Mettre à jour le formData avec le nouveau patient
-        setFormData({ ...formData, patient_id: patientData.id });
+        // Créer le patient
+        const patientResponse = await axios.post(`${API_BASE_URL}/api/patients`, patientData);
+        console.log('Patient créé:', patientResponse.data);
         
         // Créer le RDV avec le nouveau patient
-        const updatedFormData = { ...formData, patient_id: patientData.id };
-        await axios.post(`${API_BASE_URL}/api/appointments`, updatedFormData);
+        const updatedFormData = { 
+          ...formData, 
+          patient_id: patientId
+        };
+        
+        const appointmentResponse = await axios.post(`${API_BASE_URL}/api/appointments`, updatedFormData);
+        console.log('RDV créé:', appointmentResponse.data);
         
         toast.success('Patient et rendez-vous créés avec succès');
         onClose();
-        // Refresh la page pour recharger les données
-        window.location.reload();
+        // Appeler la fonction onSave avec les données mises à jour pour recharger les données
+        onSave();
         
       } catch (error) {
         console.error('Error creating patient and appointment:', error);
-        toast.error('Erreur lors de la création');
+        console.error('Error details:', error.response?.data);
+        toast.error('Erreur lors de la création: ' + (error.response?.data?.detail || error.message));
       }
     } else {
+      // Validation pour patient existant
+      if (!formData.patient_id) {
+        toast.error('Veuillez sélectionner un patient');
+        return;
+      }
+      
       // RDV normal
       onSave();
     }
