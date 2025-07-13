@@ -38,6 +38,12 @@ const WaitingRoom = ({ user }) => {
 
   const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
+  // **PHASE 4: WhatsApp Integration**
+  const [whatsappStates, setWhatsappStates] = useState({}); // Tracking WhatsApp sent status
+
+  // **PHASE 5: Payment Integration**
+  const [paymentStates, setPaymentStates] = useState({}); // Tracking payment status
+
   useEffect(() => {
     fetchTodayAppointments();
     // Rafraîchir les données toutes les 30 secondes
@@ -244,8 +250,7 @@ const WaitingRoom = ({ user }) => {
   }, [salle1, salle2]);
 
   // **PHASE 4: WhatsApp Integration**
-  const [whatsappStates, setWhatsappStates] = useState({}); // Tracking WhatsApp sent status
-
+  
   // Template de message WhatsApp
   const generateWhatsAppMessage = (patient, waitingTime, salle) => {
     const salleText = salle === 'salle1' ? 'Salle 1' : 'Salle 2';
@@ -346,9 +351,16 @@ Merci de votre patience ! 🙏`;
     setShowWhatsAppPreview(true);
   };
 
-  // **PHASE 5: Module Paiement Integration**
-  const [paymentStates, setPaymentStates] = useState({}); // Tracking payment status
+  const confirmSendWhatsApp = () => {
+    if (previewData) {
+      sendWhatsAppMessage(previewData.appointment, previewData.salle);
+      setShowWhatsAppPreview(false);
+      setPreviewData(null);
+    }
+  };
 
+  // **PHASE 5: Payment Integration**
+  
   // Calculer le montant du paiement selon le type
   const calculatePaymentAmount = (appointment) => {
     if (appointment.type_rdv === 'controle') return 0; // Contrôle gratuit
@@ -416,14 +428,6 @@ Merci de votre patience ! 🙏`;
     setShowPaymentModal(true);
   };
 
-  const confirmSendWhatsApp = () => {
-    if (previewData) {
-      sendWhatsAppMessage(previewData.appointment, previewData.salle);
-      setShowWhatsAppPreview(false);
-      setPreviewData(null);
-    }
-  };
-
   const PatientCard = ({ 
     appointment, 
     patients, 
@@ -442,6 +446,7 @@ Merci de votre patience ! 🙏`;
     onOpenPaymentModal
   }) => {
     const waitingTime = calculateWaitingTime(patients, appointment.id);
+    const paymentAmount = calculatePaymentAmount(appointment);
     
     const getStatusColor = (status) => {
       switch (status) {
@@ -460,6 +465,36 @@ Merci de votre patience ! 🙏`;
         default: return <AlertCircle className="w-4 h-4" />;
       }
     };
+
+    const getPaymentStatusInfo = () => {
+      if (appointment.type_rdv === 'controle') {
+        return { 
+          status: 'gratuit', 
+          color: 'bg-green-100 text-green-800', 
+          text: '🆓 Gratuit',
+          amount: 0
+        };
+      }
+      
+      const isPaid = appointment.paye || paymentStates[appointment.id]?.paid;
+      if (isPaid) {
+        return { 
+          status: 'paye', 
+          color: 'bg-green-100 text-green-800', 
+          text: `✅ Payé ${paymentAmount} TND`,
+          amount: paymentAmount
+        };
+      } else {
+        return { 
+          status: 'non_paye', 
+          color: 'bg-red-100 text-red-800', 
+          text: `❌ Non payé ${paymentAmount} TND`,
+          amount: paymentAmount
+        };
+      }
+    };
+
+    const paymentInfo = getPaymentStatusInfo();
 
     return (
       <div className={`p-4 rounded-lg border-2 ${getStatusColor(appointment.statut)} mb-3 transition-all duration-200 ${
@@ -480,8 +515,8 @@ Merci de votre patience ! 🙏`;
                 <span className={`px-2 py-1 rounded ${appointment.type_rdv === 'visite' ? 'bg-yellow-200 text-yellow-800' : 'bg-green-200 text-green-800'}`}>
                   {appointment.type_rdv === 'visite' ? '💰 Visite' : '🆓 Contrôle'}
                 </span>
-                <span className={`px-2 py-1 rounded ${appointment.paye ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}`}>
-                  {appointment.paye ? '✅ Payé' : '❌ Non payé'}
+                <span className={`px-2 py-1 rounded ${paymentInfo.color}`}>
+                  {paymentInfo.text}
                 </span>
               </div>
             </div>
@@ -496,13 +531,137 @@ Merci de votre patience ! 🙏`;
             <span className="text-sm font-medium capitalize">{appointment.statut}</span>
           </div>
         </div>
-      </div>
-    );
-  };
 
-  const SalleColumn = ({
+        {/* Module Paiement */}
+        {appointment.type_rdv === 'visite' && (
+          <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-purple-800">💳 Gestion Paiement</span>
+              <span className="text-lg font-bold text-purple-900">{paymentAmount} TND</span>
+            </div>
+            
+            <div className="flex space-x-2">
+              {!appointment.paye && !paymentStates[appointment.id]?.paid ? (
+                <>
+                  <button
+                    onClick={() => onMarkPaid(appointment, 'espece')}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs py-1 px-2 rounded transition-colors flex items-center justify-center space-x-1"
+                    title="Marquer comme payé en espèces"
+                  >
+                    <Banknote className="w-3 h-3" />
+                    <span>Espèces</span>
+                  </button>
+                  <button
+                    onClick={() => onMarkPaid(appointment, 'carte')}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs py-1 px-2 rounded transition-colors flex items-center justify-center space-x-1"
+                    title="Marquer comme payé par carte"
+                  >
+                    <CreditCard className="w-3 h-3" />
+                    <span>Carte</span>
+                  </button>
+                  <button
+                    onClick={() => onOpenPaymentModal(appointment)}
+                    className="bg-gray-500 hover:bg-gray-600 text-white text-xs py-1 px-2 rounded transition-colors"
+                    title="Options avancées"
+                  >
+                    <Euro className="w-3 h-3" />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="flex-1 bg-green-100 text-green-800 text-xs py-1 px-2 rounded flex items-center justify-center space-x-1">
+                    <CheckCircle className="w-3 h-3" />
+                    <span>Payé - {paymentStates[appointment.id]?.method || 'espece'}</span>
+                  </div>
+                  <button
+                    onClick={() => onMarkUnpaid(appointment)}
+                    className="bg-red-500 hover:bg-red-600 text-white text-xs py-1 px-2 rounded transition-colors"
+                    title="Annuler le paiement"
+                  >
+                    ❌
+                  </button>
+                </>
+              )}
+            </div>
+            
+            {(appointment.paye || paymentStates[appointment.id]?.paid) && paymentStates[appointment.id]?.timestamp && (
+              <div className="mt-2 text-xs text-green-600">
+                Payé le {paymentStates[appointment.id].timestamp}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Temps d'attente amélioré avec WhatsApp */}
+        {appointment.statut === 'attente' && (
+          <div className="bg-white bg-opacity-50 p-3 rounded mb-3 border-l-4 border-blue-400">
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="font-medium text-gray-700">⏱️ Temps estimé:</span>
+                <div className="text-lg font-bold text-blue-600">~{waitingTime.minutes} min</div>
+                <div className="text-xs text-gray-500">Vers {waitingTime.timeString}</div>
+              </div>
+              <div>
+                <span className="font-medium text-gray-700">👥 File d'attente:</span>
+                <div className="text-lg font-bold text-gray-600">Position #{waitingTime.position}</div>
+                <div className="text-xs text-gray-500">
+                  {waitingTime.patientsAhead === 0 
+                    ? 'Prochain patient !' 
+                    : `${waitingTime.patientsAhead} patient(s) avant`
+                  }
+                </div>
+              </div>
+            </div>
+            
+            {/* Barre de progression visuelle */}
+            <div className="mt-2">
+              <div className="flex justify-between text-xs text-gray-500 mb-1">
+                <span>Attente</span>
+                <span>Consultation</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-blue-500 h-2 rounded-full transition-all duration-500"
+                  style={{ 
+                    width: `${Math.max(10, 100 - (waitingTime.minutes / 60) * 100)}%` 
+                  }}
+                ></div>
+              </div>
+            </div>
+            
+            {/* Section WhatsApp */}
+            <div className="mt-3 pt-2 border-t border-gray-200">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-gray-600">📱 Communication patient</span>
+                {whatsappStates[appointment.id]?.sent && (
+                  <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">
+                    ✅ Envoyé {whatsappStates[appointment.id].timestamp}
+                  </span>
+                )}
+              </div>
+              <div className="flex space-x-2 mt-2">
+                <button
+                  onClick={() => onPreviewWhatsApp(appointment, appointment.salle)}
+                  className="flex-1 bg-gray-500 hover:bg-gray-600 text-white text-xs py-1 px-2 rounded transition-colors flex items-center justify-center space-x-1"
+                  title="Prévisualiser le message"
+                >
+                  <Eye className="w-3 h-3" />
+                  <span>Aperçu</span>
+                </button>
+                <button
+                  onClick={() => onSendWhatsApp(appointment, appointment.salle)}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs py-1 px-2 rounded transition-colors flex items-center justify-center space-x-1"
+                  title="Envoyer message WhatsApp avec temps d'attente"
+                >
+                  <MessageCircle className="w-3 h-3" />
+                  <span>WhatsApp</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         
-        {/* Actions */}
+        {/* Actions principales */}
         <div className="flex space-x-2">
           {appointment.statut === 'attente' && (
             <button
@@ -563,7 +722,11 @@ Merci de votre patience ! 🙏`;
     salleId,
     whatsappStates,
     onSendWhatsApp,
-    onPreviewWhatsApp
+    onPreviewWhatsApp,
+    paymentStates,
+    onMarkPaid,
+    onMarkUnpaid,
+    onOpenPaymentModal
   }) => {
     return (
       <div className="bg-white rounded-xl shadow-sm border p-6">
@@ -619,6 +782,10 @@ Merci de votre patience ! 🙏`;
                           whatsappStates={whatsappStates}
                           onSendWhatsApp={onSendWhatsApp}
                           onPreviewWhatsApp={onPreviewWhatsApp}
+                          paymentStates={paymentStates}
+                          onMarkPaid={onMarkPaid}
+                          onMarkUnpaid={onMarkUnpaid}
+                          onOpenPaymentModal={onOpenPaymentModal}
                         />
                       </div>
                     )}
@@ -734,6 +901,10 @@ Merci de votre patience ! 🙏`;
             whatsappStates={whatsappStates}
             onSendWhatsApp={sendWhatsAppMessage}
             onPreviewWhatsApp={previewWhatsAppMessage}
+            paymentStates={paymentStates}
+            onMarkPaid={markAsPaid}
+            onMarkUnpaid={markAsUnpaid}
+            onOpenPaymentModal={openPaymentModal}
           />
 
           {/* Salle 2 - Visible uniquement si elle a des patients */}
@@ -750,6 +921,10 @@ Merci de votre patience ! 🙏`;
               whatsappStates={whatsappStates}
               onSendWhatsApp={sendWhatsAppMessage}
               onPreviewWhatsApp={previewWhatsAppMessage}
+              paymentStates={paymentStates}
+              onMarkPaid={markAsPaid}
+              onMarkUnpaid={markAsUnpaid}
+              onOpenPaymentModal={openPaymentModal}
             />
           )}
         </div>
