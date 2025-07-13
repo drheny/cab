@@ -1733,11 +1733,14 @@ class CabinetMedicalAPITest(unittest.TestCase):
         patient_id = patients[0]["id"]
         today = datetime.now().strftime("%Y-%m-%d")
         
+        # Use a future time to avoid auto delay detection
+        future_time = (datetime.now() + timedelta(hours=2)).strftime("%H:%M")
+        
         # Step 1: Create appointment with status 'programme'
         new_appointment = {
             "patient_id": patient_id,
             "date": today,
-            "heure": "12:00",
+            "heure": future_time,
             "type_rdv": "controle",
             "statut": "programme",
             "salle": "",
