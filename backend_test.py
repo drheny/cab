@@ -3872,5 +3872,687 @@ class CabinetMedicalAPITest(unittest.TestCase):
             
         print("✅ Realistic workflow testing completed successfully")
 
+    # ========== NEW WORKFLOW FUNCTIONALITY TESTS ==========
+    
+    def test_workflow_basic_calendar_apis(self):
+        """Test basic Calendar APIs for workflow functionality"""
+        print("\n=== Testing Basic Calendar APIs for Workflow ===")
+        
+        # Initialize demo data to ensure we have test data
+        self.init_demo_data()
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Test 1: GET /api/rdv/jour/{today} - Fetch today's appointments for workflow sections
+        print("Testing GET /api/rdv/jour/{today} for workflow sections...")
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        self.assertIsInstance(appointments, list)
+        
+        # Verify appointments are properly structured for workflow sections
+        workflow_statuses = ["programme", "attente", "en_cours", "termine", "absent", "retard"]
+        for appointment in appointments:
+            # Verify required fields for workflow
+            self.assertIn("id", appointment)
+            self.assertIn("statut", appointment)
+            self.assertIn("salle", appointment)
+            self.assertIn("type_rdv", appointment)
+            self.assertIn("paye", appointment)
+            self.assertIn("patient", appointment)
+            
+            # Verify status is valid for workflow
+            self.assertIn(appointment["statut"], workflow_statuses)
+            
+            # Verify patient data includes required fields for badges
+            patient = appointment["patient"]
+            self.assertIn("nom", patient)
+            self.assertIn("prenom", patient)
+            self.assertIn("numero_whatsapp", patient)
+            self.assertIn("lien_whatsapp", patient)
+        
+        print(f"✅ Found {len(appointments)} appointments with proper workflow structure")
+        
+        if len(appointments) == 0:
+            print("⚠️ No appointments found for today, creating test appointment...")
+            # Create a test appointment for workflow testing
+            response = requests.get(f"{self.base_url}/api/patients")
+            patients_data = response.json()
+            if len(patients_data["patients"]) > 0:
+                patient_id = patients_data["patients"][0]["id"]
+                test_appointment = {
+                    "patient_id": patient_id,
+                    "date": today,
+                    "heure": "10:00",
+                    "type_rdv": "visite",
+                    "statut": "attente",
+                    "salle": "salle1",
+                    "motif": "Test workflow",
+                    "paye": False
+                }
+                response = requests.post(f"{self.base_url}/api/appointments", json=test_appointment)
+                self.assertEqual(response.status_code, 200)
+                test_appointment_id = response.json()["appointment_id"]
+                print(f"✅ Created test appointment: {test_appointment_id}")
+                
+                # Re-fetch appointments
+                response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+                appointments = response.json()
+        
+        # Test 2: PUT /api/rdv/{rdv_id}/statut - Update appointment status for workflow transitions
+        if len(appointments) > 0:
+            test_appointment = appointments[0]
+            rdv_id = test_appointment["id"]
+            original_status = test_appointment["statut"]
+            
+            print(f"Testing PUT /api/rdv/{rdv_id}/statut for workflow transitions...")
+            
+            # Test workflow status transitions: attente → en_cours → termine
+            workflow_transitions = [
+                {"statut": "attente", "salle": "salle1"},
+                {"statut": "en_cours", "salle": "salle1"},
+                {"statut": "termine", "salle": "salle1"}
+            ]
+            
+            for transition in workflow_transitions:
+                response = requests.put(
+                    f"{self.base_url}/api/rdv/{rdv_id}/statut",
+                    json=transition
+                )
+                self.assertEqual(response.status_code, 200)
+                result = response.json()
+                self.assertEqual(result["statut"], transition["statut"])
+                print(f"✅ Status transition to '{transition['statut']}' successful")
+                
+                # Verify the update persisted
+                response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+                updated_appointments = response.json()
+                updated_appointment = next((a for a in updated_appointments if a["id"] == rdv_id), None)
+                self.assertIsNotNone(updated_appointment)
+                self.assertEqual(updated_appointment["statut"], transition["statut"])
+        
+        # Test 3: PUT /api/rdv/{rdv_id}/salle - Room assignment functionality
+        if len(appointments) > 0:
+            rdv_id = appointments[0]["id"]
+            print(f"Testing PUT /api/rdv/{rdv_id}/salle for room assignment...")
+            
+            # Test room assignments for waiting patients
+            room_assignments = ["salle1", "salle2", ""]
+            
+            for room in room_assignments:
+                response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/salle", json={"salle": room})
+                self.assertEqual(response.status_code, 200)
+                result = response.json()
+                self.assertEqual(result["salle"], room)
+                print(f"✅ Room assignment to '{room}' successful")
+                
+                # Verify the update persisted
+                response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+                updated_appointments = response.json()
+                updated_appointment = next((a for a in updated_appointments if a["id"] == rdv_id), None)
+                self.assertIsNotNone(updated_appointment)
+                self.assertEqual(updated_appointment["salle"], room)
+        
+        print("✅ Basic Calendar APIs for workflow functionality: ALL TESTS PASSED")
+    
+    def test_workflow_new_apis(self):
+        """Test new workflow APIs"""
+        print("\n=== Testing New Workflow APIs ===")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Get or create a test appointment
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        appointments = response.json()
+        
+        if len(appointments) == 0:
+            # Create test appointment
+            response = requests.get(f"{self.base_url}/api/patients")
+            patients_data = response.json()
+            if len(patients_data["patients"]) > 0:
+                patient_id = patients_data["patients"][0]["id"]
+                test_appointment = {
+                    "patient_id": patient_id,
+                    "date": today,
+                    "heure": "11:00",
+                    "type_rdv": "visite",
+                    "statut": "attente",
+                    "motif": "Test workflow APIs",
+                    "paye": False
+                }
+                response = requests.post(f"{self.base_url}/api/appointments", json=test_appointment)
+                self.assertEqual(response.status_code, 200)
+                
+                # Re-fetch appointments
+                response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+                appointments = response.json()
+        
+        if len(appointments) > 0:
+            rdv_id = appointments[0]["id"]
+            
+            # Test 1: PUT /api/rdv/{rdv_id} - Update appointment type (visite/controle) for type toggle
+            print(f"Testing PUT /api/rdv/{rdv_id} for type toggle...")
+            
+            # Get current appointment data
+            current_appointment = appointments[0]
+            original_type = current_appointment["type_rdv"]
+            
+            # Toggle type: visite ↔ controle
+            new_type = "controle" if original_type == "visite" else "visite"
+            updated_appointment = current_appointment.copy()
+            updated_appointment["type_rdv"] = new_type
+            
+            response = requests.put(f"{self.base_url}/api/appointments/{rdv_id}", json=updated_appointment)
+            self.assertEqual(response.status_code, 200)
+            print(f"✅ Type toggle from '{original_type}' to '{new_type}' successful")
+            
+            # Verify the update
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            updated_appointments = response.json()
+            updated_appointment = next((a for a in updated_appointments if a["id"] == rdv_id), None)
+            self.assertIsNotNone(updated_appointment)
+            self.assertEqual(updated_appointment["type_rdv"], new_type)
+            
+            # Test 2: PUT /api/rdv/{rdv_id}/paiement - Payment management functionality
+            print(f"Testing PUT /api/rdv/{rdv_id}/paiement for payment management...")
+            
+            # Test payment status updates
+            payment_scenarios = [
+                {
+                    "paye": True,
+                    "montant_paye": 300.0,
+                    "methode_paiement": "espece",
+                    "date_paiement": today
+                },
+                {
+                    "paye": True,
+                    "montant_paye": 250.0,
+                    "methode_paiement": "carte",
+                    "date_paiement": today
+                },
+                {
+                    "paye": False,
+                    "montant_paye": 0,
+                    "methode_paiement": "",
+                    "date_paiement": None
+                }
+            ]
+            
+            for scenario in payment_scenarios:
+                response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/paiement", json=scenario)
+                self.assertEqual(response.status_code, 200)
+                result = response.json()
+                self.assertEqual(result["paye"], scenario["paye"])
+                self.assertEqual(result["montant_paye"], scenario["montant_paye"])
+                self.assertEqual(result["methode_paiement"], scenario["methode_paiement"])
+                
+                payment_status = "paid" if scenario["paye"] else "unpaid"
+                method = scenario["methode_paiement"] if scenario["paye"] else "none"
+                print(f"✅ Payment update: {payment_status} via {method} successful")
+                
+                # Verify payment fields are properly stored
+                response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+                updated_appointments = response.json()
+                updated_appointment = next((a for a in updated_appointments if a["id"] == rdv_id), None)
+                self.assertIsNotNone(updated_appointment)
+                self.assertEqual(updated_appointment["paye"], scenario["paye"])
+        
+        print("✅ New Workflow APIs: ALL TESTS PASSED")
+    
+    def test_workflow_transitions(self):
+        """Test workflow transition scenarios"""
+        print("\n=== Testing Workflow Transition Scenarios ===")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Create multiple test appointments for comprehensive workflow testing
+        response = requests.get(f"{self.base_url}/api/patients")
+        patients_data = response.json()
+        
+        if len(patients_data["patients"]) == 0:
+            print("⚠️ No patients found for workflow testing")
+            return
+        
+        patient_id = patients_data["patients"][0]["id"]
+        
+        # Create test appointments for different workflow scenarios
+        test_appointments = [
+            {
+                "patient_id": patient_id,
+                "date": today,
+                "heure": "09:00",
+                "type_rdv": "visite",
+                "statut": "attente",
+                "salle": "salle1",
+                "motif": "Workflow test 1",
+                "paye": False
+            },
+            {
+                "patient_id": patient_id,
+                "date": today,
+                "heure": "10:00",
+                "type_rdv": "controle",
+                "statut": "programme",
+                "salle": "",
+                "motif": "Workflow test 2",
+                "paye": False
+            }
+        ]
+        
+        created_appointment_ids = []
+        
+        try:
+            # Create test appointments
+            for appointment_data in test_appointments:
+                response = requests.post(f"{self.base_url}/api/appointments", json=appointment_data)
+                self.assertEqual(response.status_code, 200)
+                appointment_id = response.json()["appointment_id"]
+                created_appointment_ids.append(appointment_id)
+                print(f"✅ Created test appointment: {appointment_id}")
+            
+            # Test 1: Status transitions: attente → en_cours → termine
+            print("Testing status transitions: attente → en_cours → termine...")
+            rdv_id = created_appointment_ids[0]
+            
+            transitions = ["attente", "en_cours", "termine"]
+            for status in transitions:
+                response = requests.put(
+                    f"{self.base_url}/api/rdv/{rdv_id}/statut",
+                    json={"statut": status, "salle": "salle1"}
+                )
+                self.assertEqual(response.status_code, 200)
+                print(f"✅ Transition to '{status}' successful")
+            
+            # Test 2: Type toggle: visite ↔ controle
+            print("Testing type toggle: visite ↔ controle...")
+            rdv_id = created_appointment_ids[1]
+            
+            # Get current appointment
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            appointments = response.json()
+            current_appointment = next((a for a in appointments if a["id"] == rdv_id), None)
+            self.assertIsNotNone(current_appointment)
+            
+            # Toggle type
+            original_type = current_appointment["type_rdv"]
+            new_type = "visite" if original_type == "controle" else "controle"
+            
+            updated_appointment = current_appointment.copy()
+            updated_appointment["type_rdv"] = new_type
+            
+            response = requests.put(f"{self.base_url}/api/appointments/{rdv_id}", json=updated_appointment)
+            self.assertEqual(response.status_code, 200)
+            print(f"✅ Type toggle from '{original_type}' to '{new_type}' successful")
+            
+            # Test 3: Room assignments for waiting patients
+            print("Testing room assignments for waiting patients...")
+            rdv_id = created_appointment_ids[0]
+            
+            # Set status to attente first
+            response = requests.put(
+                f"{self.base_url}/api/rdv/{rdv_id}/statut",
+                json={"statut": "attente"}
+            )
+            self.assertEqual(response.status_code, 200)
+            
+            # Test room assignments
+            rooms = ["salle1", "salle2", ""]
+            for room in rooms:
+                response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/salle", json={"salle": room})
+                self.assertEqual(response.status_code, 200)
+                print(f"✅ Room assignment to '{room}' successful")
+            
+            # Test 4: Payment status updates
+            print("Testing payment status updates...")
+            rdv_id = created_appointment_ids[0]
+            
+            # Test payment scenarios
+            payment_tests = [
+                {"paye": True, "montant_paye": 300.0, "methode_paiement": "espece"},
+                {"paye": True, "montant_paye": 250.0, "methode_paiement": "carte"},
+                {"paye": False, "montant_paye": 0, "methode_paiement": ""}
+            ]
+            
+            for payment in payment_tests:
+                response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/paiement", json=payment)
+                self.assertEqual(response.status_code, 200)
+                status = "paid" if payment["paye"] else "unpaid"
+                print(f"✅ Payment status update to '{status}' successful")
+        
+        finally:
+            # Clean up test appointments
+            for appointment_id in created_appointment_ids:
+                requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+                print(f"✅ Cleaned up test appointment: {appointment_id}")
+        
+        print("✅ Workflow Transition Scenarios: ALL TESTS PASSED")
+    
+    def test_workflow_data_structure_validation(self):
+        """Test data structure validation for workflow functionality"""
+        print("\n=== Testing Workflow Data Structure Validation ===")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Test 1: Verify appointments are properly grouped by status for the 5 workflow sections
+        print("Testing appointment grouping by status for workflow sections...")
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        
+        # Expected workflow sections based on status
+        workflow_sections = {
+            "À venir": ["programme"],
+            "En salle d'attente": ["attente"],
+            "En cours": ["en_cours"],
+            "En retard": ["retard"],
+            "Absents": ["absent"],
+            "Terminés": ["termine"]
+        }
+        
+        # Group appointments by status
+        status_groups = {}
+        for appointment in appointments:
+            status = appointment["statut"]
+            if status not in status_groups:
+                status_groups[status] = []
+            status_groups[status].append(appointment)
+        
+        print(f"✅ Found appointments grouped by status: {list(status_groups.keys())}")
+        
+        # Verify each appointment has proper structure for workflow sections
+        for appointment in appointments:
+            # Required fields for workflow badges
+            required_fields = ["id", "statut", "salle", "type_rdv", "paye", "patient"]
+            for field in required_fields:
+                self.assertIn(field, appointment, f"Missing required field '{field}' in appointment")
+            
+            # Verify patient data includes all required fields for badges
+            patient = appointment["patient"]
+            required_patient_fields = ["nom", "prenom", "numero_whatsapp", "lien_whatsapp"]
+            for field in required_patient_fields:
+                self.assertIn(field, patient, f"Missing required patient field '{field}'")
+        
+        print("✅ All appointments have proper structure for workflow sections")
+        
+        # Test 2: Check that patient data includes all required fields for badges
+        print("Testing patient data structure for workflow badges...")
+        
+        if len(appointments) > 0:
+            sample_appointment = appointments[0]
+            patient = sample_appointment["patient"]
+            
+            # Verify patient badge fields
+            self.assertIsInstance(patient["nom"], str)
+            self.assertIsInstance(patient["prenom"], str)
+            self.assertIsInstance(patient["numero_whatsapp"], str)
+            self.assertIsInstance(patient["lien_whatsapp"], str)
+            
+            print("✅ Patient data structure valid for workflow badges")
+        
+        # Test 3: Validate payment fields (paye, montant, methode_paiement)
+        print("Testing payment fields validation...")
+        
+        # Create a test appointment with payment data
+        response = requests.get(f"{self.base_url}/api/patients")
+        patients_data = response.json()
+        
+        if len(patients_data["patients"]) > 0:
+            patient_id = patients_data["patients"][0]["id"]
+            
+            # Create appointment with payment fields
+            test_appointment = {
+                "patient_id": patient_id,
+                "date": today,
+                "heure": "14:00",
+                "type_rdv": "visite",
+                "statut": "attente",
+                "motif": "Payment validation test",
+                "paye": True
+            }
+            
+            response = requests.post(f"{self.base_url}/api/appointments", json=test_appointment)
+            self.assertEqual(response.status_code, 200)
+            appointment_id = response.json()["appointment_id"]
+            
+            try:
+                # Add payment details
+                payment_data = {
+                    "paye": True,
+                    "montant_paye": 300.0,
+                    "methode_paiement": "espece",
+                    "date_paiement": today
+                }
+                
+                response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/paiement", json=payment_data)
+                self.assertEqual(response.status_code, 200)
+                
+                # Verify payment fields in appointment data
+                response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+                updated_appointments = response.json()
+                payment_appointment = next((a for a in updated_appointments if a["id"] == appointment_id), None)
+                self.assertIsNotNone(payment_appointment)
+                
+                # Validate payment fields
+                self.assertIn("paye", payment_appointment)
+                self.assertIsInstance(payment_appointment["paye"], bool)
+                self.assertTrue(payment_appointment["paye"])
+                
+                print("✅ Payment fields validation successful")
+                
+                # Test payment field types and values
+                payment_fields = ["paye", "montant_paye", "methode_paiement", "date_paiement"]
+                for field in payment_fields:
+                    if field in payment_appointment:
+                        if field == "paye":
+                            self.assertIsInstance(payment_appointment[field], bool)
+                        elif field == "montant_paye":
+                            self.assertIsInstance(payment_appointment[field], (int, float))
+                        elif field in ["methode_paiement", "date_paiement"]:
+                            self.assertIsInstance(payment_appointment[field], (str, type(None)))
+                
+                print("✅ Payment field types validation successful")
+                
+            finally:
+                # Clean up
+                requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+        
+        # Test 4: Verify workflow statistics integration
+        print("Testing workflow statistics integration...")
+        response = requests.get(f"{self.base_url}/api/rdv/stats/{today}")
+        self.assertEqual(response.status_code, 200)
+        stats = response.json()
+        
+        # Verify workflow-relevant statistics
+        required_stats = ["total_rdv", "visites", "controles", "statuts", "paiements"]
+        for stat in required_stats:
+            self.assertIn(stat, stats, f"Missing required statistic '{stat}'")
+        
+        # Verify status breakdown for workflow sections
+        statuts = stats["statuts"]
+        workflow_statuses = ["programme", "attente", "en_cours", "termine", "absent", "retard"]
+        for status in workflow_statuses:
+            self.assertIn(status, statuts, f"Missing status '{status}' in statistics")
+            self.assertIsInstance(statuts[status], int)
+        
+        # Verify payment statistics
+        paiements = stats["paiements"]
+        payment_stats = ["payes", "non_payes", "ca_realise"]
+        for stat in payment_stats:
+            self.assertIn(stat, paiements, f"Missing payment statistic '{stat}'")
+        
+        print("✅ Workflow statistics integration validation successful")
+        
+        print("✅ Workflow Data Structure Validation: ALL TESTS PASSED")
+    
+    def test_workflow_realistic_scenarios(self):
+        """Test realistic workflow scenarios to ensure the optimized Calendar workflow system works correctly"""
+        print("\n=== Testing Realistic Workflow Scenarios ===")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Get patients for realistic testing
+        response = requests.get(f"{self.base_url}/api/patients")
+        patients_data = response.json()
+        
+        if len(patients_data["patients"]) < 2:
+            print("⚠️ Need at least 2 patients for realistic workflow testing")
+            return
+        
+        patients = patients_data["patients"][:2]  # Use first 2 patients
+        
+        # Scenario 1: Morning workflow - Multiple patients arriving and being processed
+        print("Testing Scenario 1: Morning workflow with multiple patients...")
+        
+        morning_appointments = [
+            {
+                "patient_id": patients[0]["id"],
+                "date": today,
+                "heure": "09:00",
+                "type_rdv": "visite",
+                "statut": "programme",
+                "salle": "",
+                "motif": "Consultation matinale",
+                "paye": False
+            },
+            {
+                "patient_id": patients[1]["id"],
+                "date": today,
+                "heure": "09:30",
+                "type_rdv": "controle",
+                "statut": "programme",
+                "salle": "",
+                "motif": "Contrôle de routine",
+                "paye": False
+            }
+        ]
+        
+        created_ids = []
+        
+        try:
+            # Create morning appointments
+            for appointment_data in morning_appointments:
+                response = requests.post(f"{self.base_url}/api/appointments", json=appointment_data)
+                self.assertEqual(response.status_code, 200)
+                appointment_id = response.json()["appointment_id"]
+                created_ids.append(appointment_id)
+            
+            print(f"✅ Created {len(created_ids)} morning appointments")
+            
+            # Simulate workflow: Patient arrives (programme → attente)
+            rdv_id_1 = created_ids[0]
+            response = requests.put(
+                f"{self.base_url}/api/rdv/{rdv_id_1}/statut",
+                json={"statut": "attente", "salle": "salle1"}
+            )
+            self.assertEqual(response.status_code, 200)
+            print("✅ Patient 1 arrived and assigned to salle1")
+            
+            # Patient enters consultation (attente → en_cours)
+            response = requests.put(
+                f"{self.base_url}/api/rdv/{rdv_id_1}/statut",
+                json={"statut": "en_cours", "salle": "salle1"}
+            )
+            self.assertEqual(response.status_code, 200)
+            print("✅ Patient 1 consultation started")
+            
+            # Second patient arrives
+            rdv_id_2 = created_ids[1]
+            response = requests.put(
+                f"{self.base_url}/api/rdv/{rdv_id_2}/statut",
+                json={"statut": "attente", "salle": "salle2"}
+            )
+            self.assertEqual(response.status_code, 200)
+            print("✅ Patient 2 arrived and assigned to salle2")
+            
+            # First patient consultation ends and pays
+            response = requests.put(
+                f"{self.base_url}/api/rdv/{rdv_id_1}/statut",
+                json={"statut": "termine", "salle": "salle1"}
+            )
+            self.assertEqual(response.status_code, 200)
+            
+            # Process payment for visite
+            payment_data = {
+                "paye": True,
+                "montant_paye": 300.0,
+                "methode_paiement": "espece",
+                "date_paiement": today
+            }
+            response = requests.put(f"{self.base_url}/api/rdv/{rdv_id_1}/paiement", json=payment_data)
+            self.assertEqual(response.status_code, 200)
+            print("✅ Patient 1 consultation completed and payment processed")
+            
+            # Second patient (controle) - no payment required
+            response = requests.put(
+                f"{self.base_url}/api/rdv/{rdv_id_2}/statut",
+                json={"statut": "en_cours", "salle": "salle2"}
+            )
+            self.assertEqual(response.status_code, 200)
+            
+            response = requests.put(
+                f"{self.base_url}/api/rdv/{rdv_id_2}/statut",
+                json={"statut": "termine", "salle": "salle2"}
+            )
+            self.assertEqual(response.status_code, 200)
+            print("✅ Patient 2 controle completed (no payment required)")
+            
+            # Verify final state
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            final_appointments = response.json()
+            
+            appointment_1 = next((a for a in final_appointments if a["id"] == rdv_id_1), None)
+            appointment_2 = next((a for a in final_appointments if a["id"] == rdv_id_2), None)
+            
+            self.assertIsNotNone(appointment_1)
+            self.assertIsNotNone(appointment_2)
+            self.assertEqual(appointment_1["statut"], "termine")
+            self.assertEqual(appointment_2["statut"], "termine")
+            self.assertTrue(appointment_1["paye"])
+            self.assertFalse(appointment_2["paye"])  # Controle doesn't require payment
+            
+            print("✅ Morning workflow scenario completed successfully")
+            
+            # Scenario 2: Test interactive badges and transitions
+            print("Testing Scenario 2: Interactive badges and transitions...")
+            
+            # Test type toggle on completed appointment
+            original_type = appointment_1["type_rdv"]
+            new_type = "controle" if original_type == "visite" else "visite"
+            
+            updated_appointment = appointment_1.copy()
+            updated_appointment["type_rdv"] = new_type
+            
+            response = requests.put(f"{self.base_url}/api/appointments/{rdv_id_1}", json=updated_appointment)
+            self.assertEqual(response.status_code, 200)
+            print(f"✅ Type toggle from '{original_type}' to '{new_type}' successful")
+            
+            # Test room reassignment
+            response = requests.put(f"{self.base_url}/api/rdv/{rdv_id_2}/salle", json={"salle": "salle1"})
+            self.assertEqual(response.status_code, 200)
+            print("✅ Room reassignment successful")
+            
+            # Scenario 3: Test workflow statistics accuracy
+            print("Testing Scenario 3: Workflow statistics accuracy...")
+            
+            response = requests.get(f"{self.base_url}/api/rdv/stats/{today}")
+            self.assertEqual(response.status_code, 200)
+            stats = response.json()
+            
+            # Verify statistics reflect our workflow
+            self.assertGreaterEqual(stats["total_rdv"], 2)
+            self.assertGreaterEqual(stats["statuts"]["termine"], 2)
+            self.assertGreaterEqual(stats["paiements"]["payes"], 1)
+            self.assertGreaterEqual(stats["paiements"]["ca_realise"], 300.0)
+            
+            print("✅ Workflow statistics accuracy verified")
+            
+        finally:
+            # Clean up all test appointments
+            for appointment_id in created_ids:
+                requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+            print(f"✅ Cleaned up {len(created_ids)} test appointments")
+        
+        print("✅ Realistic Workflow Scenarios: ALL TESTS PASSED")
+
 if __name__ == "__main__":
     unittest.main()
