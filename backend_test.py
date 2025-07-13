@@ -735,11 +735,11 @@ class CabinetMedicalAPITest(unittest.TestCase):
                     self.assertEqual(updated_appointment["statut"], new_status)
             
             # Test invalid status
-            response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/statut?statut=invalid_status")
+            response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/statut", json={"statut": "invalid_status"})
             self.assertEqual(response.status_code, 400)
             
             # Test non-existent appointment
-            response = requests.put(f"{self.base_url}/api/rdv/non_existent_id/statut?statut=attente")
+            response = requests.put(f"{self.base_url}/api/rdv/non_existent_id/statut", json={"statut": "attente"})
             self.assertEqual(response.status_code, 404)
             
         finally:
