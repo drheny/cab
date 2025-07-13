@@ -512,15 +512,24 @@ const WaitingRoom = ({ user }) => {
           </div>
         </div>
 
-        {/* Instructions Drag & Drop */}
+        {/* Instructions Drag & Drop avec temps réel */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-center space-x-2 text-blue-800">
-            <GripVertical className="w-5 h-5" />
-            <span className="font-medium">Drag & Drop activé</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2 text-blue-800">
+              <GripVertical className="w-5 h-5" />
+              <span className="font-medium">Drag & Drop activé</span>
+            </div>
+            <div className="flex items-center space-x-4 text-sm">
+              <div className="flex items-center space-x-1">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-gray-600">Temps réel</span>
+              </div>
+              <span className="text-gray-500">Mise à jour: {new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+            </div>
           </div>
           <p className="text-blue-700 text-sm mt-1">
             Glissez les patients entre les salles ou réorganisez l'ordre de priorité. 
-            Les patients en consultation ne peuvent pas être déplacés.
+            Les temps d'attente se mettent à jour automatiquement toutes les minutes.
           </p>
         </div>
 
