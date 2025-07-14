@@ -1056,23 +1056,30 @@ const WorkflowSection = ({
       </div>
       
       <div className="divide-y divide-gray-100">
-        {appointments.map((appointment) => (
-          <WorkflowCard
-            key={appointment.id}
-            appointment={appointment}
-            sectionType={sectionType}
-            onStatusUpdate={onStatusUpdate}
-            onRoomAssignment={onRoomAssignment}
-            onTypeToggle={onTypeToggle}
-            onPaymentUpdate={onPaymentUpdate}
-            onStartConsultation={onStartConsultation}
-            onFinishConsultation={onFinishConsultation}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            onViewPatient={onViewPatient}
-            isCompleted={isCompleted}
-          />
-        ))}
+        {appointments.length === 0 ? (
+          <div className="p-8 text-center text-gray-500">
+            <div className="text-4xl mb-2">👥</div>
+            <p>Aucun patient dans cette section</p>
+          </div>
+        ) : (
+          appointments.map((appointment) => (
+            <WorkflowCard
+              key={appointment.id}
+              appointment={appointment}
+              sectionType={sectionType}
+              onStatusUpdate={onStatusUpdate}
+              onRoomAssignment={onRoomAssignment}
+              onTypeToggle={onTypeToggle}
+              onPaymentUpdate={onPaymentUpdate}
+              onStartConsultation={onStartConsultation}
+              onFinishConsultation={onFinishConsultation}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onViewPatient={onViewPatient}
+              isCompleted={isCompleted}
+            />
+          ))
+        )}
       </div>
     </div>
   );
