@@ -984,6 +984,9 @@ async def update_rdv_paiement(rdv_id: str, payment_data: dict):
             "methode_paiement": methode_paiement
         }
         
+    except HTTPException:
+        # Re-raise HTTPException to maintain proper status codes
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating payment: {str(e)}")
 
