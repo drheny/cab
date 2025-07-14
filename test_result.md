@@ -22,6 +22,107 @@
 
 ## Current Implementation Status
 
+### Room Assignment Functionality Testing ✅ COMPLETED
+**Status:** ALL ROOM ASSIGNMENT TESTS PASSED - Room Toggle Functionality Fully Validated
+
+**Test Results Summary (2025-07-14 - Room Assignment Functionality Testing):**
+✅ **Room Assignment API** - PUT /api/rdv/{rdv_id}/salle endpoint working correctly with all room values
+✅ **Data Validation** - Room assignment updates correctly in database with proper persistence
+✅ **Room Toggle Workflow** - Complete toggle sequence (none → salle1 → salle2 → none) working seamlessly
+✅ **Error Handling** - Invalid room values and non-existent appointments properly rejected
+✅ **Integration Testing** - Room assignment works correctly with status changes and workflow functionality
+✅ **Concurrent Operations** - Room assignment stable under rapid consecutive operations
+
+**Detailed Test Results:**
+
+**ROOM ASSIGNMENT API TESTING: ✅ FULLY WORKING**
+- ✅ **PUT /api/rdv/{rdv_id}/salle**: Room assignment endpoint working correctly with query parameter format
+- ✅ **Room Values**: All valid room values ('salle1', 'salle2', '') working correctly
+- ✅ **Response Structure**: API returns proper JSON with message and salle fields
+- ✅ **Database Persistence**: Room assignments correctly persisted and retrievable via all endpoints
+
+**DATA VALIDATION: ✅ COMPREHENSIVE**
+- ✅ **Initial State**: Appointments start with empty room assignment as expected
+- ✅ **Multiple Endpoints**: Room assignments consistent across /api/rdv/jour and /api/appointments endpoints
+- ✅ **Data Structure**: All required appointment fields present and unchanged during room updates
+- ✅ **Field Integrity**: Patient ID, type, status, and other fields remain intact during room changes
+
+**ROOM TOGGLE WORKFLOW: ✅ COMPREHENSIVE**
+- ✅ **5-Step Sequence**: Complete workflow (none → salle1 → salle2 → none → salle1) tested successfully
+- ✅ **Status Preservation**: Appointment status remains unchanged during room assignments
+- ✅ **Field Preservation**: All appointment fields (patient_id, type_rdv, motif) preserved during room changes
+- ✅ **Immediate Persistence**: Each room change immediately reflected in database
+
+**ERROR HANDLING: ✅ ROBUST**
+- ✅ **Invalid Room Values**: Properly rejects invalid rooms (salle3, invalid, SALLE1, etc.) with 400 status
+- ✅ **Non-existent Appointments**: Returns 404 for non-existent appointment IDs
+- ✅ **Error Response Structure**: All error responses include proper 'detail' field with descriptive messages
+- ✅ **Recovery Testing**: Valid room assignments work correctly after error conditions
+
+**INTEGRATION TESTING: ✅ COMPREHENSIVE**
+- ✅ **Status Changes**: Room assignment works correctly with simultaneous status updates
+- ✅ **Workflow Compatibility**: Room assignments compatible with all appointment statuses
+- ✅ **Patient Info**: Patient information remains properly linked during room changes
+- ✅ **Multiple Endpoints**: Room assignments work consistently across all API endpoints
+
+**CONCURRENT OPERATIONS: ✅ STABLE**
+- ✅ **Rapid Consecutive Requests**: 3 iterations of rapid room changes (salle1 → salle2 → empty) successful
+- ✅ **Multiple Appointments**: Concurrent room assignments on multiple appointments working correctly
+- ✅ **Simultaneous Operations**: Room assignment and status changes can be performed simultaneously
+- ✅ **Final State Verification**: All concurrent operations result in correct final state
+
+**CRITICAL FINDINGS:**
+- 🔍 **No Backend Issues Found**: Room assignment functionality is working correctly at the API level
+- 🔍 **Consistent Behavior**: All room toggle operations behave consistently and predictably
+- 🔍 **Proper Persistence**: All room assignments are immediately and correctly persisted in database
+- 🔍 **Error Handling**: Comprehensive error handling prevents invalid operations
+
+**ROOM ASSIGNMENT FUNCTIONALITY STATUS: FULLY FUNCTIONAL AND PRODUCTION READY**
+All requirements from the review request have been successfully validated. The room assignment toggle functionality is working correctly at the backend level. If there are intermittent frontend issues, they are likely related to frontend state management, UI updates, or network timing rather than backend API problems.
+
+**Testing Agent → Main Agent (2025-07-14 - Room Assignment Functionality Testing):**
+Comprehensive room assignment functionality testing completed successfully. All requirements from the review request have been thoroughly validated:
+
+✅ **ROOM ASSIGNMENT API TESTING - PASSED:**
+- PUT /api/rdv/{rdv_id}/salle endpoint working correctly with all room values (salle1, salle2, empty)
+- API returns proper JSON responses with message and salle fields
+- Query parameter format working as expected (?salle=value)
+
+✅ **DATA VALIDATION - PASSED:**
+- Room assignment updates correctly persist in database
+- Appointment data structure includes salle field and remains intact
+- Room changes retrievable via all API endpoints (/api/rdv/jour, /api/appointments)
+
+✅ **ROOM TOGGLE WORKFLOW - PASSED:**
+- Complete toggle sequence tested: none → salle1 → salle2 → none → salle1
+- All transitions work seamlessly with immediate persistence
+- Appointment status and other fields preserved during room changes
+
+✅ **ERROR HANDLING - PASSED:**
+- Invalid room values properly rejected with 400 status and descriptive errors
+- Non-existent appointments return 404 with proper error messages
+- System recovers correctly after error conditions
+
+✅ **INTEGRATION TESTING - PASSED:**
+- Room assignment works correctly with status changes and workflow functionality
+- Compatible with all appointment statuses (programme, attente, en_cours, etc.)
+- Patient information remains properly linked during room operations
+
+✅ **CONCURRENT OPERATIONS - PASSED:**
+- Rapid consecutive room assignments work correctly without race conditions
+- Multiple simultaneous operations (room + status changes) work properly
+- System stable under concurrent load testing
+
+**Key Implementation Verification:**
+- Backend API endpoint PUT /api/rdv/{rdv_id}/salle working correctly with query parameter format
+- Room assignment values ('', 'salle1', 'salle2') all handled properly
+- Database persistence immediate and consistent across all endpoints
+- Error handling comprehensive with proper HTTP status codes and messages
+- No backend issues found that would cause intermittent frontend toggle failures
+
+**ROOM ASSIGNMENT FUNCTIONALITY: BACKEND IMPLEMENTATION COMPLETE AND FULLY FUNCTIONAL**
+The backend room assignment functionality is working correctly. Any intermittent toggle issues experienced on the frontend are likely related to frontend state management, UI synchronization, or network timing rather than backend API problems. The backend provides a solid, reliable foundation for room assignment operations.
+
 ### Calendar Workflow Functionality Testing ✅ COMPLETED
 **Status:** ALL CALENDAR WORKFLOW TESTS PASSED - New Workflow Functionality Fully Validated
 
