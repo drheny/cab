@@ -559,7 +559,7 @@ const Calendar = ({ user }) => {
         </div>
       )}
 
-      {/* List View - Workflow Optimisé - Toutes les sections toujours visibles */}
+      {/* List View - Workflow Optimisé - Sections réorganisées */}
       {viewMode === 'list' && (
         <div className="space-y-6">
           {/* 1. Salle d'attente (en haut) */}
@@ -578,15 +578,14 @@ const Calendar = ({ user }) => {
             onDragEnd={handleDragEnd}
           />
           
-          {/* 2. En consultation */}
+          {/* 2. RDV Programmés */}
           <WorkflowSection
-            title="🔵 En consultation"
-            appointments={groupedAppointments.en_cours}
-            sectionType="en_cours"
+            title="📅 RDV Programmés"
+            appointments={groupedAppointments.absent}
+            sectionType="absent"
             onStatusUpdate={handleStatusUpdate}
             onTypeToggle={handleTypeToggle}
             onPaymentUpdate={handlePaymentUpdate}
-            onFinishConsultation={handleFinishConsultation}
             onEdit={openModal}
             onDelete={handleDeleteAppointment}
             onViewPatient={viewPatientDetails}
@@ -606,14 +605,15 @@ const Calendar = ({ user }) => {
             onViewPatient={viewPatientDetails}
           />
           
-          {/* 4. RDV Programmés */}
+          {/* 4. En consultation */}
           <WorkflowSection
-            title="📅 RDV Programmés"
-            appointments={groupedAppointments.absent}
-            sectionType="absent"
+            title="🔵 En consultation"
+            appointments={groupedAppointments.en_cours}
+            sectionType="en_cours"
             onStatusUpdate={handleStatusUpdate}
             onTypeToggle={handleTypeToggle}
             onPaymentUpdate={handlePaymentUpdate}
+            onFinishConsultation={handleFinishConsultation}
             onEdit={openModal}
             onDelete={handleDeleteAppointment}
             onViewPatient={viewPatientDetails}
