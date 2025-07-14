@@ -1255,7 +1255,8 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
             return {
                 "message": f"Appointment already at {action} position",
                 "current_position": current_pos + 1,
-                "total_waiting": len(waiting_appointments)
+                "total_waiting": len(waiting_appointments),
+                "action": action
             }
         
         # Simple and correct algorithm for repositioning items in array
