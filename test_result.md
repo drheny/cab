@@ -951,25 +951,68 @@ All requirements from the review request have been successfully validated. The b
 **WAITING ROOM FUNCTIONALITY STATUS: FULLY FUNCTIONAL AND PRODUCTION READY**
 Both waiting room time calculation and patient reordering functionality are now working correctly. All critical issues from the previous assessment have been resolved. The backend fully supports accurate waiting time calculation using actual arrival timestamps and effective patient reordering using priority-based sorting.
 
-**Testing Agent → Main Agent (2025-01-14 - Waiting Room Time Calculation and Patient Reordering Testing - FINAL):**
-Comprehensive testing of waiting room time calculation and patient reordering functionality completed successfully. All requirements from the review request have been thoroughly validated and are working correctly:
+**Testing Agent → Main Agent (2025-07-14 - Waiting Room Time Calculation and Patient Reordering Testing - COMPREHENSIVE FRONTEND TESTING):**
+Comprehensive testing of waiting room time calculation and patient reordering functionality completed. Found mixed results with backend working correctly but frontend UI implementation incomplete:
 
-✅ **CRITICAL FIXES VALIDATED**: All previously identified issues have been successfully resolved
-✅ **WAITING TIME CALCULATION**: heure_arrivee_attente field implemented, timestamps recorded correctly
-✅ **PATIENT REORDERING**: Priority system fully functional with proper sorting and error handling
-✅ **STATUS TRANSITIONS**: All status changes work correctly with proper timestamp recording
-✅ **INTEGRATION TESTING**: Complete workflow validated from programme to consultation
-✅ **ERROR HANDLING**: All edge cases properly handled with appropriate HTTP status codes
+## **CORRECTED WAITING TIME CALCULATION - ✅ WORKING:**
+✅ **Accurate Waiting Time Display**: Waiting time counter shows "⏱️ En attente depuis X min" for patients with status 'attente'
+✅ **Real-time Updates**: Timer updates correctly and shows reasonable durations (0-10 minutes tested)
+✅ **Status Transition Testing**: Changing patient status from "programme" to "attente" records arrival timestamp correctly
+✅ **Backend Implementation**: heure_arrivee_attente field properly implemented and timestamp recording functional
 
-**Key Implementation Verification:**
-- Backend appointment model includes both heure_arrivee_attente and priority fields
-- Status update endpoint records arrival timestamps when changing to 'attente' status
-- Priority endpoint supports all reordering actions with proper validation
-- Day view endpoint sorts waiting patients by priority (lower number = higher priority)
-- Complete workflow supports accurate waiting time calculation and effective patient reordering
+## **FIXED PATIENT REORDERING - ❌ BACKEND WORKING, FRONTEND UI MISSING:**
+✅ **Backend API Functionality**: All reordering endpoints working correctly
+  - PUT /api/rdv/{rdv_id}/priority with actions: set_first, move_up, move_down
+  - Priority field properly updates in database (lower number = higher priority)
+  - Appointments correctly sorted by priority in API responses
+  - Error handling working (400 for invalid actions, 404 for non-existent appointments)
 
-**WAITING ROOM FUNCTIONALITY: IMPLEMENTATION COMPLETE AND PRODUCTION READY**
-The backend implementation fully supports both waiting room time calculation and patient reordering features as specified in the review request. Both issues (incorrect waiting time and non-functional reordering) have been resolved.
+❌ **Frontend UI Implementation Missing**: 
+  - **Priority Button** (🔺 AlertTriangle) - NOT VISIBLE in UI
+  - **Move Up Button** (⬆️ ChevronUp) - NOT VISIBLE in UI  
+  - **Move Down Button** (⬇️ ChevronDown) - NOT VISIBLE in UI
+  - **Position Indicator** (X/Y format) - NOT VISIBLE in UI
+  - Reordering buttons do not appear even with multiple patients in waiting room
+
+## **INTEGRATION TESTING RESULTS:**
+✅ **Backend Integration**: Complete workflow tested successfully
+  - Status transitions: programme → attente (records timestamp) → en_cours → termine
+  - Priority system: set_first, move_up, move_down all functional via API
+  - Waiting time calculation accurate using heure_arrivee_attente timestamps
+
+❌ **Frontend Integration**: UI components not implemented
+  - Reordering buttons missing from WorkflowCard component
+  - Position indicators not displayed
+  - Frontend does not expose reordering functionality to users
+
+## **SPECIFIC FINDINGS:**
+**✅ WORKING FEATURES:**
+- Waiting room section display and organization
+- Waiting time calculation (⏱️ En attente depuis X min) 
+- Status transitions with proper timestamp recording
+- ENTRER button functionality for starting consultations
+- Backend API priority/reordering system fully functional
+
+**❌ CRITICAL ISSUES FOUND:**
+- Reordering UI components not implemented in frontend
+- No visual indication of patient order/position
+- Users cannot access reordering functionality despite backend support
+- Frontend WorkflowCard component missing reordering button logic
+
+## **BACKEND VERIFICATION COMPLETED:**
+✅ **API Endpoints**: All priority management endpoints working correctly
+✅ **Timestamp Recording**: heure_arrivee_attente properly recorded on status change to 'attente'
+✅ **Priority Sorting**: Appointments sorted by priority field in /api/rdv/jour/{date} responses
+✅ **Error Handling**: Proper HTTP status codes and validation for all edge cases
+
+## **FRONTEND IMPLEMENTATION GAPS:**
+❌ **Missing UI Components**: Reordering buttons (AlertTriangle, ChevronUp, ChevronDown) not rendered
+❌ **Missing Position Display**: No X/Y position indicators shown to users
+❌ **Missing Conditional Logic**: Buttons should appear when totalCount > 1 in waiting room
+❌ **Missing Event Handlers**: onMoveUp, onMoveDown, onSetPriority functions not connected to UI
+
+**WAITING ROOM FUNCTIONALITY STATUS: BACKEND COMPLETE, FRONTEND UI INCOMPLETE**
+The backend implementation fully supports both waiting room time calculation and patient reordering. However, the frontend UI is missing the reordering controls, preventing users from accessing this functionality. The issue is specifically in the WorkflowCard component where reordering buttons are not being rendered.
 
 ### Waiting Room WhatsApp Integration Test Data Creation ✅ COMPLETED
 
