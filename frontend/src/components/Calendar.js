@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { 
   Calendar as CalendarIcon, 
@@ -10,12 +10,9 @@ import {
   MessageCircle,
   ChevronLeft,
   ChevronRight,
-  BarChart3,
   List,
   Grid,
   CheckCircle,
-  DollarSign,
-  X,
   GripVertical,
   Building2
 } from 'lucide-react';
