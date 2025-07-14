@@ -866,66 +866,110 @@ The Calendar frontend implementation is complete and matches all requirements. A
 **Updated Patient List Structure Status: PRODUCTION READY**
 All requirements from the review request have been successfully validated. The backend implementation fully supports the new column structure with proper data formatting, computed fields, and error handling.
 
-### Waiting Room Time Calculation and Patient Reordering Testing ❌ CRITICAL ISSUES FOUND
-**Status:** CRITICAL BACKEND ISSUES IDENTIFIED - Waiting Time and Reordering Need Implementation Fixes
+### Waiting Room Time Calculation and Patient Reordering Testing ✅ MAJOR FIXES VALIDATED
+**Status:** ALL CRITICAL FIXES SUCCESSFULLY IMPLEMENTED - Waiting Time and Reordering Functionality Working
 
-**Test Results Summary (2025-01-14 - Waiting Room Time Calculation and Patient Reordering Testing):**
-❌ **Waiting Time Calculation** - heure_arrivee_attente field missing from appointment model, status update doesn't record arrival time
-❌ **Patient Reordering Priority System** - Priority field exists but appointments not sorted by priority in retrieval endpoints
-❌ **Status Change Timestamp Recording** - Status update endpoint doesn't record arrival time when changing to 'attente'
-❌ **Priority System Integration** - Reordering works at database level but doesn't affect display order
-❌ **Error Handling** - Priority endpoint returns 500 instead of 400 for invalid actions and statuses
+**Test Results Summary (2025-01-14 - Waiting Room Time Calculation and Patient Reordering Testing - FIXED):**
+✅ **Waiting Time Calculation** - heure_arrivee_attente field added to appointment model, status update records arrival time correctly
+✅ **Patient Reordering Priority System** - Priority field exists and appointments sorted by priority in retrieval endpoints
+✅ **Status Change Timestamp Recording** - Status update endpoint records arrival time when changing to 'attente'
+✅ **Priority System Integration** - Reordering works at database level and affects display order correctly
+✅ **Error Handling** - Priority endpoint returns proper 400 status codes for invalid actions and statuses
 
 **Detailed Test Results:**
 
-**WAITING TIME CALCULATION: ❌ NEEDS IMPLEMENTATION**
-- ❌ **heure_arrivee_attente Field**: Missing from Appointment model - needs to be added
-- ❌ **Arrival Time Recording**: Status update endpoint doesn't record timestamp when status changes to 'attente'
-- ❌ **Timestamp Storage**: No mechanism to store actual patient arrival time vs appointment time
-- ⚠️ **Waiting Time Accuracy**: Cannot calculate accurate waiting time without arrival timestamp
+**WAITING TIME CALCULATION: ✅ FULLY IMPLEMENTED**
+- ✅ **heure_arrivee_attente Field**: Successfully added to Appointment model with default empty string value
+- ✅ **Arrival Time Recording**: Status update endpoint correctly records ISO timestamp when status changes to 'attente'
+- ✅ **Timestamp Storage**: Mechanism properly stores actual patient arrival time separate from appointment time
+- ✅ **Waiting Time Accuracy**: Can now calculate accurate waiting time using arrival timestamp instead of appointment time
+- ✅ **Explicit Timestamp Support**: Endpoint accepts explicit heure_arrivee_attente parameter for custom arrival times
 
-**PATIENT REORDERING FUNCTIONALITY: ❌ PARTIALLY WORKING**
+**PATIENT REORDERING FUNCTIONALITY: ✅ FULLY WORKING**
 - ✅ **Priority Endpoint Exists**: PUT /api/rdv/{rdv_id}/priority endpoint implemented with move_up, move_down, set_first actions
-- ✅ **Priority Field Updates**: Database priority field is being updated correctly during reordering operations
-- ❌ **Display Order**: Appointments still sorted by time instead of priority in /api/rdv/jour/{date} endpoint
-- ❌ **Error Handling**: Returns 500 status instead of 400 for invalid actions and non-attente appointments
-- ❌ **Integration**: Reordering works at database level but doesn't affect actual patient display order
+- ✅ **Priority Field Updates**: Database priority field correctly updated during reordering operations (default: 999)
+- ✅ **Display Order**: Appointments now properly sorted by priority in /api/rdv/jour/{date} endpoint for 'attente' status
+- ✅ **Error Handling**: Returns proper 400 status codes for invalid actions and non-attente appointments
+- ✅ **Integration**: Reordering works at database level and correctly affects patient display order
 
-**STATUS CHANGE TESTING: ❌ MISSING TIMESTAMP RECORDING**
+**STATUS CHANGE TESTING: ✅ TIMESTAMP RECORDING WORKING**
 - ✅ **Status Transitions**: programme → attente → en_cours → termine transitions work correctly
-- ❌ **Arrival Time Recording**: No timestamp recorded when patient arrives (status changes to 'attente')
-- ❌ **Multiple Transitions**: No mechanism to preserve arrival time during subsequent status changes
-- ❌ **Field Persistence**: heure_arrivee_attente field doesn't exist to store arrival timestamp
+- ✅ **Arrival Time Recording**: Timestamp automatically recorded when patient arrives (status changes to 'attente')
+- ✅ **Automatic Timestamps**: System generates ISO timestamp when no explicit arrival time provided
+- ✅ **Field Persistence**: heure_arrivee_attente field properly stores and retrieves arrival timestamps
 
-**PRIORITY SYSTEM TESTING: ❌ SORTING NOT IMPLEMENTED**
+**PRIORITY SYSTEM TESTING: ✅ SORTING IMPLEMENTED**
 - ✅ **Database Updates**: Priority values correctly updated in database during reordering
 - ✅ **Position Calculations**: move_up/move_down/set_first actions calculate positions correctly
-- ❌ **Retrieval Sorting**: Appointments not sorted by priority field in API responses
-- ❌ **Waiting Room Order**: Patient order in waiting room doesn't reflect priority changes
-- ❌ **Status Validation**: Error handling for non-attente appointments returns 500 instead of 400
+- ✅ **Retrieval Sorting**: Appointments properly sorted by priority field in API responses (lower number = higher priority)
+- ✅ **Waiting Room Order**: Patient order in waiting room correctly reflects priority changes
+- ✅ **Status Validation**: Proper error handling for non-attente appointments returns 400 status codes
 
-**INTEGRATION TESTING: ❌ WORKFLOW BROKEN**
-- ✅ **Basic Workflow**: programme → attente status changes work
-- ❌ **Timestamp Integration**: No arrival time recorded during status transitions
-- ❌ **Reordering Integration**: Priority changes don't affect display order
-- ❌ **Complete Workflow**: Cannot test full workflow due to missing timestamp and sorting functionality
+**INTEGRATION TESTING: ✅ COMPLETE WORKFLOW WORKING**
+- ✅ **Basic Workflow**: programme → attente status changes work correctly
+- ✅ **Timestamp Integration**: Arrival time properly recorded during status transitions
+- ✅ **Reordering Integration**: Priority changes correctly affect display order in API responses
+- ✅ **Complete Workflow**: Full workflow tested successfully: programme → attente (records timestamp) → reorder by priority → start consultation
+- ✅ **Data Persistence**: All changes properly persisted and retrievable across API endpoints
 
-**CRITICAL IMPLEMENTATION GAPS:**
-1. **Missing Field**: `heure_arrivee_attente` field not in Appointment model
-2. **No Timestamp Recording**: Status update endpoint doesn't record arrival time
-3. **Sorting Not Implemented**: Appointments not sorted by priority in retrieval endpoints
-4. **Error Handling Issues**: Priority endpoint returns 500 instead of proper 400 status codes
-5. **Integration Broken**: Reordering works in database but not in display
+**COMPREHENSIVE FUNCTIONALITY VALIDATION:**
 
-**SPECIFIC FIXES REQUIRED:**
-1. Add `heure_arrivee_attente: str = ""` field to Appointment model
-2. Modify `/api/rdv/{rdv_id}/statut` endpoint to record current timestamp when status changes to 'attente'
-3. Fix error handling in `/api/rdv/{rdv_id}/priority` endpoint to return proper 400 status codes
-4. Modify `/api/rdv/jour/{date}` endpoint to sort 'attente' appointments by priority field instead of time
-5. Ensure priority field is properly initialized for all appointments
+**1. Fixed Waiting Time Calculation:**
+- ✅ heure_arrivee_attente field added to appointment model (default: "")
+- ✅ Status update to 'attente' records current timestamp in heure_arrivee_attente
+- ✅ Waiting time calculation now uses arrival timestamp instead of appointment time
+- ✅ Supports both automatic timestamp generation and explicit timestamp parameters
 
-**WAITING ROOM FUNCTIONALITY STATUS: CRITICAL ISSUES - NEEDS MAJOR IMPLEMENTATION FIXES**
-The waiting room time calculation and patient reordering functionality has critical gaps that prevent accurate waiting time calculation and effective patient reordering. The backend needs significant updates to support these features properly.
+**2. Fixed Patient Reordering:**
+- ✅ Priority field added to appointment model (default: 999)
+- ✅ PUT /api/rdv/{rdv_id}/priority endpoint correctly updates priority values
+- ✅ GET /api/rdv/jour/{date} returns waiting patients sorted by priority (lower number = higher priority)
+- ✅ All reordering actions (move_up, move_down, set_first) working correctly
+
+**3. Status Change with Timestamp Recording:**
+- ✅ Changing status from 'programme' to 'attente' records arrival timestamp
+- ✅ Changing to 'attente' with explicit heure_arrivee_attente parameter works correctly
+- ✅ Timestamp properly stored and retrieved in ISO format
+
+**4. Priority System Integration:**
+- ✅ move_up/move_down/set_first actions update priority correctly
+- ✅ Appointments with lower priority numbers appear first in waiting room
+- ✅ Complete reordering workflow works end-to-end
+
+**5. Complete Workflow Testing:**
+- ✅ programme → attente (records timestamp) → reorder by priority → start consultation workflow validated
+- ✅ Waiting time calculated from actual arrival time instead of appointment time
+- ✅ Patient order changes reflected in API responses immediately
+
+**CRITICAL FIXES SUCCESSFULLY IMPLEMENTED:**
+1. ✅ **Added Field**: `heure_arrivee_attente: str = ""` field added to Appointment model
+2. ✅ **Timestamp Recording**: `/api/rdv/{rdv_id}/statut` endpoint records current timestamp when status changes to 'attente'
+3. ✅ **Error Handling Fixed**: `/api/rdv/{rdv_id}/priority` endpoint returns proper 400 status codes
+4. ✅ **Sorting Implemented**: `/api/rdv/jour/{date}` endpoint sorts 'attente' appointments by priority field
+5. ✅ **Priority Initialization**: Priority field properly initialized (default: 999) for all appointments
+
+**WAITING ROOM FUNCTIONALITY STATUS: FULLY FUNCTIONAL AND PRODUCTION READY**
+Both waiting room time calculation and patient reordering functionality are now working correctly. All critical issues from the previous assessment have been resolved. The backend fully supports accurate waiting time calculation using actual arrival timestamps and effective patient reordering using priority-based sorting.
+
+**Testing Agent → Main Agent (2025-01-14 - Waiting Room Time Calculation and Patient Reordering Testing - FINAL):**
+Comprehensive testing of waiting room time calculation and patient reordering functionality completed successfully. All requirements from the review request have been thoroughly validated and are working correctly:
+
+✅ **CRITICAL FIXES VALIDATED**: All previously identified issues have been successfully resolved
+✅ **WAITING TIME CALCULATION**: heure_arrivee_attente field implemented, timestamps recorded correctly
+✅ **PATIENT REORDERING**: Priority system fully functional with proper sorting and error handling
+✅ **STATUS TRANSITIONS**: All status changes work correctly with proper timestamp recording
+✅ **INTEGRATION TESTING**: Complete workflow validated from programme to consultation
+✅ **ERROR HANDLING**: All edge cases properly handled with appropriate HTTP status codes
+
+**Key Implementation Verification:**
+- Backend appointment model includes both heure_arrivee_attente and priority fields
+- Status update endpoint records arrival timestamps when changing to 'attente' status
+- Priority endpoint supports all reordering actions with proper validation
+- Day view endpoint sorts waiting patients by priority (lower number = higher priority)
+- Complete workflow supports accurate waiting time calculation and effective patient reordering
+
+**WAITING ROOM FUNCTIONALITY: IMPLEMENTATION COMPLETE AND PRODUCTION READY**
+The backend implementation fully supports both waiting room time calculation and patient reordering features as specified in the review request. Both issues (incorrect waiting time and non-functional reordering) have been resolved.
 
 ### Waiting Room WhatsApp Integration Test Data Creation ✅ COMPLETED
 
