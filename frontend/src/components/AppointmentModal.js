@@ -88,14 +88,15 @@ const AppointmentModal = ({
 
         if (response.ok) {
           const newPatient = await response.json();
-          // Mettre à jour formData avec le nouveau patient_id
-          setFormData(prev => ({ ...prev, patient_id: newPatient.id }));
+          console.log('Patient created:', newPatient);
           
           // Créer le RDV immédiatement avec le nouveau patient
           const appointmentData = {
             ...formData,
-            patient_id: newPatient.id
+            patient_id: newPatient.patient_id // Utiliser patient_id retourné par l'API
           };
+          
+          console.log('Creating appointment with data:', appointmentData);
           
           // Appeler onSave avec les données mises à jour
           onSave(appointmentData);
