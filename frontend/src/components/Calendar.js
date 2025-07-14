@@ -1136,9 +1136,18 @@ const WorkflowCard = ({
   };
 
   const getPaymentStatus = () => {
-    if (appointment.type_rdv === 'controle') return { status: 'gratuit', text: 'Gratuit', color: 'bg-green-100 text-green-800' };
-    if (appointment.paye) return { status: 'paye', text: 'Payé', color: 'bg-green-100 text-green-800' };
-    return { status: 'non_paye', text: 'Non payé', color: 'bg-red-100 text-red-800' };
+    // Si c'est un contrôle, toujours gratuit
+    if (appointment.type_rdv === 'controle') {
+      return { status: 'gratuit', text: 'Gratuit', color: 'bg-green-100 text-green-800 font-bold' };
+    }
+    
+    // Pour les visites
+    if (appointment.paye) {
+      return { status: 'paye', text: 'Payé', color: 'bg-green-100 text-green-800 font-bold' };
+    }
+    
+    // Par défaut : Non payé en rouge gras
+    return { status: 'non_paye', text: 'Non payé', color: 'bg-red-100 text-red-800 font-bold' };
   };
 
   const paymentStatus = getPaymentStatus();
