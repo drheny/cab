@@ -130,10 +130,11 @@ const Calendar = ({ user }) => {
     }
   }, [selectedDate, viewMode, API_BASE_URL]);
 
-  const handleCreateAppointment = useCallback(async () => {
+  const handleCreateAppointment = useCallback(async (appointmentData = null) => {
     try {
-      console.log('Creating appointment with formData:', formData);
-      const response = await axios.post(`${API_BASE_URL}/api/appointments`, formData);
+      const dataToSend = appointmentData || formData;
+      console.log('Creating appointment with data:', dataToSend);
+      const response = await axios.post(`${API_BASE_URL}/api/appointments`, dataToSend);
       console.log('Appointment created successfully:', response.data);
       toast.success('Rendez-vous créé avec succès');
       setShowModal(false);
