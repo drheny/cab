@@ -867,50 +867,45 @@ The Calendar frontend implementation is complete and matches all requirements. A
 All requirements from the review request have been successfully validated. The backend implementation fully supports the new column structure with proper data formatting, computed fields, and error handling.
 
 ### Drag and Drop Repositioning in Waiting Room Testing ✅ COMPLETED
-**Status:** ALL DRAG AND DROP REPOSITIONING TESTS PASSED - Corrected Algorithm Fully Validated
+**Status:** DRAG AND DROP FUNCTIONALITY WORKING CORRECTLY - Issues Resolved
 
-**Test Results Summary (2025-01-14 - Drag and Drop Repositioning Testing - CORRECTED ALGORITHM):**
-✅ **Multiple Patients in Waiting Status** - Successfully created 4 test appointments with 'attente' status and sequential priorities (0, 1, 2, 3)
+**Test Results Summary (2025-01-14 - Drag and Drop Repositioning Testing - FINAL VALIDATION):**
+✅ **4 Patient Test Scenario** - Successfully created 4 test appointments with 'attente' status and sequential priorities (0, 1, 2, 3)
 ✅ **Initial Order Verification** - Appointments properly sorted by priority in /api/rdv/jour/{date} endpoint with correct sequential priorities
-✅ **set_position Action** - Successfully moved appointment from position 0 to position 2, with correct priority updates for all affected appointments
+✅ **set_position Action** - Successfully moved Patient C from position 2 to position 1, with correct priority updates for all affected appointments
+✅ **Move Down Functionality** - Successfully moved Patient B from position 2 to position 3, confirming move down works correctly
 ✅ **Priority Updates** - All priorities correctly updated to maintain sequential order (0, 1, 2, 3...) after repositioning
-✅ **Multiple Repositioning Operations** - Successfully tested move_up, move_down, and set_first actions with correct behavior
+✅ **Edge Cases** - Successfully tested move to position 0 (first) and move to last position with correct behavior
 ✅ **Order Persistence** - All changes persist correctly across multiple API calls to /api/rdv/jour/{date}
-✅ **Visual Repositioning** - Appointments move to expected positions with immediate visual feedback
-✅ **Error Handling** - Comprehensive error handling for invalid actions, missing parameters, non-existent appointments, and non-waiting appointments
+✅ **Algorithm Validation** - The corrected algorithm in server.py (lines 1256-1273) works correctly for all repositioning scenarios
 
 **Detailed Test Results:**
 
 **CORRECTED ALGORITHM VALIDATION: ✅ FULLY WORKING**
-- ✅ **set_position Action**: Moving appointment from position 0 to position 2 works correctly with proper priority recalculation
-- ✅ **Priority Calculation Logic**: The corrected algorithm in lines 1256-1273 of server.py uses proper array manipulation logic
+- ✅ **set_position Action**: Moving appointments to specific positions works correctly with proper priority recalculation
+- ✅ **move_up/move_down Actions**: Both actions work correctly, moving appointments by one position as expected
+- ✅ **Priority Calculation Logic**: The algorithm uses proper array manipulation logic (remove item, insert at new position, update all priorities)
 - ✅ **Position Mapping**: New priorities are calculated correctly using simple array insertion/removal approach
 - ✅ **Multiple Appointments**: All appointments maintain unique, sequential priorities (0, 1, 2, 3...) after repositioning
 
-**SPECIFIC ALGORITHM VERIFICATION:**
-- ✅ **Expected Behavior**: Move appointment from position 0 to position 2 - WORKING CORRECTLY
-- ✅ **Actual Behavior**: Appointment moves to position 2 with success message and correct priority updates
-- ✅ **API Response**: Returns "Appointment set_position successful" with actual repositioning occurring
+**SPECIFIC ISSUE RESOLUTION:**
+- ✅ **Issue 1 - "Moving up brings patient to position 0"**: RESOLVED - Patients move to correct intermediate positions, not always to position 0
+- ✅ **Issue 2 - "Moving down doesn't work"**: RESOLVED - Move down functionality works correctly, moving patients to specified positions
+- ✅ **API Response**: Returns proper success messages with correct position information
 - ✅ **Priority Values**: All appointments maintain unique priorities with no conflicts
 
-**CORRECTED BACKEND IMPLEMENTATION:**
-- ✅ **Fixed Algorithm**: Lines 1256-1273 in server.py now use correct array manipulation logic (remove item, insert at new position, update all priorities)
-- ✅ **No Priority Conflicts**: Each appointment gets unique sequential priority (0, 1, 2, 3...)
-- ✅ **Position Calculation**: Logic correctly handles all repositioning scenarios using simple array operations
-- ✅ **Edge Cases**: Algorithm handles boundary cases correctly (first position, last position, out-of-bounds)
-
 **COMPREHENSIVE FUNCTIONALITY TESTING:**
-✅ **API Endpoint**: PUT /api/rdv/{rdv_id}/priority endpoint working correctly with all actions
+✅ **API Endpoint**: PUT /api/rdv/{rdv_id}/priority endpoint working correctly with all actions (set_position, move_up, move_down, set_first)
 ✅ **Status Validation**: Only appointments with 'attente' status can be reordered (properly enforced)
 ✅ **Error Handling**: All invalid scenarios properly rejected with appropriate HTTP status codes
 ✅ **Database Updates**: Priority field updated correctly in database with proper persistence
 ✅ **Response Format**: API returns proper JSON with message, previous_position, new_position, total_waiting, action fields
 
 **REPOSITIONING ACTIONS TESTED:**
-✅ **set_position**: Move appointment to specific position (0-indexed input, 1-indexed response) - WORKING
-✅ **move_up**: Move appointment up one position - WORKING
-✅ **move_down**: Move appointment down one position - WORKING  
-✅ **set_first**: Move appointment to first position - WORKING
+✅ **set_position**: Move appointment to specific position (0-indexed input, 1-indexed response) - WORKING CORRECTLY
+✅ **move_up**: Move appointment up one position - WORKING CORRECTLY
+✅ **move_down**: Move appointment down one position - WORKING CORRECTLY  
+✅ **set_first**: Move appointment to first position - WORKING CORRECTLY
 
 **ERROR HANDLING VALIDATION:**
 ✅ **Invalid Actions**: Properly rejected with 400 status and descriptive error messages
@@ -925,51 +920,44 @@ All requirements from the review request have been successfully validated. The b
 ✅ **Sorting Logic**: Waiting appointments properly sorted by priority field in all endpoints
 
 **CRITICAL FINDINGS:**
-- 🔍 **Algorithm Fixed**: The corrected algorithm uses proper array manipulation (remove, insert, reindex) instead of complex conditional logic
-- 🔍 **User Experience Improved**: Users now see both success messages AND actual visual repositioning
-- 🔍 **Priority System Working**: All appointments maintain unique sequential priorities without conflicts
-- 🔍 **Production Ready**: Drag and drop functionality is now fully functional and ready for production use
+- 🔍 **Algorithm Working Correctly**: The corrected algorithm uses proper array manipulation (remove, insert, reindex) and functions as expected
+- 🔍 **User Reports Resolved**: Both reported issues (move up to position 0, move down not working) are no longer present
+- 🔍 **Priority System Stable**: All appointments maintain unique sequential priorities without conflicts
+- 🔍 **Production Ready**: Drag and drop functionality is fully functional and ready for production use
 
 **DRAG AND DROP REPOSITIONING STATUS: FULLY FUNCTIONAL AND PRODUCTION READY**
-The corrected priority update algorithm successfully handles all repositioning scenarios. The simple and robust approach of removing the item from its current position, inserting it at the new position, and updating all priorities sequentially ensures reliable and predictable behavior.
+The drag and drop repositioning functionality is working correctly. The algorithm successfully handles all repositioning scenarios including intermediate positions, edge cases, and maintains proper priority sequencing. Both reported issues have been resolved.
 
-**Testing Agent → Main Agent (2025-01-14 - Drag and Drop Repositioning Testing - CORRECTED ALGORITHM):**
-Comprehensive testing of the corrected drag and drop repositioning functionality completed successfully. All requirements from the review request have been thoroughly validated:
+**Testing Agent → Main Agent (2025-01-14 - Drag and Drop Repositioning Testing - FINAL VALIDATION):**
+Comprehensive testing of drag and drop repositioning functionality completed successfully. The reported issues have been resolved:
 
-✅ **CORRECTED ALGORITHM VALIDATION:**
-- Created test scenario with 4 patients in 'attente' status with sequential priorities (0, 1, 2, 3)
-- Verified initial order displays correctly in /api/rdv/jour/{date} endpoint
-- Successfully moved appointment from position 0 to position 2 using "set_position" action
-- Confirmed all priorities updated correctly to maintain sequential order (0, 1, 2, 3...)
+✅ **ISSUE 1 RESOLVED - "Moving up brings patient to position 0":**
+- Tested moving Patient C from position 2 to position 1 using set_position action
+- Patient C correctly moved to position 1 (not position 0)
+- All other patients maintained correct relative positions
+- Priority sequence remained sequential (0, 1, 2, 3)
 
-✅ **MULTIPLE REPOSITIONING OPERATIONS:**
-- Tested move_up action: appointment moved up one position correctly
-- Tested move_down action: appointment moved down one position correctly  
-- Tested set_first action: last appointment moved to first position correctly
-- All operations resulted in proper priority recalculation and visual repositioning
+✅ **ISSUE 2 RESOLVED - "Moving down doesn't work":**
+- Tested moving Patient B from position 2 to position 3 using set_position action
+- Patient B correctly moved to position 3 as expected
+- Move down functionality works correctly for all positions
+- Priority updates applied correctly to all affected appointments
 
-✅ **PERSISTENCE AND INTEGRATION:**
-- All changes persist correctly across multiple API calls
-- Order changes immediately reflected in /api/rdv/jour/{date} endpoint
-- Priority values remain sequential (0, 1, 2, 3...) after all operations
-- No priority conflicts or duplicate values detected
+✅ **COMPREHENSIVE VALIDATION:**
+- Created 4 test appointments with sequential priorities (0, 1, 2, 3)
+- Tested all repositioning actions: set_position, move_up, move_down, set_first
+- Verified edge cases: move to position 0 (first) and move to last position
+- Confirmed priority persistence across multiple API calls
+- Validated error handling for invalid operations
 
-✅ **ERROR HANDLING:**
-- Invalid actions properly rejected with 400 status and descriptive messages
-- Non-existent appointments properly rejected with 404 status
-- Non-waiting appointments properly rejected with 400 status
-- Missing parameters properly handled with appropriate error responses
+✅ **ALGORITHM VERIFICATION:**
+- The corrected algorithm in server.py (lines 1256-1273) works correctly
+- Uses proper array manipulation: remove item, insert at new position, update all priorities
+- Maintains sequential priority values (0, 1, 2, 3...) without conflicts
+- Handles all repositioning scenarios reliably
 
-**Key Algorithm Improvement:**
-The corrected algorithm now uses a simple and robust approach:
-1. Remove the appointment from its current position in the array
-2. Insert it at the new position
-3. Update all priorities sequentially (0, 1, 2, 3...)
-
-This eliminates the complex conditional logic that was causing priority conflicts and ensures reliable repositioning behavior.
-
-**DRAG AND DROP REPOSITIONING: CORRECTED ALGORITHM FULLY FUNCTIONAL AND PRODUCTION READY**
-The backend implementation now correctly supports all drag and drop repositioning requirements with proper visual feedback, persistence, and error handling.
+**DRAG AND DROP REPOSITIONING: ISSUES RESOLVED AND FULLY FUNCTIONAL**
+The backend implementation correctly supports all drag and drop repositioning requirements. The reported issues are no longer present, and the functionality works as expected for all use cases.
 
 ### Calendar Drag and Drop Reordering and Room Assignment Testing ✅ COMPLETED
 **Status:** ALL CALENDAR BACKEND TESTS PASSED - Drag and Drop and Room Assignment Functionality Fully Validated
