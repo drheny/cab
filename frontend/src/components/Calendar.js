@@ -355,17 +355,24 @@ const Calendar = ({ user }) => {
 
   const groupedAppointments = useMemo(() => {
     const groups = {
-      programme: [],
       attente: [],
       en_cours: [],
-      retard: [],
       absent: [],
+      retard: [],
       termine: []
     };
     
     sortedAppointments.forEach(apt => {
-      if (groups[apt.statut]) {
-        groups[apt.statut].push(apt);
+      // Auto-assign à la section appropriée selon la logique métier
+      let targetSection = apt.statut;
+      
+      // Les RDV programmés (non encore venus) vont dans "absent non encore venu"
+      if (apt.statut === 'programme') {
+        targetSection = 'absent';
+      }
+      
+      if (groups[targetSection]) {
+        groups[targetSection].push(apt);
       }
     });
     
