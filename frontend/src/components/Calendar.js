@@ -100,7 +100,7 @@ const Calendar = ({ user }) => {
     }
   }, [selectedDate, viewMode]); // openModal is defined later, will be handled by React
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       if (viewMode === 'list') {
@@ -128,7 +128,7 @@ const Calendar = ({ user }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedDate, viewMode, API_BASE_URL]);
 
   const handleCreateAppointment = async () => {
     try {
