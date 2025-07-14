@@ -214,6 +214,17 @@ const Calendar = ({ user }) => {
     try {
       const newType = currentType === 'visite' ? 'controle' : 'visite';
       await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}`, { type_rdv: newType });
+      
+      // Si on change vers contrôle, mettre automatiquement en gratuit
+      if (newType === 'controle') {
+        await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/paiement`, {
+          paye: false,
+          gratuit: true,
+          montant: 0,
+          methode_paiement: ''
+        });
+      }
+      
       toast.success(`Type changé vers ${newType === 'visite' ? 'Visite' : 'Contrôle'}`);
       fetchData();
     } catch (error) {
