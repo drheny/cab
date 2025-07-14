@@ -4975,12 +4975,16 @@ class CabinetMedicalAPITest(unittest.TestCase):
         patient_id = patients[0]["id"]
         today = datetime.now().strftime("%Y-%m-%d")
         
+        # Use future times to avoid auto delay detection
+        future_time_1 = (datetime.now() + timedelta(hours=1)).strftime("%H:%M")
+        future_time_2 = (datetime.now() + timedelta(hours=2)).strftime("%H:%M")
+        
         # Scenario 1: Complete workflow for a visite appointment
         print("Testing complete visite workflow...")
         visite_appointment = {
             "patient_id": patient_id,
             "date": today,
-            "heure": "15:00",
+            "heure": future_time_1,
             "type_rdv": "visite",
             "statut": "programme",
             "motif": "Consultation générale",
@@ -5051,7 +5055,7 @@ class CabinetMedicalAPITest(unittest.TestCase):
         controle_appointment = {
             "patient_id": patient_id,
             "date": today,
-            "heure": "16:00",
+            "heure": future_time_2,
             "type_rdv": "controle",
             "statut": "programme",
             "motif": "Contrôle de routine",
