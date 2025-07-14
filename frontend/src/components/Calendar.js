@@ -1335,46 +1335,53 @@ const WorkflowCard = ({
           )}
 
           {/* Boutons de réorganisation pour salle d'attente */}
-          {sectionType === 'attente' && totalCount > 1 && onMoveUp && onMoveDown && onSetPriority && (
-            <>
-              {/* Bouton Priorité */}
-              {index > 0 && (
-                <button
-                  onClick={() => onSetPriority(appointment.id)}
-                  className="p-1 text-orange-600 hover:bg-orange-100 rounded transition-colors"
-                  title="Mettre en priorité (premier)"
-                >
-                  <AlertTriangle className="w-4 h-4" />
-                </button>
+          {sectionType === 'attente' && (
+            <div className="flex items-center space-x-1">
+              {console.log('DEBUG: sectionType:', sectionType, 'totalCount:', totalCount, 'index:', index)}
+              {totalCount > 1 ? (
+                <>
+                  {/* Bouton Priorité */}
+                  {index > 0 && onSetPriority && (
+                    <button
+                      onClick={() => onSetPriority(appointment.id)}
+                      className="p-1 text-orange-600 hover:bg-orange-100 rounded transition-colors"
+                      title="Mettre en priorité (premier)"
+                    >
+                      <AlertTriangle className="w-4 h-4" />
+                    </button>
+                  )}
+                  
+                  {/* Bouton Monter */}
+                  {index > 0 && onMoveUp && (
+                    <button
+                      onClick={() => onMoveUp(appointment.id)}
+                      className="p-1 text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                      title="Monter dans la liste"
+                    >
+                      <ChevronUp className="w-4 h-4" />
+                    </button>
+                  )}
+                  
+                  {/* Bouton Descendre */}
+                  {index < totalCount - 1 && onMoveDown && (
+                    <button
+                      onClick={() => onMoveDown(appointment.id)}
+                      className="p-1 text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                      title="Descendre dans la liste"
+                    >
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
+                  )}
+                  
+                  {/* Position dans la liste */}
+                  <span className="text-xs text-gray-500 font-medium px-2">
+                    {index + 1}/{totalCount}
+                  </span>
+                </>
+              ) : (
+                <span className="text-xs text-gray-400">Patient unique</span>
               )}
-              
-              {/* Bouton Monter */}
-              {index > 0 && (
-                <button
-                  onClick={() => onMoveUp(appointment.id)}
-                  className="p-1 text-gray-600 hover:bg-gray-100 rounded transition-colors"
-                  title="Monter dans la liste"
-                >
-                  <ChevronUp className="w-4 h-4" />
-                </button>
-              )}
-              
-              {/* Bouton Descendre */}
-              {index < totalCount - 1 && (
-                <button
-                  onClick={() => onMoveDown(appointment.id)}
-                  className="p-1 text-gray-600 hover:bg-gray-100 rounded transition-colors"
-                  title="Descendre dans la liste"
-                >
-                  <ChevronDown className="w-4 h-4" />
-                </button>
-              )}
-              
-              {/* Position dans la liste */}
-              <span className="text-xs text-gray-500 font-medium px-2">
-                {index + 1}/{totalCount}
-              </span>
-            </>
+            </div>
           )}
 
           {/* Bouton WhatsApp */}
