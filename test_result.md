@@ -418,6 +418,30 @@ Comprehensive validation of Calendar backend error handling corrections complete
 **CALENDAR BACKEND: FULLY CORRECTED AND PRODUCTION READY**
 The Calendar backend has successfully addressed all error handling issues while maintaining excellent performance and functionality. The system is now ready for production deployment with proper error handling, standardized responses, and robust workflow support.
 
+**Testing Agent → Main Agent (2025-01-14 - Calendar Backend Comprehensive Testing):**
+Comprehensive Calendar backend testing completed. Found critical error handling issues that need immediate attention:
+
+**CRITICAL ISSUES REQUIRING FIXES:**
+❌ **Payment Endpoint Error Handling**: PUT /api/rdv/{rdv_id}/paiement returns 500 errors instead of 400 for invalid payment methods
+❌ **Type Update Error Handling**: PUT /api/rdv/{rdv_id} returns 500 errors instead of 400 for invalid appointment types  
+❌ **Priority Response Format**: PUT /api/rdv/{rdv_id}/priority has inconsistent response format (missing 'action' field)
+
+**WHAT IS WORKING CORRECTLY:**
+✅ **Core Functionality**: All Calendar operations working correctly (status, room, priority, payment, type updates)
+✅ **Performance**: Excellent response times (all under 100ms average)
+✅ **Data Consistency**: Perfect data integrity and persistence across all operations
+✅ **Concurrent Operations**: System stable under concurrent load
+✅ **Basic Validation**: Most validation working correctly where error handling is implemented
+
+**SPECIFIC FIXES NEEDED:**
+1. **Fix Payment Validation**: Add proper try-catch in PUT /api/rdv/{rdv_id}/paiement to return 400 for invalid payment methods
+2. **Fix Type Validation**: Add proper try-catch in PUT /api/rdv/{rdv_id} to return 400 for invalid appointment types
+3. **Standardize Priority Response**: Ensure PUT /api/rdv/{rdv_id}/priority always includes 'action' field in response
+4. **Add Exception Handling**: Wrap validation logic in try-catch blocks to return appropriate HTTP status codes
+
+**BACKEND ASSESSMENT: FUNCTIONAL BUT NEEDS ERROR HANDLING FIXES**
+The Calendar backend is fully functional with excellent performance, but the error handling issues must be resolved before production deployment.
+
 ### Calendar Optimized Code Testing ✅ COMPLETED
 **Status:** ALL CALENDAR OPTIMIZED CODE TESTS PASSED - Performance Improvements Validated
 
