@@ -259,13 +259,24 @@ const Calendar = ({ user }) => {
 
   // Démarrer consultation (attente → en_cours)
   const handleStartConsultation = async (appointmentId) => {
+    // Optimistic update - update UI immediately
+    setAppointments(prevAppointments => 
+      prevAppointments.map(apt => {
+        if (apt.id === appointmentId) {
+          return { ...apt, statut: 'en_cours' };
+        }
+        return apt;
+      })
+    );
+
     try {
       await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/statut`, { statut: 'en_cours' });
       toast.success('Consultation démarrée');
-      fetchData();
     } catch (error) {
       console.error('Error starting consultation:', error);
       toast.error('Erreur lors du démarrage de la consultation');
+      // Revert optimistic update on error
+      await fetchData();
     }
   };
 
