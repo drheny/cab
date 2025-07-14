@@ -140,7 +140,7 @@ const Calendar = ({ user }) => {
       toast.success('Rendez-vous créé avec succès');
       setShowModal(false);
       resetForm();
-      // Rafraîchir les données du calendrier
+      // Refresh data after creation
       await fetchData();
     } catch (error) {
       console.error('Error creating appointment:', error);
@@ -155,7 +155,8 @@ const Calendar = ({ user }) => {
       toast.success('Rendez-vous mis à jour avec succès');
       setShowModal(false);
       resetForm();
-      fetchData();
+      // Refresh data after update
+      await fetchData();
     } catch (error) {
       console.error('Error updating appointment:', error);
       toast.error('Erreur lors de la mise à jour du rendez-vous');
@@ -164,13 +165,19 @@ const Calendar = ({ user }) => {
 
   const handleDeleteAppointment = async (appointmentId) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce rendez-vous ?')) {
+      // Optimistic update - remove from UI immediately
+      setAppointments(prevAppointments => 
+        prevAppointments.filter(apt => apt.id !== appointmentId)
+      );
+
       try {
         await axios.delete(`${API_BASE_URL}/api/appointments/${appointmentId}`);
         toast.success('Rendez-vous supprimé avec succès');
-        fetchData();
       } catch (error) {
         console.error('Error deleting appointment:', error);
         toast.error('Erreur lors de la suppression du rendez-vous');
+        // Revert optimistic update on error
+        await fetchData();
       }
     }
   };
