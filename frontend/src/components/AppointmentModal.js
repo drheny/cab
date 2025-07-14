@@ -30,34 +30,6 @@ const AppointmentModal = ({
     setSearchTerm(`${patient.prenom} ${patient.nom}`);
   };
 
-  const handleNewPatientSubmit = async () => {
-    try {
-      const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
-      const response = await fetch(`${API_BASE_URL}/api/patients`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newPatientData),
-      });
-
-      if (response.ok) {
-        const newPatient = await response.json();
-        setFormData(prev => ({ ...prev, patient_id: newPatient.id }));
-        setSearchTerm(`${newPatient.prenom} ${newPatient.nom}`);
-        setShowPatientForm(false);
-        setNewPatientData({ nom: '', prenom: '', telephone: '' });
-        toast.success('Patient créé avec succès');
-        if (onRefresh) onRefresh();
-      } else {
-        toast.error('Erreur lors de la création du patient');
-      }
-    } catch (error) {
-      console.error('Error creating patient:', error);
-      toast.error('Erreur lors de la création du patient');
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     
