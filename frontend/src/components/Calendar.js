@@ -583,6 +583,7 @@ const Calendar = ({ user }) => {
             onTypeToggle={handleTypeToggle}
             onPaymentUpdate={handlePaymentUpdate}
             onStartConsultation={handleStartConsultation}
+            onRoomAssignment={handleRoomAssignment}
             onEdit={openModal}
             onDelete={handleDeleteAppointment}
             onViewPatient={viewPatientDetails}
