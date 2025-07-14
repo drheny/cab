@@ -349,17 +349,27 @@ const Calendar = ({ user }) => {
 
   // Room assignment dropdown
   const handleRoomAssignment = async (appointmentId, newRoom) => {
+    // Optimistic update - update UI immediately
+    setAppointments(prevAppointments => 
+      prevAppointments.map(apt => {
+        if (apt.id === appointmentId) {
+          return { ...apt, salle: newRoom };
+        }
+        return apt;
+      })
+    );
+
     try {
       await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/salle?salle=${newRoom}`);
       
       const roomText = newRoom === '' ? 'Aucune salle' : 
                       newRoom === 'salle1' ? 'Salle 1' : 'Salle 2';
       toast.success(`Patient assigné à: ${roomText}`);
-      
-      await fetchData(); // Refresh data
     } catch (error) {
       console.error('Error assigning room:', error);
       toast.error('Erreur lors de l\'assignation de salle');
+      // Revert optimistic update on error
+      await fetchData();
     }
   };
 
