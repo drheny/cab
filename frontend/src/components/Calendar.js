@@ -1388,15 +1388,20 @@ const WorkflowCard = ({
             {paymentStatus.text}
           </button>
 
-          {/* Badge Salle - Cliquable pour patients en attente */}
+          {/* Dropdown Salle - Pour patients en attente */}
           {sectionType === 'attente' && (
-            <button
-              onClick={() => onRoomAssignment(appointment.id, appointment.salle)}
-              className={`px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer hover:opacity-80 ${getRoomColor(appointment.salle)}`}
-              title={`Cliquer pour changer la salle. Actuel: ${appointment.salle === '' ? 'Aucune' : appointment.salle === 'salle1' ? 'Salle 1' : 'Salle 2'}`}
-            >
-              {getRoomDisplayText(appointment.salle) || <Building2 className="w-3 h-3" />}
-            </button>
+            <div className="relative">
+              <select
+                value={appointment.salle || ''}
+                onChange={(e) => onRoomAssignment(appointment.id, e.target.value)}
+                className="px-2 py-1 rounded text-xs font-medium border border-gray-300 bg-white hover:bg-gray-50 transition-colors cursor-pointer"
+                title="Sélectionner une salle"
+              >
+                <option value="">Aucune salle</option>
+                <option value="salle1">Salle 1</option>
+                <option value="salle2">Salle 2</option>
+              </select>
+            </div>
           )}
 
           {/* Affichage salle pour autres sections */}
