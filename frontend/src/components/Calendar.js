@@ -233,7 +233,7 @@ const Calendar = ({ user }) => {
         heure_arrivee_attente: currentTime
       });
       toast.success('Patient en salle d\'attente');
-      fetchData();
+      await fetchData(); // Refresh data immediately
     } catch (error) {
       console.error('Error moving to waiting room:', error);
       toast.error('Erreur lors de la mise en salle d\'attente');
