@@ -7386,5 +7386,650 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
             # Clean up
             requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
 
+    # ========== WAITING ROOM TIME CALCULATION AND PATIENT REORDERING TESTS ==========
+    
+    def test_waiting_time_calculation_field_exists(self):
+        """Test that heure_arrivee_attente field is added to appointment model"""
+        # Get patients for testing
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for testing")
+        
+        patient_id = patients[0]["id"]
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Create a new appointment
+        test_appointment = {
+            "patient_id": patient_id,
+            "date": today,
+            "heure": "10:00",
+            "type_rdv": "visite",
+            "statut": "programme",
+            "motif": "Test waiting time field",
+            "paye": False
+        }
+        
+        response = requests.post(f"{self.base_url}/api/appointments", json=test_appointment)
+        self.assertEqual(response.status_code, 200)
+        appointment_id = response.json()["appointment_id"]
+        
+        try:
+            # Get the appointment and verify heure_arrivee_attente field exists
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            created_appointment = None
+            for appt in appointments:
+                if appt["id"] == appointment_id:
+                    created_appointment = appt
+                    break
+            
+            self.assertIsNotNone(created_appointment, "Created appointment not found")
+            self.assertIn("heure_arrivee_attente", created_appointment, "heure_arrivee_attente field missing from appointment model")
+            self.assertEqual(created_appointment["heure_arrivee_attente"], "", "heure_arrivee_attente should be empty initially")
+            
+        finally:
+            # Clean up
+            requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+    
+    def test_priority_field_exists(self):
+        """Test that priority field is added to appointment model"""
+        # Get patients for testing
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for testing")
+        
+        patient_id = patients[0]["id"]
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Create a new appointment
+        test_appointment = {
+            "patient_id": patient_id,
+            "date": today,
+            "heure": "11:00",
+            "type_rdv": "visite",
+            "statut": "programme",
+            "motif": "Test priority field",
+            "paye": False
+        }
+        
+        response = requests.post(f"{self.base_url}/api/appointments", json=test_appointment)
+        self.assertEqual(response.status_code, 200)
+        appointment_id = response.json()["appointment_id"]
+        
+        try:
+            # Get the appointment and verify priority field exists
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            created_appointment = None
+            for appt in appointments:
+                if appt["id"] == appointment_id:
+                    created_appointment = appt
+                    break
+            
+            self.assertIsNotNone(created_appointment, "Created appointment not found")
+            self.assertIn("priority", created_appointment, "priority field missing from appointment model")
+            self.assertEqual(created_appointment["priority"], 999, "priority should default to 999")
+            
+        finally:
+            # Clean up
+            requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+    
+    def test_status_update_records_arrival_timestamp(self):
+        """Test status update to 'attente' records current timestamp in heure_arrivee_attente"""
+        # Get patients for testing
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for testing")
+        
+        patient_id = patients[0]["id"]
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Create a new appointment
+        test_appointment = {
+            "patient_id": patient_id,
+            "date": today,
+            "heure": "12:00",
+            "type_rdv": "visite",
+            "statut": "programme",
+            "motif": "Test arrival timestamp",
+            "paye": False
+        }
+        
+        response = requests.post(f"{self.base_url}/api/appointments", json=test_appointment)
+        self.assertEqual(response.status_code, 200)
+        appointment_id = response.json()["appointment_id"]
+        
+        try:
+            # Record time before status change
+            before_change = datetime.now()
+            
+            # Change status to 'attente'
+            response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/statut", json={"statut": "attente"})
+            self.assertEqual(response.status_code, 200)
+            
+            # Record time after status change
+            after_change = datetime.now()
+            
+            # Get the appointment and verify arrival timestamp was recorded
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            updated_appointment = None
+            for appt in appointments:
+                if appt["id"] == appointment_id:
+                    updated_appointment = appt
+                    break
+            
+            self.assertIsNotNone(updated_appointment, "Updated appointment not found")
+            self.assertEqual(updated_appointment["statut"], "attente")
+            self.assertNotEqual(updated_appointment["heure_arrivee_attente"], "", "heure_arrivee_attente should be recorded when status changes to 'attente'")
+            
+            # Verify timestamp is reasonable (between before and after change)
+            arrival_time_str = updated_appointment["heure_arrivee_attente"]
+            try:
+                arrival_time = datetime.fromisoformat(arrival_time_str.replace('Z', '+00:00'))
+                # Allow some tolerance for processing time
+                self.assertGreaterEqual(arrival_time, before_change - timedelta(seconds=5))
+                self.assertLessEqual(arrival_time, after_change + timedelta(seconds=5))
+            except ValueError:
+                self.fail(f"Invalid timestamp format: {arrival_time_str}")
+            
+        finally:
+            # Clean up
+            requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+    
+    def test_status_update_with_explicit_arrival_time(self):
+        """Test changing to 'attente' with explicit heure_arrivee_attente parameter"""
+        # Get patients for testing
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for testing")
+        
+        patient_id = patients[0]["id"]
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Create a new appointment
+        test_appointment = {
+            "patient_id": patient_id,
+            "date": today,
+            "heure": "13:00",
+            "type_rdv": "visite",
+            "statut": "programme",
+            "motif": "Test explicit arrival time",
+            "paye": False
+        }
+        
+        response = requests.post(f"{self.base_url}/api/appointments", json=test_appointment)
+        self.assertEqual(response.status_code, 200)
+        appointment_id = response.json()["appointment_id"]
+        
+        try:
+            # Set explicit arrival time
+            explicit_arrival_time = "2025-01-14T13:15:00"
+            
+            # Change status to 'attente' with explicit arrival time
+            response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/statut", json={
+                "statut": "attente",
+                "heure_arrivee_attente": explicit_arrival_time
+            })
+            self.assertEqual(response.status_code, 200)
+            
+            # Get the appointment and verify explicit arrival timestamp was used
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            updated_appointment = None
+            for appt in appointments:
+                if appt["id"] == appointment_id:
+                    updated_appointment = appt
+                    break
+            
+            self.assertIsNotNone(updated_appointment, "Updated appointment not found")
+            self.assertEqual(updated_appointment["statut"], "attente")
+            self.assertEqual(updated_appointment["heure_arrivee_attente"], explicit_arrival_time, "Explicit arrival time should be used")
+            
+        finally:
+            # Clean up
+            requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+    
+    def test_priority_endpoint_basic_functionality(self):
+        """Test PUT /api/rdv/{rdv_id}/priority endpoint correctly updates priority values"""
+        # Get patients for testing
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for testing")
+        
+        patient_id = patients[0]["id"]
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Create multiple appointments in waiting status
+        appointment_ids = []
+        for i in range(3):
+            test_appointment = {
+                "patient_id": patient_id,
+                "date": today,
+                "heure": f"14:{i*15:02d}",  # 14:00, 14:15, 14:30
+                "type_rdv": "visite",
+                "statut": "attente",
+                "motif": f"Test priority {i+1}",
+                "paye": False
+            }
+            
+            response = requests.post(f"{self.base_url}/api/appointments", json=test_appointment)
+            self.assertEqual(response.status_code, 200)
+            appointment_ids.append(response.json()["appointment_id"])
+        
+        try:
+            # Test set_first action
+            response = requests.put(f"{self.base_url}/api/rdv/{appointment_ids[2]}/priority", json={"action": "set_first"})
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            self.assertIn("message", data)
+            self.assertIn("new_position", data)
+            self.assertEqual(data["new_position"], 1)
+            
+            # Test move_up action
+            response = requests.put(f"{self.base_url}/api/rdv/{appointment_ids[1]}/priority", json={"action": "move_up"})
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            self.assertIn("message", data)
+            self.assertIn("new_position", data)
+            
+            # Test move_down action
+            response = requests.put(f"{self.base_url}/api/rdv/{appointment_ids[0]}/priority", json={"action": "move_down"})
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            self.assertIn("message", data)
+            self.assertIn("new_position", data)
+            
+            # Test invalid action
+            response = requests.put(f"{self.base_url}/api/rdv/{appointment_ids[0]}/priority", json={"action": "invalid_action"})
+            self.assertEqual(response.status_code, 400)
+            
+            # Test missing action
+            response = requests.put(f"{self.base_url}/api/rdv/{appointment_ids[0]}/priority", json={})
+            self.assertEqual(response.status_code, 400)
+            
+            # Test non-existent appointment
+            response = requests.put(f"{self.base_url}/api/rdv/non_existent_id/priority", json={"action": "move_up"})
+            self.assertEqual(response.status_code, 404)
+            
+        finally:
+            # Clean up
+            for appointment_id in appointment_ids:
+                requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+    
+    def test_priority_endpoint_status_validation(self):
+        """Test priority endpoint only allows reordering for 'attente' status appointments"""
+        # Get patients for testing
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for testing")
+        
+        patient_id = patients[0]["id"]
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Create appointments with different statuses
+        test_statuses = ["programme", "en_cours", "termine"]
+        appointment_ids = []
+        
+        for i, status in enumerate(test_statuses):
+            test_appointment = {
+                "patient_id": patient_id,
+                "date": today,
+                "heure": f"15:{i*15:02d}",
+                "type_rdv": "visite",
+                "statut": status,
+                "motif": f"Test status {status}",
+                "paye": False
+            }
+            
+            response = requests.post(f"{self.base_url}/api/appointments", json=test_appointment)
+            self.assertEqual(response.status_code, 200)
+            appointment_ids.append(response.json()["appointment_id"])
+        
+        try:
+            # Test that non-attente appointments cannot be reordered
+            for appointment_id in appointment_ids:
+                response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/priority", json={"action": "move_up"})
+                self.assertEqual(response.status_code, 400, f"Should not allow reordering for non-attente appointments")
+                data = response.json()
+                self.assertIn("Only appointments with 'attente' status can be reordered", data["detail"])
+            
+        finally:
+            # Clean up
+            for appointment_id in appointment_ids:
+                requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+    
+    def test_waiting_patients_sorted_by_priority(self):
+        """Test that GET /api/rdv/jour/{date} returns waiting patients sorted by priority"""
+        # Get patients for testing
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for testing")
+        
+        patient_id = patients[0]["id"]
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Create multiple appointments in waiting status
+        appointment_ids = []
+        for i in range(4):
+            test_appointment = {
+                "patient_id": patient_id,
+                "date": today,
+                "heure": f"16:{i*10:02d}",  # 16:00, 16:10, 16:20, 16:30
+                "type_rdv": "visite",
+                "statut": "attente",
+                "motif": f"Test sorting {i+1}",
+                "paye": False
+            }
+            
+            response = requests.post(f"{self.base_url}/api/appointments", json=test_appointment)
+            self.assertEqual(response.status_code, 200)
+            appointment_ids.append(response.json()["appointment_id"])
+        
+        try:
+            # Reorder appointments using priority endpoint
+            # Move last appointment to first position
+            response = requests.put(f"{self.base_url}/api/rdv/{appointment_ids[3]}/priority", json={"action": "set_first"})
+            self.assertEqual(response.status_code, 200)
+            
+            # Move second appointment up
+            response = requests.put(f"{self.base_url}/api/rdv/{appointment_ids[1]}/priority", json={"action": "move_up"})
+            self.assertEqual(response.status_code, 200)
+            
+            # Get appointments and verify they are sorted by priority for waiting patients
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            # Filter waiting appointments
+            waiting_appointments = [appt for appt in appointments if appt["statut"] == "attente" and appt["id"] in appointment_ids]
+            
+            # Verify we have all our test appointments
+            self.assertEqual(len(waiting_appointments), 4, "Should have 4 waiting appointments")
+            
+            # Verify appointments are sorted by priority (lower priority number = higher priority)
+            for i in range(1, len(waiting_appointments)):
+                prev_priority = waiting_appointments[i-1].get("priority", 999)
+                curr_priority = waiting_appointments[i].get("priority", 999)
+                self.assertLessEqual(prev_priority, curr_priority, 
+                    f"Waiting appointments should be sorted by priority: {prev_priority} <= {curr_priority}")
+            
+            # Verify the reordered appointment is now first
+            self.assertEqual(waiting_appointments[0]["id"], appointment_ids[3], 
+                "Last appointment should now be first after set_first action")
+            
+        finally:
+            # Clean up
+            for appointment_id in appointment_ids:
+                requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+    
+    def test_complete_workflow_programme_to_attente_to_reorder(self):
+        """Test complete workflow: programme → attente (records timestamp) → reorder by priority → start consultation"""
+        # Get patients for testing
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for testing")
+        
+        patient_id = patients[0]["id"]
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Create multiple appointments in programme status
+        appointment_ids = []
+        for i in range(3):
+            test_appointment = {
+                "patient_id": patient_id,
+                "date": today,
+                "heure": f"17:{i*15:02d}",  # 17:00, 17:15, 17:30
+                "type_rdv": "visite",
+                "statut": "programme",
+                "motif": f"Test workflow {i+1}",
+                "paye": False
+            }
+            
+            response = requests.post(f"{self.base_url}/api/appointments", json=test_appointment)
+            self.assertEqual(response.status_code, 200)
+            appointment_ids.append(response.json()["appointment_id"])
+        
+        try:
+            # Step 1: Change all appointments from programme to attente (should record timestamps)
+            for appointment_id in appointment_ids:
+                response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/statut", json={"statut": "attente"})
+                self.assertEqual(response.status_code, 200)
+            
+            # Verify all appointments are now in attente with timestamps
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            waiting_appointments = [appt for appt in appointments if appt["id"] in appointment_ids]
+            self.assertEqual(len(waiting_appointments), 3, "Should have 3 waiting appointments")
+            
+            for appt in waiting_appointments:
+                self.assertEqual(appt["statut"], "attente")
+                self.assertNotEqual(appt["heure_arrivee_attente"], "", "Arrival timestamp should be recorded")
+            
+            # Step 2: Reorder appointments by priority
+            # Move last appointment to first position
+            response = requests.put(f"{self.base_url}/api/rdv/{appointment_ids[2]}/priority", json={"action": "set_first"})
+            self.assertEqual(response.status_code, 200)
+            
+            # Move middle appointment up
+            response = requests.put(f"{self.base_url}/api/rdv/{appointment_ids[1]}/priority", json={"action": "move_up"})
+            self.assertEqual(response.status_code, 200)
+            
+            # Verify new order
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            waiting_appointments = [appt for appt in appointments if appt["statut"] == "attente" and appt["id"] in appointment_ids]
+            self.assertEqual(len(waiting_appointments), 3, "Should still have 3 waiting appointments")
+            
+            # Verify appointments are sorted by priority
+            for i in range(1, len(waiting_appointments)):
+                prev_priority = waiting_appointments[i-1].get("priority", 999)
+                curr_priority = waiting_appointments[i].get("priority", 999)
+                self.assertLessEqual(prev_priority, curr_priority, "Should be sorted by priority")
+            
+            # Verify the reordered appointment is now first
+            self.assertEqual(waiting_appointments[0]["id"], appointment_ids[2], "Last appointment should now be first")
+            
+            # Step 3: Start consultation for first patient
+            first_appointment_id = waiting_appointments[0]["id"]
+            response = requests.put(f"{self.base_url}/api/rdv/{first_appointment_id}/statut", json={"statut": "en_cours"})
+            self.assertEqual(response.status_code, 200)
+            
+            # Verify status change
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            started_appointment = None
+            for appt in appointments:
+                if appt["id"] == first_appointment_id:
+                    started_appointment = appt
+                    break
+            
+            self.assertIsNotNone(started_appointment, "Started appointment not found")
+            self.assertEqual(started_appointment["statut"], "en_cours")
+            # Arrival timestamp should be preserved
+            self.assertNotEqual(started_appointment["heure_arrivee_attente"], "", "Arrival timestamp should be preserved")
+            
+        finally:
+            # Clean up
+            for appointment_id in appointment_ids:
+                requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+    
+    def test_waiting_time_calculation_accuracy(self):
+        """Test that waiting time is calculated from actual arrival time instead of appointment time"""
+        # Get patients for testing
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for testing")
+        
+        patient_id = patients[0]["id"]
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Create appointment with specific time
+        appointment_time = "09:00"
+        test_appointment = {
+            "patient_id": patient_id,
+            "date": today,
+            "heure": appointment_time,
+            "type_rdv": "visite",
+            "statut": "programme",
+            "motif": "Test waiting time calculation",
+            "paye": False
+        }
+        
+        response = requests.post(f"{self.base_url}/api/appointments", json=test_appointment)
+        self.assertEqual(response.status_code, 200)
+        appointment_id = response.json()["appointment_id"]
+        
+        try:
+            # Simulate patient arriving 30 minutes late
+            arrival_time = datetime.now().replace(hour=9, minute=30, second=0, microsecond=0)
+            arrival_timestamp = arrival_time.isoformat()
+            
+            # Change status to attente with explicit arrival time
+            response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/statut", json={
+                "statut": "attente",
+                "heure_arrivee_attente": arrival_timestamp
+            })
+            self.assertEqual(response.status_code, 200)
+            
+            # Get the appointment and verify arrival timestamp
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            updated_appointment = None
+            for appt in appointments:
+                if appt["id"] == appointment_id:
+                    updated_appointment = appt
+                    break
+            
+            self.assertIsNotNone(updated_appointment, "Updated appointment not found")
+            self.assertEqual(updated_appointment["statut"], "attente")
+            self.assertEqual(updated_appointment["heure_arrivee_attente"], arrival_timestamp)
+            
+            # Verify that waiting time calculation should use arrival time (09:30) not appointment time (09:00)
+            # This is a structural test - the actual waiting time calculation would be done in frontend
+            # But we verify the backend provides the correct data structure
+            self.assertNotEqual(updated_appointment["heure"], updated_appointment["heure_arrivee_attente"], 
+                "Appointment time and arrival time should be different")
+            
+            # Parse times to verify the difference
+            appt_time = datetime.strptime(f"{today} {updated_appointment['heure']}", "%Y-%m-%d %H:%M")
+            arrival_time_parsed = datetime.fromisoformat(updated_appointment["heure_arrivee_attente"].replace('Z', '+00:00'))
+            
+            # Arrival should be later than appointment time (patient was late)
+            self.assertGreater(arrival_time_parsed.replace(tzinfo=None), appt_time, 
+                "Arrival time should be later than appointment time")
+            
+        finally:
+            # Clean up
+            requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+    
+    def test_priority_system_integration_end_to_end(self):
+        """Test that appointments with lower priority numbers appear first in waiting room"""
+        # Get patients for testing
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for testing")
+        
+        patient_id = patients[0]["id"]
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Create 5 appointments in waiting status
+        appointment_ids = []
+        for i in range(5):
+            test_appointment = {
+                "patient_id": patient_id,
+                "date": today,
+                "heure": f"18:{i*10:02d}",  # 18:00, 18:10, 18:20, 18:30, 18:40
+                "type_rdv": "visite",
+                "statut": "attente",
+                "motif": f"Test integration {i+1}",
+                "paye": False
+            }
+            
+            response = requests.post(f"{self.base_url}/api/appointments", json=test_appointment)
+            self.assertEqual(response.status_code, 200)
+            appointment_ids.append(response.json()["appointment_id"])
+        
+        try:
+            # Perform multiple reordering operations
+            # Move 5th appointment to first
+            response = requests.put(f"{self.base_url}/api/rdv/{appointment_ids[4]}/priority", json={"action": "set_first"})
+            self.assertEqual(response.status_code, 200)
+            
+            # Move 2nd appointment up (should become 2nd after the moved appointment)
+            response = requests.put(f"{self.base_url}/api/rdv/{appointment_ids[1]}/priority", json={"action": "move_up"})
+            self.assertEqual(response.status_code, 200)
+            
+            # Move 3rd appointment down
+            response = requests.put(f"{self.base_url}/api/rdv/{appointment_ids[2]}/priority", json={"action": "move_down"})
+            self.assertEqual(response.status_code, 200)
+            
+            # Get final order and verify priority-based sorting
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            # Filter our test appointments in waiting status
+            waiting_appointments = [appt for appt in appointments if appt["statut"] == "attente" and appt["id"] in appointment_ids]
+            self.assertEqual(len(waiting_appointments), 5, "Should have 5 waiting appointments")
+            
+            # Verify strict priority ordering (lower number = higher priority = appears first)
+            for i in range(1, len(waiting_appointments)):
+                prev_priority = waiting_appointments[i-1].get("priority", 999)
+                curr_priority = waiting_appointments[i].get("priority", 999)
+                self.assertLess(prev_priority, curr_priority, 
+                    f"Priority ordering violated: appointment {i-1} priority {prev_priority} should be < appointment {i} priority {curr_priority}")
+            
+            # Verify the 5th appointment (index 4) is now first
+            self.assertEqual(waiting_appointments[0]["id"], appointment_ids[4], 
+                "5th appointment should be first after set_first action")
+            
+            # Verify priority values are consecutive integers starting from 0
+            expected_priorities = list(range(len(waiting_appointments)))
+            actual_priorities = [appt.get("priority", 999) for appt in waiting_appointments]
+            self.assertEqual(actual_priorities, expected_priorities, 
+                "Priority values should be consecutive integers starting from 0")
+            
+        finally:
+            # Clean up
+            for appointment_id in appointment_ids:
+                requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+
 if __name__ == "__main__":
     unittest.main()
