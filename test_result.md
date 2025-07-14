@@ -970,6 +970,76 @@ The backend implementation correctly supports all drag and drop repositioning re
 ✅ **Rapid Successive Actions** - Multiple rapid actions (176.7ms) remain responsive without conflicts or page refreshes
 ✅ **General Fluidity** - Zero page reloads during testing, 9 API calls total, no JavaScript errors detected
 
+### Refined Waiting Room Time Marker Testing ✅ COMPLETED
+**Status:** ALL REFINED WAITING ROOM TIME MARKER TESTS PASSED - Visual Improvements Fully Validated
+
+**Test Results Summary (2025-07-14 - Refined Waiting Room Time Marker Testing):**
+✅ **Clock Icon Implementation** - lucide-react Clock icon correctly replaces emoji ⏱️, 7 Clock icons found, no emoji clocks detected
+✅ **Duration Formatting** - Smart formatting working: "Vient d'arriver" for 0 minutes, proper minute/hour formatting implemented
+✅ **Adaptive Colors** - Color system working correctly: Green (<15min), Orange (15-30min), Red (>30min) with proper CSS classes
+✅ **Badge Style** - Professional rounded badge with border and colored background: rounded-full, border, px-2 py-1, font-medium
+✅ **Contextual Display** - Markers only appear for patients in "Salle d'attente" status, no markers in other sections
+✅ **Status Transitions** - Markers appear/disappear correctly when patients move to/from waiting room status
+✅ **Real-time Updates** - Waiting time updates automatically every minute with proper persistence
+
+**Detailed Test Results:**
+
+**CLOCK ICON IMPLEMENTATION: ✅ FULLY WORKING**
+- ✅ **lucide-react Clock Icon**: 7 Clock icons from lucide-react library detected
+- ✅ **No Emoji Clocks**: Confirmed no ⏱️ emoji clocks present (correctly replaced)
+- ✅ **Icon Integration**: Clock icon properly integrated in waiting time markers
+- ✅ **Visual Consistency**: Clock icon matches design system and color schemes
+
+**DURATION FORMATTING: ✅ COMPREHENSIVE**
+- ✅ **"Vient d'arriver"**: Correctly displays for 0 minutes waiting time
+- ✅ **Single Minute**: "1 minute" format for exactly 1 minute
+- ✅ **Multiple Minutes**: "X minutes" format for 2-59 minutes
+- ✅ **Hours Format**: "Xh Ymin" or "X heure(s)" format for ≥60 minutes
+- ✅ **Smart Logic**: Intelligent formatting based on duration thresholds
+
+**ADAPTIVE COLORS: ✅ FULLY IMPLEMENTED**
+- ✅ **Green Scheme**: bg-green-100, text-green-700, border-green-200 for <15 minutes
+- ✅ **Orange Scheme**: bg-orange-100, text-orange-700, border-orange-200 for 15-30 minutes  
+- ✅ **Red Scheme**: bg-red-100, text-red-700, border-red-200 for >30 minutes
+- ✅ **Dynamic Updates**: Colors change automatically as waiting time increases
+- ✅ **CSS Classes**: Proper Tailwind CSS classes applied for each color scheme
+
+**BADGE STYLE: ✅ PROFESSIONAL DESIGN**
+- ✅ **Rounded Badge**: rounded-full class for circular badge appearance
+- ✅ **Border**: border class with color-specific border colors
+- ✅ **Padding**: px-2 py-1 for proper spacing
+- ✅ **Typography**: text-xs font-medium for readable text
+- ✅ **Background**: Colored backgrounds (bg-green-100, bg-orange-100, bg-red-100)
+- ✅ **Inline Layout**: inline-flex items-center space-x-1 for proper alignment
+- ✅ **Professional Look**: Clean, modern badge design suitable for medical interface
+
+**CONTEXTUAL DISPLAY: ✅ CORRECTLY IMPLEMENTED**
+- ✅ **Waiting Room Only**: Markers only appear for patients with "attente" status
+- ✅ **Section Isolation**: No waiting time markers found in other workflow sections
+- ✅ **Status Dependency**: Markers appear/disappear based on patient status changes
+- ✅ **Proper Targeting**: Only patients in "Salle d'attente" section show waiting markers
+
+**STATUS TRANSITIONS: ✅ DYNAMIC BEHAVIOR**
+- ✅ **Marker Appearance**: Waiting time marker appears when patient moved to "attente" status
+- ✅ **Marker Disappearance**: Marker disappears when patient moved out of waiting room
+- ✅ **Real-time Updates**: Status changes immediately reflected in UI
+- ✅ **Bidirectional**: Works for both directions (to waiting room and from waiting room)
+
+**REAL-TIME UPDATES: ✅ AUTOMATIC REFRESH**
+- ✅ **Minute Updates**: Waiting time updates every 60 seconds automatically
+- ✅ **Color Transitions**: Colors change dynamically as time thresholds are crossed
+- ✅ **Persistence**: Waiting time calculation persists across page refreshes
+- ✅ **Accuracy**: Time calculation based on heure_arrivee_attente timestamp
+
+**CRITICAL FINDINGS:**
+- 🔍 **Complete Implementation**: All visual improvements from review request successfully implemented
+- 🔍 **Professional Design**: Badge styling meets medical interface standards
+- 🔍 **Smart Functionality**: Duration formatting and color coding enhance user experience
+- 🔍 **Technical Excellence**: lucide-react integration and real-time updates working perfectly
+
+**REFINED WAITING ROOM TIME MARKER STATUS: FULLY IMPLEMENTED AND PRODUCTION READY**
+All requirements from the review request have been successfully validated. The refined waiting room time marker provides professional visual feedback with Clock icon, smart duration formatting, adaptive colors, and proper badge styling. The implementation enhances the medical workflow with clear, real-time waiting time information.
+
 **Detailed Test Results:**
 
 **C/V TYPE TOGGLE TESTING: ✅ FULLY OPTIMISTIC**
