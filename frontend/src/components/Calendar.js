@@ -1462,20 +1462,14 @@ const WorkflowCard = ({
               {appointment.patient?.prenom} {appointment.patient?.nom}
             </button>
             
-            {/* Compteur durée d'attente pour patients en attente */}
+            {/* Marqueur d'attente raffiné pour patients en attente */}
             {sectionType === 'attente' && (
-              <div className="flex items-center space-x-1 text-xs mt-1">
-                <Clock className="w-3 h-3 text-orange-500" />
-                <span className={`font-medium ${
-                  waitingTime < 15 ? 'text-green-600' : 
-                  waitingTime < 30 ? 'text-orange-600' : 
-                  'text-red-600'
-                }`}>
-                  {waitingTime === 0 ? 'Vient d\'arriver' : 
-                   waitingTime === 1 ? '1 minute' : 
-                   `${waitingTime} minutes`}
-                </span>
-                <span className="text-gray-400">d'attente</span>
+              <div className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium border mt-1 ${
+                getWaitingTimeStyle(waitingTime).bgColor
+              } ${getWaitingTimeStyle(waitingTime).textColor} ${getWaitingTimeStyle(waitingTime).borderColor}`}>
+                <Clock className={`w-3 h-3 ${getWaitingTimeStyle(waitingTime).iconColor}`} />
+                <span>{formatWaitingTime(waitingTime)}</span>
+                <span className="text-gray-500">d'attente</span>
               </div>
             )}
           </div>
