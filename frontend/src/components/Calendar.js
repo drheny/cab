@@ -1046,7 +1046,7 @@ const WeekView = ({ weekData, onStatusUpdate, onRoomAssignment, onEdit, onDelete
                             </div>
                             <div className="flex items-center space-x-1">
                               <span className={`px-1 py-0.5 rounded text-xs ${
-                                apt.type_rdv === 'visite' ? 'bg-blue-200 text-blue-800' : 'bg-green-200 text-green-800'
+                                apt.type_rdv === 'visite' ? 'bg-green-200 text-green-800' : 'bg-blue-200 text-blue-800'
                               }`}>
                                 {apt.type_rdv === 'visite' ? 'V' : 'C'}
                               </span>
@@ -1055,6 +1055,16 @@ const WeekView = ({ weekData, onStatusUpdate, onRoomAssignment, onEdit, onDelete
                                   {apt.salle === 'salle1' ? 'S1' : 'S2'}
                                 </span>
                               )}
+                              {/* Badge de paiement */}
+                              <span className={`px-1 py-0.5 rounded text-xs ${
+                                apt.type_rdv === 'controle' 
+                                  ? 'bg-green-200 text-green-800' 
+                                  : apt.paye 
+                                    ? 'bg-green-200 text-green-800' 
+                                    : 'bg-red-200 text-red-800'
+                              }`}>
+                                {apt.type_rdv === 'controle' ? 'Gratuit' : apt.paye ? 'Payé' : 'Non Payé'}
+                              </span>
                             </div>
                           </div>
                         ))}
