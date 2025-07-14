@@ -411,7 +411,7 @@ const Calendar = ({ user }) => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
 
-  const viewPatientDetails = async (patientId) => {
+  const viewPatientDetails = useCallback(async (patientId) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/api/patients/${patientId}`);
       setSelectedPatient(response.data);
@@ -420,34 +420,9 @@ const Calendar = ({ user }) => {
       console.error('Error fetching patient details:', error);
       toast.error('Erreur lors du chargement des détails du patient');
     }
-  };
+  }, [API_BASE_URL]);
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'absent': return 'bg-gray-100 text-gray-800';
-      case 'attente': return 'bg-yellow-100 text-yellow-800';
-      case 'en_cours': return 'bg-blue-100 text-blue-800';
-      case 'termine': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'absent': return 'Absent';
-      case 'attente': return 'En attente';
-      case 'en_cours': return 'En cours';
-      case 'termine': return 'Terminé';
-      default: return 'Absent';
-    }
-  };
-
-  const getWhatsAppLink = (phone) => {
-    const cleanPhone = phone.replace(/\D/g, '');
-    return `https://wa.me/212${cleanPhone.startsWith('0') ? cleanPhone.substring(1) : cleanPhone}`;
-  };
-
-  const navigateDate = (direction) => {
+  const navigateDate = useCallback((direction) => {
     const currentDate = new Date(selectedDate);
     if (direction === 'prev') {
       currentDate.setDate(currentDate.getDate() - 1);
@@ -455,16 +430,42 @@ const Calendar = ({ user }) => {
       currentDate.setDate(currentDate.getDate() + 1);
     }
     setSelectedDate(currentDate.toISOString().split('T')[0]);
-  };
+  }, [selectedDate]);
 
-  const formatDate = (dateString) => {
+  // Memoized utility functions
+  const getStatusColor = useCallback((status) => {
+    switch (status) {
+      case 'absent': return 'bg-gray-100 text-gray-800';
+      case 'attente': return 'bg-yellow-100 text-yellow-800';
+      case 'en_cours': return 'bg-blue-100 text-blue-800';
+      case 'termine': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  }, []);
+
+  const getStatusText = useCallback((status) => {
+    switch (status) {
+      case 'absent': return 'Absent';
+      case 'attente': return 'En attente';
+      case 'en_cours': return 'En cours';
+      case 'termine': return 'Terminé';
+      default: return 'Absent';
+    }
+  }, []);
+
+  const getWhatsAppLink = useCallback((phone) => {
+    const cleanPhone = phone.replace(/\D/g, '');
+    return `https://wa.me/212${cleanPhone.startsWith('0') ? cleanPhone.substring(1) : cleanPhone}`;
+  }, []);
+
+  const formatDate = useCallback((dateString) => {
     return new Date(dateString).toLocaleDateString('fr-FR', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
       day: 'numeric'
     });
-  };
+  }, []);
 
   // Sort appointments by status priority for list view
   const sortedAppointments = useMemo(() => {
