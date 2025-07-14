@@ -10030,5 +10030,306 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
         
         print("✅ Cleanup completed")
 
+    # ========== MODAL RDV CORRECTION TESTS (SPECIFIC SCENARIO) ==========
+    
+    def test_modal_rdv_correction_specific_scenario(self):
+        """Test the specific scenario from review request: TestCorrection + DebugOK + 21612345000 + RDV today 18:00 controle"""
+        print("\n=== Testing Modal RDV Correction Specific Scenario ===")
+        
+        # Step 1: Create new patient with exact data from review request
+        patient_data = {
+            "nom": "TestCorrection",
+            "prenom": "DebugOK", 
+            "telephone": "21612345000"
+        }
+        
+        print(f"Creating patient: {patient_data}")
+        response = requests.post(f"{self.base_url}/api/patients", json=patient_data)
+        self.assertEqual(response.status_code, 200, f"Patient creation failed: {response.text}")
+        
+        create_response = response.json()
+        print(f"Patient creation response: {create_response}")
+        
+        # CRITICAL TEST: Verify the response contains patient_id (not id)
+        self.assertIn("patient_id", create_response, "Response should contain 'patient_id' field")
+        self.assertIn("message", create_response, "Response should contain 'message' field")
+        
+        patient_id = create_response["patient_id"]
+        print(f"✅ Patient created successfully with patient_id: {patient_id}")
+        
+        try:
+            # Step 2: Verify patient was created correctly
+            response = requests.get(f"{self.base_url}/api/patients/{patient_id}")
+            self.assertEqual(response.status_code, 200, f"Patient retrieval failed: {response.text}")
+            
+            patient_details = response.json()
+            self.assertEqual(patient_details["nom"], "TestCorrection")
+            self.assertEqual(patient_details["prenom"], "DebugOK")
+            self.assertEqual(patient_details["telephone"], "21612345000")
+            print(f"✅ Patient details verified: {patient_details['nom']} {patient_details['prenom']}")
+            
+            # Step 3: Create RDV using the patient_id from the response
+            today = datetime.now().strftime("%Y-%m-%d")
+            appointment_data = {
+                "patient_id": patient_id,  # Using patient_id from API response
+                "date": today,
+                "heure": "18:00",
+                "type_rdv": "controle",
+                "motif": "Test correction bug"
+            }
+            
+            print(f"Creating appointment: {appointment_data}")
+            response = requests.post(f"{self.base_url}/api/appointments", json=appointment_data)
+            self.assertEqual(response.status_code, 200, f"Appointment creation failed: {response.text}")
+            
+            appointment_response = response.json()
+            print(f"Appointment creation response: {appointment_response}")
+            
+            self.assertIn("appointment_id", appointment_response, "Response should contain 'appointment_id' field")
+            appointment_id = appointment_response["appointment_id"]
+            print(f"✅ Appointment created successfully with appointment_id: {appointment_id}")
+            
+            # Step 4: Verify appointment was created with correct patient linkage
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200, f"Day appointments retrieval failed: {response.text}")
+            
+            appointments = response.json()
+            created_appointment = None
+            for appt in appointments:
+                if appt["id"] == appointment_id:
+                    created_appointment = appt
+                    break
+            
+            self.assertIsNotNone(created_appointment, "Created appointment not found in day view")
+            print(f"✅ Appointment found in day view")
+            
+            # Step 5: CRITICAL TEST - Verify patient_id linkage is correct
+            self.assertEqual(created_appointment["patient_id"], patient_id, 
+                           f"Patient ID mismatch: expected {patient_id}, got {created_appointment['patient_id']}")
+            print(f"✅ Patient ID linkage verified: {created_appointment['patient_id']}")
+            
+            # Step 6: Verify appointment details
+            self.assertEqual(created_appointment["date"], today)
+            self.assertEqual(created_appointment["heure"], "18:00")
+            self.assertEqual(created_appointment["type_rdv"], "controle")
+            self.assertEqual(created_appointment["motif"], "Test correction bug")
+            print(f"✅ Appointment details verified: {created_appointment['type_rdv']} at {created_appointment['heure']}")
+            
+            # Step 7: Verify patient info is included in appointment response
+            self.assertIn("patient", created_appointment, "Patient info should be included in appointment")
+            patient_info = created_appointment["patient"]
+            self.assertEqual(patient_info["nom"], "TestCorrection")
+            self.assertEqual(patient_info["prenom"], "DebugOK")
+            print(f"✅ Patient info in appointment verified: {patient_info['nom']} {patient_info['prenom']}")
+            
+            # Step 8: Test data persistence - verify both records exist independently
+            # Check patient still exists
+            response = requests.get(f"{self.base_url}/api/patients/{patient_id}")
+            self.assertEqual(response.status_code, 200, "Patient should still exist")
+            
+            # Check appointment via general appointments endpoint
+            response = requests.get(f"{self.base_url}/api/appointments?date={today}")
+            self.assertEqual(response.status_code, 200, "Appointments retrieval failed")
+            all_appointments = response.json()
+            
+            found_in_general = any(appt["id"] == appointment_id for appt in all_appointments)
+            self.assertTrue(found_in_general, "Appointment should be found in general appointments endpoint")
+            print(f"✅ Data persistence verified - both patient and appointment exist independently")
+            
+            # Step 9: Performance test - measure response times
+            import time
+            
+            # Test patient creation performance
+            start_time = time.time()
+            test_patient = {"nom": "PerfTest", "prenom": "Patient", "telephone": "21612345001"}
+            response = requests.post(f"{self.base_url}/api/patients", json=test_patient)
+            patient_creation_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                test_patient_id = response.json()["patient_id"]
+                
+                # Test appointment creation performance
+                start_time = time.time()
+                test_appointment = {
+                    "patient_id": test_patient_id,
+                    "date": today,
+                    "heure": "19:00",
+                    "type_rdv": "visite",
+                    "motif": "Performance test"
+                }
+                response = requests.post(f"{self.base_url}/api/appointments", json=test_appointment)
+                appointment_creation_time = (time.time() - start_time) * 1000
+                
+                print(f"✅ Performance: Patient creation: {patient_creation_time:.1f}ms, Appointment creation: {appointment_creation_time:.1f}ms")
+                
+                # Clean up performance test data
+                if response.status_code == 200:
+                    requests.delete(f"{self.base_url}/api/appointments/{response.json()['appointment_id']}")
+                requests.delete(f"{self.base_url}/api/patients/{test_patient_id}")
+            
+            # Clean up main test appointment
+            requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+            print(f"✅ Test appointment cleaned up")
+            
+        finally:
+            # Clean up main test patient
+            requests.delete(f"{self.base_url}/api/patients/{patient_id}")
+            print(f"✅ Test patient cleaned up")
+        
+        print("=== Modal RDV Correction Test PASSED ===\n")
+    
+    def test_modal_rdv_patient_id_extraction(self):
+        """Test that patient_id is correctly extracted from API response (not id)"""
+        print("\n=== Testing Patient ID Extraction from API Response ===")
+        
+        # Test multiple patient creations to ensure consistent response format
+        test_cases = [
+            {"nom": "Test1", "prenom": "Patient1", "telephone": "21612345001"},
+            {"nom": "Test2", "prenom": "Patient2", "telephone": "21612345002"},
+            {"nom": "Test3", "prenom": "Patient3", "telephone": "21612345003"}
+        ]
+        
+        created_patients = []
+        
+        try:
+            for i, patient_data in enumerate(test_cases):
+                print(f"Testing patient {i+1}: {patient_data}")
+                
+                response = requests.post(f"{self.base_url}/api/patients", json=patient_data)
+                self.assertEqual(response.status_code, 200, f"Patient {i+1} creation failed")
+                
+                response_data = response.json()
+                print(f"Response {i+1}: {response_data}")
+                
+                # CRITICAL: Verify response format
+                self.assertIn("patient_id", response_data, f"Patient {i+1} response missing 'patient_id'")
+                self.assertIn("message", response_data, f"Patient {i+1} response missing 'message'")
+                self.assertNotIn("id", response_data, f"Patient {i+1} response should not contain 'id' field")
+                
+                patient_id = response_data["patient_id"]
+                created_patients.append(patient_id)
+                
+                # Verify the patient_id is a valid UUID format
+                import re
+                uuid_pattern = r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+                self.assertTrue(re.match(uuid_pattern, patient_id), f"Patient {i+1} ID is not valid UUID format")
+                
+                print(f"✅ Patient {i+1} created with valid patient_id: {patient_id}")
+        
+        finally:
+            # Clean up all created patients
+            for patient_id in created_patients:
+                requests.delete(f"{self.base_url}/api/patients/{patient_id}")
+            print(f"✅ Cleaned up {len(created_patients)} test patients")
+        
+        print("=== Patient ID Extraction Test PASSED ===\n")
+    
+    def test_modal_rdv_concurrent_operations(self):
+        """Test concurrent patient + appointment creation to verify stability"""
+        print("\n=== Testing Concurrent Modal RDV Operations ===")
+        
+        import threading
+        import time
+        
+        results = []
+        errors = []
+        
+        def create_patient_and_appointment(thread_id):
+            try:
+                # Create patient
+                patient_data = {
+                    "nom": f"Concurrent{thread_id}",
+                    "prenom": f"Test{thread_id}",
+                    "telephone": f"2161234500{thread_id}"
+                }
+                
+                start_time = time.time()
+                response = requests.post(f"{self.base_url}/api/patients", json=patient_data)
+                if response.status_code != 200:
+                    errors.append(f"Thread {thread_id}: Patient creation failed - {response.status_code}")
+                    return
+                
+                patient_id = response.json()["patient_id"]
+                patient_time = time.time() - start_time
+                
+                # Create appointment
+                today = datetime.now().strftime("%Y-%m-%d")
+                appointment_data = {
+                    "patient_id": patient_id,
+                    "date": today,
+                    "heure": f"{14 + thread_id}:00",
+                    "type_rdv": "visite",
+                    "motif": f"Concurrent test {thread_id}"
+                }
+                
+                start_time = time.time()
+                response = requests.post(f"{self.base_url}/api/appointments", json=appointment_data)
+                if response.status_code != 200:
+                    errors.append(f"Thread {thread_id}: Appointment creation failed - {response.status_code}")
+                    # Clean up patient
+                    requests.delete(f"{self.base_url}/api/patients/{patient_id}")
+                    return
+                
+                appointment_id = response.json()["appointment_id"]
+                appointment_time = time.time() - start_time
+                
+                results.append({
+                    "thread_id": thread_id,
+                    "patient_id": patient_id,
+                    "appointment_id": appointment_id,
+                    "patient_time": patient_time * 1000,
+                    "appointment_time": appointment_time * 1000
+                })
+                
+            except Exception as e:
+                errors.append(f"Thread {thread_id}: Exception - {str(e)}")
+        
+        # Run 3 concurrent operations
+        threads = []
+        for i in range(3):
+            thread = threading.Thread(target=create_patient_and_appointment, args=(i,))
+            threads.append(thread)
+        
+        # Start all threads
+        start_time = time.time()
+        for thread in threads:
+            thread.start()
+        
+        # Wait for all threads to complete
+        for thread in threads:
+            thread.join()
+        
+        total_time = (time.time() - start_time) * 1000
+        
+        # Verify results
+        self.assertEqual(len(errors), 0, f"Concurrent operations had errors: {errors}")
+        self.assertEqual(len(results), 3, f"Expected 3 successful operations, got {len(results)}")
+        
+        print(f"✅ All 3 concurrent operations completed successfully in {total_time:.1f}ms")
+        
+        # Verify all operations completed successfully
+        for result in results:
+            print(f"Thread {result['thread_id']}: Patient {result['patient_time']:.1f}ms, Appointment {result['appointment_time']:.1f}ms")
+            
+            # Verify data integrity
+            today = datetime.now().strftime("%Y-%m-%d")
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            found = any(appt["id"] == result["appointment_id"] for appt in appointments)
+            self.assertTrue(found, f"Appointment from thread {result['thread_id']} not found")
+        
+        # Clean up
+        try:
+            for result in results:
+                requests.delete(f"{self.base_url}/api/appointments/{result['appointment_id']}")
+                requests.delete(f"{self.base_url}/api/patients/{result['patient_id']}")
+            print(f"✅ Cleaned up all concurrent test data")
+        except:
+            pass  # Best effort cleanup
+        
+        print("=== Concurrent Modal RDV Operations Test PASSED ===\n")
+
 if __name__ == "__main__":
     unittest.main()
