@@ -559,7 +559,6 @@ const Calendar = ({ user }) => {
             appointments={groupedAppointments.attente}
             sectionType="attente"
             onStatusUpdate={handleStatusUpdate}
-            onRoomAssignment={handleRoomAssignment}
             onTypeToggle={handleTypeToggle}
             onPaymentUpdate={handlePaymentUpdate}
             onStartConsultation={handleStartConsultation}
