@@ -1020,6 +1020,9 @@ async def update_rdv_whatsapp(rdv_id: str, whatsapp_data: dict):
             "whatsapp_timestamp": whatsapp_timestamp
         }
         
+    except HTTPException:
+        # Re-raise HTTPException to maintain proper status codes
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating WhatsApp status: {str(e)}")
 
