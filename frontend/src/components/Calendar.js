@@ -627,9 +627,9 @@ const Calendar = ({ user }) => {
             onViewPatient={viewPatientDetails}
           />
           
-          {/* 4. Absents non encore venus */}
+          {/* 4. RDV Programmés */}
           <WorkflowSection
-            title="🔴 Absents non encore venus"
+            title="📅 RDV Programmés"
             appointments={groupedAppointments.absent}
             sectionType="absent"
             onStatusUpdate={handleStatusUpdate}
