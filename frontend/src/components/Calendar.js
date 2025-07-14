@@ -1165,9 +1165,11 @@ const WorkflowCard = ({
     }
   }, [showStatusDropdown]);
 
-  // Calculer temps d'attente pour patients en attente
+  // Calculer temps d'attente pour patients en salle d'attente seulement
   useEffect(() => {
-    if (sectionType === 'attente') {
+    if (sectionType === 'attente' && appointment.statut === 'attente') {
+      // Le compteur commence seulement quand le patient est en statut "attente"
+      // On utilise l'heure de création ou de mise à jour du statut
       const startTime = new Date(`2025-01-01 ${appointment.heure}`);
       const now = new Date();
       const currentTime = new Date(`2025-01-01 ${now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`);
@@ -1184,7 +1186,7 @@ const WorkflowCard = ({
       
       return () => clearInterval(interval);
     }
-  }, [sectionType, appointment.heure]);
+  }, [sectionType, appointment.heure, appointment.statut]);
 
   const getWhatsAppLink = (numero) => {
     if (!numero) return '#';
@@ -1195,16 +1197,6 @@ const WorkflowCard = ({
   const handleStatusChange = (newStatus) => {
     onStatusUpdate(appointment.id, newStatus);
     setShowStatusDropdown(false);
-  };
-
-  const handleRoomChange = (room) => {
-    console.log('Changing room for appointment:', appointment.id, 'to room:', room);
-    if (onRoomAssignment) {
-      onRoomAssignment(appointment.id, room);
-      setShowRoomDropdown(false);
-    } else {
-      console.error('onRoomAssignment function not provided');
-    }
   };
 
   const getPaymentStatus = () => {
