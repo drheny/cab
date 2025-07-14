@@ -1228,13 +1228,13 @@ const WorkflowCard = ({
   onPaymentUpdate,
   onStartConsultation,
   onFinishConsultation,
-  onMoveUp,
-  onMoveDown,
-  onSetPriority,
+  onRoomAssignment,
   onEdit, 
   onDelete, 
   onViewPatient,
-  isCompleted 
+  isCompleted,
+  dragHandleProps,
+  isDragging = false
 }) => {
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -1300,13 +1300,34 @@ const WorkflowCard = ({
     return { status: 'non_paye', text: 'Non payé', color: 'bg-red-100 text-red-800 font-bold' };
   };
 
+  const getRoomDisplayText = (salle) => {
+    if (!salle || salle === '') return '';
+    return salle === 'salle1' ? 'S1' : 'S2';
+  };
+
+  const getRoomColor = (salle) => {
+    if (!salle || salle === '') return 'bg-gray-100 text-gray-600';
+    return salle === 'salle1' ? 'bg-purple-100 text-purple-800' : 'bg-orange-100 text-orange-800';
+  };
+
   const paymentStatus = getPaymentStatus();
 
   return (
-    <div className="p-4 hover:bg-white/50 transition-colors">
+    <div className={`p-4 hover:bg-white/50 transition-colors ${isDragging ? 'shadow-lg' : ''}`}>
       <div className="flex items-center justify-between">
         {/* Partie gauche - Info patient */}
         <div className="flex items-center space-x-4 flex-1">
+          {/* Drag handle for waiting room */}
+          {sectionType === 'attente' && totalCount > 1 && (
+            <div 
+              {...dragHandleProps}
+              className="p-1 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing"
+              title="Glisser pour réorganiser"
+            >
+              <GripVertical className="w-4 h-4" />
+            </div>
+          )}
+          
           {/* Heure */}
           <div className="flex items-center space-x-2 min-w-0">
             <Clock className="w-4 h-4 text-gray-400" />
@@ -1386,6 +1407,24 @@ const WorkflowCard = ({
             {paymentStatus.text}
           </button>
 
+          {/* Badge Salle - Cliquable pour patients en attente */}
+          {sectionType === 'attente' && (
+            <button
+              onClick={() => onRoomAssignment(appointment.id, appointment.salle)}
+              className={`px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer hover:opacity-80 ${getRoomColor(appointment.salle)}`}
+              title={`Cliquer pour changer la salle. Actuel: ${appointment.salle === '' ? 'Aucune' : appointment.salle === 'salle1' ? 'Salle 1' : 'Salle 2'}`}
+            >
+              {getRoomDisplayText(appointment.salle) || <Building2 className="w-3 h-3" />}
+            </button>
+          )}
+
+          {/* Affichage salle pour autres sections */}
+          {sectionType !== 'attente' && appointment.salle && (
+            <span className={`px-2 py-1 rounded text-xs font-medium ${getRoomColor(appointment.salle)}`}>
+              {getRoomDisplayText(appointment.salle)}
+            </span>
+          )}
+
           {/* Bouton ENTRER pour patients en attente */}
           {sectionType === 'attente' && (
             <button
@@ -1395,49 +1434,6 @@ const WorkflowCard = ({
             >
               ENTRER
             </button>
-          )}
-
-          {/* Boutons de réorganisation pour salle d'attente */}
-          {sectionType === 'attente' && totalCount > 1 && (
-            <>
-              {/* Bouton Priorité */}
-              {index > 0 && onSetPriority && (
-                <button
-                  onClick={() => onSetPriority(appointment.id)}
-                  className="p-1 text-orange-600 hover:bg-orange-100 rounded transition-colors"
-                  title="Mettre en priorité (premier)"
-                >
-                  <AlertTriangle className="w-4 h-4" />
-                </button>
-              )}
-              
-              {/* Bouton Monter */}
-              {index > 0 && onMoveUp && (
-                <button
-                  onClick={() => onMoveUp(appointment.id)}
-                  className="p-1 text-gray-600 hover:bg-gray-100 rounded transition-colors"
-                  title="Monter dans la liste"
-                >
-                  <ChevronUp className="w-4 h-4" />
-                </button>
-              )}
-              
-              {/* Bouton Descendre */}
-              {index < totalCount - 1 && onMoveDown && (
-                <button
-                  onClick={() => onMoveDown(appointment.id)}
-                  className="p-1 text-gray-600 hover:bg-gray-100 rounded transition-colors"
-                  title="Descendre dans la liste"
-                >
-                  <ChevronDown className="w-4 h-4" />
-                </button>
-              )}
-              
-              {/* Position dans la liste */}
-              <span className="text-xs text-gray-500 font-medium px-2">
-                {index + 1}/{totalCount}
-              </span>
-            </>
           )}
 
           {/* Bouton WhatsApp */}
