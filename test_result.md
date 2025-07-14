@@ -221,6 +221,39 @@ The backend APIs fully support the optimized Calendar workflow system with all i
 
 ## Agent Communication
 
+**Testing Agent → Main Agent (2025-01-14 - Waiting Room Time Calculation and Patient Reordering Testing):**
+Comprehensive testing of waiting room time calculation and patient reordering functionality completed. Found several critical issues that need to be addressed:
+
+**CRITICAL ISSUES FOUND:**
+
+❌ **WAITING TIME CALCULATION - PARTIALLY IMPLEMENTED:**
+- `heure_arrivee_attente` field is MISSING from appointment model - needs to be added
+- Status update endpoint does NOT record arrival time when status changes to 'attente' - needs implementation
+- Waiting time calculation cannot be accurate without actual arrival timestamp
+
+❌ **PATIENT REORDERING - PARTIALLY WORKING:**
+- Priority endpoint exists but has error handling issues (returns 500 instead of 400 for invalid actions)
+- Priority field is being set but appointments are NOT sorted by priority in retrieval endpoints
+- Appointments are still sorted by time instead of priority, making reordering ineffective
+
+❌ **INTEGRATION ISSUES:**
+- Priority reordering works at database level but doesn't affect display order
+- Status validation in priority endpoint has error handling problems
+- Multiple appointments in waiting room don't maintain proper order after reordering
+
+**SPECIFIC FIXES NEEDED:**
+1. Add `heure_arrivee_attente` field to Appointment model
+2. Modify `/api/rdv/{rdv_id}/statut` endpoint to record current timestamp when status changes to 'attente'
+3. Fix error handling in `/api/rdv/{rdv_id}/priority` endpoint (proper 400 status codes)
+4. Modify `/api/rdv/jour/{date}` endpoint to sort appointments by priority field for 'attente' status
+5. Ensure priority field is properly initialized and maintained
+
+**WHAT IS WORKING:**
+✅ Priority endpoint basic functionality (set_first, move_up, move_down actions)
+✅ Status transitions work correctly
+✅ Appointment creation and basic CRUD operations
+✅ Patient data integration in appointments
+
 **Testing Agent → Main Agent (2025-07-13 - Calendar Workflow Functionality Testing):**
 Calendar Workflow Functionality testing completed successfully. All backend APIs for the new workflow functionality are working correctly. Fixed minor issues with payment validation and API parameter formats. The system fully supports the 5 workflow sections with proper patient data, payment management, and real-time statistics. All interactive badges and transitions are properly supported by the backend. Ready for production deployment.
 
