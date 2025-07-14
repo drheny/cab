@@ -1195,7 +1195,7 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
         raise HTTPException(status_code=400, detail="action is required")
     
     # Validate action
-    valid_actions = ["move_up", "move_down", "set_first"]
+    valid_actions = ["move_up", "move_down", "set_first", "set_position"]
     if action not in valid_actions:
         raise HTTPException(status_code=400, detail=f"Invalid action. Must be one of: {valid_actions}")
     
@@ -1210,12 +1210,12 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
     
     try:
         
-        # Get all appointments for the same date with 'attente' status, sorted by current position
+        # Get all appointments for the same date with 'attente' status, sorted by current priority
         date = appointment["date"]
         waiting_appointments = list(appointments_collection.find({
             "date": date,
             "statut": "attente"
-        }).sort("heure", 1))  # Sort by time as default ordering
+        }).sort([("priority", 1), ("heure", 1)]))  # Sort by priority first, then time
         
         if len(waiting_appointments) <= 1:
             return {"message": "Only one appointment in waiting room, no reordering needed"}
@@ -1234,6 +1234,9 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
         if action == "set_first":
             # Move to first position
             new_pos = 0
+        elif action == "set_position":
+            # Set to specific position (for drag and drop)
+            new_pos = min(max(0, priority_data.get("position", 0)), len(waiting_appointments) - 1)
         elif action == "move_up":
             # Move up one position (decrease index)
             new_pos = max(0, current_pos - 1)
