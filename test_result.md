@@ -3938,3 +3938,108 @@ The reported bug stating "neither the patient nor the appointment gets created" 
 
 **MODAL FUNCTIONALITY STATUS: FULLY FUNCTIONAL AND PRODUCTION READY**
 The modal functionality for creating appointments with new patients is working perfectly. All backend APIs support the complete workflow as intended. The system is ready for production use with confidence in its reliability and data integrity.
+
+### Calendar Functionality After Room Assignment Toggle Cleanup Testing ✅ COMPLETED
+**Status:** ALL CALENDAR CLEANUP TESTS PASSED - Core Functionality Fully Validated After Room Assignment Toggle Removal
+
+**Test Results Summary (2025-01-14 - Calendar Functionality After Room Assignment Cleanup Testing):**
+✅ **Core Calendar APIs** - All core workflow APIs working correctly without room assignment dependency
+✅ **Workflow Status Transitions** - Status transitions working seamlessly without room assignment requirements
+✅ **Patient Reordering Functionality** - All reordering operations (move_up, move_down, set_first) working correctly
+✅ **Payment Logic** - Automatic gratuit setting for controle and payment management for visite appointments working correctly
+✅ **Data Structure Validation** - Appointments grouping by status and waiting time calculation working properly
+
+**Detailed Test Results:**
+
+**CORE CALENDAR APIS: ✅ FULLY WORKING**
+- ✅ **GET /api/rdv/jour/{today}**: Fetches today's appointments with proper patient info and all required fields
+- ✅ **PUT /api/rdv/{rdv_id}/statut**: Updates appointment status correctly (programme → attente → en_cours → termine)
+- ✅ **PUT /api/rdv/{rdv_id}**: Updates appointment type (visite/controle) with correct payment logic
+- ✅ **PUT /api/rdv/{rdv_id}/paiement**: Payment management working with all payment methods (espece, carte, cheque, virement)
+- ✅ **Patient Info Integration**: All appointments include complete patient information for workflow functionality
+
+**WORKFLOW STATUS TRANSITIONS: ✅ FULLY WORKING**
+- ✅ **Status Workflow**: Complete workflow transitions (programme → attente → en_cours → termine) tested successfully
+- ✅ **Status Independence**: Status updates work correctly without room assignment dependency
+- ✅ **Status Persistence**: All status changes properly persisted and retrievable
+- ✅ **Workflow Sections**: Appointments can be grouped correctly by status for 5 workflow sections
+- ✅ **Room Assignment Optional**: Room assignment field still available but not required for status transitions
+
+**PATIENT REORDERING FUNCTIONALITY: ✅ FULLY WORKING**
+- ✅ **PUT /api/rdv/{rdv_id}/priority**: All reordering actions working correctly
+- ✅ **move_up Action**: Successfully moves patients up in waiting room queue
+- ✅ **move_down Action**: Successfully moves patients down in waiting room queue (with proper boundary handling)
+- ✅ **set_first Action**: Successfully moves patients to first position in queue
+- ✅ **Position Tracking**: Proper position tracking with new_position, previous_position, and total_waiting
+- ✅ **Error Handling**: Appropriate error responses for invalid actions and non-existent appointments
+
+**PAYMENT LOGIC: ✅ FULLY WORKING**
+- ✅ **Automatic Gratuit for Controle**: Controle appointments automatically marked as gratuit (free) with paye=true
+- ✅ **Payment Status for Visite**: Visite appointments default to non_paye status requiring manual payment
+- ✅ **Payment Methods**: All payment methods working correctly (espece, carte, cheque, virement)
+- ✅ **Payment Records**: Proper creation/deletion of payment records in database
+- ✅ **Type Toggle Logic**: Payment status correctly updated when switching between visite and controle
+
+**DATA STRUCTURE VALIDATION: ✅ COMPREHENSIVE**
+- ✅ **Status Grouping**: Appointments can be grouped correctly by status for workflow sections
+- ✅ **Waiting Time Calculation**: Logic works correctly for attente status appointments
+- ✅ **Statistics Integration**: Statistics endpoint provides accurate data structure with status breakdown
+- ✅ **Data Consistency**: Total RDV counts consistent across status and type breakdowns
+- ✅ **Patient Info Structure**: All required patient fields present for workflow badges and interactions
+
+**CRITICAL FINDINGS:**
+- 🔍 **No Core Functionality Issues**: All core Calendar APIs working correctly after room assignment toggle cleanup
+- 🔍 **Status Transitions Independent**: Status updates work seamlessly without room assignment dependency
+- 🔍 **Reordering Functionality Intact**: Patient reordering in waiting room working correctly
+- 🔍 **Payment Logic Preserved**: Automatic gratuit for controle and manual payment for visite working correctly
+- 🔍 **Data Structure Maintained**: All data structures for workflow sections and statistics working properly
+
+**CALENDAR FUNCTIONALITY STATUS: FULLY FUNCTIONAL AFTER CLEANUP**
+All requirements from the review request have been successfully validated. The Calendar functionality works correctly after removing room assignment toggle dependency. All core APIs, workflow transitions, patient reordering, payment logic, and data structure validation are working properly.
+
+**Testing Agent → Main Agent (2025-01-14 - Calendar Functionality After Room Assignment Cleanup Testing):**
+Comprehensive Calendar functionality testing completed successfully after room assignment toggle cleanup. All requirements from the review request have been thoroughly validated:
+
+✅ **CORE CALENDAR APIS - PASSED:**
+- GET /api/rdv/jour/{today} fetching appointments with patient info working correctly
+- PUT /api/rdv/{rdv_id}/statut updating appointment status working seamlessly
+- PUT /api/rdv/{rdv_id} updating appointment type with payment logic working correctly
+- PUT /api/rdv/{rdv_id}/paiement payment management with all methods working properly
+
+✅ **WORKFLOW STATUS TRANSITIONS - PASSED:**
+- Status changes (programme → attente → en_cours → termine) working correctly
+- Status updates work without room assignment dependency
+- Workflow sections can be properly organized by status
+- All transitions persist correctly in database
+
+✅ **PATIENT REORDERING - PASSED:**
+- PUT /api/rdv/{rdv_id}/priority endpoint working correctly
+- move_up, move_down, set_first actions all functional
+- Proper position tracking and boundary handling
+- Error handling for invalid operations working
+
+✅ **PAYMENT LOGIC - PASSED:**
+- Automatic gratuit setting for controle appointments working correctly
+- Payment status updates for visite appointments working properly
+- All payment methods (espece, carte, cheque, virement) functional
+- Payment record management working correctly
+
+✅ **DATA STRUCTURE VALIDATION - PASSED:**
+- Appointments can be grouped correctly by status
+- Waiting time calculation logic working for attente status
+- Statistics integration providing accurate data
+- Data consistency maintained across all endpoints
+
+**Key Implementation Verification:**
+- All core Calendar APIs working correctly without room assignment toggle dependency
+- Status transitions work seamlessly without requiring room assignments
+- Patient reordering functionality preserved and working correctly
+- Payment logic for controle (gratuit) and visite (manual payment) working properly
+- Data structures for workflow sections and statistics maintained correctly
+
+**CALENDAR FUNCTIONALITY: CLEANUP SUCCESSFUL AND FULLY FUNCTIONAL**
+The Calendar functionality has been successfully cleaned up with room assignment toggle removal while maintaining all core workflow capabilities. All APIs are working correctly and the system is ready for production use.
+
+**Testing Agent → Main Agent (2025-01-14 - Calendar Functionality After Room Assignment Cleanup Testing - FINAL):**
+Calendar functionality testing after room assignment toggle cleanup completed successfully. All core Calendar APIs are working correctly without room assignment dependency. Status transitions, patient reordering, payment logic, and data structure validation all passed comprehensive testing. The cleanup was successful and the system maintains full workflow functionality. Ready for production deployment.
+
