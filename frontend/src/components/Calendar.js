@@ -269,6 +269,71 @@ const Calendar = ({ user }) => {
     }
   };
 
+  // ====== FONCTIONS RÉORGANISATION SALLE D'ATTENTE ======
+  
+  // Monter un patient dans la liste d'attente
+  const handleMoveUp = async (appointmentId) => {
+    try {
+      const waitingPatients = groupedAppointments.attente;
+      const currentIndex = waitingPatients.findIndex(apt => apt.id === appointmentId);
+      
+      if (currentIndex > 0) {
+        // Échanger les positions avec le patient au-dessus
+        const patientAbove = waitingPatients[currentIndex - 1];
+        
+        await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/priority`, { 
+          action: 'move_up',
+          target_id: patientAbove.id 
+        });
+        
+        toast.success('Patient déplacé vers le haut');
+        fetchData();
+      }
+    } catch (error) {
+      console.error('Error moving patient up:', error);
+      toast.error('Erreur lors du déplacement');
+    }
+  };
+
+  // Descendre un patient dans la liste d'attente
+  const handleMoveDown = async (appointmentId) => {
+    try {
+      const waitingPatients = groupedAppointments.attente;
+      const currentIndex = waitingPatients.findIndex(apt => apt.id === appointmentId);
+      
+      if (currentIndex < waitingPatients.length - 1) {
+        // Échanger les positions avec le patient en-dessous
+        const patientBelow = waitingPatients[currentIndex + 1];
+        
+        await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/priority`, { 
+          action: 'move_down',
+          target_id: patientBelow.id 
+        });
+        
+        toast.success('Patient déplacé vers le bas');
+        fetchData();
+      }
+    } catch (error) {
+      console.error('Error moving patient down:', error);
+      toast.error('Erreur lors du déplacement');
+    }
+  };
+
+  // Mettre un patient en priorité (premier dans la liste)
+  const handleSetPriority = async (appointmentId) => {
+    try {
+      await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/priority`, { 
+        action: 'set_first' 
+      });
+      
+      toast.success('Patient mis en priorité');
+      fetchData();
+    } catch (error) {
+      console.error('Error setting priority:', error);
+      toast.error('Erreur lors de la mise en priorité');
+    }
+  };
+
   // États pour les modales
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
