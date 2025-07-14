@@ -266,66 +266,36 @@ const Calendar = ({ user }) => {
 
   // ====== FONCTIONS RÉORGANISATION SALLE D'ATTENTE ======
   
-  // Monter un patient dans la liste d'attente
-  const handleMoveUp = async (appointmentId) => {
+  // Drag and drop reordering for waiting room
+  const handleDragEnd = async (result) => {
+    const { destination, source, draggableId } = result;
+    
+    // If no destination, exit
+    if (!destination) return;
+    
+    // If dropped in same position, exit
+    if (destination.index === source.index) return;
+    
     try {
       const waitingPatients = groupedAppointments.attente;
-      const currentIndex = waitingPatients.findIndex(apt => apt.id === appointmentId);
+      const draggedAppointment = waitingPatients.find(apt => apt.id === draggableId);
       
-      if (currentIndex > 0) {
-        // Échanger les positions avec le patient au-dessus
-        const patientAbove = waitingPatients[currentIndex - 1];
-        
-        await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/priority`, { 
-          action: 'move_up',
-          target_id: patientAbove.id 
-        });
-        
-        toast.success('Patient déplacé vers le haut');
-        fetchData();
-      }
-    } catch (error) {
-      console.error('Error moving patient up:', error);
-      toast.error('Erreur lors du déplacement');
-    }
-  };
-
-  // Descendre un patient dans la liste d'attente
-  const handleMoveDown = async (appointmentId) => {
-    try {
-      const waitingPatients = groupedAppointments.attente;
-      const currentIndex = waitingPatients.findIndex(apt => apt.id === appointmentId);
+      if (!draggedAppointment) return;
       
-      if (currentIndex < waitingPatients.length - 1) {
-        // Échanger les positions avec le patient en-dessous
-        const patientBelow = waitingPatients[currentIndex + 1];
-        
-        await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/priority`, { 
-          action: 'move_down',
-          target_id: patientBelow.id 
-        });
-        
-        toast.success('Patient déplacé vers le bas');
-        fetchData();
-      }
-    } catch (error) {
-      console.error('Error moving patient down:', error);
-      toast.error('Erreur lors du déplacement');
-    }
-  };
-
-  // Mettre un patient en priorité (premier dans la liste)
-  const handleSetPriority = async (appointmentId) => {
-    try {
-      await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/priority`, { 
-        action: 'set_first' 
+      // Calculate new priority based on position
+      const newPriority = destination.index;
+      
+      // Update appointment priority in backend
+      await axios.put(`${API_BASE_URL}/api/rdv/${draggableId}/priority`, {
+        action: 'set_position',
+        position: newPriority
       });
       
-      toast.success('Patient mis en priorité');
-      fetchData();
+      toast.success('Patient repositionné');
+      await fetchData(); // Refresh data
     } catch (error) {
-      console.error('Error setting priority:', error);
-      toast.error('Erreur lors de la mise en priorité');
+      console.error('Error reordering patient:', error);
+      toast.error('Erreur lors du repositionnement');
     }
   };
 
