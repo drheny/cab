@@ -9355,40 +9355,61 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
         """
         print("\n=== TESTING DRAG AND DROP SPECIFIC ISSUES ===")
         
-        # Step 1: Create 4 test appointments with 'attente' status
+        # Step 1: Get existing patients and create additional ones if needed
         response = requests.get(f"{self.base_url}/api/patients")
         self.assertEqual(response.status_code, 200)
         patients_data = response.json()
         patients = patients_data["patients"]
-        self.assertTrue(len(patients) >= 4, "Need at least 4 patients for testing")
+        
+        # Create additional patients if we don't have enough
+        created_patients = []
+        while len(patients) + len(created_patients) < 4:
+            patient_num = len(patients) + len(created_patients) + 1
+            new_patient = {
+                "nom": f"TestPatient{patient_num}",
+                "prenom": f"DragDrop",
+                "telephone": f"21650000{patient_num:03d}"
+            }
+            
+            response = requests.post(f"{self.base_url}/api/patients", json=new_patient)
+            self.assertEqual(response.status_code, 200)
+            patient_id = response.json()["patient_id"]
+            created_patients.append(patient_id)
+            print(f"✅ Created additional patient: TestPatient{patient_num}")
+        
+        # Get updated patient list
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        all_patients = patients_data["patients"]
         
         today = datetime.now().strftime("%Y-%m-%d")
         test_appointments = []
         patient_names = ["Patient A", "Patient B", "Patient C", "Patient D"]
         
-        # Create 4 appointments in sequence
-        for i in range(4):
-            appointment_data = {
-                "patient_id": patients[i % len(patients)]["id"],
-                "date": today,
-                "heure": f"{9 + i}:00",
-                "type_rdv": "visite",
-                "statut": "attente",
-                "motif": f"Test appointment for {patient_names[i]}",
-                "priority": i  # Set initial priorities 0, 1, 2, 3
-            }
-            
-            response = requests.post(f"{self.base_url}/api/appointments", json=appointment_data)
-            self.assertEqual(response.status_code, 200)
-            appointment_id = response.json()["appointment_id"]
-            test_appointments.append({
-                "id": appointment_id,
-                "patient_name": patient_names[i],
-                "expected_priority": i
-            })
-            print(f"✅ Created {patient_names[i]} with priority {i}")
-        
         try:
+            # Create 4 appointments in sequence
+            for i in range(4):
+                appointment_data = {
+                    "patient_id": all_patients[i]["id"],
+                    "date": today,
+                    "heure": f"{9 + i}:00",
+                    "type_rdv": "visite",
+                    "statut": "attente",
+                    "motif": f"Test appointment for {patient_names[i]}",
+                    "priority": i  # Set initial priorities 0, 1, 2, 3
+                }
+                
+                response = requests.post(f"{self.base_url}/api/appointments", json=appointment_data)
+                self.assertEqual(response.status_code, 200)
+                appointment_id = response.json()["appointment_id"]
+                test_appointments.append({
+                    "id": appointment_id,
+                    "patient_name": patient_names[i],
+                    "expected_priority": i
+                })
+                print(f"✅ Created {patient_names[i]} with priority {i}")
+            
             # Step 2: Verify initial order with priorities (0, 1, 2, 3)
             print("\n--- Step 2: Verify Initial Order ---")
             response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
@@ -9539,6 +9560,14 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
                     print(f"✅ Cleaned up {test_apt['patient_name']}")
                 except:
                     print(f"⚠️ Failed to clean up {test_apt['patient_name']}")
+            
+            # Clean up created patients
+            for patient_id in created_patients:
+                try:
+                    requests.delete(f"{self.base_url}/api/patients/{patient_id}")
+                    print(f"✅ Cleaned up created patient {patient_id}")
+                except:
+                    print(f"⚠️ Failed to clean up patient {patient_id}")
     
     def test_drag_and_drop_move_up_move_down_actions(self):
         """Test move_up and move_down actions specifically"""
