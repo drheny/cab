@@ -213,14 +213,9 @@ const AppointmentModal = ({
                       className="border border-gray-300 rounded px-3 py-2"
                     />
                   </div>
-                  <button
-                    type="button"
-                    onClick={handleNewPatientSubmit}
-                    className="mt-3 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm"
-                    disabled
-                  >
-                    Créer patient (utilisez le bouton "Créer RDV" ci-dessous)
-                  </button>
+                  <p className="mt-3 text-sm text-gray-600">
+                    Utilisez le bouton "Créer patient + RDV" ci-dessous pour créer le patient et le rendez-vous en une seule action.
+                  </p>
                 </div>
               )}
             </div>
