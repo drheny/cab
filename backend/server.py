@@ -703,8 +703,19 @@ async def get_rdv_jour(date: str):
                 "lien_whatsapp": patient.get("lien_whatsapp", "")
             }
     
-    # Sort by time
-    appointments.sort(key=lambda x: x["heure"])
+    # Sort appointments - by priority for waiting patients, by time for others
+    def sort_appointments(appointments):
+        def sort_key(apt):
+            if apt["statut"] == "attente":
+                # For waiting patients, sort by priority (lower number = higher priority)
+                return (0, apt.get("priority", 999))
+            else:
+                # For other statuses, sort by time
+                return (1, apt["heure"])
+        
+        return sorted(appointments, key=sort_key)
+    
+    appointments = sort_appointments(appointments)
     
     return appointments
 
