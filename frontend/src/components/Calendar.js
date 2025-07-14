@@ -860,7 +860,7 @@ const Calendar = ({ user }) => {
       )}
     </div>
   );
-};
+});
 
 // Composant WeekView pour la vue semaine
 const WeekView = ({ weekData, onStatusUpdate, onRoomAssignment, onEdit, onDelete, onViewPatient, selectedDate, onCreateAppointment }) => {
