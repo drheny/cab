@@ -1189,6 +1189,19 @@ const WorkflowCard = ({
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [waitingTime, setWaitingTime] = useState(0);
 
+  // Fermer les dropdowns en cliquant à l'extérieur
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setShowStatusDropdown(false);
+      setShowRoomDropdown(false);
+    };
+
+    if (showStatusDropdown || showRoomDropdown) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [showStatusDropdown, showRoomDropdown]);
+
   // Calculer temps d'attente pour patients en attente
   useEffect(() => {
     if (sectionType === 'attente') {
