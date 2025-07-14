@@ -224,6 +224,22 @@ const Calendar = ({ user }) => {
     }
   };
 
+  // Marquer patient en salle d'attente avec timestamp
+  const handlePatientToWaitingRoom = async (appointmentId) => {
+    try {
+      const currentTime = new Date().toISOString();
+      await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/statut`, { 
+        statut: 'attente',
+        heure_arrivee_attente: currentTime
+      });
+      toast.success('Patient en salle d\'attente');
+      fetchData();
+    } catch (error) {
+      console.error('Error moving to waiting room:', error);
+      toast.error('Erreur lors de la mise en salle d\'attente');
+    }
+  };
+
   // Terminer consultation (en_cours → termine)
   const handleFinishConsultation = async (appointmentId) => {
     try {
