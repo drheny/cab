@@ -681,16 +681,19 @@ All visual improvements specified in the review request are working correctly. T
 
 **CALENDAR MODULE STATUS: PRODUCTION READY - ALL REQUIREMENTS FULFILLED**
 
-### Modal Functionality for New Patient Appointments Testing ✅ COMPLETED
-**Status:** ALL MODAL NEW PATIENT APPOINTMENT TESTS PASSED - Complete Workflow Fully Validated
+### Modal RDV Workflow Integration Testing ✅ COMPLETED
+**Status:** ALL MODAL RDV WORKFLOW TESTS PASSED - New Patient + Appointment Creation Fully Validated
 
-**Test Results Summary (2025-01-12 - Modal New Patient Appointments Testing):**
-✅ **New Patient Creation API** - POST /api/patients endpoint working perfectly with modal data structure (nom, prenom, telephone)
-✅ **Appointment Creation API** - POST /api/appointments endpoint working correctly with patient_id from newly created patient
-✅ **Integration Flow** - Complete workflow validated: create patient → create appointment → verify both retrievable
-✅ **Edge Cases Handling** - All edge cases properly handled (missing fields, invalid phone, invalid patient_id)
-✅ **Data Validation** - Patient data structure matches frontend expectations, appointment linkage working correctly
-✅ **Patient Lookup** - All patient lookup methods working after creation (direct, paginated, search)
+**Test Results Summary (2025-01-14 - Modal RDV Workflow Integration Testing):**
+✅ **New Patient + RDV Workflow** - Complete workflow for creating patient and appointment simultaneously working perfectly
+✅ **Exact Scenario Validation** - Tested exact review request scenario (nom="Test Modal", prenom="Integration", telephone="21612345678", RDV today 14:00 visite)
+✅ **Backend API Integration** - POST /api/patients and POST /api/appointments endpoints working correctly in sequence
+✅ **Data Persistence** - Both patient and appointment data properly persisted and retrievable via all endpoints
+✅ **Patient-Appointment Linkage** - Patient information correctly linked in appointment responses
+✅ **Performance Validation** - Workflow completes in under 3000ms with excellent response times
+✅ **Concurrent Operations** - Multiple simultaneous patient+appointment creations work correctly
+✅ **Edge Cases Handling** - Proper validation and error handling for missing fields and invalid data
+✅ **Multi-Endpoint Retrieval** - Created data retrievable via direct lookup, pagination, search, and day view
 
 **Detailed Test Results:**
 
