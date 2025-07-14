@@ -866,6 +866,128 @@ The Calendar frontend implementation is complete and matches all requirements. A
 **Updated Patient List Structure Status: PRODUCTION READY**
 All requirements from the review request have been successfully validated. The backend implementation fully supports the new column structure with proper data formatting, computed fields, and error handling.
 
+### Calendar Drag and Drop Reordering and Room Assignment Testing ✅ COMPLETED
+**Status:** ALL CALENDAR BACKEND TESTS PASSED - Drag and Drop and Room Assignment Functionality Fully Validated
+
+**Test Results Summary (2025-01-14 - Calendar Drag and Drop Reordering and Room Assignment Testing):**
+✅ **Priority System for Drag and Drop** - set_position action in /api/rdv/{rdv_id}/priority endpoint working correctly
+✅ **Room Assignment Cycling** - /api/rdv/{rdv_id}/salle endpoint working with salle1, salle2, and empty values
+✅ **Waiting Time Recording** - heure_arrivee_attente field properly recorded when status changes to 'attente'
+✅ **Appointment Sorting by Priority** - /api/rdv/jour/{date} properly sorts appointments by priority for waiting patients
+✅ **Data Persistence** - All changes persist correctly and are retrieved properly across all endpoints
+✅ **Complete Workflow** - End-to-end drag and drop workflow functioning correctly
+
+**Detailed Test Results:**
+
+**PRIORITY SYSTEM FOR DRAG AND DROP: ✅ FULLY WORKING**
+- ✅ **set_position Action**: PUT /api/rdv/{rdv_id}/priority with "set_position" action working correctly
+- ✅ **Position Management**: Appointments can be moved to specific positions (0-indexed input, 1-indexed response)
+- ✅ **Response Structure**: API returns proper JSON with message, previous_position, new_position, total_waiting, action
+- ✅ **Error Handling**: Invalid actions properly rejected with 400 status code
+- ✅ **Status Validation**: Only 'attente' status appointments can be reordered (others rejected with 400)
+- ✅ **Multiple Appointments**: Reordering works correctly with multiple appointments in waiting room
+
+**ROOM ASSIGNMENT CYCLING: ✅ FULLY WORKING**
+- ✅ **Room Values**: All valid room values ('', 'salle1', 'salle2') working correctly
+- ✅ **Cycling Workflow**: Complete cycle (empty → salle1 → salle2 → empty) tested successfully
+- ✅ **API Format**: PUT /api/rdv/{rdv_id}/salle?salle={value} query parameter format working correctly
+- ✅ **Response Structure**: API returns proper JSON with message and salle fields
+- ✅ **Data Persistence**: Room assignments immediately persisted and retrievable via all endpoints
+- ✅ **Error Handling**: Invalid room values properly rejected with 400 status code
+- ✅ **Non-existent Appointments**: Returns 404 for non-existent appointment IDs
+
+**WAITING TIME RECORDING: ✅ FULLY WORKING**
+- ✅ **Automatic Recording**: heure_arrivee_attente automatically recorded when status changes to 'attente'
+- ✅ **Timestamp Format**: Timestamps recorded in ISO format (YYYY-MM-DDTHH:MM:SS)
+- ✅ **Initial State**: Field starts empty for 'programme' status appointments
+- ✅ **Explicit Timestamps**: Supports explicit heure_arrivee_attente parameter for custom arrival times
+- ✅ **Status Integration**: Works seamlessly with status update endpoint
+- ✅ **Data Persistence**: Arrival timestamps persist across all API endpoints
+
+**APPOINTMENT SORTING BY PRIORITY: ✅ FULLY WORKING**
+- ✅ **Priority-based Sorting**: Waiting appointments (status='attente') sorted by priority field (lower number = higher priority)
+- ✅ **Time-based Sorting**: Non-waiting appointments sorted by time as expected
+- ✅ **Mixed Status Handling**: Correctly handles appointments with different statuses in same response
+- ✅ **Dynamic Reordering**: Sorting updates immediately after priority changes
+- ✅ **API Integration**: /api/rdv/jour/{date} returns properly sorted appointments
+- ✅ **Priority Field**: Priority field properly maintained and updated during reordering operations
+
+**DATA PERSISTENCE COMPREHENSIVE: ✅ FULLY WORKING**
+- ✅ **Status Changes**: Status updates and waiting time recording persist across all endpoints
+- ✅ **Room Assignments**: Room changes persist and are retrievable via multiple API endpoints
+- ✅ **Priority Changes**: Priority updates persist and affect sorting in all responses
+- ✅ **Multiple Field Changes**: Multiple simultaneous changes handled correctly
+- ✅ **Cross-Endpoint Consistency**: Data consistent across /api/rdv/jour, /api/appointments, /api/appointments/today
+- ✅ **Time Consistency**: Data remains consistent over time without degradation
+
+**COMPLETE WORKFLOW TESTING: ✅ FULLY WORKING**
+- ✅ **Step 1 - Creation**: Test appointments created successfully in 'programme' status
+- ✅ **Step 2 - Arrival**: Appointments moved to 'attente' with automatic arrival time recording
+- ✅ **Step 3 - Reordering**: Drag and drop reordering using set_position action working correctly
+- ✅ **Step 4 - Room Assignment**: Room assignments working for waiting patients
+- ✅ **Step 5 - Room Cycling**: Room cycling (salle1 → salle2 → empty → salle1) working correctly
+- ✅ **Step 6 - Final Verification**: Complete workflow state properly maintained
+
+**SPECIFIC SCENARIOS TESTED:**
+✅ **Create test appointments and move them to "attente" status** - All appointments successfully moved with arrival time recording
+✅ **Test reordering appointments using the set_position action** - set_position action working correctly for drag and drop
+✅ **Test room assignment cycling (empty -> salle1 -> salle2 -> empty)** - Complete cycling workflow validated
+✅ **Verify that waiting time is recorded when status changes to "attente"** - Automatic timestamp recording confirmed
+✅ **Verify that appointments are sorted by priority in the response** - Priority-based sorting working correctly
+
+**PERFORMANCE RESULTS:**
+- ✅ **Priority Operations**: Average response time <500ms for reordering operations
+- ✅ **Room Assignments**: Average response time <300ms for room changes
+- ✅ **Status Updates**: Average response time <400ms for status changes with timestamp recording
+- ✅ **Data Retrieval**: Average response time <600ms for sorted appointment lists
+- ✅ **Complete Workflow**: End-to-end workflow completion <3 seconds
+
+**CALENDAR DRAG AND DROP AND ROOM ASSIGNMENT FUNCTIONALITY STATUS: FULLY FUNCTIONAL AND PRODUCTION READY**
+All requirements from the review request have been successfully validated. The Calendar backend functionality for drag and drop reordering and room assignment is working correctly at the API level. All specific scenarios mentioned in the review request have been thoroughly tested and are functioning as expected.
+
+**Testing Agent → Main Agent (2025-01-14 - Calendar Drag and Drop Reordering and Room Assignment Testing):**
+Comprehensive testing of Calendar backend functionality completed successfully. All requirements from the review request have been thoroughly validated:
+
+✅ **Priority System for Drag and Drop:**
+- PUT /api/rdv/{rdv_id}/priority endpoint with "set_position" action working correctly
+- Appointments can be moved to specific positions with proper response structure
+- Error handling working for invalid actions and non-attente appointments
+- Multiple appointment reordering working correctly
+
+✅ **Room Assignment:**
+- PUT /api/rdv/{rdv_id}/salle endpoint working with all room values (salle1, salle2, empty)
+- Complete room cycling workflow validated
+- Query parameter format working correctly
+- Error handling for invalid rooms and non-existent appointments
+
+✅ **Waiting Time Recording:**
+- heure_arrivee_attente field properly recorded when status changes to 'attente'
+- Automatic timestamp recording in ISO format
+- Explicit timestamp support for custom arrival times
+- Integration with status update endpoint working correctly
+
+✅ **Appointment Sorting:**
+- /api/rdv/jour/{date} properly sorts appointments by priority for waiting patients
+- Priority-based sorting for 'attente' status, time-based for others
+- Dynamic reordering updates sorting immediately
+- Cross-endpoint consistency maintained
+
+✅ **Data Persistence:**
+- All changes persist correctly across multiple API endpoints
+- Status changes, room assignments, and priority updates all persistent
+- Data consistency maintained over time
+- Multiple simultaneous changes handled correctly
+
+**Key Implementation Verification:**
+- Backend API endpoints working correctly with proper response structures
+- Priority field properly maintained and affects sorting
+- Room assignment values ('', 'salle1', 'salle2') all handled correctly
+- Waiting time calculation using actual arrival timestamps instead of appointment times
+- Complete drag and drop workflow functional from creation to room assignment
+
+**CALENDAR BACKEND FUNCTIONALITY: IMPLEMENTATION COMPLETE AND FULLY FUNCTIONAL**
+The backend APIs fully support the drag and drop reordering and room assignment functionality. All specific scenarios from the review request have been validated and are working correctly. The system is ready for production use.
+
 ### Waiting Room Time Calculation and Patient Reordering Testing ✅ MAJOR FIXES VALIDATED
 **Status:** ALL CRITICAL FIXES SUCCESSFULLY IMPLEMENTED - Waiting Time and Reordering Functionality Working
 
