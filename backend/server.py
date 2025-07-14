@@ -843,15 +843,25 @@ async def update_rdv_statut(rdv_id: str, status_data: dict):
     if isinstance(status_data, dict):
         statut = status_data.get("statut")
         salle = status_data.get("salle", "")
+        heure_arrivee_attente = status_data.get("heure_arrivee_attente", "")
     else:
         statut = status_data
         salle = ""
+        heure_arrivee_attente = ""
     
     valid_statuts = ["programme", "attente", "en_cours", "termine", "absent", "retard"]
     if statut not in valid_statuts:
         raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuts}")
     
     update_data = {"statut": statut, "updated_at": datetime.now()}
+    
+    # Si on passe en salle d'attente, enregistrer l'heure d'arrivée
+    if statut == "attente":
+        if heure_arrivee_attente:
+            update_data["heure_arrivee_attente"] = heure_arrivee_attente
+        else:
+            update_data["heure_arrivee_attente"] = datetime.now().isoformat()
+    
     if salle:
         valid_salles = ["", "salle1", "salle2"]
         if salle in valid_salles:
