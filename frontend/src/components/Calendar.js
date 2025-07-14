@@ -261,7 +261,7 @@ const Calendar = ({ user }) => {
   }, [API_BASE_URL, fetchData]);
 
   // Démarrer consultation (attente → en_cours)
-  const handleStartConsultation = async (appointmentId) => {
+  const handleStartConsultation = useCallback(async (appointmentId) => {
     // Optimistic update - update UI immediately
     setAppointments(prevAppointments => 
       prevAppointments.map(apt => {
@@ -281,10 +281,10 @@ const Calendar = ({ user }) => {
       // Revert optimistic update on error
       await fetchData();
     }
-  };
+  }, [API_BASE_URL, fetchData]);
 
   // Marquer patient en salle d'attente avec timestamp
-  const handlePatientToWaitingRoom = async (appointmentId) => {
+  const handlePatientToWaitingRoom = useCallback(async (appointmentId) => {
     try {
       const currentTime = new Date().toISOString();
       await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/statut`, { 
@@ -297,10 +297,10 @@ const Calendar = ({ user }) => {
       console.error('Error moving to waiting room:', error);
       toast.error('Erreur lors de la mise en salle d\'attente');
     }
-  };
+  }, [API_BASE_URL, fetchData]);
 
   // Terminer consultation (en_cours → termine)
-  const handleFinishConsultation = async (appointmentId) => {
+  const handleFinishConsultation = useCallback(async (appointmentId) => {
     try {
       await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/statut`, { statut: 'termine' });
       toast.success('Consultation terminée');
@@ -309,10 +309,10 @@ const Calendar = ({ user }) => {
       console.error('Error finishing consultation:', error);
       toast.error('Erreur lors de la fin de consultation');
     }
-  };
+  }, [API_BASE_URL, fetchData]);
 
   // Gestion des paiements
-  const handlePaymentUpdate = async (appointmentId, paymentData) => {
+  const handlePaymentUpdate = useCallback(async (appointmentId, paymentData) => {
     // Optimistic update - update UI immediately
     setAppointments(prevAppointments => 
       prevAppointments.map(apt => {
@@ -332,7 +332,7 @@ const Calendar = ({ user }) => {
       // Revert optimistic update on error
       await fetchData();
     }
-  };
+  }, [API_BASE_URL, fetchData]);
 
   // ====== FONCTIONS RÉORGANISATION SALLE D'ATTENTE ======
   
