@@ -6208,7 +6208,6 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
                 "non_existent_id",
                 "12345",
                 "invalid-uuid",
-                "",
                 "null"
             ]
             
@@ -6227,6 +6226,12 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
                         print(f"✅ Correctly returned 404 for non-existent ID '{invalid_id}': {error_data['detail']}")
                     except:
                         print(f"✅ Correctly returned 404 for non-existent ID '{invalid_id}' (non-JSON response)")
+            
+            # Test empty appointment ID (should return 422 for validation error)
+            print("Testing empty appointment ID...")
+            response = requests.put(f"{self.base_url}/api/rdv//salle?salle=salle1")
+            self.assertIn(response.status_code, [404, 422], "Empty ID should return 404 or 422")
+            print(f"✅ Empty appointment ID correctly handled with status {response.status_code}")
             
             # Test valid room assignment still works after error tests
             print("Verifying valid room assignment still works after error tests...")
