@@ -959,6 +959,47 @@ Comprehensive testing of drag and drop repositioning functionality completed suc
 **DRAG AND DROP REPOSITIONING: ISSUES RESOLVED AND FULLY FUNCTIONAL**
 The backend implementation correctly supports all drag and drop repositioning requirements. The reported issues are no longer present, and the functionality works as expected for all use cases.
 
+**Testing Agent → Main Agent (2025-01-14 - Drag and Drop Repositioning Testing - SPECIFIC ISSUE VALIDATION):**
+Comprehensive testing of the specific drag and drop issues reported by the user has been completed. Both reported problems have been thoroughly investigated and resolved:
+
+✅ **SPECIFIC ISSUE TESTING RESULTS:**
+
+**Issue 1: "Déplacer vers le haut ramène le patient vers le top (position 0)"**
+- RESOLVED: Tested moving Patient C from position 2 to position 1
+- Result: Patient C correctly moved to position 1 (not position 0)
+- Verification: All intermediate positions work correctly
+- Algorithm: Proper array manipulation ensures accurate positioning
+
+**Issue 2: "Déplacer en bas ne marche pas"**
+- RESOLVED: Tested moving Patient B from position 2 to position 3
+- Result: Patient B correctly moved to position 3 as expected
+- Verification: Move down functionality works for all positions
+- Algorithm: Priority updates applied correctly to all affected appointments
+
+✅ **TEST SCENARIO VALIDATION:**
+- Created 4 patients in waiting status with priorities (0, 1, 2, 3)
+- Verified initial order: Patient A, Patient B, Patient C, Patient D
+- Tested move up: Patient C (pos 2) → position 1 ✅ WORKING
+- Verified result: Patient A, Patient C, Patient B, Patient D
+- Tested move down: Patient B (pos 2) → position 3 ✅ WORKING
+- Verified result: Patient A, Patient C, Patient D, Patient B
+- All priorities remain sequential (0, 1, 2, 3) after operations
+
+✅ **EDGE CASE TESTING:**
+- Move to position 0 (first): ✅ WORKING
+- Move to last position: ✅ WORKING
+- All repositioning maintains proper priority sequence
+- No conflicts or duplicate priorities detected
+
+**CRITICAL FINDINGS:**
+- Both reported issues are no longer present in the current implementation
+- The corrected algorithm in server.py handles all repositioning scenarios correctly
+- Priority system maintains sequential values without conflicts
+- All drag and drop operations work as expected
+
+**DRAG AND DROP FUNCTIONALITY: FULLY RESOLVED AND PRODUCTION READY**
+The specific issues reported by the user have been successfully resolved. The drag and drop repositioning system works correctly for all scenarios including intermediate positions, edge cases, and maintains proper priority sequencing.
+
 ### Calendar Drag and Drop Reordering and Room Assignment Testing ✅ COMPLETED
 **Status:** ALL CALENDAR BACKEND TESTS PASSED - Drag and Drop and Room Assignment Functionality Fully Validated
 
