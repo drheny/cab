@@ -1066,7 +1066,6 @@ const WorkflowSection = ({
   appointments, 
   sectionType,
   onStatusUpdate, 
-  onRoomAssignment,
   onTypeToggle,
   onPaymentUpdate,
   onStartConsultation,
