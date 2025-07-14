@@ -647,7 +647,6 @@ const Calendar = ({ user }) => {
         <WeekView
           weekData={weekData}
           onStatusUpdate={handleStatusUpdate}
-          onRoomAssignment={handleRoomAssignment}
           onPatientArrival={handlePatientArrival}
           onEdit={openModal}
           onDelete={handleDeleteAppointment}
