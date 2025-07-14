@@ -309,7 +309,7 @@ const AppointmentModal = ({
                 type="submit"
                 className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors"
               >
-                {appointment ? 'Modifier' : 'Créer'}
+                {appointment ? 'Modifier' : showPatientForm ? 'Créer patient + RDV' : 'Créer RDV'}
               </button>
             </div>
           </form>
