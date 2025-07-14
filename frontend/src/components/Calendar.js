@@ -310,13 +310,24 @@ const Calendar = ({ user }) => {
 
   // Gestion des paiements
   const handlePaymentUpdate = async (appointmentId, paymentData) => {
+    // Optimistic update - update UI immediately
+    setAppointments(prevAppointments => 
+      prevAppointments.map(apt => {
+        if (apt.id === appointmentId) {
+          return { ...apt, paye: paymentData.paye };
+        }
+        return apt;
+      })
+    );
+
     try {
       await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/paiement`, paymentData);
       toast.success('Paiement mis à jour');
-      fetchData();
     } catch (error) {
       console.error('Error updating payment:', error);
       toast.error('Erreur lors de la mise à jour du paiement');
+      // Revert optimistic update on error
+      await fetchData();
     }
   };
 
