@@ -70,13 +70,17 @@ const AppointmentModal = ({
           
           console.log('Creating appointment with data:', appointmentData);
           
-          // Appeler onSave avec les données mises à jour
-          onSave(appointmentData);
+          // Appeler onSave avec les données mises à jour et attendre le résultat
+          const result = await onSave(appointmentData);
           
-          // Nettoyer le formulaire nouveau patient
-          setShowPatientForm(false);
-          setNewPatientData({ nom: '', prenom: '', telephone: '' });
-          toast.success('Patient créé et rendez-vous programmé avec succès');
+          if (result && result.success) {
+            // Nettoyer le formulaire nouveau patient seulement en cas de succès
+            setShowPatientForm(false);
+            setNewPatientData({ nom: '', prenom: '', telephone: '' });
+            toast.success('Patient créé et rendez-vous programmé avec succès');
+          } else {
+            toast.error('Erreur lors de la création du rendez-vous: ' + (result?.error || 'Erreur inconnue'));
+          }
         } else {
           toast.error('Erreur lors de la création du patient');
         }
