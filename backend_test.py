@@ -6350,5 +6350,433 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
             for rdv_id in appointment_ids:
                 requests.delete(f"{self.base_url}/api/appointments/{rdv_id}")
 
+    # ========== CALENDAR FUNCTIONALITY AFTER ROOM ASSIGNMENT CLEANUP TESTS ==========
+    
+    def test_calendar_core_apis_after_cleanup(self):
+        """Test Core Calendar APIs still functional after room assignment toggle removal"""
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # 1. Test GET /api/rdv/jour/{today} - Fetch today's appointments
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        self.assertIsInstance(appointments, list)
+        
+        # Verify appointments have all required fields
+        for appointment in appointments:
+            required_fields = ["id", "patient_id", "date", "heure", "type_rdv", "statut", "salle", "motif", "paye"]
+            for field in required_fields:
+                self.assertIn(field, appointment, f"Missing field {field} in appointment")
+            
+            # Verify patient info is included
+            self.assertIn("patient", appointment)
+            patient = appointment["patient"]
+            self.assertIn("nom", patient)
+            self.assertIn("prenom", patient)
+            self.assertIn("numero_whatsapp", patient)
+            self.assertIn("lien_whatsapp", patient)
+        
+        print("✅ GET /api/rdv/jour/{today} - Core API working correctly")
+        
+        # Get an appointment for further testing
+        if len(appointments) > 0:
+            test_appointment = appointments[0]
+            rdv_id = test_appointment["id"]
+            
+            # 2. Test PUT /api/rdv/{rdv_id}/statut - Update appointment status
+            status_updates = ["attente", "en_cours", "termine"]
+            for new_status in status_updates:
+                response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/statut", json={"statut": new_status})
+                self.assertEqual(response.status_code, 200)
+                data = response.json()
+                self.assertEqual(data["statut"], new_status)
+                
+                # Verify the update persisted
+                response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+                self.assertEqual(response.status_code, 200)
+                updated_appointments = response.json()
+                updated_appointment = next((a for a in updated_appointments if a["id"] == rdv_id), None)
+                self.assertIsNotNone(updated_appointment)
+                self.assertEqual(updated_appointment["statut"], new_status)
+            
+            print("✅ PUT /api/rdv/{rdv_id}/statut - Status updates working correctly")
+            
+            # 3. Test PUT /api/rdv/{rdv_id} - Update appointment type (visite/controle)
+            type_updates = ["controle", "visite"]
+            for new_type in type_updates:
+                response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}", json={"type_rdv": new_type})
+                self.assertEqual(response.status_code, 200)
+                data = response.json()
+                self.assertEqual(data["type_rdv"], new_type)
+                
+                # Verify payment logic for controle vs visite
+                if new_type == "controle":
+                    self.assertEqual(data["payment_status"], "gratuit")
+                else:
+                    self.assertEqual(data["payment_status"], "non_paye")
+            
+            print("✅ PUT /api/rdv/{rdv_id} - Type toggle working correctly with payment logic")
+            
+            # 4. Test PUT /api/rdv/{rdv_id}/paiement - Payment management
+            payment_test_cases = [
+                {
+                    "paye": True,
+                    "montant_paye": 300,
+                    "methode_paiement": "espece",
+                    "date_paiement": today
+                },
+                {
+                    "paye": True,
+                    "montant_paye": 250,
+                    "methode_paiement": "carte",
+                    "date_paiement": today
+                },
+                {
+                    "paye": False,
+                    "montant_paye": 0,
+                    "methode_paiement": "",
+                    "date_paiement": None
+                }
+            ]
+            
+            for payment_data in payment_test_cases:
+                response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/paiement", json=payment_data)
+                self.assertEqual(response.status_code, 200)
+                data = response.json()
+                self.assertEqual(data["paye"], payment_data["paye"])
+                self.assertEqual(data["montant_paye"], payment_data["montant_paye"])
+                self.assertEqual(data["methode_paiement"], payment_data["methode_paiement"])
+            
+            print("✅ PUT /api/rdv/{rdv_id}/paiement - Payment management working correctly")
+        
+        print("✅ All Core Calendar APIs working correctly after cleanup")
+    
+    def test_workflow_status_transitions_after_cleanup(self):
+        """Test workflow status transitions work correctly without room assignment"""
+        # Create a test appointment for status transition testing
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for testing")
+        
+        patient_id = patients[0]["id"]
+        today = datetime.now().strftime("%Y-%m-%d")
+        future_time = (datetime.now() + timedelta(hours=1)).strftime("%H:%M")
+        
+        # Create test appointment
+        test_appointment = {
+            "patient_id": patient_id,
+            "date": today,
+            "heure": future_time,
+            "type_rdv": "visite",
+            "statut": "programme",
+            "motif": "Test workflow transitions",
+            "paye": False
+        }
+        
+        response = requests.post(f"{self.base_url}/api/appointments", json=test_appointment)
+        self.assertEqual(response.status_code, 200)
+        rdv_id = response.json()["appointment_id"]
+        
+        try:
+            # Test status transition workflow: programme → attente → en_cours → termine
+            workflow_transitions = [
+                ("programme", "attente"),
+                ("attente", "en_cours"),
+                ("en_cours", "termine")
+            ]
+            
+            for from_status, to_status in workflow_transitions:
+                # Update status
+                response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/statut", json={"statut": to_status})
+                self.assertEqual(response.status_code, 200)
+                data = response.json()
+                self.assertEqual(data["statut"], to_status)
+                
+                # Verify the transition persisted
+                response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+                self.assertEqual(response.status_code, 200)
+                appointments = response.json()
+                updated_appointment = next((a for a in appointments if a["id"] == rdv_id), None)
+                self.assertIsNotNone(updated_appointment)
+                self.assertEqual(updated_appointment["statut"], to_status)
+                
+                print(f"✅ Status transition {from_status} → {to_status} working correctly")
+            
+            # Test that status updates work without room assignment dependency
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            final_appointment = next((a for a in appointments if a["id"] == rdv_id), None)
+            self.assertIsNotNone(final_appointment)
+            
+            # Verify appointment can exist in any status without room assignment
+            self.assertEqual(final_appointment["statut"], "termine")
+            # Room assignment should still be available but not required
+            self.assertIn("salle", final_appointment)
+            
+            print("✅ Workflow status transitions working correctly without room assignment dependency")
+            
+        finally:
+            # Clean up
+            requests.delete(f"{self.base_url}/api/appointments/{rdv_id}")
+    
+    def test_patient_reordering_still_works(self):
+        """Test patient reordering functionality still works after cleanup"""
+        # Get patients for testing
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) >= 2, "Need at least 2 patients for reordering test")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        future_time_1 = (datetime.now() + timedelta(hours=1)).strftime("%H:%M")
+        future_time_2 = (datetime.now() + timedelta(hours=1, minutes=30)).strftime("%H:%M")
+        
+        # Create multiple appointments in 'attente' status for reordering
+        appointments_to_create = [
+            {
+                "patient_id": patients[0]["id"],
+                "date": today,
+                "heure": future_time_1,
+                "type_rdv": "visite",
+                "statut": "attente",
+                "motif": "Test reordering 1",
+                "paye": False
+            },
+            {
+                "patient_id": patients[1]["id"],
+                "date": today,
+                "heure": future_time_2,
+                "type_rdv": "visite",
+                "statut": "attente",
+                "motif": "Test reordering 2",
+                "paye": False
+            }
+        ]
+        
+        created_appointment_ids = []
+        
+        try:
+            # Create test appointments
+            for appointment_data in appointments_to_create:
+                response = requests.post(f"{self.base_url}/api/appointments", json=appointment_data)
+                self.assertEqual(response.status_code, 200)
+                created_appointment_ids.append(response.json()["appointment_id"])
+            
+            # Test reordering actions
+            rdv_id = created_appointment_ids[1]  # Second appointment
+            
+            # Test move_up action
+            response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/priority", json={"action": "move_up"})
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            self.assertIn("message", data)
+            self.assertIn("new_position", data)
+            self.assertIn("total_waiting", data)
+            self.assertEqual(data["action"], "move_up")
+            
+            print("✅ PUT /api/rdv/{rdv_id}/priority - move_up action working correctly")
+            
+            # Test set_first action
+            response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/priority", json={"action": "set_first"})
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            self.assertEqual(data["action"], "set_first")
+            self.assertEqual(data["new_position"], 1)  # Should be first position
+            
+            print("✅ PUT /api/rdv/{rdv_id}/priority - set_first action working correctly")
+            
+            # Test move_down action
+            response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/priority", json={"action": "move_down"})
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            self.assertEqual(data["action"], "move_down")
+            
+            print("✅ PUT /api/rdv/{rdv_id}/priority - move_down action working correctly")
+            
+            # Test invalid action
+            response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/priority", json={"action": "invalid_action"})
+            self.assertEqual(response.status_code, 400)
+            
+            # Test non-existent appointment
+            response = requests.put(f"{self.base_url}/api/rdv/non_existent_id/priority", json={"action": "move_up"})
+            self.assertEqual(response.status_code, 404)
+            
+            print("✅ Patient reordering functionality working correctly after cleanup")
+            
+        finally:
+            # Clean up created appointments
+            for appointment_id in created_appointment_ids:
+                requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+    
+    def test_payment_logic_after_cleanup(self):
+        """Test payment logic still works correctly after cleanup"""
+        # Get a patient for testing
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for testing")
+        
+        patient_id = patients[0]["id"]
+        today = datetime.now().strftime("%Y-%m-%d")
+        future_time = (datetime.now() + timedelta(hours=2)).strftime("%H:%M")
+        
+        # Create test appointment
+        test_appointment = {
+            "patient_id": patient_id,
+            "date": today,
+            "heure": future_time,
+            "type_rdv": "visite",
+            "statut": "programme",
+            "motif": "Test payment logic",
+            "paye": False
+        }
+        
+        response = requests.post(f"{self.base_url}/api/appointments", json=test_appointment)
+        self.assertEqual(response.status_code, 200)
+        rdv_id = response.json()["appointment_id"]
+        
+        try:
+            # Test automatic gratuit setting for controle appointments
+            response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}", json={"type_rdv": "controle"})
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            self.assertEqual(data["type_rdv"], "controle")
+            self.assertEqual(data["payment_status"], "gratuit")
+            
+            # Verify the appointment is marked as paid with gratuit
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            updated_appointment = next((a for a in appointments if a["id"] == rdv_id), None)
+            self.assertIsNotNone(updated_appointment)
+            self.assertEqual(updated_appointment["type_rdv"], "controle")
+            self.assertTrue(updated_appointment["paye"])  # Should be automatically paid for controle
+            
+            print("✅ Automatic gratuit setting for controle appointments working correctly")
+            
+            # Test payment status updates for visite appointments
+            response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}", json={"type_rdv": "visite"})
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            self.assertEqual(data["type_rdv"], "visite")
+            self.assertEqual(data["payment_status"], "non_paye")
+            
+            # Test manual payment update for visite
+            payment_data = {
+                "paye": True,
+                "montant_paye": 300,
+                "methode_paiement": "espece",
+                "date_paiement": today
+            }
+            
+            response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/paiement", json=payment_data)
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            self.assertTrue(data["paye"])
+            self.assertEqual(data["montant_paye"], 300)
+            self.assertEqual(data["methode_paiement"], "espece")
+            
+            print("✅ Payment status updates for visite appointments working correctly")
+            
+            # Test payment methods
+            payment_methods = ["espece", "carte", "cheque", "virement"]
+            for method in payment_methods:
+                payment_data = {
+                    "paye": True,
+                    "montant_paye": 250,
+                    "methode_paiement": method,
+                    "date_paiement": today
+                }
+                
+                response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/paiement", json=payment_data)
+                self.assertEqual(response.status_code, 200)
+                data = response.json()
+                self.assertEqual(data["methode_paiement"], method)
+            
+            print("✅ All payment methods working correctly")
+            
+        finally:
+            # Clean up
+            requests.delete(f"{self.base_url}/api/appointments/{rdv_id}")
+    
+    def test_data_structure_validation_after_cleanup(self):
+        """Test data structure validation after cleanup"""
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Test appointments can be grouped correctly by status
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        
+        # Group appointments by status
+        status_groups = {}
+        for appointment in appointments:
+            status = appointment["statut"]
+            if status not in status_groups:
+                status_groups[status] = []
+            status_groups[status].append(appointment)
+        
+        # Verify all expected statuses can be grouped
+        valid_statuses = ["programme", "attente", "en_cours", "termine", "absent", "retard"]
+        for status in status_groups.keys():
+            self.assertIn(status, valid_statuses, f"Invalid status found: {status}")
+        
+        print("✅ Appointments can be grouped correctly by status")
+        
+        # Test waiting time calculation logic for attente status only
+        attente_appointments = status_groups.get("attente", [])
+        for appointment in attente_appointments:
+            # Verify appointment has time information for waiting time calculation
+            self.assertIn("heure", appointment)
+            self.assertIn("date", appointment)
+            
+            # Verify time format is valid for calculation
+            try:
+                appointment_time = datetime.strptime(f"{appointment['date']} {appointment['heure']}", "%Y-%m-%d %H:%M")
+                current_time = datetime.now()
+                
+                # Waiting time can be calculated
+                if appointment_time <= current_time:
+                    waiting_minutes = (current_time - appointment_time).total_seconds() / 60
+                    self.assertGreaterEqual(waiting_minutes, 0)
+                
+            except ValueError:
+                self.fail(f"Invalid date/time format in appointment: {appointment['date']} {appointment['heure']}")
+        
+        print("✅ Waiting time calculation logic working for attente status")
+        
+        # Test statistics endpoint data structure
+        response = requests.get(f"{self.base_url}/api/rdv/stats/{today}")
+        self.assertEqual(response.status_code, 200)
+        stats = response.json()
+        
+        # Verify statistics structure is intact
+        required_stats_fields = ["date", "total_rdv", "visites", "controles", "statuts", "taux_presence", "paiements"]
+        for field in required_stats_fields:
+            self.assertIn(field, stats, f"Missing stats field: {field}")
+        
+        # Verify status breakdown in statistics
+        statuts = stats["statuts"]
+        for status in valid_statuses:
+            self.assertIn(status, statuts, f"Missing status in statistics: {status}")
+            self.assertIsInstance(statuts[status], int)
+            self.assertGreaterEqual(statuts[status], 0)
+        
+        print("✅ Statistics data structure validation working correctly")
+        
+        # Verify data consistency
+        total_by_status = sum(statuts.values())
+        self.assertEqual(stats["total_rdv"], total_by_status, "Total RDV count inconsistent with status breakdown")
+        
+        total_by_type = stats["visites"] + stats["controles"]
+        self.assertEqual(stats["total_rdv"], total_by_type, "Total RDV count inconsistent with type breakdown")
+        
+        print("✅ Data structure validation working correctly after cleanup")
+
 if __name__ == "__main__":
     unittest.main()
