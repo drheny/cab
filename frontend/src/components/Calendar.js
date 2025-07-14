@@ -556,12 +556,10 @@ const Calendar = ({ user }) => {
             onTypeToggle={handleTypeToggle}
             onPaymentUpdate={handlePaymentUpdate}
             onStartConsultation={handleStartConsultation}
-            onMoveUp={handleMoveUp}
-            onMoveDown={handleMoveDown}
-            onSetPriority={handleSetPriority}
             onEdit={openModal}
             onDelete={handleDeleteAppointment}
             onViewPatient={viewPatientDetails}
+            onDragEnd={handleDragEnd}
           />
           
           {/* 2. En consultation */}
