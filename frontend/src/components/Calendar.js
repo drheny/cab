@@ -213,12 +213,33 @@ const Calendar = ({ user }) => {
   
   // Basculer entre Contrôle/Visite
   const handleTypeToggle = async (appointmentId, currentType) => {
+    const newType = currentType === 'visite' ? 'controle' : 'visite';
+    
+    // Optimistic update - update UI immediately
+    setAppointments(prevAppointments => 
+      prevAppointments.map(apt => {
+        if (apt.id === appointmentId) {
+          return { ...apt, type_rdv: newType };
+        }
+        return apt;
+      })
+    );
+
     try {
-      const newType = currentType === 'visite' ? 'controle' : 'visite';
       await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}`, { type_rdv: newType });
       
       // Si on change vers contrôle, mettre automatiquement en gratuit
       if (newType === 'controle') {
+        // Also update payment status optimistically
+        setAppointments(prevAppointments => 
+          prevAppointments.map(apt => {
+            if (apt.id === appointmentId) {
+              return { ...apt, paye: false };
+            }
+            return apt;
+          })
+        );
+        
         await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/paiement`, {
           paye: false,
           gratuit: true,
@@ -228,10 +249,11 @@ const Calendar = ({ user }) => {
       }
       
       toast.success(`Type changé vers ${newType === 'visite' ? 'Visite' : 'Contrôle'}`);
-      fetchData();
     } catch (error) {
       console.error('Error toggling type:', error);
       toast.error('Erreur lors du changement de type');
+      // Revert optimistic update on error
+      await fetchData();
     }
   };
 
