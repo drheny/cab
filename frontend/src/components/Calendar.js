@@ -1115,7 +1115,7 @@ const WorkflowSection = ({
     switch (sectionType) {
       case 'attente': return 'border-green-200 bg-green-50';
       case 'en_cours': return 'border-blue-200 bg-blue-50';
-      case 'absent': return 'border-red-200 bg-red-50';
+      case 'absent': return 'border-blue-200 bg-blue-50'; // RDV Programmés en bleu
       case 'retard': return 'border-orange-200 bg-orange-50';
       case 'termine': return 'border-gray-200 bg-gray-50';
       default: return 'border-gray-200 bg-white';
