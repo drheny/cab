@@ -49,7 +49,8 @@ const Calendar = ({ user }) => {
 
   const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
-  const resetForm = () => {
+  // Memoized functions to prevent unnecessary re-renders
+  const resetForm = useCallback(() => {
     setFormData({
       patient_id: '',
       date: selectedDate,
@@ -59,9 +60,9 @@ const Calendar = ({ user }) => {
       notes: ''
     });
     setSelectedAppointment(null);
-  };
+  }, [selectedDate]);
 
-  const openModal = (appointment = null) => {
+  const openModal = useCallback((appointment = null) => {
     if (appointment) {
       setSelectedAppointment(appointment);
       setFormData({
@@ -76,17 +77,17 @@ const Calendar = ({ user }) => {
       resetForm();
     }
     setShowModal(true);
-  };
+  }, [resetForm]);
 
-  const openModalWithDateTime = (dateTime = {}) => {
+  const openModalWithDateTime = useCallback((dateTime = {}) => {
     resetForm();
-    setFormData({
-      ...formData,
+    setFormData(prev => ({
+      ...prev,
       date: dateTime.date || selectedDate,
       heure: dateTime.heure || ''
-    });
+    }));
     setShowModal(true);
-  };
+  }, [resetForm, selectedDate]);
 
   useEffect(() => {
     fetchData();
