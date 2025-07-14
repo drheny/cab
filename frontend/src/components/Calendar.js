@@ -1372,6 +1372,49 @@ const WorkflowCard = ({
             </button>
           )}
 
+          {/* Boutons de réorganisation pour salle d'attente */}
+          {sectionType === 'attente' && totalCount > 1 && (
+            <>
+              {/* Bouton Priorité */}
+              {index > 0 && (
+                <button
+                  onClick={() => onSetPriority(appointment.id)}
+                  className="p-1 text-orange-600 hover:bg-orange-100 rounded transition-colors"
+                  title="Mettre en priorité (premier)"
+                >
+                  <AlertTriangle className="w-4 h-4" />
+                </button>
+              )}
+              
+              {/* Bouton Monter */}
+              {index > 0 && (
+                <button
+                  onClick={() => onMoveUp(appointment.id)}
+                  className="p-1 text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                  title="Monter dans la liste"
+                >
+                  <ChevronUp className="w-4 h-4" />
+                </button>
+              )}
+              
+              {/* Bouton Descendre */}
+              {index < totalCount - 1 && (
+                <button
+                  onClick={() => onMoveDown(appointment.id)}
+                  className="p-1 text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                  title="Descendre dans la liste"
+                >
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+              )}
+              
+              {/* Position dans la liste */}
+              <span className="text-xs text-gray-500 font-medium px-2">
+                {index + 1}/{totalCount}
+              </span>
+            </>
+          )}
+
           {/* Bouton WhatsApp */}
           <a
             href={getWhatsAppLink(appointment.patient?.numero_whatsapp || appointment.patient?.telephone)}
