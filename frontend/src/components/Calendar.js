@@ -1235,8 +1235,13 @@ const WorkflowCard = ({
   };
 
   const handleRoomChange = (room) => {
-    onRoomAssignment(appointment.id, room);
-    setShowRoomDropdown(false);
+    console.log('Changing room for appointment:', appointment.id, 'to room:', room);
+    if (onRoomAssignment) {
+      onRoomAssignment(appointment.id, room);
+      setShowRoomDropdown(false);
+    } else {
+      console.error('onRoomAssignment function not provided');
+    }
   };
 
   const getPaymentStatus = () => {
