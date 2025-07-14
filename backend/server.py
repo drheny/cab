@@ -1252,33 +1252,25 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
                 "total_waiting": len(waiting_appointments)
             }
         
-        # Reorder the appointments by updating their priority field
-        # We'll use a priority field to maintain order (lower number = higher priority)
+        # Simple and correct algorithm for repositioning items in array
+        # Create a new list with the item moved to its new position
+        new_order = []
+        
+        # First, create a list without the moved item
         for i, appt in enumerate(waiting_appointments):
-            if i == current_pos:
-                continue  # Skip the appointment being moved
-            
-            # Calculate new priority based on position
-            if i < new_pos:
-                priority = i
-            elif i >= new_pos and current_pos > new_pos:
-                priority = i + 1
-            elif i > new_pos and current_pos < new_pos:
-                priority = i
-            else:
-                priority = i
-            
-            # Update priority in database
+            if i != current_pos:
+                new_order.append(appt)
+        
+        # Insert the moved item at its new position
+        moved_item = waiting_appointments[current_pos]
+        new_order.insert(new_pos, moved_item)
+        
+        # Update all priorities based on new positions
+        for i, appt in enumerate(new_order):
             appointments_collection.update_one(
                 {"id": appt["id"]},
-                {"$set": {"priority": priority, "updated_at": datetime.now()}}
+                {"$set": {"priority": i, "updated_at": datetime.now()}}
             )
-        
-        # Update the moved appointment's priority
-        appointments_collection.update_one(
-            {"id": rdv_id},
-            {"$set": {"priority": new_pos, "updated_at": datetime.now()}}
-        )
         
         return {
             "message": f"Appointment {action} successful",
