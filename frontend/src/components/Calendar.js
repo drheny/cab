@@ -1097,12 +1097,11 @@ const WorkflowSection = ({
   onPaymentUpdate,
   onStartConsultation,
   onFinishConsultation,
-  onMoveUp,
-  onMoveDown,
-  onSetPriority,
+  onRoomAssignment,
   onEdit, 
   onDelete, 
   onViewPatient,
+  onDragEnd,
   isCompleted = false 
 }) => {
   const getSectionColor = () => {
@@ -1116,43 +1115,104 @@ const WorkflowSection = ({
     }
   };
 
+  // Drag and drop is only enabled for waiting room
+  const isDragEnabled = sectionType === 'attente' && appointments.length > 1;
+
   return (
     <div className={`rounded-xl shadow-sm border-2 ${getSectionColor()} ${isCompleted ? 'opacity-75' : ''}`}>
       <div className="p-4 border-b border-gray-200">
         <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-        <p className="text-sm text-gray-600">{appointments.length} patient(s)</p>
+        <p className="text-sm text-gray-600">
+          {appointments.length} patient(s)
+          {isDragEnabled && <span className="text-gray-400 ml-2">• Glissez-déposez pour réorganiser</span>}
+        </p>
       </div>
       
-      <div className="divide-y divide-gray-100">
-        {appointments.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">
-            <div className="text-4xl mb-2">👥</div>
-            <p>Aucun patient dans cette section</p>
-          </div>
-        ) : (
-          appointments.map((appointment, index) => (
-            <WorkflowCard
-              key={appointment.id}
-              appointment={appointment}
-              index={index}
-              totalCount={appointments.length}
-              sectionType={sectionType}
-              onStatusUpdate={onStatusUpdate}
-              onTypeToggle={onTypeToggle}
-              onPaymentUpdate={onPaymentUpdate}
-              onStartConsultation={onStartConsultation}
-              onFinishConsultation={onFinishConsultation}
-              onMoveUp={onMoveUp}
-              onMoveDown={onMoveDown}
-              onSetPriority={onSetPriority}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              onViewPatient={onViewPatient}
-              isCompleted={isCompleted}
-            />
-          ))
-        )}
-      </div>
+      {isDragEnabled ? (
+        <DragDropContext onDragEnd={onDragEnd}>
+          <Droppable droppableId={sectionType}>
+            {(provided) => (
+              <div 
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+                className="divide-y divide-gray-100"
+              >
+                {appointments.length === 0 ? (
+                  <div className="p-8 text-center text-gray-500">
+                    <div className="text-4xl mb-2">👥</div>
+                    <p>Aucun patient dans cette section</p>
+                  </div>
+                ) : (
+                  appointments.map((appointment, index) => (
+                    <Draggable
+                      key={appointment.id}
+                      draggableId={appointment.id}
+                      index={index}
+                    >
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          className={`${snapshot.isDragging ? 'bg-blue-50 shadow-lg' : ''}`}
+                        >
+                          <WorkflowCard
+                            appointment={appointment}
+                            index={index}
+                            totalCount={appointments.length}
+                            sectionType={sectionType}
+                            onStatusUpdate={onStatusUpdate}
+                            onTypeToggle={onTypeToggle}
+                            onPaymentUpdate={onPaymentUpdate}
+                            onStartConsultation={onStartConsultation}
+                            onFinishConsultation={onFinishConsultation}
+                            onRoomAssignment={onRoomAssignment}
+                            onEdit={onEdit}
+                            onDelete={onDelete}
+                            onViewPatient={onViewPatient}
+                            isCompleted={isCompleted}
+                            dragHandleProps={provided.dragHandleProps}
+                            isDragging={snapshot.isDragging}
+                          />
+                        </div>
+                      )}
+                    </Draggable>
+                  ))
+                )}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
+      ) : (
+        <div className="divide-y divide-gray-100">
+          {appointments.length === 0 ? (
+            <div className="p-8 text-center text-gray-500">
+              <div className="text-4xl mb-2">👥</div>
+              <p>Aucun patient dans cette section</p>
+            </div>
+          ) : (
+            appointments.map((appointment, index) => (
+              <WorkflowCard
+                key={appointment.id}
+                appointment={appointment}
+                index={index}
+                totalCount={appointments.length}
+                sectionType={sectionType}
+                onStatusUpdate={onStatusUpdate}
+                onTypeToggle={onTypeToggle}
+                onPaymentUpdate={onPaymentUpdate}
+                onStartConsultation={onStartConsultation}
+                onFinishConsultation={onFinishConsultation}
+                onRoomAssignment={onRoomAssignment}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onViewPatient={onViewPatient}
+                isCompleted={isCompleted}
+              />
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 };
