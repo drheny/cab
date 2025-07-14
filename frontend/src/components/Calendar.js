@@ -1136,10 +1136,12 @@ const WorkflowSection = ({
             <p>Aucun patient dans cette section</p>
           </div>
         ) : (
-          appointments.map((appointment) => (
+          appointments.map((appointment, index) => (
             <WorkflowCard
               key={appointment.id}
               appointment={appointment}
+              index={index}
+              totalCount={appointments.length}
               sectionType={sectionType}
               onStatusUpdate={onStatusUpdate}
               onRoomAssignment={onRoomAssignment}
@@ -1147,6 +1149,9 @@ const WorkflowSection = ({
               onPaymentUpdate={onPaymentUpdate}
               onStartConsultation={onStartConsultation}
               onFinishConsultation={onFinishConsultation}
+              onMoveUp={onMoveUp}
+              onMoveDown={onMoveDown}
+              onSetPriority={onSetPriority}
               onEdit={onEdit}
               onDelete={onDelete}
               onViewPatient={onViewPatient}
