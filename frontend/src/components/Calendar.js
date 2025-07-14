@@ -298,20 +298,9 @@ const Calendar = ({ user }) => {
     }
   };
 
-  // Room assignment toggle
-  const handleRoomAssignment = async (appointmentId, currentRoom) => {
+  // Room assignment dropdown
+  const handleRoomAssignment = async (appointmentId, newRoom) => {
     try {
-      let newRoom = '';
-      
-      // Cycle through rooms: '' -> 'salle1' -> 'salle2' -> ''
-      if (currentRoom === '') {
-        newRoom = 'salle1';
-      } else if (currentRoom === 'salle1') {
-        newRoom = 'salle2';
-      } else {
-        newRoom = '';
-      }
-      
       await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/salle?salle=${newRoom}`);
       
       const roomText = newRoom === '' ? 'Aucune salle' : 
