@@ -342,7 +342,26 @@ const Calendar = ({ user }) => {
     
     // If dropped in same position, exit
     if (destination.index === source.index) return;
-    
+
+    // Optimistic update - reorder appointments immediately in UI
+    setAppointments(prevAppointments => {
+      const waitingPatients = prevAppointments.filter(apt => apt.statut === 'attente');
+      const otherPatients = prevAppointments.filter(apt => apt.statut !== 'attente');
+      
+      // Reorder waiting patients
+      const newWaitingOrder = Array.from(waitingPatients);
+      const [movedPatient] = newWaitingOrder.splice(source.index, 1);
+      newWaitingOrder.splice(destination.index, 0, movedPatient);
+      
+      // Update priorities optimistically
+      const updatedWaitingPatients = newWaitingOrder.map((apt, index) => ({
+        ...apt,
+        priority: index
+      }));
+      
+      return [...updatedWaitingPatients, ...otherPatients];
+    });
+
     try {
       // Update appointment priority in backend
       await axios.put(`${API_BASE_URL}/api/rdv/${draggableId}/priority`, {
@@ -351,10 +370,11 @@ const Calendar = ({ user }) => {
       });
       
       toast.success('Patient repositionné');
-      await fetchData(); // Refresh data immediately
     } catch (error) {
       console.error('Error reordering patient:', error);
       toast.error('Erreur lors du repositionnement');
+      // Revert optimistic update on error
+      await fetchData();
     }
   };
 
