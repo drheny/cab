@@ -299,6 +299,33 @@ const Calendar = ({ user }) => {
     }
   };
 
+  // Room assignment toggle
+  const handleRoomAssignment = async (appointmentId, currentRoom) => {
+    try {
+      let newRoom = '';
+      
+      // Cycle through rooms: '' -> 'salle1' -> 'salle2' -> ''
+      if (currentRoom === '') {
+        newRoom = 'salle1';
+      } else if (currentRoom === 'salle1') {
+        newRoom = 'salle2';
+      } else {
+        newRoom = '';
+      }
+      
+      await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/salle?salle=${newRoom}`);
+      
+      const roomText = newRoom === '' ? 'Aucune salle' : 
+                      newRoom === 'salle1' ? 'Salle 1' : 'Salle 2';
+      toast.success(`Patient assigné à: ${roomText}`);
+      
+      await fetchData(); // Refresh data
+    } catch (error) {
+      console.error('Error assigning room:', error);
+      toast.error('Erreur lors de l\'assignation de salle');
+    }
+  };
+
   // États pour les modales (simplifié)
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
