@@ -337,11 +337,9 @@ const Calendar = ({ user }) => {
     }
   };
 
-  // États pour les modales
+  // États pour les modales (simplifié)
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
-  const [showStatusDropdown, setShowStatusDropdown] = useState(null);
-  const [showRoomDropdown, setShowRoomDropdown] = useState(null);
 
   const viewPatientDetails = async (patientId) => {
     try {
