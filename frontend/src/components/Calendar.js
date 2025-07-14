@@ -141,10 +141,12 @@ const Calendar = ({ user }) => {
       resetForm();
       // Refresh data after creation
       await fetchData();
+      return { success: true };
     } catch (error) {
       console.error('Error creating appointment:', error);
       console.error('Error details:', error.response?.data);
       toast.error('Erreur lors de la création du rendez-vous: ' + (error.response?.data?.detail || error.message));
+      return { success: false, error: error.response?.data?.detail || error.message };
     }
   }, [formData, API_BASE_URL, resetForm, fetchData]);
 
