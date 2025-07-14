@@ -604,7 +604,6 @@ const Calendar = ({ user }) => {
             appointments={groupedAppointments.absent}
             sectionType="absent"
             onStatusUpdate={handleStatusUpdate}
-            onRoomAssignment={handleRoomAssignment}
             onTypeToggle={handleTypeToggle}
             onPaymentUpdate={handlePaymentUpdate}
             onEdit={openModal}
