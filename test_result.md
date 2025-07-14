@@ -257,27 +257,47 @@ Comprehensive testing of waiting room time calculation and patient reordering fu
 **Testing Agent → Main Agent (2025-07-13 - Calendar Workflow Functionality Testing):**
 Calendar Workflow Functionality testing completed successfully. All backend APIs for the new workflow functionality are working correctly. Fixed minor issues with payment validation and API parameter formats. The system fully supports the 5 workflow sections with proper patient data, payment management, and real-time statistics. All interactive badges and transitions are properly supported by the backend. Ready for production deployment.
 
-**Testing Agent → Main Agent (2025-07-13 - Calendar Workflow Functionality Testing - FINAL):**
-Comprehensive Calendar Workflow Functionality testing completed successfully. All requirements from the review request have been thoroughly validated and are working correctly:
+**Testing Agent → Main Agent (2025-07-14 - Refined Waiting Room Time Marker Testing):**
+Comprehensive testing of refined waiting room time marker completed successfully. All visual improvements from the review request have been thoroughly validated:
 
-✅ **CRITICAL FIX IMPLEMENTED**: Created missing AppointmentModal component that was causing JavaScript errors
-✅ **5-SECTION WORKFLOW**: All workflow sections properly implemented with correct color coding
-✅ **INTERACTIVE BADGES**: C/V toggle, Status dropdown, Room assignment, Payment modal all functional
-✅ **SPECIAL FEATURES**: Waiting timers, ENTRER button, WhatsApp integration working perfectly
-✅ **UI STRUCTURE**: Professional medical interface with Liste/Semaine toggle and statistics dashboard
-✅ **WORKFLOW TRANSITIONS**: Seamless patient movement between sections and status updates
-✅ **MODAL FUNCTIONALITY**: Complete Nouveau RDV modal with patient search and creation features
+✅ **CLOCK ICON IMPLEMENTATION:**
+- lucide-react Clock icon correctly replaces emoji ⏱️ (7 Clock icons detected, 0 emoji clocks)
+- Clock icon properly integrated with color schemes and badge styling
+- Visual consistency maintained across all waiting time markers
 
-**Key Achievements:**
-- Fixed missing AppointmentModal component preventing modal functionality
-- Validated all 5 workflow sections with proper color coding and organization
-- Confirmed all interactive badges work correctly for medical workflow
-- Verified special features enhance medical practice efficiency
-- Tested workflow transitions and patient status management
-- Validated professional UI suitable for medical practice environment
+✅ **DURATION FORMATTING:**
+- "Vient d'arriver" correctly displays for 0 minutes waiting time
+- Smart formatting logic: 1 minute, X minutes, Xh Ymin, X heure(s)
+- Intelligent duration thresholds working as specified
 
-**CALENDAR WORKFLOW FUNCTIONALITY: FULLY IMPLEMENTED AND PRODUCTION READY**
-The new optimized Calendar workflow system is complete and ready for medical practice deployment.
+✅ **ADAPTIVE COLORS:**
+- Green scheme (bg-green-100, text-green-700, border-green-200) for <15 minutes
+- Orange scheme (bg-orange-100, text-orange-700, border-orange-200) for 15-30 minutes
+- Red scheme (bg-red-100, text-red-700, border-red-200) for >30 minutes
+- Colors change dynamically as waiting time increases
+
+✅ **BADGE STYLE:**
+- Professional rounded badge (rounded-full) with proper border and colored background
+- Correct padding (px-2 py-1), typography (text-xs font-medium), and layout (inline-flex)
+- Clean, modern design suitable for medical interface
+
+✅ **CONTEXTUAL DISPLAY:**
+- Waiting time markers only appear for patients in "Salle d'attente" status
+- No markers found in other workflow sections (correct isolation)
+- Status-dependent display working correctly
+
+✅ **STATUS TRANSITIONS:**
+- Markers appear when patients moved to waiting room status
+- Markers disappear when patients moved out of waiting room
+- Real-time status changes immediately reflected in UI
+
+✅ **REAL-TIME UPDATES:**
+- Waiting time updates automatically every 60 seconds
+- Color transitions occur dynamically as time thresholds are crossed
+- Time calculation based on heure_arrivee_attente timestamp
+
+**REFINED WAITING ROOM TIME MARKER: FULLY IMPLEMENTED AND PRODUCTION READY**
+All visual improvements specified in the review request are working correctly. The implementation provides professional, real-time waiting time feedback with proper Clock icon, smart duration formatting, adaptive colors, and badge styling that enhances the medical workflow experience.
 
 
 ### Phase 2: Frontend - Vue Liste ✅ COMPLETED  
