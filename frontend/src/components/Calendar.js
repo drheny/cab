@@ -176,6 +176,21 @@ const Calendar = ({ user }) => {
   };
 
   const handleStatusUpdate = async (appointmentId, newStatus) => {
+    // Optimistic update - update UI immediately
+    setAppointments(prevAppointments => 
+      prevAppointments.map(apt => {
+        if (apt.id === appointmentId) {
+          const updatedApt = { ...apt, statut: newStatus };
+          // When moving to waiting room, record the arrival time
+          if (newStatus === 'attente') {
+            updatedApt.heure_arrivee_attente = new Date().toISOString();
+          }
+          return updatedApt;
+        }
+        return apt;
+      })
+    );
+
     try {
       const updateData = { statut: newStatus };
       
@@ -186,10 +201,11 @@ const Calendar = ({ user }) => {
       
       await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/statut`, updateData);
       toast.success('Statut mis à jour');
-      await fetchData(); // Refresh data immediately
     } catch (error) {
       console.error('Error updating status:', error);
       toast.error('Erreur lors de la mise à jour du statut');
+      // Revert optimistic update on error
+      await fetchData();
     }
   };
 
