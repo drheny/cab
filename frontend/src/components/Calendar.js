@@ -1167,6 +1167,8 @@ const WorkflowSection = ({
 // Composant WorkflowCard optimisé avec badges interactifs
 const WorkflowCard = ({ 
   appointment, 
+  index,
+  totalCount,
   sectionType,
   onStatusUpdate, 
   onRoomAssignment,
@@ -1174,6 +1176,9 @@ const WorkflowCard = ({
   onPaymentUpdate,
   onStartConsultation,
   onFinishConsultation,
+  onMoveUp,
+  onMoveDown,
+  onSetPriority,
   onEdit, 
   onDelete, 
   onViewPatient,
