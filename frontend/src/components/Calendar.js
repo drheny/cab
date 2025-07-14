@@ -1137,7 +1137,6 @@ const WorkflowCard = ({
   totalCount,
   sectionType,
   onStatusUpdate, 
-  onRoomAssignment,
   onTypeToggle,
   onPaymentUpdate,
   onStartConsultation,
@@ -1151,7 +1150,6 @@ const WorkflowCard = ({
   isCompleted 
 }) => {
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
-  const [showRoomDropdown, setShowRoomDropdown] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [waitingTime, setWaitingTime] = useState(0);
 
@@ -1159,14 +1157,13 @@ const WorkflowCard = ({
   useEffect(() => {
     const handleClickOutside = () => {
       setShowStatusDropdown(false);
-      setShowRoomDropdown(false);
     };
 
-    if (showStatusDropdown || showRoomDropdown) {
+    if (showStatusDropdown) {
       document.addEventListener('click', handleClickOutside);
       return () => document.removeEventListener('click', handleClickOutside);
     }
-  }, [showStatusDropdown, showRoomDropdown]);
+  }, [showStatusDropdown]);
 
   // Calculer temps d'attente pour patients en attente
   useEffect(() => {
