@@ -58,17 +58,67 @@ const AppointmentModal = ({
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.patient_id) {
-      toast.error('Veuillez sélectionner un patient');
-      return;
-    }
+    
+    // Validation des champs obligatoires
     if (!formData.date || !formData.heure) {
       toast.error('Veuillez remplir la date et l\'heure');
       return;
     }
-    onSave();
+    
+    // Si on est en mode "nouveau patient", créer le patient d'abord
+    if (showPatientForm) {
+      // Validation des données du nouveau patient
+      if (!newPatientData.nom || !newPatientData.prenom) {
+        toast.error('Veuillez remplir le nom et le prénom du patient');
+        return;
+      }
+      
+      try {
+        // Créer le nouveau patient
+        const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+        const response = await fetch(`${API_BASE_URL}/api/patients`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newPatientData),
+        });
+
+        if (response.ok) {
+          const newPatient = await response.json();
+          // Mettre à jour formData avec le nouveau patient_id
+          setFormData(prev => ({ ...prev, patient_id: newPatient.id }));
+          
+          // Créer le RDV immédiatement avec le nouveau patient
+          const appointmentData = {
+            ...formData,
+            patient_id: newPatient.id
+          };
+          
+          // Appeler onSave avec les données mises à jour
+          onSave(appointmentData);
+          
+          // Nettoyer le formulaire nouveau patient
+          setShowPatientForm(false);
+          setNewPatientData({ nom: '', prenom: '', telephone: '' });
+          toast.success('Patient créé et rendez-vous programmé avec succès');
+        } else {
+          toast.error('Erreur lors de la création du patient');
+        }
+      } catch (error) {
+        console.error('Error creating patient:', error);
+        toast.error('Erreur lors de la création du patient');
+      }
+    } else {
+      // Mode normal - vérifier qu'un patient est sélectionné
+      if (!formData.patient_id) {
+        toast.error('Veuillez sélectionner un patient');
+        return;
+      }
+      onSave();
+    }
   };
 
   if (!isOpen) return null;
