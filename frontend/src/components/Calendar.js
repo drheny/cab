@@ -1352,6 +1352,47 @@ const WorkflowCard = ({
     }
   }, [sectionType, appointment.statut, appointment.heure_arrivee_attente]);
 
+  // Fonction pour obtenir le style du marqueur d'attente selon la durée
+  const getWaitingTimeStyle = (minutes) => {
+    if (minutes < 15) {
+      return {
+        bgColor: 'bg-green-100',
+        textColor: 'text-green-700',
+        iconColor: 'text-green-500',
+        borderColor: 'border-green-200'
+      };
+    } else if (minutes < 30) {
+      return {
+        bgColor: 'bg-orange-100',
+        textColor: 'text-orange-700',
+        iconColor: 'text-orange-500',
+        borderColor: 'border-orange-200'
+      };
+    } else {
+      return {
+        bgColor: 'bg-red-100',
+        textColor: 'text-red-700',
+        iconColor: 'text-red-500',
+        borderColor: 'border-red-200'
+      };
+    }
+  };
+
+  // Fonction pour formatter la durée d'attente
+  const formatWaitingTime = (minutes) => {
+    if (minutes === 0) return 'Vient d\'arriver';
+    if (minutes === 1) return '1 minute';
+    if (minutes < 60) return `${minutes} minutes`;
+    
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    if (remainingMinutes === 0) {
+      return hours === 1 ? '1 heure' : `${hours} heures`;
+    } else {
+      return `${hours}h ${remainingMinutes}min`;
+    }
+  };
+
   const getWhatsAppLink = (numero) => {
     if (!numero) return '#';
     const cleanNumber = numero.replace(/\D/g, '');
