@@ -1631,29 +1631,29 @@ The Calendar frontend successfully implements all drag and drop reordering and r
 **WAITING ROOM FUNCTIONALITY STATUS: FULLY FUNCTIONAL AND PRODUCTION READY**
 Both waiting room time calculation and patient reordering functionality are now working correctly. All critical issues from the previous assessment have been resolved. The backend fully supports accurate waiting time calculation using actual arrival timestamps and effective patient reordering using priority-based sorting.
 
-## **OPTIMISTIC UPDATES PERFORMANCE - ✅ FULLY IMPLEMENTED:**
-✅ **Real-time UI Updates**: All actions update interface immediately before API calls
-✅ **C/V Type Toggle**: Optimistic updates working perfectly (129.7ms response time)
-✅ **Status Changes**: Dropdown status changes instant (128.9ms) with immediate UI feedback
-✅ **Room Assignment**: Room dropdown updates immediately (126.5ms) without page reload
-✅ **ENTRER Button**: Consultation start responds instantly (224.1ms) with immediate status change
-✅ **Drag and Drop**: Immediate reordering with optimistic UI updates
-✅ **Rapid Actions**: Multiple rapid actions (176.7ms) remain responsive without conflicts
-✅ **Error Handling**: Automatic reversion to backend data if API calls fail
-✅ **Zero Page Reloads**: No page refreshes detected during any interactions
-✅ **General Fluidity**: All 9 API calls processed without JavaScript errors
+## **REFINED WAITING TIME MARKER - ✅ FULLY IMPLEMENTED:**
+✅ **Clock Icon**: lucide-react Clock icon properly replaces emoji ⏱️
+✅ **Duration Formatting**: Smart formatting ("Vient d'arriver", minutes, hours) working perfectly
+✅ **Adaptive Colors**: Green/Orange/Red color schemes based on waiting duration functioning correctly
+✅ **Badge Style**: Professional rounded badge with border and colored background implemented
+✅ **Contextual Display**: Markers only appear for patients in "Salle d'attente" status
+✅ **Status Transitions**: Markers appear/disappear correctly when patients move to/from waiting room
+✅ **Real-time Updates**: Automatic minute-by-minute updates with dynamic color changes
+✅ **Color System**: Green (<15min), Orange (15-30min), Red (>30min) working correctly
+✅ **Professional Styling**: Rounded corners, borders, and appropriate spacing implemented
 
-## **PERFORMANCE METRICS:**
-✅ **Response Times**: All interactions under 230ms (excellent performance)
-✅ **User Experience**: Smooth, responsive interface with immediate feedback
-✅ **No Flash/Flicker**: Seamless transitions without visual disruption
-✅ **Memory Efficient**: Optimistic updates use minimal memory overhead
-✅ **Production Ready**: Performance exceeds requirements for medical workflow
+## **WAITING TIME MARKER FEATURES:**
+✅ **Visual Indicators**: Professional badge design with Clock icon and adaptive colors
+✅ **Smart Formatting**: Contextual duration display (0 min: "Vient d'arriver", 1 min: "1 minute", >60 min: "Xh Ymin")
+✅ **Color Coding**: Green for recent arrivals, Orange for moderate waits, Red for long waits
+✅ **Real-time Updates**: Automatic refresh every minute with dynamic color transitions
+✅ **Contextual Display**: Only shown for patients in waiting room status
+✅ **French Localization**: All text properly formatted in French
 
-**Testing Agent → Main Agent (2025-01-14 - Calendar Real-time Performance Optimization):**
-Comprehensive testing of Calendar optimistic updates completed successfully. All performance improvements have been implemented and are working flawlessly:
+**Testing Agent → Main Agent (2025-01-14 - Refined Waiting Time Marker Implementation):**
+Comprehensive testing of refined waiting time marker completed successfully. All visual improvements are working correctly:
 
-The Calendar interface now provides instant, real-time updates without page refreshes. All actions (C/V toggles, status changes, room assignments, ENTRER button, drag and drop) provide immediate UI feedback before API calls complete. Performance metrics exceed targets with response times under 230ms for all interactions. The user experience is now smooth and responsive as requested.
+The refined waiting time marker provides professional, color-coded visual feedback with Clock icon, smart duration formatting, and adaptive styling. The system properly displays waiting times with appropriate color coding based on duration, updates in real-time, and maintains contextual visibility only for waiting room patients. All features are production-ready and meet medical workflow requirements.
 
 ## **DRAG AND DROP REPOSITIONING - ✅ IMPROVEMENTS IMPLEMENTED:**
 ✅ **Algorithm Fixed**: Simplified drag and drop algorithm implemented in backend
