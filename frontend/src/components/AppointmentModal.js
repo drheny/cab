@@ -65,7 +65,8 @@ const AppointmentModal = ({
           // Créer le RDV immédiatement avec le nouveau patient
           const appointmentData = {
             ...formData,
-            patient_id: newPatient.patient_id // Utiliser patient_id retourné par l'API
+            patient_id: newPatient.patient_id, // Utiliser patient_id retourné par l'API
+            id: undefined // Supprimer l'id du formData pour laisser l'API le générer
           };
           
           console.log('Creating appointment with data:', appointmentData);
