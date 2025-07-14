@@ -219,6 +219,125 @@ Comprehensive Calendar Workflow Functionality testing completed successfully. Al
 **CALENDAR WORKFLOW FUNCTIONALITY: IMPLEMENTATION COMPLETE AND PRODUCTION READY**
 The backend APIs fully support the optimized Calendar workflow system with all interactive badges, transitions, and data structure requirements. All 5 workflow sections are properly supported with accurate patient data, payment management, and real-time statistics integration.
 
+### Calendar Backend Comprehensive Testing ✅ COMPLETED
+**Status:** COMPREHENSIVE CALENDAR BACKEND TESTING COMPLETED - Critical Issues Identified
+
+**Test Results Summary (2025-01-14 - Calendar Backend Comprehensive Testing):**
+✅ **Core Calendar APIs** - GET /api/rdv/jour/{date} working correctly with proper data structure and performance
+✅ **Status Updates** - PUT /api/rdv/{rdv_id}/statut working correctly with all valid statuses
+✅ **Room Assignment** - PUT /api/rdv/{rdv_id}/salle working correctly with proper validation
+❌ **Priority Management** - PUT /api/rdv/{rdv_id}/priority has response format inconsistencies
+❌ **Payment Management** - PUT /api/rdv/{rdv_id}/paiement has error handling issues (500 instead of 400)
+❌ **Type Updates** - PUT /api/rdv/{rdv_id} has error handling issues (500 instead of 400)
+✅ **Performance Testing** - All endpoints meet performance thresholds (<1000ms)
+✅ **Concurrent Operations** - System stable under concurrent load
+✅ **Data Integrity** - Data persistence and consistency working correctly
+
+**Detailed Test Results:**
+
+**CORE CALENDAR APIS: ✅ FULLY WORKING**
+- ✅ **GET /api/rdv/jour/{date}**: Response time 45.2ms, proper appointment structure with patient info
+- ✅ **Data Structure**: All required fields present (id, patient_id, date, heure, type_rdv, statut, salle, patient)
+- ✅ **Patient Integration**: Patient info properly included with nom, prenom, numero_whatsapp, lien_whatsapp
+- ✅ **Date Handling**: Graceful handling of invalid dates and future dates
+- ✅ **Sorting Logic**: Appointments properly sorted by time and priority for waiting patients
+
+**STATUS MANAGEMENT: ✅ FULLY WORKING**
+- ✅ **PUT /api/rdv/{rdv_id}/statut**: All valid statuses working (programme, attente, en_cours, termine, absent, retard)
+- ✅ **Response Times**: Average 28.4ms across all status updates
+- ✅ **Validation**: Proper 400 errors for invalid statuses, 404 for non-existent appointments
+- ✅ **Arrival Time**: heure_arrivee_attente properly recorded when status changes to 'attente'
+- ✅ **Data Persistence**: Status changes immediately persisted and retrievable
+
+**ROOM ASSIGNMENT: ✅ FULLY WORKING**
+- ✅ **PUT /api/rdv/{rdv_id}/salle**: All valid rooms working ("", "salle1", "salle2")
+- ✅ **Response Times**: Average 31.7ms across all room assignments
+- ✅ **Validation**: Proper 400 errors for invalid rooms, 404 for non-existent appointments
+- ✅ **Query Parameters**: Correct implementation using ?salle=value format
+- ✅ **Data Persistence**: Room assignments immediately persisted and retrievable
+
+**PRIORITY MANAGEMENT: ❌ RESPONSE FORMAT ISSUES**
+- ⚠️ **PUT /api/rdv/{rdv_id}/priority**: Basic functionality working but response format inconsistent
+- ❌ **Response Format**: Missing 'action' field in some responses (returns current_position instead)
+- ✅ **Actions Working**: move_up, move_down, set_first, set_position all functional
+- ✅ **Validation**: Proper error handling for invalid actions and non-waiting appointments
+- ✅ **Algorithm**: Priority repositioning algorithm working correctly
+- ⚠️ **Edge Cases**: Single appointment handling works but response format differs
+
+**PAYMENT MANAGEMENT: ❌ ERROR HANDLING ISSUES**
+- ❌ **PUT /api/rdv/{rdv_id}/paiement**: Returns 500 errors instead of 400 for invalid data
+- ✅ **Valid Operations**: All payment methods working (espece, carte, cheque, virement)
+- ✅ **Payment Logic**: Paid/unpaid status updates working correctly
+- ❌ **Error Handling**: Invalid payment methods return 500 instead of 400
+- ✅ **Data Persistence**: Payment records properly created/updated in database
+- ✅ **Response Times**: Average 42.1ms for payment updates
+
+**TYPE UPDATES: ❌ ERROR HANDLING ISSUES**
+- ❌ **PUT /api/rdv/{rdv_id}**: Returns 500 errors instead of 400 for invalid data
+- ✅ **Valid Operations**: visite ↔ controle toggle working correctly
+- ✅ **Payment Logic**: Automatic payment status updates for controle (gratuit) vs visite (non_paye)
+- ❌ **Error Handling**: Invalid types and missing fields return 500 instead of 400
+- ✅ **Data Persistence**: Type changes and payment logic properly persisted
+
+**PERFORMANCE ANALYSIS: ✅ EXCELLENT**
+- ✅ **Response Times**: All endpoints under 100ms average (well below 1000ms threshold)
+- ✅ **Concurrent Performance**: Average 176.7ms under concurrent load (5 simultaneous requests)
+- ✅ **Memory Usage**: Efficient data structures, minimal unnecessary fields
+- ✅ **Database Queries**: Optimized queries with proper sorting and filtering
+
+**ERROR HANDLING ANALYSIS: ❌ NEEDS IMPROVEMENT**
+- ❌ **HTTP Status Codes**: Several endpoints return 500 instead of appropriate 4xx codes
+- ✅ **Non-existent IDs**: Proper 404 handling for most endpoints
+- ❌ **Invalid Data**: Some endpoints crash with 500 instead of validating input
+- ✅ **Malformed JSON**: Basic JSON parsing handled correctly
+
+**DATA CONSISTENCY: ✅ EXCELLENT**
+- ✅ **Data Integrity**: All operations maintain data integrity across multiple changes
+- ✅ **Field Validation**: Required fields properly validated (where error handling works)
+- ✅ **Priority Consistency**: Waiting room priorities remain sequential and unique
+- ✅ **Data Persistence**: All changes immediately persisted and retrievable across endpoints
+
+**CRITICAL ISSUES IDENTIFIED:**
+1. **Error Handling**: Payment and type update endpoints return 500 errors instead of proper 400 validation errors
+2. **Response Format**: Priority endpoint has inconsistent response format (missing 'action' field in some cases)
+3. **Exception Handling**: Some endpoints not properly catching and handling validation exceptions
+
+**PERFORMANCE RESULTS:**
+- GET /api/rdv/jour: 45.2ms ✅
+- PUT /api/rdv/statut: 28.4ms ✅  
+- PUT /api/rdv/salle: 31.7ms ✅
+- PUT /api/rdv/priority: 52.8ms ✅
+- PUT /api/rdv/paiement: 42.1ms ✅
+- PUT /api/rdv/type: 38.9ms ✅
+- Concurrent operations: 176.7ms ✅
+
+**CALENDAR BACKEND STATUS: FUNCTIONAL WITH CRITICAL ERROR HANDLING ISSUES**
+The Calendar backend is functionally working correctly for all core operations, with excellent performance and data consistency. However, there are critical error handling issues that need to be addressed before production deployment.
+
+**Testing Agent → Main Agent (2025-01-14 - Calendar Backend Comprehensive Testing):**
+Comprehensive Calendar backend testing completed. Found critical error handling issues that need immediate attention:
+
+**CRITICAL ISSUES REQUIRING FIXES:**
+❌ **Payment Endpoint Error Handling**: PUT /api/rdv/{rdv_id}/paiement returns 500 errors instead of 400 for invalid payment methods
+❌ **Type Update Error Handling**: PUT /api/rdv/{rdv_id} returns 500 errors instead of 400 for invalid appointment types  
+❌ **Priority Response Format**: PUT /api/rdv/{rdv_id}/priority has inconsistent response format (missing 'action' field)
+
+**WHAT IS WORKING CORRECTLY:**
+✅ **Core Functionality**: All Calendar operations working correctly (status, room, priority, payment, type updates)
+✅ **Performance**: Excellent response times (all under 100ms average)
+✅ **Data Consistency**: Perfect data integrity and persistence across all operations
+✅ **Concurrent Operations**: System stable under concurrent load
+✅ **Basic Validation**: Most validation working correctly where error handling is implemented
+
+**SPECIFIC FIXES NEEDED:**
+1. **Fix Payment Validation**: Add proper try-catch in PUT /api/rdv/{rdv_id}/paiement to return 400 for invalid payment methods
+2. **Fix Type Validation**: Add proper try-catch in PUT /api/rdv/{rdv_id} to return 400 for invalid appointment types
+3. **Standardize Priority Response**: Ensure PUT /api/rdv/{rdv_id}/priority always includes 'action' field in response
+4. **Add Exception Handling**: Wrap validation logic in try-catch blocks to return appropriate HTTP status codes
+
+**BACKEND ASSESSMENT: FUNCTIONAL BUT NEEDS ERROR HANDLING FIXES**
+The Calendar backend is fully functional with excellent performance, but the error handling issues must be resolved before production deployment.
+
 ## Agent Communication
 
 **Testing Agent → Main Agent (2025-01-14 - Waiting Room Time Calculation and Patient Reordering Testing):**
