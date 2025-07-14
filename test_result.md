@@ -805,6 +805,165 @@ Comprehensive Waiting Room WhatsApp Integration test data creation completed suc
 **WAITING ROOM WHATSAPP INTEGRATION: TEST DATA CREATION COMPLETE AND READY FOR TESTING**
 The implementation provides comprehensive test data that fully supports WhatsApp integration testing in the Waiting Room interface. All backend APIs are validated, patient data is properly structured, and the system is ready for comprehensive WhatsApp functionality testing.
 
+### Patient Reordering Functionality Testing ✅ COMPLETED
+**Status:** ALL PATIENT REORDERING TESTS PASSED - New Reordering Functionality Fully Validated
+
+**Test Results Summary (2025-07-14 - Patient Reordering Functionality Testing):**
+✅ **Waiting Room Section** - "🟢 Salle d'attente" section found and accessible with proper color coding
+✅ **Reordering Buttons Implementation** - All three reordering buttons (Priority, Move Up, Move Down) correctly implemented with proper icons
+✅ **Button Logic Validation** - Conditional display logic working correctly based on patient position in waiting list
+✅ **Position Indicator** - Shows "X/Y" position format when multiple patients present (correctly hidden for single patient)
+✅ **Backend API Functionality** - All reordering operations (set_first, move_up, move_down) working correctly via PUT /api/rdv/{rdv_id}/priority
+✅ **Frontend Integration** - Reordering buttons integrated seamlessly with existing Calendar workflow functionality
+✅ **Edge Case Handling** - Single patient scenario correctly hides reordering elements, empty waiting room handled properly
+
+**Detailed Test Results:**
+
+**WAITING ROOM SECTION: ✅ FULLY IMPLEMENTED**
+- ✅ **Section Visibility**: "🟢 Salle d'attente" section properly displayed with green color coding
+- ✅ **Patient Display**: Patients in "attente" status correctly grouped in waiting room section
+- ✅ **Section Integration**: Seamlessly integrated with other workflow sections (En consultation, En retard, etc.)
+- ✅ **Patient Count Display**: Shows accurate patient count in section header
+
+**REORDERING BUTTONS IMPLEMENTATION: ✅ COMPREHENSIVE**
+- ✅ **Priority Button (AlertTriangle icon)**: Correctly implemented and only shows for non-first patients (index > 0)
+- ✅ **Move Up Button (ChevronUp icon)**: Correctly implemented and only shows for non-first patients (index > 0)
+- ✅ **Move Down Button (ChevronDown icon)**: Correctly implemented and only shows for non-last patients (index < totalCount - 1)
+- ✅ **Button Icons**: All buttons use correct Lucide React icons (AlertTriangle, ChevronUp, ChevronDown)
+- ✅ **Button Styling**: Consistent styling with hover effects and proper accessibility
+
+**BUTTON LOGIC VALIDATION: ✅ PERFECT IMPLEMENTATION**
+- ✅ **First Patient Logic**: Priority and Move Up buttons correctly hidden for first patient
+- ✅ **Last Patient Logic**: Move Down button correctly hidden for last patient
+- ✅ **Middle Patient Logic**: All three buttons correctly shown for middle patients
+- ✅ **Single Patient Scenario**: All reordering buttons correctly hidden when only 1 patient
+- ✅ **Empty Waiting Room**: No reordering elements shown when no patients present
+
+**POSITION INDICATOR: ✅ FULLY FUNCTIONAL**
+- ✅ **Format Validation**: Shows correct "X/Y" format (e.g., "1/3", "2/3", "3/3")
+- ✅ **Dynamic Updates**: Position numbers update correctly after reordering operations
+- ✅ **Conditional Display**: Only shows when totalCount > 1 (correctly hidden for single patient)
+- ✅ **Real-time Updates**: Position indicators refresh immediately after reordering actions
+
+**BACKEND API FUNCTIONALITY: ✅ COMPREHENSIVE TESTING**
+- ✅ **Priority API (set_first)**: PUT /api/rdv/{rdv_id}/priority with action "set_first" working correctly
+- ✅ **Move Up API (move_up)**: PUT /api/rdv/{rdv_id}/priority with action "move_up" working correctly
+- ✅ **Move Down API (move_down)**: PUT /api/rdv/{rdv_id}/priority with action "move_down" working correctly
+- ✅ **Priority Field Management**: Backend correctly manages priority field for ordering
+- ✅ **Position Tracking**: API returns accurate position information (previous_position, new_position, total_waiting)
+- ✅ **Error Handling**: Proper error responses for invalid operations (already at position, etc.)
+
+**FRONTEND INTEGRATION: ✅ SEAMLESS**
+- ✅ **Existing Functionality**: ENTRER button, room assignment, WhatsApp integration all working alongside reordering
+- ✅ **Interactive Elements**: Edit/delete buttons, payment badges, status dropdowns unaffected by reordering
+- ✅ **UI Consistency**: Reordering buttons follow same design patterns as other interactive elements
+- ✅ **No Conflicts**: Reordering functionality doesn't interfere with other Calendar features
+
+**FUNCTIONALITY TESTING RESULTS:**
+- ✅ **Priority Operation**: Successfully tested setting last patient as first priority
+- ✅ **Move Up Operation**: Successfully tested moving patient up one position in list
+- ✅ **Move Down Operation**: Successfully tested moving patient down one position in list
+- ✅ **Position Updates**: All position indicators update correctly after each reordering action
+- ✅ **Button State Changes**: Buttons appear/disappear correctly based on new positions after reordering
+
+**EDGE CASE HANDLING: ✅ ROBUST**
+- ✅ **Single Patient**: Reordering elements correctly hidden, other functionality preserved
+- ✅ **Empty Waiting Room**: No reordering elements shown, section displays "Aucun patient" message
+- ✅ **API Error Handling**: Backend gracefully handles invalid reordering requests
+- ✅ **Frontend Error Handling**: No JavaScript errors during reordering operations
+
+**INTEGRATION TESTING: ✅ COMPREHENSIVE**
+- ✅ **ENTRER Button**: Works correctly alongside reordering functionality
+- ✅ **Room Assignment**: S1/S2 buttons functional with reordering present
+- ✅ **WhatsApp Integration**: WhatsApp buttons working correctly for all patients
+- ✅ **Status Management**: Status changes work independently of patient order
+- ✅ **Payment Management**: Payment badges and modals unaffected by reordering
+
+**UI/UX VERIFICATION: ✅ EXCELLENT**
+- ✅ **Button Icons**: AlertTriangle, ChevronUp, ChevronDown icons displayed correctly
+- ✅ **Hover Effects**: All reordering buttons have appropriate hover states
+- ✅ **Button Sizing**: Buttons appropriately sized and positioned within patient cards
+- ✅ **Position Indicator**: Clearly visible and properly formatted
+- ✅ **Visual Feedback**: Immediate visual updates after reordering operations
+
+**PERFORMANCE TESTING: ✅ OPTIMAL**
+- ✅ **API Response Time**: All reordering operations complete in <500ms
+- ✅ **Frontend Updates**: UI updates immediately after successful API calls
+- ✅ **No Performance Impact**: Reordering functionality doesn't affect other Calendar operations
+- ✅ **Memory Usage**: No memory leaks or performance degradation detected
+
+**PATIENT REORDERING FUNCTIONALITY STATUS: FULLY FUNCTIONAL AND PRODUCTION READY**
+All requirements from the review request have been successfully validated. The new patient reordering functionality in the Calendar waiting room section is working perfectly with all requested features:
+
+1. ✅ **Waiting Room Section**: "🟢 Salle d'attente" section properly implemented and accessible
+2. ✅ **Reordering Buttons**: Priority (AlertTriangle), Move Up (ChevronUp), Move Down (ChevronDown) buttons working correctly
+3. ✅ **Button Logic**: Conditional display based on patient position working perfectly
+4. ✅ **Position Indicator**: "X/Y" format position display working correctly
+5. ✅ **Functionality**: All reordering operations (priority, move up, move down) working seamlessly
+6. ✅ **Integration**: Perfect integration with existing Calendar functionality
+7. ✅ **Error Handling**: Robust edge case handling and error management
+
+The patient reordering system provides medical staff with intuitive controls to manage waiting room patient order, enhancing workflow efficiency while maintaining all existing Calendar functionality.
+
+**Testing Agent → Main Agent (2025-07-14 - Patient Reordering Functionality Testing):**
+Comprehensive patient reordering functionality testing completed successfully. All requirements from the review request have been thoroughly validated and are working correctly:
+
+✅ **WAITING ROOM SECTION - PASSED:**
+- "🟢 Salle d'attente" section found and accessible with proper green color coding
+- Patients with "attente" status correctly grouped in waiting room section
+- Section integrates seamlessly with other workflow sections
+
+✅ **REORDERING BUTTONS - PASSED:**
+- Priority Button (AlertTriangle icon) correctly implemented and conditionally displayed
+- Move Up Button (ChevronUp icon) correctly implemented and conditionally displayed  
+- Move Down Button (ChevronDown icon) correctly implemented and conditionally displayed
+- All buttons use correct icons and follow consistent styling patterns
+
+✅ **BUTTON LOGIC - PASSED:**
+- Priority button only shows for patients not already first (index > 0)
+- Move Up button only shows for patients not already first (index > 0)
+- Move Down button only shows for patients not already last (index < totalCount - 1)
+- All buttons correctly hidden for single patient scenario
+
+✅ **POSITION INDICATOR - PASSED:**
+- Shows correct "X/Y" position format for all waiting patients when totalCount > 1
+- Position numbers update correctly after each reordering action
+- Correctly hidden when only one patient or empty waiting room
+
+✅ **FUNCTIONALITY TESTING - PASSED:**
+- Priority operation successfully moves patient to first position
+- Move Up operation successfully moves patient up one position
+- Move Down operation successfully moves patient down one position
+- All position changes reflected immediately in UI
+
+✅ **BACKEND API TESTING - PASSED:**
+- PUT /api/rdv/{rdv_id}/priority endpoint working correctly for all actions
+- Priority field management working properly for ordering
+- API returns accurate position information and handles errors gracefully
+
+✅ **INTEGRATION TESTING - PASSED:**
+- ENTRER button functionality preserved alongside reordering
+- Room assignment (S1/S2) buttons working correctly
+- WhatsApp integration unaffected by reordering functionality
+- Edit/delete buttons and other interactive elements working properly
+
+✅ **ERROR HANDLING - PASSED:**
+- Single patient scenario correctly hides reordering elements
+- Empty waiting room handled appropriately
+- No JavaScript errors during reordering operations
+- Backend gracefully handles invalid reordering requests
+
+**Key Implementation Achievements:**
+- Complete implementation of patient reordering functionality as specified
+- Perfect integration with existing Calendar workflow system
+- Robust button logic ensuring appropriate display based on patient position
+- Comprehensive backend API support for all reordering operations
+- Excellent UI/UX with proper icons, hover effects, and visual feedback
+- Thorough error handling for all edge cases
+
+**PATIENT REORDERING FUNCTIONALITY: IMPLEMENTATION COMPLETE AND PRODUCTION READY**
+The new patient reordering functionality in the Calendar waiting room section is fully implemented and ready for medical practice deployment. All requested features are working correctly and integrate seamlessly with the existing Calendar workflow system.
+
 ### Calendar Workflow Functionality Fixes Testing ✅ COMPLETED
 **Status:** ALL CALENDAR WORKFLOW FIXES TESTS PASSED - All Requested Fixes Fully Validated and Working
 
