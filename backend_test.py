@@ -4862,12 +4862,15 @@ class CabinetMedicalAPITest(unittest.TestCase):
         patient_id = patients[0]["id"]
         today = datetime.now().strftime("%Y-%m-%d")
         
+        # Use a future time to avoid auto delay detection
+        future_time = (datetime.now() + timedelta(hours=2)).strftime("%H:%M")
+        
         # Test 1: Create programme appointment and verify it appears in "absent non encore venu" section
         print("Testing programme appointment status...")
         programme_appointment = {
             "patient_id": patient_id,
             "date": today,
-            "heure": "14:00",
+            "heure": future_time,
             "type_rdv": "visite",
             "statut": "programme",
             "motif": "Test status transitions",
