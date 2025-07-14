@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, Search, Plus } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const AppointmentModal = ({ 
