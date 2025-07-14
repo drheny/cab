@@ -748,6 +748,92 @@ async def get_rdv_semaine(date: str):
         "appointments": appointments
     }
 
+@app.put("/api/rdv/{rdv_id}")
+async def update_rdv(rdv_id: str, update_data: dict):
+    """Update appointment (including type toggle from visite to controle and vice versa)"""
+    try:
+        # Extract update fields
+        type_rdv = update_data.get("type_rdv")
+        
+        if not type_rdv:
+            raise HTTPException(status_code=400, detail="type_rdv is required")
+        
+        # Validate appointment type
+        valid_types = ["visite", "controle"]
+        if type_rdv not in valid_types:
+            raise HTTPException(status_code=400, detail=f"Invalid type. Must be one of: {valid_types}")
+        
+        # Prepare update data
+        update_fields = {
+            "type_rdv": type_rdv,
+            "updated_at": datetime.now()
+        }
+        
+        # Apply payment logic corrections based on type
+        if type_rdv == "controle":
+            # Controle appointments should be automatically marked as gratuit (free)
+            update_fields.update({
+                "paye": True,
+                "montant_paye": 0,
+                "methode_paiement": "gratuit",
+                "date_paiement": datetime.now().strftime("%Y-%m-%d")
+            })
+        elif type_rdv == "visite":
+            # Visite appointments should default to non_paye (unpaid) status
+            update_fields.update({
+                "paye": False,
+                "montant_paye": 0,
+                "methode_paiement": "",
+                "date_paiement": None
+            })
+        
+        # Update appointment
+        result = appointments_collection.update_one(
+            {"id": rdv_id},
+            {"$set": update_fields}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Appointment not found")
+        
+        # Handle payment record based on type
+        if type_rdv == "controle":
+            # Create/update payment record for controle (gratuit)
+            payment_record = {
+                "id": str(uuid.uuid4()),
+                "patient_id": "",  # Will be filled from appointment
+                "appointment_id": rdv_id,
+                "montant": 0,
+                "type_paiement": "gratuit",
+                "statut": "paye",
+                "date": datetime.now().strftime("%Y-%m-%d"),
+                "created_at": datetime.now()
+            }
+            
+            # Get patient_id from appointment
+            appointment = appointments_collection.find_one({"id": rdv_id})
+            if appointment:
+                payment_record["patient_id"] = appointment.get("patient_id", "")
+            
+            # Insert or update payment record
+            payments_collection.update_one(
+                {"appointment_id": rdv_id},
+                {"$set": payment_record},
+                upsert=True
+            )
+        else:
+            # Remove payment record for visite (will be unpaid by default)
+            payments_collection.delete_one({"appointment_id": rdv_id})
+        
+        return {
+            "message": "Appointment updated successfully", 
+            "type_rdv": type_rdv,
+            "payment_status": "gratuit" if type_rdv == "controle" else "non_paye"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating appointment: {str(e)}")
+
 @app.put("/api/rdv/{rdv_id}/statut")
 async def update_rdv_statut(rdv_id: str, status_data: dict):
     """Update appointment status"""
