@@ -177,9 +177,16 @@ const Calendar = ({ user }) => {
 
   const handleStatusUpdate = async (appointmentId, newStatus) => {
     try {
-      await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/statut`, { statut: newStatus });
+      const updateData = { statut: newStatus };
+      
+      // When moving to waiting room, record the arrival time
+      if (newStatus === 'attente') {
+        updateData.heure_arrivee_attente = new Date().toISOString();
+      }
+      
+      await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/statut`, updateData);
       toast.success('Statut mis à jour');
-      fetchData();
+      await fetchData(); // Refresh data immediately
     } catch (error) {
       console.error('Error updating status:', error);
       toast.error('Erreur lors de la mise à jour du statut');
