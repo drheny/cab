@@ -337,7 +337,7 @@ const Calendar = ({ user }) => {
   // ====== FONCTIONS RÉORGANISATION SALLE D'ATTENTE ======
   
   // Drag and drop reordering for waiting room
-  const handleDragEnd = async (result) => {
+  const handleDragEnd = useCallback(async (result) => {
     const { destination, source, draggableId } = result;
     
     // If no destination, exit
@@ -379,10 +379,10 @@ const Calendar = ({ user }) => {
       // Revert optimistic update on error
       await fetchData();
     }
-  };
+  }, [API_BASE_URL, fetchData]);
 
   // Room assignment dropdown
-  const handleRoomAssignment = async (appointmentId, newRoom) => {
+  const handleRoomAssignment = useCallback(async (appointmentId, newRoom) => {
     // Optimistic update - update UI immediately
     setAppointments(prevAppointments => 
       prevAppointments.map(apt => {
@@ -405,7 +405,7 @@ const Calendar = ({ user }) => {
       // Revert optimistic update on error
       await fetchData();
     }
-  };
+  }, [API_BASE_URL, fetchData]);
 
   // États pour les modales (simplifié)
   const [showPaymentModal, setShowPaymentModal] = useState(false);
