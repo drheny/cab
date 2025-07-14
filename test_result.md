@@ -866,6 +866,73 @@ The Calendar frontend implementation is complete and matches all requirements. A
 **Updated Patient List Structure Status: PRODUCTION READY**
 All requirements from the review request have been successfully validated. The backend implementation fully supports the new column structure with proper data formatting, computed fields, and error handling.
 
+### Drag and Drop Repositioning in Waiting Room Testing ❌ CRITICAL ISSUE FOUND
+**Status:** CRITICAL BUG IDENTIFIED - Priority Update Logic is Flawed
+
+**Test Results Summary (2025-01-14 - Drag and Drop Repositioning Testing):**
+❌ **Priority Update Logic** - The algorithm for calculating new priorities in set_position action is fundamentally broken
+❌ **Visual Repositioning** - Appointments do not move to expected positions despite success messages
+❌ **Database Priority Updates** - Priority values are updated but with incorrect logic causing wrong ordering
+✅ **API Response Structure** - Endpoint returns proper success messages (explaining why users see validation messages)
+✅ **Status Validation** - Only 'attente' status appointments can be reordered (working correctly)
+✅ **Error Handling** - Invalid actions and non-waiting appointments properly rejected
+
+**Detailed Test Results:**
+
+**ROOT CAUSE IDENTIFIED: ❌ PRIORITY UPDATE ALGORITHM IS BROKEN**
+- ❌ **set_position Action**: When moving appointment from position 0 to position 2, it stays at position 0
+- ❌ **Priority Calculation Logic**: The algorithm in lines 1257-1275 of server.py has flawed conditional logic
+- ❌ **Position Mapping**: New priorities are calculated incorrectly, causing appointments to not move visually
+- ❌ **Multiple Appointments**: Priority conflicts occur when multiple appointments get same priority values
+
+**SPECIFIC ISSUE ANALYSIS:**
+- ❌ **Expected Behavior**: Move appointment from position 0 to position 2
+- ❌ **Actual Behavior**: Appointment remains at position 0 despite success message
+- ❌ **API Response**: Returns "Appointment set_position successful" but no actual repositioning occurs
+- ❌ **Priority Values**: Multiple appointments end up with same priority (2), breaking sort order
+
+**BACKEND IMPLEMENTATION PROBLEMS:**
+- ❌ **Flawed Algorithm**: Lines 1262-1269 in server.py contain incorrect conditional logic for priority calculation
+- ❌ **Priority Conflicts**: Multiple appointments assigned same priority value causing sort instability
+- ❌ **Position Calculation**: The logic for determining new priority values based on position is mathematically incorrect
+- ❌ **Edge Cases**: Algorithm fails for basic repositioning scenarios (position 0 → position 2)
+
+**WHAT IS WORKING:**
+✅ **API Endpoint**: PUT /api/rdv/{rdv_id}/priority endpoint accepts requests and returns responses
+✅ **Status Validation**: Only appointments with 'attente' status can be reordered
+✅ **Error Handling**: Invalid actions (invalid_action) properly rejected with 400 status
+✅ **Database Updates**: Priority field is updated in database (but with wrong values)
+✅ **Response Format**: API returns proper JSON with message, previous_position, new_position fields
+
+**CRITICAL FINDINGS:**
+- 🔍 **User Experience Issue**: Users see success messages but no visual change, causing confusion
+- 🔍 **Algorithm Failure**: The core repositioning logic is mathematically incorrect
+- 🔍 **Priority System Broken**: Multiple appointments get same priority, breaking sort order
+- 🔍 **Production Impact**: Drag and drop functionality is completely non-functional despite appearing to work
+
+**DRAG AND DROP REPOSITIONING STATUS: CRITICAL BUG - REQUIRES IMMEDIATE FIX**
+The priority update algorithm in the backend needs to be completely rewritten. The current implementation has fundamental logical errors that prevent any repositioning from working correctly. This explains why users report seeing validation messages but no actual repositioning.
+
+**Testing Agent → Main Agent (2025-01-14 - Drag and Drop Repositioning Testing):**
+Critical bug identified in drag and drop repositioning functionality. Comprehensive testing reveals that the priority update algorithm in the backend is fundamentally broken:
+
+❌ **CRITICAL ISSUE FOUND:**
+- Priority update logic in `/api/rdv/{rdv_id}/priority` endpoint is mathematically incorrect
+- Appointments do not move to expected positions despite success messages
+- Multiple appointments end up with same priority values, breaking sort order
+- Users see validation messages but no visual repositioning occurs
+
+❌ **SPECIFIC PROBLEM:**
+- Lines 1257-1275 in server.py contain flawed conditional logic for priority calculation
+- When moving appointment from position 0 to position 2, it remains at position 0
+- Algorithm assigns same priority (2) to multiple appointments, causing sort conflicts
+
+❌ **ROOT CAUSE:**
+The algorithm for calculating new priority values based on position changes is fundamentally incorrect. The conditional logic in the priority update function does not properly handle the repositioning scenarios.
+
+**IMMEDIATE ACTION REQUIRED:**
+The priority update algorithm needs to be completely rewritten with correct mathematical logic for repositioning appointments in the waiting room queue.
+
 ### Calendar Drag and Drop Reordering and Room Assignment Testing ✅ COMPLETED
 **Status:** ALL CALENDAR BACKEND TESTS PASSED - Drag and Drop and Room Assignment Functionality Fully Validated
 
