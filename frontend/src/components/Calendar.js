@@ -180,7 +180,7 @@ const Calendar = ({ user }) => {
     }
   }, [API_BASE_URL, fetchData]);
 
-  const handleStatusUpdate = async (appointmentId, newStatus) => {
+  const handleStatusUpdate = useCallback(async (appointmentId, newStatus) => {
     // Optimistic update - update UI immediately
     setAppointments(prevAppointments => 
       prevAppointments.map(apt => {
@@ -212,12 +212,10 @@ const Calendar = ({ user }) => {
       // Revert optimistic update on error
       await fetchData();
     }
-  };
+  }, [API_BASE_URL, fetchData]);
 
-  // ====== NOUVELLES FONCTIONS WORKFLOW ======
-  
   // Basculer entre Contrôle/Visite
-  const handleTypeToggle = async (appointmentId, currentType) => {
+  const handleTypeToggle = useCallback(async (appointmentId, currentType) => {
     const newType = currentType === 'visite' ? 'controle' : 'visite';
     
     // Optimistic update - update UI immediately
@@ -260,7 +258,7 @@ const Calendar = ({ user }) => {
       // Revert optimistic update on error
       await fetchData();
     }
-  };
+  }, [API_BASE_URL, fetchData]);
 
   // Démarrer consultation (attente → en_cours)
   const handleStartConsultation = async (appointmentId) => {
