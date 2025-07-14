@@ -1162,6 +1162,108 @@ async def create_payment(payment: Payment):
     payments_collection.insert_one(payment_dict)
     return {"message": "Payment created successfully", "payment_id": payment.id}
 
+
+@app.put("/api/rdv/{rdv_id}/priority")
+async def update_rdv_priority(rdv_id: str, priority_data: dict):
+    """Update appointment priority/position for waiting room reordering"""
+    try:
+        action = priority_data.get("action")
+        
+        if not action:
+            raise HTTPException(status_code=400, detail="action is required")
+        
+        # Validate action
+        valid_actions = ["move_up", "move_down", "set_first"]
+        if action not in valid_actions:
+            raise HTTPException(status_code=400, detail=f"Invalid action. Must be one of: {valid_actions}")
+        
+        # Get the appointment to reorder
+        appointment = appointments_collection.find_one({"id": rdv_id})
+        if not appointment:
+            raise HTTPException(status_code=404, detail="Appointment not found")
+        
+        # Only allow reordering for appointments in 'attente' status
+        if appointment["statut"] != "attente":
+            raise HTTPException(status_code=400, detail="Only appointments with 'attente' status can be reordered")
+        
+        # Get all appointments for the same date with 'attente' status, sorted by current position
+        date = appointment["date"]
+        waiting_appointments = list(appointments_collection.find({
+            "date": date,
+            "statut": "attente"
+        }).sort("heure", 1))  # Sort by time as default ordering
+        
+        if len(waiting_appointments) <= 1:
+            return {"message": "Only one appointment in waiting room, no reordering needed"}
+        
+        # Find current position of the appointment
+        current_pos = None
+        for i, appt in enumerate(waiting_appointments):
+            if appt["id"] == rdv_id:
+                current_pos = i
+                break
+        
+        if current_pos is None:
+            raise HTTPException(status_code=404, detail="Appointment not found in waiting list")
+        
+        # Perform the reordering action
+        if action == "set_first":
+            # Move to first position
+            new_pos = 0
+        elif action == "move_up":
+            # Move up one position (decrease index)
+            new_pos = max(0, current_pos - 1)
+        elif action == "move_down":
+            # Move down one position (increase index)
+            new_pos = min(len(waiting_appointments) - 1, current_pos + 1)
+        
+        # If position doesn't change, return early
+        if new_pos == current_pos:
+            return {
+                "message": f"Appointment already at {action} position",
+                "current_position": current_pos + 1,
+                "total_waiting": len(waiting_appointments)
+            }
+        
+        # Reorder the appointments by updating their priority field
+        # We'll use a priority field to maintain order (lower number = higher priority)
+        for i, appt in enumerate(waiting_appointments):
+            if i == current_pos:
+                continue  # Skip the appointment being moved
+            
+            # Calculate new priority based on position
+            if i < new_pos:
+                priority = i
+            elif i >= new_pos and current_pos > new_pos:
+                priority = i + 1
+            elif i > new_pos and current_pos < new_pos:
+                priority = i
+            else:
+                priority = i
+            
+            # Update priority in database
+            appointments_collection.update_one(
+                {"id": appt["id"]},
+                {"$set": {"priority": priority, "updated_at": datetime.now()}}
+            )
+        
+        # Update the moved appointment's priority
+        appointments_collection.update_one(
+            {"id": rdv_id},
+            {"$set": {"priority": new_pos, "updated_at": datetime.now()}}
+        )
+        
+        return {
+            "message": f"Appointment {action} successful",
+            "previous_position": current_pos + 1,
+            "new_position": new_pos + 1,
+            "total_waiting": len(waiting_appointments),
+            "action": action
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating priority: {str(e)}")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
