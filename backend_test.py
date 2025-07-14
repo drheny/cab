@@ -8221,11 +8221,12 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
         
         today = datetime.now().strftime("%Y-%m-%d")
         
-        # Create a test appointment in 'programme' status
+        # Create a test appointment in 'programme' status with future time to avoid delay detection
+        future_time = (datetime.now() + timedelta(hours=2)).strftime("%H:%M")
         appointment_data = {
             "patient_id": patients[0]["id"],
             "date": today,
-            "heure": "12:00",
+            "heure": future_time,
             "type_rdv": "visite",
             "statut": "programme",
             "motif": "Test appointment for waiting time recording",
