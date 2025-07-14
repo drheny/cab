@@ -130,7 +130,7 @@ const Calendar = ({ user }) => {
     }
   }, [selectedDate, viewMode, API_BASE_URL]);
 
-  const handleCreateAppointment = async () => {
+  const handleCreateAppointment = useCallback(async () => {
     try {
       console.log('Creating appointment with formData:', formData);
       const response = await axios.post(`${API_BASE_URL}/api/appointments`, formData);
@@ -145,9 +145,9 @@ const Calendar = ({ user }) => {
       console.error('Error details:', error.response?.data);
       toast.error('Erreur lors de la création du rendez-vous: ' + (error.response?.data?.detail || error.message));
     }
-  };
+  }, [formData, API_BASE_URL, resetForm, fetchData]);
 
-  const handleUpdateAppointment = async () => {
+  const handleUpdateAppointment = useCallback(async () => {
     try {
       await axios.put(`${API_BASE_URL}/api/appointments/${selectedAppointment.id}`, formData);
       toast.success('Rendez-vous mis à jour avec succès');
@@ -159,9 +159,9 @@ const Calendar = ({ user }) => {
       console.error('Error updating appointment:', error);
       toast.error('Erreur lors de la mise à jour du rendez-vous');
     }
-  };
+  }, [formData, selectedAppointment, API_BASE_URL, resetForm, fetchData]);
 
-  const handleDeleteAppointment = async (appointmentId) => {
+  const handleDeleteAppointment = useCallback(async (appointmentId) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce rendez-vous ?')) {
       // Optimistic update - remove from UI immediately
       setAppointments(prevAppointments => 
@@ -178,7 +178,7 @@ const Calendar = ({ user }) => {
         await fetchData();
       }
     }
-  };
+  }, [API_BASE_URL, fetchData]);
 
   const handleStatusUpdate = async (appointmentId, newStatus) => {
     // Optimistic update - update UI immediately
