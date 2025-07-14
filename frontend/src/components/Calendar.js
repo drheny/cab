@@ -284,22 +284,14 @@ const Calendar = ({ user }) => {
     if (destination.index === source.index) return;
     
     try {
-      const waitingPatients = groupedAppointments.attente;
-      const draggedAppointment = waitingPatients.find(apt => apt.id === draggableId);
-      
-      if (!draggedAppointment) return;
-      
-      // Calculate new priority based on position
-      const newPriority = destination.index;
-      
       // Update appointment priority in backend
       await axios.put(`${API_BASE_URL}/api/rdv/${draggableId}/priority`, {
         action: 'set_position',
-        position: newPriority
+        position: destination.index
       });
       
       toast.success('Patient repositionné');
-      await fetchData(); // Refresh data
+      await fetchData(); // Refresh data immediately
     } catch (error) {
       console.error('Error reordering patient:', error);
       toast.error('Erreur lors du repositionnement');
