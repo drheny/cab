@@ -776,6 +776,113 @@ Comprehensive testing of refined waiting room time marker completed successfully
 **REFINED WAITING ROOM TIME MARKER: FULLY IMPLEMENTED AND PRODUCTION READY**
 All visual improvements specified in the review request are working correctly. The implementation provides professional, real-time waiting time feedback with proper Clock icon, smart duration formatting, adaptive colors, and badge styling that enhances the medical workflow experience.
 
+### Calendar Weekly View Visual Improvements Testing ✅ COMPLETED
+**Status:** ALL CALENDAR WEEKLY VIEW VISUAL IMPROVEMENTS TESTS PASSED - New Color System and Badges Fully Validated
+
+**Test Results Summary (2025-07-14 - Calendar Weekly View Visual Improvements Testing):**
+✅ **New Color System Implementation** - getAppointmentColor() function working correctly with proper priority logic
+✅ **Appointment Colors According to Specifications** - visite=green, controle=blue, retard=red (priority over type)
+✅ **V/C Badge System** - V badges in green, C badges in blue with correct color schemes
+✅ **Payment Badge System** - Payé (green), Non Payé (red), Gratuit (green) badges working correctly
+✅ **Weekly View Functionality** - Vue Semaine accessible and functional with proper grid layout
+✅ **View Toggle System** - Liste/Semaine buttons working correctly for view switching
+✅ **Badge Color Accuracy** - 100% accuracy in badge color implementation (6/6 appointments tested)
+✅ **Priority Logic** - Retard status correctly overrides type color (red priority over green/blue)
+
+**Detailed Test Results:**
+
+**NEW COLOR SYSTEM VALIDATION: ✅ FULLY WORKING**
+- ✅ **getAppointmentColor() Function**: Successfully replaces getStatusColor() with new logic
+- ✅ **Priority Logic**: Retard status (red) correctly takes priority over appointment type colors
+- ✅ **Type-Based Colors**: visite appointments display in green, controle appointments in blue
+- ✅ **Color Consistency**: All 6 tested appointments showed correct color implementation
+- ✅ **CSS Classes**: Proper bg-green-100/text-green-800, bg-blue-100/text-blue-800, bg-red-100/text-red-800 usage
+
+**APPOINTMENT COLOR SPECIFICATIONS: ✅ COMPREHENSIVE**
+- ✅ **Visite = Green**: Confirmed visite appointments display with green background (bg-green-100 text-green-800)
+- ✅ **Controle = Blue**: Confirmed controle appointments display with blue background (bg-blue-100 text-blue-800)
+- ✅ **Retard = Red Priority**: Confirmed retard status overrides type color with red background (bg-red-100 text-red-800)
+- ✅ **Border Consistency**: Matching border colors (border-green-200, border-blue-200, border-red-200)
+
+**V/C BADGE SYSTEM: ✅ FULLY WORKING**
+- ✅ **V Badge Colors**: All V badges correctly display with green scheme (bg-green-200 text-green-800)
+- ✅ **C Badge Colors**: All C badges correctly display with blue scheme (bg-blue-200 text-blue-800)
+- ✅ **Badge Positioning**: V/C badges properly positioned within appointment cards
+- ✅ **Visual Consistency**: Consistent badge styling across all appointments
+
+**PAYMENT BADGE SYSTEM: ✅ COMPREHENSIVE**
+- ✅ **Payé Badges**: Correctly display in green (bg-green-200 text-green-800)
+- ✅ **Non Payé Badges**: Correctly display in red (bg-red-200 text-red-800)
+- ✅ **Gratuit Badges**: Correctly display in green for controle appointments (bg-green-200 text-green-800)
+- ✅ **Logic Implementation**: Payment status correctly determined by appointment type and payment status
+
+**WEEKLY VIEW FUNCTIONALITY: ✅ FULLY WORKING**
+- ✅ **Vue Semaine Header**: Weekly view properly identified with "Vue Semaine" header
+- ✅ **Day Grid Layout**: 6 day columns (Lundi-Samedi) properly displayed
+- ✅ **Time Slots**: 36 time slots (9h00-18h00, 15-minute intervals) correctly rendered
+- ✅ **Appointment Display**: 6 appointments properly positioned in weekly grid
+- ✅ **Grid Navigation**: Time slots and day headers properly aligned
+
+**VIEW TOGGLE FUNCTIONALITY: ✅ WORKING**
+- ✅ **Liste/Semaine Buttons**: Both toggle buttons present and functional
+- ✅ **Liste View**: Successfully switches to workflow sections view
+- ✅ **Semaine View**: Successfully switches to weekly grid view
+- ✅ **State Persistence**: View state properly maintained during navigation
+
+**TEST DATA VALIDATION: ✅ COMPREHENSIVE**
+- ✅ **Appointment 1**: Yassine Ben Ahmed - visite, attente, payé → GREEN appointment, V green badge, Payé green badge
+- ✅ **Appointment 2**: Lina Alami - visite, non payé → GREEN appointment, V green badge, Non Payé red badge
+- ✅ **Appointment 3**: Lina Alami - controle, retard → RED appointment (retard priority), C blue badge, Gratuit green badge
+- ✅ **Appointment 4**: Omar Tazi - controle, normal → BLUE appointment, C blue badge, Gratuit green badge
+- ✅ **Additional Appointments**: All tested appointments follow the same correct pattern
+
+**PERFORMANCE AND STABILITY: ✅ EXCELLENT**
+- ✅ **View Switching**: Smooth transitions between Liste and Semaine views
+- ✅ **Color Rendering**: Immediate and consistent color application
+- ✅ **Badge Display**: All badges render correctly without layout issues
+- ✅ **Responsive Design**: Weekly view properly adapts to screen size
+
+**CALENDAR WEEKLY VIEW VISUAL IMPROVEMENTS STATUS: FULLY FUNCTIONAL AND PRODUCTION READY**
+All visual improvements from the review request have been successfully implemented and tested. The new color system with getAppointmentColor() function works perfectly, implementing the specified color scheme (visite=green, controle=blue, retard=red priority). The badge system displays V/C badges and payment badges with correct colors as specified. The weekly view functionality is complete and fully operational.
+
+**Testing Agent → Main Agent (2025-07-14 - Calendar Weekly View Visual Improvements Testing):**
+Comprehensive Calendar Weekly View visual improvements testing completed successfully. All requirements from the review request have been thoroughly validated:
+
+✅ **NEW COLOR SYSTEM IMPLEMENTATION - PASSED:**
+- getAppointmentColor() function successfully replaces getStatusColor() with new priority logic
+- Retard status correctly takes priority over appointment type colors (red overrides green/blue)
+- All appointment colors follow specifications: visite=green, controle=blue, retard=red
+
+✅ **BADGE SYSTEM IMPLEMENTATION - PASSED:**
+- V/C badges display with correct colors: V badges in green, C badges in blue
+- Payment badges work correctly: Payé (green), Non Payé (red), Gratuit (green for controles)
+- All badge colors match the specified color schemes exactly
+
+✅ **WEEKLY VIEW FUNCTIONALITY - PASSED:**
+- Vue Semaine accessible via Semaine button in view toggle
+- Weekly grid displays properly with 6 days (Lundi-Samedi) and time slots (9h00-18h00)
+- Appointments positioned correctly in weekly grid with all visual improvements
+
+✅ **COLOR SPECIFICATIONS VALIDATION - PASSED:**
+- 100% accuracy in color implementation (6/6 appointments tested correctly)
+- Priority logic working: retard status overrides type colors as specified
+- Visual consistency maintained across all appointment types and statuses
+
+✅ **TEST DATA VERIFICATION - PASSED:**
+- All test scenarios from review request validated successfully
+- Appointment colors and badges match expected specifications exactly
+- No visual regressions or color inconsistencies detected
+
+**Key Implementation Highlights:**
+- getAppointmentColor() function properly implements priority logic (retard > type)
+- Badge color schemes follow exact specifications with proper CSS classes
+- Weekly view maintains all visual improvements while preserving functionality
+- View toggle system works seamlessly between Liste and Semaine views
+- All visual elements render consistently without performance issues
+
+**CALENDAR WEEKLY VIEW VISUAL IMPROVEMENTS: FULLY IMPLEMENTED AND PRODUCTION READY**
+The Calendar Weekly View visual improvements have been successfully implemented and tested. The new color system with getAppointmentColor() function, updated V/C badges, and new payment badges all work correctly according to the specifications. The weekly view functionality is complete and ready for production use.
+
 
 ### Phase 2: Frontend - Vue Liste ✅ COMPLETED  
 **Status:** ALL FEATURES IMPLEMENTED AND TESTED - Calendar Frontend Complete
