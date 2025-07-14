@@ -1189,25 +1189,26 @@ async def create_payment(payment: Payment):
 @app.put("/api/rdv/{rdv_id}/priority")
 async def update_rdv_priority(rdv_id: str, priority_data: dict):
     """Update appointment priority/position for waiting room reordering"""
+    action = priority_data.get("action")
+    
+    if not action:
+        raise HTTPException(status_code=400, detail="action is required")
+    
+    # Validate action
+    valid_actions = ["move_up", "move_down", "set_first"]
+    if action not in valid_actions:
+        raise HTTPException(status_code=400, detail=f"Invalid action. Must be one of: {valid_actions}")
+    
+    # Get the appointment to reorder
+    appointment = appointments_collection.find_one({"id": rdv_id})
+    if not appointment:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+    
+    # Only allow reordering for appointments in 'attente' status
+    if appointment["statut"] != "attente":
+        raise HTTPException(status_code=400, detail="Only appointments with 'attente' status can be reordered")
+    
     try:
-        action = priority_data.get("action")
-        
-        if not action:
-            raise HTTPException(status_code=400, detail="action is required")
-        
-        # Validate action
-        valid_actions = ["move_up", "move_down", "set_first"]
-        if action not in valid_actions:
-            raise HTTPException(status_code=400, detail=f"Invalid action. Must be one of: {valid_actions}")
-        
-        # Get the appointment to reorder
-        appointment = appointments_collection.find_one({"id": rdv_id})
-        if not appointment:
-            raise HTTPException(status_code=404, detail="Appointment not found")
-        
-        # Only allow reordering for appointments in 'attente' status
-        if appointment["statut"] != "attente":
-            raise HTTPException(status_code=400, detail="Only appointments with 'attente' status can be reordered")
         
         # Get all appointments for the same date with 'attente' status, sorted by current position
         date = appointment["date"]
