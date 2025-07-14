@@ -186,30 +186,6 @@ const Calendar = ({ user }) => {
     }
   };
 
-  const handleRoomAssignment = async (appointmentId, salle) => {
-    try {
-      await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/salle`, { salle });
-      toast.success(`Affecté à ${salle === 'salle1' ? 'Salle 1' : salle === 'salle2' ? 'Salle 2' : 'aucune salle'}`);
-      fetchData();
-    } catch (error) {
-      console.error('Error updating room:', error);
-      toast.error('Erreur lors de l\'affectation de salle');
-    }
-  };
-
-  const handlePatientArrival = async (appointmentId, salle) => {
-    try {
-      // Marquer le patient comme arrivé et l'affecter à la salle
-      await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/statut`, { statut: 'attente' });
-      await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/salle`, { salle });
-      toast.success(`Patient arrivé et affecté à ${salle === 'salle1' ? 'Salle 1' : 'Salle 2'}`);
-      fetchData();
-    } catch (error) {
-      console.error('Error handling patient arrival:', error);
-      toast.error('Erreur lors de la prise en charge du patient');
-    }
-  };
-
   // ====== NOUVELLES FONCTIONS WORKFLOW ======
   
   // Basculer entre Contrôle/Visite
