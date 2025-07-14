@@ -1168,25 +1168,24 @@ const WorkflowCard = ({
   // Calculer temps d'attente pour patients en salle d'attente seulement
   useEffect(() => {
     if (sectionType === 'attente' && appointment.statut === 'attente') {
-      // Le compteur commence seulement quand le patient est en statut "attente"
-      // On utilise l'heure de création ou de mise à jour du statut
-      const startTime = new Date(`2025-01-01 ${appointment.heure}`);
+      // Le compteur se base sur l'heure d'arrivée en salle d'attente
+      // Si pas d'heure d'arrivée spécifique, utiliser l'heure actuelle comme début
+      const arrivalTime = appointment.heure_arrivee_attente || new Date().toISOString();
+      const startTime = new Date(arrivalTime);
       const now = new Date();
-      const currentTime = new Date(`2025-01-01 ${now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`);
-      const diffMinutes = Math.max(0, Math.floor((currentTime - startTime) / 60000));
+      const diffMinutes = Math.max(0, Math.floor((now - startTime) / 60000));
       setWaitingTime(diffMinutes);
       
       // Mettre à jour toutes les minutes
       const interval = setInterval(() => {
         const newNow = new Date();
-        const newCurrentTime = new Date(`2025-01-01 ${newNow.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`);
-        const newDiffMinutes = Math.max(0, Math.floor((newCurrentTime - startTime) / 60000));
+        const newDiffMinutes = Math.max(0, Math.floor((newNow - startTime) / 60000));
         setWaitingTime(newDiffMinutes);
       }, 60000);
       
       return () => clearInterval(interval);
     }
-  }, [sectionType, appointment.heure, appointment.statut]);
+  }, [sectionType, appointment.statut, appointment.heure_arrivee_attente]);
 
   const getWhatsAppLink = (numero) => {
     if (!numero) return '#';
