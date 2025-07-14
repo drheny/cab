@@ -1698,7 +1698,7 @@ class CabinetMedicalAPITest(unittest.TestCase):
             self.assertEqual(response.status_code, 200)
             
             # Step 3: Update status to 'attente' using PUT /api/rdv/{id}/statut
-            response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/statut?statut=attente")
+            response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/statut", json={"statut": "attente"})
             self.assertEqual(response.status_code, 200)
             
             # Step 4: Verify patient appears in waiting room data
