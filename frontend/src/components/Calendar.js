@@ -1602,7 +1602,7 @@ const WorkflowCard = React.memo(({
       )}
     </div>
   );
-};
+});
 
 // Modal de paiement
 const PaymentModal = ({ appointment, onClose, onUpdate }) => {
