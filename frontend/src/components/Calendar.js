@@ -886,14 +886,16 @@ const WeekView = ({ weekData, onStatusUpdate, onRoomAssignment, onEdit, onDelete
     return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'programme': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'attente': return 'bg-green-100 text-green-800 border-green-200';
-      case 'en_cours': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'termine': return 'bg-gray-100 text-gray-600 border-gray-200';
-      case 'absent': return 'bg-red-100 text-red-800 border-red-200';
-      case 'retard': return 'bg-orange-100 text-orange-800 border-orange-200';
+  const getAppointmentColor = (appointment) => {
+    // Couleur rouge pour les retards
+    if (appointment.statut === 'retard') {
+      return 'bg-red-100 text-red-800 border-red-200';
+    }
+    
+    // Couleur selon le type de RDV
+    switch (appointment.type_rdv) {
+      case 'visite': return 'bg-green-100 text-green-800 border-green-200';
+      case 'controle': return 'bg-blue-100 text-blue-800 border-blue-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
