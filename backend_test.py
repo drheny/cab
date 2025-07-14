@@ -9346,5 +9346,290 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
         
         print("✅ All edge case tests passed!")
 
+    # ========== DRAG AND DROP REPOSITIONING TESTS - SPECIFIC ISSUE VALIDATION ==========
+    
+    def test_drag_and_drop_specific_issues(self):
+        """Test specific drag and drop issues reported by user:
+        1. Moving up brings patient to position 0 (top)
+        2. Moving down doesn't work
+        """
+        print("\n=== TESTING DRAG AND DROP SPECIFIC ISSUES ===")
+        
+        # Step 1: Create 4 test appointments with 'attente' status
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) >= 4, "Need at least 4 patients for testing")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        test_appointments = []
+        patient_names = ["Patient A", "Patient B", "Patient C", "Patient D"]
+        
+        # Create 4 appointments in sequence
+        for i in range(4):
+            appointment_data = {
+                "patient_id": patients[i % len(patients)]["id"],
+                "date": today,
+                "heure": f"{9 + i}:00",
+                "type_rdv": "visite",
+                "statut": "attente",
+                "motif": f"Test appointment for {patient_names[i]}",
+                "priority": i  # Set initial priorities 0, 1, 2, 3
+            }
+            
+            response = requests.post(f"{self.base_url}/api/appointments", json=appointment_data)
+            self.assertEqual(response.status_code, 200)
+            appointment_id = response.json()["appointment_id"]
+            test_appointments.append({
+                "id": appointment_id,
+                "patient_name": patient_names[i],
+                "expected_priority": i
+            })
+            print(f"✅ Created {patient_names[i]} with priority {i}")
+        
+        try:
+            # Step 2: Verify initial order with priorities (0, 1, 2, 3)
+            print("\n--- Step 2: Verify Initial Order ---")
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            # Filter only our test appointments in waiting status
+            waiting_appointments = [apt for apt in appointments if apt["statut"] == "attente" and apt["id"] in [ta["id"] for ta in test_appointments]]
+            waiting_appointments.sort(key=lambda x: x.get("priority", 999))
+            
+            self.assertEqual(len(waiting_appointments), 4, "Should have 4 waiting appointments")
+            
+            for i, apt in enumerate(waiting_appointments):
+                expected_priority = i
+                actual_priority = apt.get("priority", 999)
+                print(f"Position {i}: {apt['motif']} - Priority: {actual_priority}")
+                self.assertEqual(actual_priority, expected_priority, f"Initial priority mismatch at position {i}")
+            
+            print("✅ Initial order verified: priorities are 0, 1, 2, 3")
+            
+            # Step 3: Test moving Patient C (position 2) up to position 1 using set_position
+            print("\n--- Step 3: Move Patient C (position 2) to position 1 ---")
+            patient_c_id = test_appointments[2]["id"]  # Patient C
+            
+            response = requests.put(f"{self.base_url}/api/rdv/{patient_c_id}/priority", json={
+                "action": "set_position",
+                "position": 1
+            })
+            self.assertEqual(response.status_code, 200)
+            move_data = response.json()
+            print(f"Move response: {move_data}")
+            
+            # Verify new order: Patient A, Patient C, Patient B, Patient D
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            waiting_appointments = [apt for apt in appointments if apt["statut"] == "attente" and apt["id"] in [ta["id"] for ta in test_appointments]]
+            waiting_appointments.sort(key=lambda x: x.get("priority", 999))
+            
+            expected_order_after_move_up = ["Patient A", "Patient C", "Patient B", "Patient D"]
+            for i, apt in enumerate(waiting_appointments):
+                expected_patient = expected_order_after_move_up[i]
+                actual_motif = apt["motif"]
+                print(f"Position {i}: {actual_motif} - Priority: {apt.get('priority', 999)}")
+                self.assertIn(expected_patient, actual_motif, f"Wrong patient at position {i} after move up")
+                self.assertEqual(apt.get("priority", 999), i, f"Wrong priority at position {i} after move up")
+            
+            print("✅ Move up test passed: Patient C moved to position 1")
+            
+            # Step 4: Test moving Patient B (now at position 2) down to position 3 using set_position
+            print("\n--- Step 4: Move Patient B (position 2) to position 3 ---")
+            patient_b_id = test_appointments[1]["id"]  # Patient B
+            
+            response = requests.put(f"{self.base_url}/api/rdv/{patient_b_id}/priority", json={
+                "action": "set_position",
+                "position": 3
+            })
+            self.assertEqual(response.status_code, 200)
+            move_data = response.json()
+            print(f"Move response: {move_data}")
+            
+            # Verify new order: Patient A, Patient C, Patient D, Patient B
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            waiting_appointments = [apt for apt in appointments if apt["statut"] == "attente" and apt["id"] in [ta["id"] for ta in test_appointments]]
+            waiting_appointments.sort(key=lambda x: x.get("priority", 999))
+            
+            expected_order_after_move_down = ["Patient A", "Patient C", "Patient D", "Patient B"]
+            for i, apt in enumerate(waiting_appointments):
+                expected_patient = expected_order_after_move_down[i]
+                actual_motif = apt["motif"]
+                print(f"Position {i}: {actual_motif} - Priority: {apt.get('priority', 999)}")
+                self.assertIn(expected_patient, actual_motif, f"Wrong patient at position {i} after move down")
+                self.assertEqual(apt.get("priority", 999), i, f"Wrong priority at position {i} after move down")
+            
+            print("✅ Move down test passed: Patient B moved to position 3")
+            
+            # Step 5: Test edge cases - move to position 0 (first)
+            print("\n--- Step 5: Test Edge Case - Move to Position 0 (First) ---")
+            patient_d_id = test_appointments[3]["id"]  # Patient D (currently at position 2)
+            
+            response = requests.put(f"{self.base_url}/api/rdv/{patient_d_id}/priority", json={
+                "action": "set_position",
+                "position": 0
+            })
+            self.assertEqual(response.status_code, 200)
+            move_data = response.json()
+            print(f"Move to first response: {move_data}")
+            
+            # Verify Patient D is now first
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            waiting_appointments = [apt for apt in appointments if apt["statut"] == "attente" and apt["id"] in [ta["id"] for ta in test_appointments]]
+            waiting_appointments.sort(key=lambda x: x.get("priority", 999))
+            
+            first_appointment = waiting_appointments[0]
+            self.assertIn("Patient D", first_appointment["motif"], "Patient D should be first after move to position 0")
+            self.assertEqual(first_appointment.get("priority", 999), 0, "First patient should have priority 0")
+            
+            print("✅ Move to position 0 test passed: Patient D is now first")
+            
+            # Step 6: Test edge case - move to last position
+            print("\n--- Step 6: Test Edge Case - Move to Last Position ---")
+            patient_a_id = test_appointments[0]["id"]  # Patient A
+            
+            response = requests.put(f"{self.base_url}/api/rdv/{patient_a_id}/priority", json={
+                "action": "set_position",
+                "position": 3  # Last position (0-indexed)
+            })
+            self.assertEqual(response.status_code, 200)
+            move_data = response.json()
+            print(f"Move to last response: {move_data}")
+            
+            # Verify Patient A is now last
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            waiting_appointments = [apt for apt in appointments if apt["statut"] == "attente" and apt["id"] in [ta["id"] for ta in test_appointments]]
+            waiting_appointments.sort(key=lambda x: x.get("priority", 999))
+            
+            last_appointment = waiting_appointments[-1]
+            self.assertIn("Patient A", last_appointment["motif"], "Patient A should be last after move to position 3")
+            self.assertEqual(last_appointment.get("priority", 999), 3, "Last patient should have priority 3")
+            
+            print("✅ Move to last position test passed: Patient A is now last")
+            
+            # Final verification: All priorities should be sequential (0, 1, 2, 3)
+            print("\n--- Final Verification: Sequential Priorities ---")
+            for i, apt in enumerate(waiting_appointments):
+                actual_priority = apt.get("priority", 999)
+                print(f"Final Position {i}: {apt['motif']} - Priority: {actual_priority}")
+                self.assertEqual(actual_priority, i, f"Final priority should be {i} at position {i}")
+            
+            print("✅ All drag and drop tests passed successfully!")
+            
+        finally:
+            # Clean up test appointments
+            print("\n--- Cleaning up test appointments ---")
+            for test_apt in test_appointments:
+                try:
+                    requests.delete(f"{self.base_url}/api/appointments/{test_apt['id']}")
+                    print(f"✅ Cleaned up {test_apt['patient_name']}")
+                except:
+                    print(f"⚠️ Failed to clean up {test_apt['patient_name']}")
+    
+    def test_drag_and_drop_move_up_move_down_actions(self):
+        """Test move_up and move_down actions specifically"""
+        print("\n=== TESTING MOVE_UP AND MOVE_DOWN ACTIONS ===")
+        
+        # Create 3 test appointments for simpler testing
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) >= 3, "Need at least 3 patients for testing")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        test_appointments = []
+        
+        # Create 3 appointments
+        for i in range(3):
+            appointment_data = {
+                "patient_id": patients[i % len(patients)]["id"],
+                "date": today,
+                "heure": f"{10 + i}:00",
+                "type_rdv": "visite",
+                "statut": "attente",
+                "motif": f"Move test {i}",
+                "priority": i
+            }
+            
+            response = requests.post(f"{self.base_url}/api/appointments", json=appointment_data)
+            self.assertEqual(response.status_code, 200)
+            appointment_id = response.json()["appointment_id"]
+            test_appointments.append(appointment_id)
+            print(f"✅ Created appointment {i} with priority {i}")
+        
+        try:
+            # Test move_up action
+            print("\n--- Testing move_up action ---")
+            middle_appointment_id = test_appointments[1]  # Position 1
+            
+            response = requests.put(f"{self.base_url}/api/rdv/{middle_appointment_id}/priority", json={
+                "action": "move_up"
+            })
+            self.assertEqual(response.status_code, 200)
+            move_data = response.json()
+            print(f"Move up response: {move_data}")
+            
+            # Verify the appointment moved up
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            waiting_appointments = [apt for apt in appointments if apt["statut"] == "attente" and apt["id"] in test_appointments]
+            waiting_appointments.sort(key=lambda x: x.get("priority", 999))
+            
+            # Middle appointment should now be first
+            self.assertEqual(waiting_appointments[0]["id"], middle_appointment_id, "Middle appointment should be first after move_up")
+            self.assertEqual(waiting_appointments[0].get("priority", 999), 0, "Moved up appointment should have priority 0")
+            
+            print("✅ move_up action works correctly")
+            
+            # Test move_down action
+            print("\n--- Testing move_down action ---")
+            first_appointment_id = waiting_appointments[0]["id"]  # Now at position 0
+            
+            response = requests.put(f"{self.base_url}/api/rdv/{first_appointment_id}/priority", json={
+                "action": "move_down"
+            })
+            self.assertEqual(response.status_code, 200)
+            move_data = response.json()
+            print(f"Move down response: {move_data}")
+            
+            # Verify the appointment moved down
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            waiting_appointments = [apt for apt in appointments if apt["statut"] == "attente" and apt["id"] in test_appointments]
+            waiting_appointments.sort(key=lambda x: x.get("priority", 999))
+            
+            # First appointment should now be second
+            self.assertEqual(waiting_appointments[1]["id"], first_appointment_id, "First appointment should be second after move_down")
+            self.assertEqual(waiting_appointments[1].get("priority", 999), 1, "Moved down appointment should have priority 1")
+            
+            print("✅ move_down action works correctly")
+            
+        finally:
+            # Clean up
+            for apt_id in test_appointments:
+                try:
+                    requests.delete(f"{self.base_url}/api/appointments/{apt_id}")
+                except:
+                    pass
+
 if __name__ == "__main__":
     unittest.main()
