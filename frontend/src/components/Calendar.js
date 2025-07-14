@@ -1111,7 +1111,6 @@ const WorkflowSection = ({
               totalCount={appointments.length}
               sectionType={sectionType}
               onStatusUpdate={onStatusUpdate}
-              onRoomAssignment={onRoomAssignment}
               onTypeToggle={onTypeToggle}
               onPaymentUpdate={onPaymentUpdate}
               onStartConsultation={onStartConsultation}
