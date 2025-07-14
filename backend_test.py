@@ -8466,10 +8466,12 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
         # Create test appointments
         test_appointments = []
         for i in range(2):
+            # Use future times to avoid delay detection
+            future_time = (datetime.now() + timedelta(hours=3 + i)).strftime("%H:%M")
             appointment_data = {
                 "patient_id": patients[i]["id"],
                 "date": today,
-                "heure": f"{15 + i}:00",
+                "heure": future_time,
                 "type_rdv": "visite",
                 "statut": "programme",
                 "motif": f"Test persistence appointment {i+1}",
