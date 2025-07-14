@@ -1335,7 +1335,7 @@ const WorkflowCard = ({
           )}
 
           {/* Boutons de réorganisation pour salle d'attente */}
-          {sectionType === 'attente' && totalCount > 1 && (
+          {sectionType === 'attente' && totalCount > 1 && onMoveUp && onMoveDown && onSetPriority && (
             <>
               {/* Bouton Priorité */}
               {index > 0 && (
