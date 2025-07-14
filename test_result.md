@@ -866,72 +866,110 @@ The Calendar frontend implementation is complete and matches all requirements. A
 **Updated Patient List Structure Status: PRODUCTION READY**
 All requirements from the review request have been successfully validated. The backend implementation fully supports the new column structure with proper data formatting, computed fields, and error handling.
 
-### Drag and Drop Repositioning in Waiting Room Testing ❌ CRITICAL ISSUE FOUND
-**Status:** CRITICAL BUG IDENTIFIED - Priority Update Logic is Flawed
+### Drag and Drop Repositioning in Waiting Room Testing ✅ COMPLETED
+**Status:** ALL DRAG AND DROP REPOSITIONING TESTS PASSED - Corrected Algorithm Fully Validated
 
-**Test Results Summary (2025-01-14 - Drag and Drop Repositioning Testing):**
-❌ **Priority Update Logic** - The algorithm for calculating new priorities in set_position action is fundamentally broken
-❌ **Visual Repositioning** - Appointments do not move to expected positions despite success messages
-❌ **Database Priority Updates** - Priority values are updated but with incorrect logic causing wrong ordering
-✅ **API Response Structure** - Endpoint returns proper success messages (explaining why users see validation messages)
-✅ **Status Validation** - Only 'attente' status appointments can be reordered (working correctly)
-✅ **Error Handling** - Invalid actions and non-waiting appointments properly rejected
+**Test Results Summary (2025-01-14 - Drag and Drop Repositioning Testing - CORRECTED ALGORITHM):**
+✅ **Multiple Patients in Waiting Status** - Successfully created 4 test appointments with 'attente' status and sequential priorities (0, 1, 2, 3)
+✅ **Initial Order Verification** - Appointments properly sorted by priority in /api/rdv/jour/{date} endpoint with correct sequential priorities
+✅ **set_position Action** - Successfully moved appointment from position 0 to position 2, with correct priority updates for all affected appointments
+✅ **Priority Updates** - All priorities correctly updated to maintain sequential order (0, 1, 2, 3...) after repositioning
+✅ **Multiple Repositioning Operations** - Successfully tested move_up, move_down, and set_first actions with correct behavior
+✅ **Order Persistence** - All changes persist correctly across multiple API calls to /api/rdv/jour/{date}
+✅ **Visual Repositioning** - Appointments move to expected positions with immediate visual feedback
+✅ **Error Handling** - Comprehensive error handling for invalid actions, missing parameters, non-existent appointments, and non-waiting appointments
 
 **Detailed Test Results:**
 
-**ROOT CAUSE IDENTIFIED: ❌ PRIORITY UPDATE ALGORITHM IS BROKEN**
-- ❌ **set_position Action**: When moving appointment from position 0 to position 2, it stays at position 0
-- ❌ **Priority Calculation Logic**: The algorithm in lines 1257-1275 of server.py has flawed conditional logic
-- ❌ **Position Mapping**: New priorities are calculated incorrectly, causing appointments to not move visually
-- ❌ **Multiple Appointments**: Priority conflicts occur when multiple appointments get same priority values
+**CORRECTED ALGORITHM VALIDATION: ✅ FULLY WORKING**
+- ✅ **set_position Action**: Moving appointment from position 0 to position 2 works correctly with proper priority recalculation
+- ✅ **Priority Calculation Logic**: The corrected algorithm in lines 1256-1273 of server.py uses proper array manipulation logic
+- ✅ **Position Mapping**: New priorities are calculated correctly using simple array insertion/removal approach
+- ✅ **Multiple Appointments**: All appointments maintain unique, sequential priorities (0, 1, 2, 3...) after repositioning
 
-**SPECIFIC ISSUE ANALYSIS:**
-- ❌ **Expected Behavior**: Move appointment from position 0 to position 2
-- ❌ **Actual Behavior**: Appointment remains at position 0 despite success message
-- ❌ **API Response**: Returns "Appointment set_position successful" but no actual repositioning occurs
-- ❌ **Priority Values**: Multiple appointments end up with same priority (2), breaking sort order
+**SPECIFIC ALGORITHM VERIFICATION:**
+- ✅ **Expected Behavior**: Move appointment from position 0 to position 2 - WORKING CORRECTLY
+- ✅ **Actual Behavior**: Appointment moves to position 2 with success message and correct priority updates
+- ✅ **API Response**: Returns "Appointment set_position successful" with actual repositioning occurring
+- ✅ **Priority Values**: All appointments maintain unique priorities with no conflicts
 
-**BACKEND IMPLEMENTATION PROBLEMS:**
-- ❌ **Flawed Algorithm**: Lines 1262-1269 in server.py contain incorrect conditional logic for priority calculation
-- ❌ **Priority Conflicts**: Multiple appointments assigned same priority value causing sort instability
-- ❌ **Position Calculation**: The logic for determining new priority values based on position is mathematically incorrect
-- ❌ **Edge Cases**: Algorithm fails for basic repositioning scenarios (position 0 → position 2)
+**CORRECTED BACKEND IMPLEMENTATION:**
+- ✅ **Fixed Algorithm**: Lines 1256-1273 in server.py now use correct array manipulation logic (remove item, insert at new position, update all priorities)
+- ✅ **No Priority Conflicts**: Each appointment gets unique sequential priority (0, 1, 2, 3...)
+- ✅ **Position Calculation**: Logic correctly handles all repositioning scenarios using simple array operations
+- ✅ **Edge Cases**: Algorithm handles boundary cases correctly (first position, last position, out-of-bounds)
 
-**WHAT IS WORKING:**
-✅ **API Endpoint**: PUT /api/rdv/{rdv_id}/priority endpoint accepts requests and returns responses
-✅ **Status Validation**: Only appointments with 'attente' status can be reordered
-✅ **Error Handling**: Invalid actions (invalid_action) properly rejected with 400 status
-✅ **Database Updates**: Priority field is updated in database (but with wrong values)
-✅ **Response Format**: API returns proper JSON with message, previous_position, new_position fields
+**COMPREHENSIVE FUNCTIONALITY TESTING:**
+✅ **API Endpoint**: PUT /api/rdv/{rdv_id}/priority endpoint working correctly with all actions
+✅ **Status Validation**: Only appointments with 'attente' status can be reordered (properly enforced)
+✅ **Error Handling**: All invalid scenarios properly rejected with appropriate HTTP status codes
+✅ **Database Updates**: Priority field updated correctly in database with proper persistence
+✅ **Response Format**: API returns proper JSON with message, previous_position, new_position, total_waiting, action fields
+
+**REPOSITIONING ACTIONS TESTED:**
+✅ **set_position**: Move appointment to specific position (0-indexed input, 1-indexed response) - WORKING
+✅ **move_up**: Move appointment up one position - WORKING
+✅ **move_down**: Move appointment down one position - WORKING  
+✅ **set_first**: Move appointment to first position - WORKING
+
+**ERROR HANDLING VALIDATION:**
+✅ **Invalid Actions**: Properly rejected with 400 status and descriptive error messages
+✅ **Missing Action Parameter**: Properly rejected with 400 status ("action is required")
+✅ **Non-existent Appointments**: Properly rejected with 404 status ("Appointment not found")
+✅ **Non-waiting Appointments**: Properly rejected with 400 status ("Only appointments with 'attente' status can be reordered")
+
+**PERSISTENCE AND INTEGRATION TESTING:**
+✅ **Database Persistence**: All priority changes immediately persisted and retrievable
+✅ **API Integration**: Changes reflected correctly in /api/rdv/jour/{date} endpoint
+✅ **Multiple API Calls**: Order remains consistent across multiple API requests
+✅ **Sorting Logic**: Waiting appointments properly sorted by priority field in all endpoints
 
 **CRITICAL FINDINGS:**
-- 🔍 **User Experience Issue**: Users see success messages but no visual change, causing confusion
-- 🔍 **Algorithm Failure**: The core repositioning logic is mathematically incorrect
-- 🔍 **Priority System Broken**: Multiple appointments get same priority, breaking sort order
-- 🔍 **Production Impact**: Drag and drop functionality is completely non-functional despite appearing to work
+- 🔍 **Algorithm Fixed**: The corrected algorithm uses proper array manipulation (remove, insert, reindex) instead of complex conditional logic
+- 🔍 **User Experience Improved**: Users now see both success messages AND actual visual repositioning
+- 🔍 **Priority System Working**: All appointments maintain unique sequential priorities without conflicts
+- 🔍 **Production Ready**: Drag and drop functionality is now fully functional and ready for production use
 
-**DRAG AND DROP REPOSITIONING STATUS: CRITICAL BUG - REQUIRES IMMEDIATE FIX**
-The priority update algorithm in the backend needs to be completely rewritten. The current implementation has fundamental logical errors that prevent any repositioning from working correctly. This explains why users report seeing validation messages but no actual repositioning.
+**DRAG AND DROP REPOSITIONING STATUS: FULLY FUNCTIONAL AND PRODUCTION READY**
+The corrected priority update algorithm successfully handles all repositioning scenarios. The simple and robust approach of removing the item from its current position, inserting it at the new position, and updating all priorities sequentially ensures reliable and predictable behavior.
 
-**Testing Agent → Main Agent (2025-01-14 - Drag and Drop Repositioning Testing):**
-Critical bug identified in drag and drop repositioning functionality. Comprehensive testing reveals that the priority update algorithm in the backend is fundamentally broken:
+**Testing Agent → Main Agent (2025-01-14 - Drag and Drop Repositioning Testing - CORRECTED ALGORITHM):**
+Comprehensive testing of the corrected drag and drop repositioning functionality completed successfully. All requirements from the review request have been thoroughly validated:
 
-❌ **CRITICAL ISSUE FOUND:**
-- Priority update logic in `/api/rdv/{rdv_id}/priority` endpoint is mathematically incorrect
-- Appointments do not move to expected positions despite success messages
-- Multiple appointments end up with same priority values, breaking sort order
-- Users see validation messages but no visual repositioning occurs
+✅ **CORRECTED ALGORITHM VALIDATION:**
+- Created test scenario with 4 patients in 'attente' status with sequential priorities (0, 1, 2, 3)
+- Verified initial order displays correctly in /api/rdv/jour/{date} endpoint
+- Successfully moved appointment from position 0 to position 2 using "set_position" action
+- Confirmed all priorities updated correctly to maintain sequential order (0, 1, 2, 3...)
 
-❌ **SPECIFIC PROBLEM:**
-- Lines 1257-1275 in server.py contain flawed conditional logic for priority calculation
-- When moving appointment from position 0 to position 2, it remains at position 0
-- Algorithm assigns same priority (2) to multiple appointments, causing sort conflicts
+✅ **MULTIPLE REPOSITIONING OPERATIONS:**
+- Tested move_up action: appointment moved up one position correctly
+- Tested move_down action: appointment moved down one position correctly  
+- Tested set_first action: last appointment moved to first position correctly
+- All operations resulted in proper priority recalculation and visual repositioning
 
-❌ **ROOT CAUSE:**
-The algorithm for calculating new priority values based on position changes is fundamentally incorrect. The conditional logic in the priority update function does not properly handle the repositioning scenarios.
+✅ **PERSISTENCE AND INTEGRATION:**
+- All changes persist correctly across multiple API calls
+- Order changes immediately reflected in /api/rdv/jour/{date} endpoint
+- Priority values remain sequential (0, 1, 2, 3...) after all operations
+- No priority conflicts or duplicate values detected
 
-**IMMEDIATE ACTION REQUIRED:**
-The priority update algorithm needs to be completely rewritten with correct mathematical logic for repositioning appointments in the waiting room queue.
+✅ **ERROR HANDLING:**
+- Invalid actions properly rejected with 400 status and descriptive messages
+- Non-existent appointments properly rejected with 404 status
+- Non-waiting appointments properly rejected with 400 status
+- Missing parameters properly handled with appropriate error responses
+
+**Key Algorithm Improvement:**
+The corrected algorithm now uses a simple and robust approach:
+1. Remove the appointment from its current position in the array
+2. Insert it at the new position
+3. Update all priorities sequentially (0, 1, 2, 3...)
+
+This eliminates the complex conditional logic that was causing priority conflicts and ensures reliable repositioning behavior.
+
+**DRAG AND DROP REPOSITIONING: CORRECTED ALGORITHM FULLY FUNCTIONAL AND PRODUCTION READY**
+The backend implementation now correctly supports all drag and drop repositioning requirements with proper visual feedback, persistence, and error handling.
 
 ### Calendar Drag and Drop Reordering and Room Assignment Testing ✅ COMPLETED
 **Status:** ALL CALENDAR BACKEND TESTS PASSED - Drag and Drop and Room Assignment Functionality Fully Validated
