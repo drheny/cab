@@ -844,6 +844,9 @@ async def update_rdv(rdv_id: str, update_data: dict):
             "payment_status": "gratuit" if type_rdv == "controle" else "non_paye"
         }
         
+    except HTTPException:
+        # Re-raise HTTPException to maintain proper status codes
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating appointment: {str(e)}")
 
