@@ -406,7 +406,15 @@ const Calendar = ({ user }) => {
       const statusDiff = (statusOrder[a.statut] || 0) - (statusOrder[b.statut] || 0);
       if (statusDiff !== 0) return statusDiff;
       
-      // Then by time
+      // For waiting room patients, sort by priority field (if exists)
+      if (a.statut === 'attente' && b.statut === 'attente') {
+        const priorityA = a.priority || 999;
+        const priorityB = b.priority || 999;
+        const priorityDiff = priorityA - priorityB;
+        if (priorityDiff !== 0) return priorityDiff;
+      }
+      
+      // Then by time for other cases
       return a.heure.localeCompare(b.heure);
     });
   }, [appointments]);
