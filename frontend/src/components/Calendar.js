@@ -1293,7 +1293,7 @@ const WorkflowSection = ({
 };
 
 // Composant WorkflowCard optimisé avec badges interactifs
-const WorkflowCard = ({ 
+const WorkflowCard = React.memo(({ 
   appointment, 
   index,
   totalCount,
