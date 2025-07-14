@@ -1423,8 +1423,18 @@ const WorkflowCard = ({
             
             {/* Compteur durée d'attente pour patients en attente */}
             {sectionType === 'attente' && (
-              <div className="text-xs text-orange-600 font-medium mt-1">
-                ⏱️ En attente depuis {waitingTime} min
+              <div className="flex items-center space-x-1 text-xs mt-1">
+                <Clock className="w-3 h-3 text-orange-500" />
+                <span className={`font-medium ${
+                  waitingTime < 15 ? 'text-green-600' : 
+                  waitingTime < 30 ? 'text-orange-600' : 
+                  'text-red-600'
+                }`}>
+                  {waitingTime === 0 ? 'Vient d\'arriver' : 
+                   waitingTime === 1 ? '1 minute' : 
+                   `${waitingTime} minutes`}
+                </span>
+                <span className="text-gray-400">d'attente</span>
               </div>
             )}
           </div>
