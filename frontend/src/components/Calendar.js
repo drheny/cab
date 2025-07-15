@@ -133,18 +133,13 @@ const Calendar = ({ user }) => {
   const handleCreateAppointment = useCallback(async (appointmentData = null) => {
     try {
       const dataToSend = appointmentData || formData;
-      console.log('Creating appointment with data:', dataToSend);
       const response = await axios.post(`${API_BASE_URL}/api/appointments`, dataToSend);
-      console.log('Appointment created successfully:', response.data);
       toast.success('Rendez-vous créé avec succès');
       setShowModal(false);
       resetForm();
-      // Refresh data after creation
       await fetchData();
       return { success: true };
     } catch (error) {
-      console.error('Error creating appointment:', error);
-      console.error('Error details:', error.response?.data);
       toast.error('Erreur lors de la création du rendez-vous: ' + (error.response?.data?.detail || error.message));
       return { success: false, error: error.response?.data?.detail || error.message };
     }
@@ -156,10 +151,8 @@ const Calendar = ({ user }) => {
       toast.success('Rendez-vous mis à jour avec succès');
       setShowModal(false);
       resetForm();
-      // Refresh data after update
       await fetchData();
     } catch (error) {
-      console.error('Error updating appointment:', error);
       toast.error('Erreur lors de la mise à jour du rendez-vous');
     }
   }, [formData, selectedAppointment, API_BASE_URL, resetForm, fetchData]);
