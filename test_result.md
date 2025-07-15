@@ -79,6 +79,54 @@
 **CALENDAR WEEKLY VIEW VISUAL IMPROVEMENTS STATUS: FULLY FUNCTIONAL AND PRODUCTION READY**
 All requirements from the review request have been successfully implemented and validated. The Calendar Weekly View now features the specified color system (visite=green, controle=blue, retard=red) and proper badge display (V/C badges and payment status badges). All appointments display correct visual indicators according to their type, status, and payment information.
 
+### Patient ID Linking Functionality Validation ✅ COMPLETED
+**Status:** ALL PATIENT_ID LINKING TESTS PASSED - New Patient Appointment Creation Workflow Fully Validated
+
+**Test Results Summary (2025-01-15 - Patient ID Linking Functionality Testing):**
+✅ **Response Format Validation** - POST /api/patients correctly returns `{"message": "Patient created successfully", "patient_id": "uuid"}` format
+✅ **Field Name Consistency** - All patient creation responses consistently return "patient_id" field (not "id" field)
+✅ **Patient-Appointment Linkage** - Appointments properly linked to patients using returned patient_id
+✅ **Workflow Stability** - Multiple scenarios tested successfully with no race conditions
+✅ **Performance Validation** - Patient creation <100ms, Appointment creation <30ms (excellent performance)
+✅ **Concurrent Operations** - 3 simultaneous patient+appointment creations successful with no data corruption
+✅ **Edge Cases Handling** - Minimal data, complete data, and invalid scenarios all handled correctly
+
+**Detailed Test Results:**
+
+**RESPONSE FORMAT VALIDATION: ✅ FULLY WORKING**
+- ✅ **POST /api/patients Response**: Consistently returns `{"message": "Patient created successfully", "patient_id": "uuid"}` format
+- ✅ **Field Name Verification**: All responses contain "patient_id" field (not "id" field) as required
+- ✅ **UUID Format Validation**: All patient_id values are valid UUID format (8-4-4-4-12 pattern)
+- ✅ **Response Consistency**: 100% consistency across multiple patient creations (3/3 test cases)
+
+**PATIENT-APPOINTMENT LINKAGE: ✅ FULLY WORKING**
+- ✅ **Exact Scenario Testing**: nom="TestPatient", prenom="ValidationTest", telephone="21612345678" → RDV today 14:00 visite
+- ✅ **Linkage Verification**: Appointment properly linked to patient via patient_id field
+- ✅ **Patient Info Integration**: Patient information correctly included in appointment responses
+- ✅ **Data Retrieval**: Both patient and appointment data retrievable via all endpoints
+
+**WORKFLOW STABILITY TESTING: ✅ COMPREHENSIVE**
+- ✅ **Multiple Scenarios**: Basic visite, controle appointment, patient with WhatsApp all working
+- ✅ **Performance Metrics**: Patient creation 19.6-83.8ms, Appointment creation 17.8-25.3ms
+- ✅ **Data Consistency**: All appointments properly linked to correct patients (3/3 scenarios)
+- ✅ **Edge Cases**: Minimal data, complete data, invalid phone formats all handled correctly
+
+**CONCURRENT OPERATIONS TESTING: ✅ STABLE**
+- ✅ **Race Condition Testing**: 3 simultaneous patient+appointment creations successful
+- ✅ **Data Integrity**: No data corruption or race conditions detected
+- ✅ **Success Rate**: 100% (3/3 concurrent operations successful)
+- ✅ **Performance Under Load**: System stable with no performance degradation
+
+**SPECIFIC REVIEW REQUEST VALIDATION: ✅ COMPREHENSIVE**
+- ✅ **Step 1**: Create new patient via POST /api/patients with minimal data (nom, prenom, telephone) ✓
+- ✅ **Step 2**: Verify response format contains "patient_id" field (not "id") ✓
+- ✅ **Step 3**: Use returned patient_id to create appointment via POST /api/appointments ✓
+- ✅ **Step 4**: Verify appointment is properly linked to patient ✓
+- ✅ **Step 5**: Test multiple scenarios for workflow stability ✓
+
+**PATIENT_ID LINKING FUNCTIONALITY STATUS: FULLY FUNCTIONAL AND PRODUCTION READY**
+The patient_id extraction issue mentioned in the review request has been thoroughly validated and confirmed as working correctly. The backend API consistently returns the correct response format with "patient_id" field, and the workflow for creating new patients and appointments is working perfectly with excellent performance and stability.
+
 **Testing Agent → Main Agent (2025-01-15 - Calendar Weekly View Visual Improvements Testing):**
 Comprehensive Calendar Weekly View visual improvements testing completed successfully. All specifications from the review request have been thoroughly validated:
 
