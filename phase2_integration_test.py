@@ -15,7 +15,7 @@ class Phase2IntegrationTest(unittest.TestCase):
     """
     
     def setUp(self):
-        backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://55889468-3991-4273-85d4-c063d9ea0845.preview.emergentagent.com')
+        backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://510a820f-4437-42cd-9a3d-92f753cd249d.preview.emergentagent.com')
         self.base_url = backend_url
         print(f"Testing Phase 2 integration at: {self.base_url}")
         # Initialize demo data
