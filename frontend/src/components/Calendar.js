@@ -337,103 +337,47 @@ const Calendar = ({ user }) => {
     }
   }, [API_BASE_URL, fetchData]);
 
-  // ====== FONCTIONS RÉORGANISATION SALLE D'ATTENTE ======
-  
-  // Fixed arrow-based reordering with optimistic updates - NO page refresh
+  // Patient reordering with optimistic updates
   const handlePatientReorder = useCallback(async (appointmentId, action) => {
-    console.log(`\n=== ARROW REORDER START ===`);
-    console.log(`Action: ${action}`);
-    console.log(`Appointment ID: ${appointmentId}`);
-    
-    // Get current waiting patients sorted by priority
     const waitingPatients = appointments
       .filter(apt => apt.statut === 'attente')
-      .sort((a, b) => {
-        const priorityA = typeof a.priority === 'number' ? a.priority : 999;
-        const priorityB = typeof b.priority === 'number' ? b.priority : 999;
-        return priorityA - priorityB;
-      });
+      .sort((a, b) => (a.priority || 999) - (b.priority || 999));
     
-    console.log(`Waiting patients: ${waitingPatients.length}`);
-    console.log('Current priority order:', waitingPatients.map((p, i) => `${i}: ${p.patient?.nom} (priority: ${p.priority})`));
-    
-    if (waitingPatients.length < 2) {
-      console.log('Not enough patients for reordering');
-      return;
-    }
+    if (waitingPatients.length < 2) return;
 
-    // Find the appointment in the waiting list by ID
     const currentIndex = waitingPatients.findIndex(apt => apt.id === appointmentId);
-    console.log(`Found appointment at priority index: ${currentIndex}`);
-    
-    if (currentIndex === -1) {
-      console.error('ERROR: Appointment not found in waiting list!');
-      return;
-    }
+    if (currentIndex === -1) return;
 
-    // Validate move using actual priority position
-    let canMove = false;
     let newIndex = currentIndex;
-    
     if (action === 'move_up' && currentIndex > 0) {
-      canMove = true;
       newIndex = currentIndex - 1;
-      console.log(`✅ Can move up from priority position ${currentIndex} to ${newIndex}`);
     } else if (action === 'move_down' && currentIndex < waitingPatients.length - 1) {
-      canMove = true;
       newIndex = currentIndex + 1;
-      console.log(`✅ Can move down from priority position ${currentIndex} to ${newIndex}`);
     } else {
-      console.log(`❌ Cannot move ${action} from priority position ${currentIndex}`);
       return;
     }
 
-    if (!canMove) {
-      console.log('Move not possible - bailing out');
-      return;
-    }
-
-    // Optimistic update - update UI immediately without page refresh
+    // Optimistic update
     setAppointments(prevAppointments => {
       const otherAppointments = prevAppointments.filter(apt => apt.statut !== 'attente');
-      
-      // Create new waiting order with the moved patient
       const newWaitingOrder = [...waitingPatients];
       const [movedPatient] = newWaitingOrder.splice(currentIndex, 1);
       newWaitingOrder.splice(newIndex, 0, movedPatient);
       
-      // Update priorities to match new positions (0-based)
       const updatedWaitingPatients = newWaitingOrder.map((apt, index) => ({
         ...apt,
         priority: index
       }));
       
-      console.log('Optimistic update - new order:', updatedWaitingPatients.map(p => ({ name: p.patient?.nom, priority: p.priority })));
-      
       return [...updatedWaitingPatients, ...otherAppointments];
     });
 
     try {
-      console.log(`🚀 Calling backend API: ${action}`);
-      
-      const response = await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/priority`, {
-        action: action
-      });
-      
-      console.log('✅ Backend response:', response.data);
-      
-      // NO fetchData() call - rely on optimistic update for smooth UX
+      await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/priority`, { action });
       toast.success('Patient repositionné');
-      console.log('=== ARROW REORDER END (SUCCESS) ===\n');
-      
     } catch (error) {
-      console.error('❌ ERROR during reordering:', error);
       toast.error('Erreur lors du repositionnement');
-      
-      // Only refresh data on error to revert optimistic update
-      console.log('🔄 Refreshing data due to error...');
-      await fetchData();
-      console.log('=== ARROW REORDER END (ERROR) ===\n');
+      await fetchData(); // Revert on error
     }
   }, [API_BASE_URL, fetchData, appointments]);
 
