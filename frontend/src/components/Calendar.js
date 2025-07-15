@@ -349,17 +349,36 @@ const Calendar = ({ user }) => {
     // If dropped in same position, exit
     if (destination.index === source.index) return;
 
+    // Get current waiting patients sorted by priority
+    const waitingPatients = appointments
+      .filter(apt => apt.statut === 'attente')
+      .sort((a, b) => (a.priority || 999) - (b.priority || 999));
+    
+    // If we don't have enough patients, exit
+    if (waitingPatients.length < 2) return;
+
     // Optimistic update - reorder appointments immediately in UI
     setAppointments(prevAppointments => {
-      const waitingPatients = prevAppointments.filter(apt => apt.statut === 'attente');
+      const currentWaitingPatients = prevAppointments
+        .filter(apt => apt.statut === 'attente')
+        .sort((a, b) => (a.priority || 999) - (b.priority || 999));
       const otherPatients = prevAppointments.filter(apt => apt.statut !== 'attente');
       
-      // Reorder waiting patients
-      const newWaitingOrder = Array.from(waitingPatients);
-      const [movedPatient] = newWaitingOrder.splice(source.index, 1);
+      // Reorder waiting patients using the exact same algorithm as backend
+      const newWaitingOrder = [];
+      
+      // First, create a list without the moved item
+      for (let i = 0; i < currentWaitingPatients.length; i++) {
+        if (i !== source.index) {
+          newWaitingOrder.push(currentWaitingPatients[i]);
+        }
+      }
+      
+      // Insert the moved item at its new position
+      const movedPatient = currentWaitingPatients[source.index];
       newWaitingOrder.splice(destination.index, 0, movedPatient);
       
-      // Update priorities optimistically
+      // Update priorities to match backend (0-based indexing)
       const updatedWaitingPatients = newWaitingOrder.map((apt, index) => ({
         ...apt,
         priority: index
@@ -370,19 +389,23 @@ const Calendar = ({ user }) => {
 
     try {
       // Update appointment priority in backend
-      await axios.put(`${API_BASE_URL}/api/rdv/${draggableId}/priority`, {
+      const response = await axios.put(`${API_BASE_URL}/api/rdv/${draggableId}/priority`, {
         action: 'set_position',
         position: destination.index
       });
       
+      console.log('Priority update response:', response.data);
       toast.success('Patient repositionné');
+      
+      // Refresh data to ensure consistency with backend
+      await fetchData();
     } catch (error) {
       console.error('Error reordering patient:', error);
       toast.error('Erreur lors du repositionnement');
       // Revert optimistic update on error
       await fetchData();
     }
-  }, [API_BASE_URL, fetchData]);
+  }, [API_BASE_URL, fetchData, appointments]);
 
   // Room assignment dropdown
   const handleRoomAssignment = useCallback(async (appointmentId, newRoom) => {
