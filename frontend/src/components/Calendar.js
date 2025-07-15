@@ -1493,12 +1493,42 @@ const WorkflowCard = React.memo(({
       <div className="flex items-center justify-between">
         {/* Partie gauche - Info patient */}
         <div className="flex items-center space-x-4 flex-1">
-          {/* Drag handle for waiting room */}
+          {/* Reorder buttons for waiting room */}
+          {sectionType === 'attente' && totalCount > 1 && onPatientReorder && (
+            <div className="flex flex-col space-y-1">
+              <button
+                onClick={() => onPatientReorder(appointment.id, 'move_up')}
+                disabled={index === 0}
+                className={`p-1 rounded text-xs ${
+                  index === 0 
+                    ? 'text-gray-300 cursor-not-allowed' 
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                }`}
+                title="Monter d'une position"
+              >
+                <ChevronUp className="w-3 h-3" />
+              </button>
+              <button
+                onClick={() => onPatientReorder(appointment.id, 'move_down')}
+                disabled={index === totalCount - 1}
+                className={`p-1 rounded text-xs ${
+                  index === totalCount - 1 
+                    ? 'text-gray-300 cursor-not-allowed' 
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                }`}
+                title="Descendre d'une position"
+              >
+                <ChevronDown className="w-3 h-3" />
+              </button>
+            </div>
+          )}
+          
+          {/* Drag handle for waiting room (backup method) */}
           {sectionType === 'attente' && totalCount > 1 && (
             <div 
               {...dragHandleProps}
               className="p-1 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing"
-              title="Glisser pour réorganiser"
+              title="Glisser pour réorganiser (ou utilisez les flèches)"
             >
               <GripVertical className="w-4 h-4" />
             </div>
