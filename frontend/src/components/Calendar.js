@@ -339,46 +339,45 @@ const Calendar = ({ user }) => {
 
   // ====== FONCTIONS RÉORGANISATION SALLE D'ATTENTE ======
   
-  // Drag and drop reordering for waiting room
-  const handleDragEnd = useCallback(async (result) => {
-    const { destination, source, draggableId } = result;
-    
-    // If no destination, exit
-    if (!destination) return;
-    
-    // If dropped in same position, exit
-    if (destination.index === source.index) return;
-
-    // Get current waiting patients sorted by priority
+  // Alternative approach: Up/Down arrows for patient reordering
+  const handlePatientReorder = useCallback(async (appointmentId, action) => {
     const waitingPatients = appointments
       .filter(apt => apt.statut === 'attente')
       .sort((a, b) => (a.priority || 999) - (b.priority || 999));
     
-    // If we don't have enough patients, exit
     if (waitingPatients.length < 2) return;
 
-    // Optimistic update - reorder appointments immediately in UI
+    // Optimistic update
     setAppointments(prevAppointments => {
       const currentWaitingPatients = prevAppointments
         .filter(apt => apt.statut === 'attente')
         .sort((a, b) => (a.priority || 999) - (b.priority || 999));
       const otherPatients = prevAppointments.filter(apt => apt.statut !== 'attente');
       
-      // Reorder waiting patients using the exact same algorithm as backend
-      const newWaitingOrder = [];
+      // Find current position
+      const currentIndex = currentWaitingPatients.findIndex(apt => apt.id === appointmentId);
+      if (currentIndex === -1) return prevAppointments;
       
-      // First, create a list without the moved item
-      for (let i = 0; i < currentWaitingPatients.length; i++) {
-        if (i !== source.index) {
-          newWaitingOrder.push(currentWaitingPatients[i]);
-        }
+      let newIndex = currentIndex;
+      if (action === 'move_up' && currentIndex > 0) {
+        newIndex = currentIndex - 1;
+      } else if (action === 'move_down' && currentIndex < currentWaitingPatients.length - 1) {
+        newIndex = currentIndex + 1;
+      } else if (action === 'set_first') {
+        newIndex = 0;
+      } else if (action === 'set_last') {
+        newIndex = currentWaitingPatients.length - 1;
       }
       
-      // Insert the moved item at its new position
-      const movedPatient = currentWaitingPatients[source.index];
-      newWaitingOrder.splice(destination.index, 0, movedPatient);
+      // If no change, return original
+      if (newIndex === currentIndex) return prevAppointments;
       
-      // Update priorities to match backend (0-based indexing)
+      // Reorder array
+      const newWaitingOrder = [...currentWaitingPatients];
+      const [movedPatient] = newWaitingOrder.splice(currentIndex, 1);
+      newWaitingOrder.splice(newIndex, 0, movedPatient);
+      
+      // Update priorities
       const updatedWaitingPatients = newWaitingOrder.map((apt, index) => ({
         ...apt,
         priority: index
@@ -388,23 +387,41 @@ const Calendar = ({ user }) => {
     });
 
     try {
-      // Update appointment priority in backend
-      const response = await axios.put(`${API_BASE_URL}/api/rdv/${draggableId}/priority`, {
-        action: 'set_position',
-        position: destination.index
+      const response = await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/priority`, {
+        action: action
       });
       
       console.log('Priority update response:', response.data);
       toast.success('Patient repositionné');
-      
-      // No need to refresh data - optimistic update handles UI consistency
     } catch (error) {
       console.error('Error reordering patient:', error);
       toast.error('Erreur lors du repositionnement');
-      // Only refresh data on error to revert optimistic update
       await fetchData();
     }
   }, [API_BASE_URL, fetchData, appointments]);
+
+  // Keep drag and drop as backup but with simpler logic
+  const handleDragEnd = useCallback(async (result) => {
+    const { destination, source, draggableId } = result;
+    
+    if (!destination || destination.index === source.index) return;
+
+    // For drag and drop, use set_position with exact index
+    try {
+      await axios.put(`${API_BASE_URL}/api/rdv/${draggableId}/priority`, {
+        action: 'set_position',
+        position: destination.index
+      });
+      
+      // Refresh data to ensure consistency
+      await fetchData();
+      toast.success('Patient repositionné');
+    } catch (error) {
+      console.error('Error reordering patient:', error);
+      toast.error('Erreur lors du repositionnement');
+      await fetchData();
+    }
+  }, [API_BASE_URL, fetchData]);
 
   // Room assignment dropdown
   const handleRoomAssignment = useCallback(async (appointmentId, newRoom) => {
