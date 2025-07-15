@@ -1339,6 +1339,90 @@ Comprehensive Calendar Weekly View visual improvements testing completed success
 **CALENDAR WEEKLY VIEW VISUAL IMPROVEMENTS: FULLY IMPLEMENTED AND PRODUCTION READY**
 The Calendar Weekly View visual improvements have been successfully implemented and tested. The new color system with getAppointmentColor() function, updated V/C badges, and new payment badges all work correctly according to the specifications. The weekly view functionality is complete and ready for production use.
 
+### Alternative Solution: Up/Down Arrow Reordering ✅ IMPLEMENTED
+**Status:** UP/DOWN ARROW REORDERING SYSTEM IMPLEMENTED - More Reliable Alternative to Drag & Drop
+
+**Problem Analysis:**
+The user reported that "repositioning via drag and drop is random, its happening but not in the order wanted" and "when there is more than 2 patients, the item dragged doesn't drop in the wanted line."
+
+**Root Cause of Drag & Drop Issues:**
+1. **Index Mapping Problem**: The `destination.index` from react-beautiful-dnd doesn't reliably correspond to the actual position in the sorted array
+2. **Sorting Inconsistency**: Multiple sorting operations between UI display and optimistic updates cause position mismatches
+3. **Complex State Management**: Optimistic updates with drag & drop library create race conditions with 3+ patients
+
+**Solution: Dual Approach Implementation**
+
+**Primary Solution: Up/Down Arrow Buttons**
+- ✅ **Precise Control**: Each patient has dedicated up/down arrow buttons
+- ✅ **Predictable Behavior**: Move up/down by exactly one position at a time
+- ✅ **Visual Feedback**: Buttons disabled when at top/bottom position
+- ✅ **Reliable API Calls**: Uses backend `move_up` and `move_down` actions
+
+**Secondary Solution: Simplified Drag & Drop**
+- ✅ **Backup Method**: Drag & drop still available but with data refresh for consistency
+- ✅ **Fallback Approach**: Uses `set_position` with full data refresh to avoid inconsistencies
+
+**Implementation Details:**
+
+**1. Up/Down Arrow System:**
+```javascript
+const handlePatientReorder = useCallback(async (appointmentId, action) => {
+  // Optimistic update with reliable array manipulation
+  const currentIndex = currentWaitingPatients.findIndex(apt => apt.id === appointmentId);
+  
+  let newIndex = currentIndex;
+  if (action === 'move_up' && currentIndex > 0) {
+    newIndex = currentIndex - 1;
+  } else if (action === 'move_down' && currentIndex < currentWaitingPatients.length - 1) {
+    newIndex = currentIndex + 1;
+  }
+  
+  // Direct array manipulation - no complex sorting
+  const newWaitingOrder = [...currentWaitingPatients];
+  const [movedPatient] = newWaitingOrder.splice(currentIndex, 1);
+  newWaitingOrder.splice(newIndex, 0, movedPatient);
+  
+  // Backend API call with specific action
+  await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/priority`, {
+    action: action
+  });
+}, [API_BASE_URL, fetchData, appointments]);
+```
+
+**2. UI Implementation:**
+- ✅ **Visual Arrows**: ChevronUp/ChevronDown icons for clear user intent
+- ✅ **Disabled States**: Buttons automatically disabled when movement not possible
+- ✅ **Tooltips**: Clear labels "Monter d'une position" / "Descendre d'une position"
+- ✅ **Positioning**: Arrows placed prominently next to patient cards
+
+**3. Backend Integration:**
+- ✅ **move_up Action**: Moves patient up by one position in waiting room
+- ✅ **move_down Action**: Moves patient down by one position in waiting room
+- ✅ **set_first Action**: Available for moving patient to first position
+- ✅ **Consistent Response**: All actions return proper position information
+
+**Benefits of Arrow-Based Approach:**
+- ✅ **Predictable**: Each click moves patient exactly one position
+- ✅ **Intuitive**: Users immediately understand up/down movement
+- ✅ **Reliable**: No index mapping issues or drag & drop complexity
+- ✅ **Accessible**: Works well on touch devices and provides clear feedback
+- ✅ **Error-Resistant**: Simple operations are less prone to position miscalculations
+
+**User Experience Improvements:**
+- ✅ **Immediate Feedback**: Buttons show enabled/disabled state instantly
+- ✅ **Step-by-Step Control**: Users can make precise adjustments one step at a time
+- ✅ **Clear Intent**: No ambiguity about where patient will be moved
+- ✅ **Backup Options**: Drag & drop still available as secondary method
+
+**Testing Validation:**
+- ✅ **Backend APIs**: All priority management actions tested and working
+- ✅ **UI Components**: Arrow buttons properly integrated into waiting room cards
+- ✅ **State Management**: Optimistic updates work correctly with arrow-based system
+- ✅ **Error Handling**: Failed operations properly handled with state restoration
+
+**ALTERNATIVE REORDERING SOLUTION STATUS: IMPLEMENTED AND READY**
+The up/down arrow reordering system provides a more reliable and user-friendly alternative to drag & drop. Users can now precisely control patient order in the waiting room with predictable, one-step movements. The system is intuitive, accessible, and eliminates the random positioning issues experienced with drag & drop operations.
+
 ### Page Refresh Issue After Drag and Drop Fix ✅ COMPLETED
 **Status:** PAGE REFRESH ISSUE RESOLVED - Optimistic Updates Without Full Page Reload
 
