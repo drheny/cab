@@ -295,29 +295,73 @@ const Calendar = ({ user }) => {
     }
   }, [API_BASE_URL, fetchData]);
 
-  // Patient reordering - SIMPLIFIED: Backend first, then refresh
+  // Patient reordering with CORRECT optimistic updates - no page refresh
   const handlePatientReorder = useCallback(async (appointmentId, action) => {
     console.log(`\n=== ARROW CLICK: ${action} ===`);
     
-    // NO optimistic updates - backend first approach
+    // Get current waiting patients sorted by priority
+    const waitingPatients = appointments
+      .filter(apt => apt.statut === 'attente')
+      .sort((a, b) => {
+        const priorityA = typeof a.priority === 'number' ? a.priority : 999;
+        const priorityB = typeof b.priority === 'number' ? b.priority : 999;
+        return priorityA - priorityB;
+      });
+    
+    if (waitingPatients.length < 2) return;
+    
+    // Find current position in sorted array
+    const currentIndex = waitingPatients.findIndex(apt => apt.id === appointmentId);
+    if (currentIndex === -1) return;
+    
+    // Calculate new position
+    let newIndex = currentIndex;
+    if (action === 'move_up' && currentIndex > 0) {
+      newIndex = currentIndex - 1;
+    } else if (action === 'move_down' && currentIndex < waitingPatients.length - 1) {
+      newIndex = currentIndex + 1;
+    } else {
+      return; // No movement possible
+    }
+    
+    console.log(`Moving from position ${currentIndex} to ${newIndex}`);
+    
+    // OPTIMISTIC UPDATE - mirrors exact backend logic
+    setAppointments(prevAppointments => {
+      const otherAppointments = prevAppointments.filter(apt => apt.statut !== 'attente');
+      
+      // Reorder the waiting patients array
+      const newWaitingOrder = [...waitingPatients];
+      const [movedPatient] = newWaitingOrder.splice(currentIndex, 1);
+      newWaitingOrder.splice(newIndex, 0, movedPatient);
+      
+      // Update priorities to match new order (0-based)
+      const updatedWaitingPatients = newWaitingOrder.map((apt, index) => ({
+        ...apt,
+        priority: index
+      }));
+      
+      console.log('Optimistic update:', updatedWaitingPatients.map(p => `${p.patient?.nom} (priority: ${p.priority})`));
+      
+      return [...updatedWaitingPatients, ...otherAppointments];
+    });
+    
+    // Call backend API (no await fetchData - keep optimistic update)
     try {
-      console.log('Calling backend API...');
-      
       const response = await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/priority`, { action });
-      
       console.log('Backend response:', response.data);
-      
-      // Refresh data from backend to show real changes
-      console.log('Refreshing data from backend...');
-      await fetchData();
-      
       toast.success('Patient repositionné');
+      
+      // NO fetchData() call - optimistic update is correct
       
     } catch (error) {
       console.error('Error during reordering:', error);
       toast.error('Erreur lors du repositionnement');
+      
+      // Only refresh on error to revert optimistic update
+      await fetchData();
     }
-  }, [API_BASE_URL, fetchData]);
+  }, [API_BASE_URL, fetchData, appointments]);
 
   const handleRoomAssignment = useCallback(async (appointmentId, newRoom) => {
     setAppointments(prevAppointments =>
