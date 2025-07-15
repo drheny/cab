@@ -261,9 +261,8 @@ const Calendar = ({ user }) => {
         heure_arrivee_attente: currentTime
       });
       toast.success('Patient en salle d\'attente');
-      await fetchData(); // Refresh data immediately
+      await fetchData();
     } catch (error) {
-      console.error('Error moving to waiting room:', error);
       toast.error('Erreur lors de la mise en salle d\'attente');
     }
   }, [API_BASE_URL, fetchData]);
