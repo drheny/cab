@@ -15,13 +15,11 @@ import {
   List,
   Grid,
   CheckCircle,
-  GripVertical,
   Building2
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import AppointmentModal from './AppointmentModal';
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
 const Calendar = ({ user }) => {
   const location = useLocation();
