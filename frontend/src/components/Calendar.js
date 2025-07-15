@@ -684,7 +684,6 @@ const Calendar = ({ user }) => {
             onEdit={openModal}
             onDelete={handleDeleteAppointment}
             onViewPatient={viewPatientDetails}
-            onDragEnd={handleDragEnd}
             onPatientReorder={handlePatientReorder}
           />
           
