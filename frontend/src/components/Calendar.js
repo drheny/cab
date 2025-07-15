@@ -1215,16 +1215,13 @@ const WorkflowSection = ({
     }
   };
 
-  // Drag and drop is only enabled for waiting room
-  const isDragEnabled = sectionType === 'attente' && appointments.length > 1;
-
   return (
     <div className={`rounded-xl shadow-sm border-2 ${getSectionColor()} ${isCompleted ? 'opacity-75' : ''}`}>
       <div className="p-4 border-b border-gray-200">
         <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
         <p className="text-sm text-gray-600">
           {appointments.length} patient(s)
-          {isDragEnabled && <span className="text-gray-400 ml-2">• Glissez-déposez pour réorganiser</span>}
+          {sectionType === 'attente' && appointments.length > 1 && <span className="text-gray-400 ml-2">• Utilisez les flèches pour réorganiser</span>}
         </p>
       </div>
       
