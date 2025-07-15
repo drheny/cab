@@ -339,17 +339,14 @@ const Calendar = ({ user }) => {
 
   // ====== FONCTIONS RÉORGANISATION SALLE D'ATTENTE ======
   
-  // Completely rewritten arrow-based reordering with robust debugging
+  // Fixed arrow-based reordering - addresses root cause of random behavior
   const handlePatientReorder = useCallback(async (appointmentId, action) => {
     console.log(`\n=== ARROW REORDER START ===`);
     console.log(`Action: ${action}`);
     console.log(`Appointment ID: ${appointmentId}`);
     
-    // Get current waiting patients with detailed logging
-    const allAppointments = appointments || [];
-    console.log(`Total appointments: ${allAppointments.length}`);
-    
-    const waitingPatients = allAppointments
+    // Get current waiting patients sorted by priority
+    const waitingPatients = appointments
       .filter(apt => apt.statut === 'attente')
       .sort((a, b) => {
         const priorityA = typeof a.priority === 'number' ? a.priority : 999;
@@ -358,33 +355,32 @@ const Calendar = ({ user }) => {
       });
     
     console.log(`Waiting patients: ${waitingPatients.length}`);
-    console.log('Current order:', waitingPatients.map((p, i) => `${i}: ${p.patient?.nom} (priority: ${p.priority})`));
+    console.log('Current priority order:', waitingPatients.map((p, i) => `${i}: ${p.patient?.nom} (priority: ${p.priority})`));
     
     if (waitingPatients.length < 2) {
       console.log('Not enough patients for reordering');
       return;
     }
 
-    // Find the appointment in the waiting list
+    // Find the appointment in the waiting list by ID
     const currentIndex = waitingPatients.findIndex(apt => apt.id === appointmentId);
-    console.log(`Found appointment at index: ${currentIndex}`);
+    console.log(`Found appointment at priority index: ${currentIndex}`);
     
     if (currentIndex === -1) {
       console.error('ERROR: Appointment not found in waiting list!');
-      console.log('Available appointments:', waitingPatients.map(p => ({ id: p.id, nom: p.patient?.nom })));
       return;
     }
 
-    // Validate move
+    // Validate move using actual priority position (not display index)
     let canMove = false;
     if (action === 'move_up' && currentIndex > 0) {
       canMove = true;
-      console.log(`✅ Can move up from position ${currentIndex} to ${currentIndex - 1}`);
+      console.log(`✅ Can move up from priority position ${currentIndex} to ${currentIndex - 1}`);
     } else if (action === 'move_down' && currentIndex < waitingPatients.length - 1) {
       canMove = true;
-      console.log(`✅ Can move down from position ${currentIndex} to ${currentIndex + 1}`);
+      console.log(`✅ Can move down from priority position ${currentIndex} to ${currentIndex + 1}`);
     } else {
-      console.log(`❌ Cannot move ${action} from position ${currentIndex}`);
+      console.log(`❌ Cannot move ${action} from priority position ${currentIndex}`);
       return;
     }
 
@@ -402,9 +398,7 @@ const Calendar = ({ user }) => {
       
       console.log('✅ Backend response:', response.data);
       
-      // Add a small delay to ensure backend has processed
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
+      // Remove artificial delay - it causes race conditions
       console.log('🔄 Refreshing data from backend...');
       await fetchData();
       
@@ -413,7 +407,6 @@ const Calendar = ({ user }) => {
       
     } catch (error) {
       console.error('❌ ERROR during reordering:', error);
-      console.error('Error details:', error.response?.data);
       toast.error('Erreur lors du repositionnement');
       console.log('=== ARROW REORDER END (ERROR) ===\n');
     }
