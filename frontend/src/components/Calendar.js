@@ -339,7 +339,7 @@ const Calendar = ({ user }) => {
 
   // ====== FONCTIONS RÉORGANISATION SALLE D'ATTENTE ======
   
-  // Fixed arrow-based reordering - addresses root cause of random behavior
+  // Fixed arrow-based reordering with optimistic updates - NO page refresh
   const handlePatientReorder = useCallback(async (appointmentId, action) => {
     console.log(`\n=== ARROW REORDER START ===`);
     console.log(`Action: ${action}`);
@@ -371,14 +371,18 @@ const Calendar = ({ user }) => {
       return;
     }
 
-    // Validate move using actual priority position (not display index)
+    // Validate move using actual priority position
     let canMove = false;
+    let newIndex = currentIndex;
+    
     if (action === 'move_up' && currentIndex > 0) {
       canMove = true;
-      console.log(`✅ Can move up from priority position ${currentIndex} to ${currentIndex - 1}`);
+      newIndex = currentIndex - 1;
+      console.log(`✅ Can move up from priority position ${currentIndex} to ${newIndex}`);
     } else if (action === 'move_down' && currentIndex < waitingPatients.length - 1) {
       canMove = true;
-      console.log(`✅ Can move down from priority position ${currentIndex} to ${currentIndex + 1}`);
+      newIndex = currentIndex + 1;
+      console.log(`✅ Can move down from priority position ${currentIndex} to ${newIndex}`);
     } else {
       console.log(`❌ Cannot move ${action} from priority position ${currentIndex}`);
       return;
@@ -389,6 +393,26 @@ const Calendar = ({ user }) => {
       return;
     }
 
+    // Optimistic update - update UI immediately without page refresh
+    setAppointments(prevAppointments => {
+      const otherAppointments = prevAppointments.filter(apt => apt.statut !== 'attente');
+      
+      // Create new waiting order with the moved patient
+      const newWaitingOrder = [...waitingPatients];
+      const [movedPatient] = newWaitingOrder.splice(currentIndex, 1);
+      newWaitingOrder.splice(newIndex, 0, movedPatient);
+      
+      // Update priorities to match new positions (0-based)
+      const updatedWaitingPatients = newWaitingOrder.map((apt, index) => ({
+        ...apt,
+        priority: index
+      }));
+      
+      console.log('Optimistic update - new order:', updatedWaitingPatients.map(p => ({ name: p.patient?.nom, priority: p.priority })));
+      
+      return [...updatedWaitingPatients, ...otherAppointments];
+    });
+
     try {
       console.log(`🚀 Calling backend API: ${action}`);
       
@@ -398,16 +422,17 @@ const Calendar = ({ user }) => {
       
       console.log('✅ Backend response:', response.data);
       
-      // Remove artificial delay - it causes race conditions
-      console.log('🔄 Refreshing data from backend...');
-      await fetchData();
-      
+      // NO fetchData() call - rely on optimistic update for smooth UX
       toast.success('Patient repositionné');
-      console.log('=== ARROW REORDER END ===\n');
+      console.log('=== ARROW REORDER END (SUCCESS) ===\n');
       
     } catch (error) {
       console.error('❌ ERROR during reordering:', error);
       toast.error('Erreur lors du repositionnement');
+      
+      // Only refresh data on error to revert optimistic update
+      console.log('🔄 Refreshing data due to error...');
+      await fetchData();
       console.log('=== ARROW REORDER END (ERROR) ===\n');
     }
   }, [API_BASE_URL, fetchData, appointments]);
