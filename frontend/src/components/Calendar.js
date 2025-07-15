@@ -1232,6 +1232,7 @@ const WorkflowSection = ({
   onDelete, 
   onViewPatient,
   onDragEnd,
+  onPatientReorder,
   isCompleted = false 
 }) => {
   const getSectionColor = () => {
