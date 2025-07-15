@@ -1341,6 +1341,7 @@ const WorkflowSection = ({
                 onEdit={onEdit}
                 onDelete={onDelete}
                 onViewPatient={onViewPatient}
+                onPatientReorder={onPatientReorder}
                 isCompleted={isCompleted}
               />
             ))
