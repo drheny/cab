@@ -343,41 +343,90 @@ const Calendar = ({ user }) => {
   
   // Alternative approach: Up/Down arrows for patient reordering
   const handlePatientReorder = useCallback(async (appointmentId, action) => {
-    const waitingPatients = appointments
+    // Get current waiting patients sorted by priority
+    const currentWaitingPatients = appointments
       .filter(apt => apt.statut === 'attente')
       .sort((a, b) => (a.priority || 999) - (b.priority || 999));
     
-    if (waitingPatients.length < 2) return;
+    if (currentWaitingPatients.length < 2) return;
 
-    // Optimistic update
+    // Find current position
+    const currentIndex = currentWaitingPatients.findIndex(apt => apt.id === appointmentId);
+    if (currentIndex === -1) {
+      console.error('Patient not found in waiting list');
+      return;
+    }
+
+    let newIndex = currentIndex;
+    if (action === 'move_up' && currentIndex > 0) {
+      newIndex = currentIndex - 1;
+    } else if (action === 'move_down' && currentIndex < currentWaitingPatients.length - 1) {
+      newIndex = currentIndex + 1;
+    } else {
+      // No movement needed
+      return;
+    }
+
+    console.log(`Moving patient from position ${currentIndex} to ${newIndex}`);
+
+    // Optimistic update with careful state management
+    setAppointments(prevAppointments => {
+      const waitingPatients = prevAppointments
+        .filter(apt => apt.statut === 'attente')
+        .sort((a, b) => (a.priority || 999) - (b.priority || 999));
+      const otherPatients = prevAppointments.filter(apt => apt.statut !== 'attente');
+      
+      // Create new array with moved patient
+      const newWaitingOrder = [...waitingPatients];
+      const [movedPatient] = newWaitingOrder.splice(currentIndex, 1);
+      newWaitingOrder.splice(newIndex, 0, movedPatient);
+      
+      // Update priorities to match new positions
+      const updatedWaitingPatients = newWaitingOrder.map((apt, index) => ({
+        ...apt,
+        priority: index
+      }));
+      
+      console.log('Updated waiting patients:', updatedWaitingPatients.map(p => ({ name: p.patient?.nom, priority: p.priority })));
+      
+      return [...updatedWaitingPatients, ...otherPatients];
+    });
+
+    try {
+      // Call backend API
+      const response = await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/priority`, {
+        action: action
+      });
+      
+      console.log('Backend response:', response.data);
+      toast.success('Patient repositionné');
+    } catch (error) {
+      console.error('Error reordering patient:', error);
+      toast.error('Erreur lors du repositionnement');
+      // Revert optimistic update on error
+      await fetchData();
+    }
+  }, [API_BASE_URL, fetchData, appointments]);
+
+  // Improved drag and drop without page refresh
+  const handleDragEnd = useCallback(async (result) => {
+    const { destination, source, draggableId } = result;
+    
+    if (!destination || destination.index === source.index) return;
+
+    console.log(`Dragging from ${source.index} to ${destination.index}`);
+
+    // Optimistic update for drag and drop
     setAppointments(prevAppointments => {
       const currentWaitingPatients = prevAppointments
         .filter(apt => apt.statut === 'attente')
         .sort((a, b) => (a.priority || 999) - (b.priority || 999));
       const otherPatients = prevAppointments.filter(apt => apt.statut !== 'attente');
       
-      // Find current position
-      const currentIndex = currentWaitingPatients.findIndex(apt => apt.id === appointmentId);
-      if (currentIndex === -1) return prevAppointments;
-      
-      let newIndex = currentIndex;
-      if (action === 'move_up' && currentIndex > 0) {
-        newIndex = currentIndex - 1;
-      } else if (action === 'move_down' && currentIndex < currentWaitingPatients.length - 1) {
-        newIndex = currentIndex + 1;
-      } else if (action === 'set_first') {
-        newIndex = 0;
-      } else if (action === 'set_last') {
-        newIndex = currentWaitingPatients.length - 1;
-      }
-      
-      // If no change, return original
-      if (newIndex === currentIndex) return prevAppointments;
-      
       // Reorder array
       const newWaitingOrder = [...currentWaitingPatients];
-      const [movedPatient] = newWaitingOrder.splice(currentIndex, 1);
-      newWaitingOrder.splice(newIndex, 0, movedPatient);
+      const [movedPatient] = newWaitingOrder.splice(source.index, 1);
+      newWaitingOrder.splice(destination.index, 0, movedPatient);
       
       // Update priorities
       const updatedWaitingPatients = newWaitingOrder.map((apt, index) => ({
@@ -389,38 +438,20 @@ const Calendar = ({ user }) => {
     });
 
     try {
-      const response = await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/priority`, {
-        action: action
-      });
-      
-      console.log('Priority update response:', response.data);
-      toast.success('Patient repositionné');
-    } catch (error) {
-      console.error('Error reordering patient:', error);
-      toast.error('Erreur lors du repositionnement');
-      await fetchData();
-    }
-  }, [API_BASE_URL, fetchData, appointments]);
-
-  // Keep drag and drop as backup but with simpler logic
-  const handleDragEnd = useCallback(async (result) => {
-    const { destination, source, draggableId } = result;
-    
-    if (!destination || destination.index === source.index) return;
-
-    // For drag and drop, use set_position with exact index
-    try {
+      // Call backend API
       await axios.put(`${API_BASE_URL}/api/rdv/${draggableId}/priority`, {
         action: 'set_position',
         position: destination.index
       });
       
-      // Refresh data to ensure consistency
-      await fetchData();
+      console.log('Drag and drop successful');
       toast.success('Patient repositionné');
+      
+      // NO fetchData() call - rely on optimistic update
     } catch (error) {
       console.error('Error reordering patient:', error);
       toast.error('Erreur lors du repositionnement');
+      // Only refresh on error
       await fetchData();
     }
   }, [API_BASE_URL, fetchData]);
