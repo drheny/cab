@@ -10,6 +10,8 @@ import {
   MessageCircle,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
+  ChevronDown,
   List,
   Grid,
   CheckCircle,
