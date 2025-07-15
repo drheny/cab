@@ -1428,26 +1428,32 @@ const WorkflowCard = React.memo(({
           {sectionType === 'attente' && totalCount > 1 && onPatientReorder && (
             <div className="flex flex-col space-y-1">
               <button
-                onClick={() => onPatientReorder(appointment.id, 'move_up')}
+                onClick={() => {
+                  console.log(`UP ARROW CLICKED: Patient ${appointment.patient?.nom} at display index ${index}, priority ${appointment.priority}`);
+                  onPatientReorder(appointment.id, 'move_up');
+                }}
                 disabled={index === 0}
                 className={`p-1 rounded text-xs ${
                   index === 0 
                     ? 'text-gray-300 cursor-not-allowed' 
                     : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
                 }`}
-                title="Monter d'une position"
+                title={`Monter d'une position (actuellement ${index + 1}/${totalCount})`}
               >
                 <ChevronUp className="w-3 h-3" />
               </button>
               <button
-                onClick={() => onPatientReorder(appointment.id, 'move_down')}
+                onClick={() => {
+                  console.log(`DOWN ARROW CLICKED: Patient ${appointment.patient?.nom} at display index ${index}, priority ${appointment.priority}`);
+                  onPatientReorder(appointment.id, 'move_down');
+                }}
                 disabled={index === totalCount - 1}
                 className={`p-1 rounded text-xs ${
                   index === totalCount - 1 
                     ? 'text-gray-300 cursor-not-allowed' 
                     : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
                 }`}
-                title="Descendre d'une position"
+                title={`Descendre d'une position (actuellement ${index + 1}/${totalCount})`}
               >
                 <ChevronDown className="w-3 h-3" />
               </button>
