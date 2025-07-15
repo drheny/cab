@@ -339,33 +339,24 @@ const Calendar = ({ user }) => {
     }
   }, [API_BASE_URL, fetchData, appointments]);
 
-  // Room assignment dropdown
   const handleRoomAssignment = useCallback(async (appointmentId, newRoom) => {
-    // Optimistic update - update UI immediately
-    setAppointments(prevAppointments => 
-      prevAppointments.map(apt => {
-        if (apt.id === appointmentId) {
-          return { ...apt, salle: newRoom };
-        }
-        return apt;
-      })
+    setAppointments(prevAppointments =>
+      prevAppointments.map(apt =>
+        apt.id === appointmentId ? { ...apt, salle: newRoom } : apt
+      )
     );
 
     try {
       await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/salle?salle=${newRoom}`);
-      
       const roomText = newRoom === '' ? 'Aucune salle' : 
                       newRoom === 'salle1' ? 'Salle 1' : 'Salle 2';
       toast.success(`Patient assigné à: ${roomText}`);
     } catch (error) {
-      console.error('Error assigning room:', error);
       toast.error('Erreur lors de l\'assignation de salle');
-      // Revert optimistic update on error
       await fetchData();
     }
   }, [API_BASE_URL, fetchData]);
 
-  // États pour les modales (simplifié)
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
 
@@ -375,10 +366,9 @@ const Calendar = ({ user }) => {
       setSelectedPatient(response.data);
       setShowPatientModal(true);
     } catch (error) {
-      console.error('Error fetching patient details:', error);
       toast.error('Erreur lors du chargement des détails du patient');
     }
-  }, [API_BASE_URL]);
+  }, [API_BASE_URL, setSelectedPatient, setShowPatientModal]);
 
   const navigateDate = useCallback((direction) => {
     const currentDate = new Date(selectedDate);
