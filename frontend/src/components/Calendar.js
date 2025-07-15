@@ -397,12 +397,11 @@ const Calendar = ({ user }) => {
       console.log('Priority update response:', response.data);
       toast.success('Patient repositionné');
       
-      // Refresh data to ensure consistency with backend
-      await fetchData();
+      // No need to refresh data - optimistic update handles UI consistency
     } catch (error) {
       console.error('Error reordering patient:', error);
       toast.error('Erreur lors du repositionnement');
-      // Revert optimistic update on error
+      // Only refresh data on error to revert optimistic update
       await fetchData();
     }
   }, [API_BASE_URL, fetchData, appointments]);
