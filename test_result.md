@@ -1339,6 +1339,72 @@ Comprehensive Calendar Weekly View visual improvements testing completed success
 **CALENDAR WEEKLY VIEW VISUAL IMPROVEMENTS: FULLY IMPLEMENTED AND PRODUCTION READY**
 The Calendar Weekly View visual improvements have been successfully implemented and tested. The new color system with getAppointmentColor() function, updated V/C badges, and new payment badges all work correctly according to the specifications. The weekly view functionality is complete and ready for production use.
 
+### Page Refresh Issue After Drag and Drop Fix ✅ COMPLETED
+**Status:** PAGE REFRESH ISSUE RESOLVED - Optimistic Updates Without Full Page Reload
+
+**Problem Identified:**
+User reported that "page is always refreshing after drag and drop a line" - causing poor user experience during patient reordering.
+
+**Root Cause:**
+The automatic `fetchData()` call after every successful drag operation was causing the entire page to reload/refresh data unnecessarily.
+
+**Solution Implemented:**
+✅ **Removed Unnecessary Data Refresh**: Eliminated the automatic `fetchData()` call after successful drag operations
+✅ **Optimistic Updates Only**: Now relies on optimistic UI updates for immediate visual feedback
+✅ **Error-Only Refresh**: Only refreshes data when there's an error to revert the optimistic update
+
+**Code Changes:**
+```javascript
+// BEFORE (caused page refresh):
+try {
+  await axios.put(`${API_BASE_URL}/api/rdv/${draggableId}/priority`, {
+    action: 'set_position',
+    position: destination.index
+  });
+  
+  toast.success('Patient repositionné');
+  await fetchData(); // ❌ This was causing the page refresh
+} catch (error) {
+  // ...
+}
+
+// AFTER (no page refresh):
+try {
+  await axios.put(`${API_BASE_URL}/api/rdv/${draggableId}/priority`, {
+    action: 'set_position',
+    position: destination.index
+  });
+  
+  toast.success('Patient repositionné');
+  // ✅ No automatic refresh - optimistic update handles UI
+} catch (error) {
+  // Only refresh on error to revert optimistic update
+  await fetchData();
+}
+```
+
+**Benefits of the Fix:**
+- ✅ **Instant Visual Feedback**: Patient cards move immediately without page refresh
+- ✅ **Smooth User Experience**: No loading indicators or page reloads during drag operations
+- ✅ **Better Performance**: Avoids unnecessary API calls and data fetching
+- ✅ **Maintained Consistency**: Backend is still updated, but UI doesn't need to reload
+- ✅ **Error Recovery**: Still refreshes data only when needed (on errors)
+
+**How It Works Now:**
+1. **User Drags Patient**: Visual feedback is immediate through optimistic update
+2. **Backend API Call**: Updates priority in database silently
+3. **Success**: UI stays as-is (already showing correct order)
+4. **Error**: Only then does it refresh to revert the optimistic update
+
+**Testing Validation:**
+- ✅ **No Loading Indicators**: Page doesn't show loading spinner after drag operations
+- ✅ **Immediate Visual Response**: Patient cards move to new positions instantly
+- ✅ **Backend Synchronization**: Priority values are still correctly updated in database
+- ✅ **Error Handling**: Failed operations still properly revert UI state
+
+**PAGE REFRESH ISSUE STATUS: RESOLVED**
+The drag and drop functionality now works smoothly without page refreshes. Users can reorder patients in the waiting room with immediate visual feedback and no interruption to their workflow.
+
 ### Drag and Drop Visual Repositioning Fix ✅ COMPLETED
 **Status:** DRAG AND DROP VISUAL REPOSITIONING ISSUES FIXED - Enhanced Algorithm and Synchronization
 
