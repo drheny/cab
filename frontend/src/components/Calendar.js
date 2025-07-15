@@ -339,58 +339,83 @@ const Calendar = ({ user }) => {
 
   // ====== FONCTIONS RÉORGANISATION SALLE D'ATTENTE ======
   
-  // Simplified arrow-based reordering - removing drag and drop completely
+  // Completely rewritten arrow-based reordering with robust debugging
   const handlePatientReorder = useCallback(async (appointmentId, action) => {
-    console.log(`=== Arrow click: ${action} for appointment ${appointmentId} ===`);
+    console.log(`\n=== ARROW REORDER START ===`);
+    console.log(`Action: ${action}`);
+    console.log(`Appointment ID: ${appointmentId}`);
     
-    // Get current waiting patients sorted by priority
-    const currentWaitingPatients = appointments
+    // Get current waiting patients with detailed logging
+    const allAppointments = appointments || [];
+    console.log(`Total appointments: ${allAppointments.length}`);
+    
+    const waitingPatients = allAppointments
       .filter(apt => apt.statut === 'attente')
-      .sort((a, b) => (a.priority || 999) - (b.priority || 999));
+      .sort((a, b) => {
+        const priorityA = typeof a.priority === 'number' ? a.priority : 999;
+        const priorityB = typeof b.priority === 'number' ? b.priority : 999;
+        return priorityA - priorityB;
+      });
     
-    if (currentWaitingPatients.length < 2) {
+    console.log(`Waiting patients: ${waitingPatients.length}`);
+    console.log('Current order:', waitingPatients.map((p, i) => `${i}: ${p.patient?.nom} (priority: ${p.priority})`));
+    
+    if (waitingPatients.length < 2) {
       console.log('Not enough patients for reordering');
       return;
     }
 
-    // Find current position
-    const currentIndex = currentWaitingPatients.findIndex(apt => apt.id === appointmentId);
+    // Find the appointment in the waiting list
+    const currentIndex = waitingPatients.findIndex(apt => apt.id === appointmentId);
+    console.log(`Found appointment at index: ${currentIndex}`);
+    
     if (currentIndex === -1) {
-      console.error('Patient not found in waiting list');
+      console.error('ERROR: Appointment not found in waiting list!');
+      console.log('Available appointments:', waitingPatients.map(p => ({ id: p.id, nom: p.patient?.nom })));
       return;
     }
 
-    console.log(`Patient currently at position ${currentIndex} of ${currentWaitingPatients.length}`);
-    console.log('Current order:', currentWaitingPatients.map((p, i) => `${i}: ${p.patient?.nom}`));
-
-    // Validate if movement is possible
-    if (action === 'move_up' && currentIndex === 0) {
-      console.log('Cannot move up - already at top');
+    // Validate move
+    let canMove = false;
+    if (action === 'move_up' && currentIndex > 0) {
+      canMove = true;
+      console.log(`✅ Can move up from position ${currentIndex} to ${currentIndex - 1}`);
+    } else if (action === 'move_down' && currentIndex < waitingPatients.length - 1) {
+      canMove = true;
+      console.log(`✅ Can move down from position ${currentIndex} to ${currentIndex + 1}`);
+    } else {
+      console.log(`❌ Cannot move ${action} from position ${currentIndex}`);
       return;
     }
-    if (action === 'move_down' && currentIndex === currentWaitingPatients.length - 1) {
-      console.log('Cannot move down - already at bottom');
+
+    if (!canMove) {
+      console.log('Move not possible - bailing out');
       return;
     }
 
     try {
-      console.log(`Calling backend API with action: ${action}`);
+      console.log(`🚀 Calling backend API: ${action}`);
       
-      // Call backend API first - NO optimistic update to avoid conflicts
       const response = await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/priority`, {
         action: action
       });
       
-      console.log('Backend response:', response.data);
+      console.log('✅ Backend response:', response.data);
       
-      // Refresh data from backend to ensure consistency
+      // Add a small delay to ensure backend has processed
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      console.log('🔄 Refreshing data from backend...');
       await fetchData();
       
       toast.success('Patient repositionné');
+      console.log('=== ARROW REORDER END ===\n');
       
     } catch (error) {
-      console.error('Error reordering patient:', error);
+      console.error('❌ ERROR during reordering:', error);
+      console.error('Error details:', error.response?.data);
       toast.error('Erreur lors du repositionnement');
+      console.log('=== ARROW REORDER END (ERROR) ===\n');
     }
   }, [API_BASE_URL, fetchData, appointments]);
 
