@@ -1320,36 +1320,36 @@ const WorkflowCard = React.memo(({
       <div className="flex items-center justify-between">
         {/* Partie gauche - Info patient */}
         <div className="flex items-center space-x-4 flex-1">
-          {/* Reorder buttons for waiting room - HANDLES NULL PRIORITIES */}
+          {/* Reorder buttons - SIMPLIFIED: Position-based logic */}
           {sectionType === 'attente' && totalCount > 1 && onPatientReorder && (
             <div className="flex flex-col space-y-1">
               <button
                 onClick={() => {
-                  console.log(`UP ARROW: ${appointment.patient?.nom} (priority: ${appointment.priority})`);
+                  console.log(`UP ARROW: ${appointment.patient?.nom} (position: ${index + 1}/${totalCount})`);
                   onPatientReorder(appointment.id, 'move_up');
                 }}
                 disabled={index === 0}
                 className={`p-1 rounded text-xs ${
                   index === 0 
                     ? 'text-gray-300 cursor-not-allowed' 
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                    : 'text-blue-500 hover:text-blue-700 hover:bg-blue-50'
                 }`}
-                title={`Monter d'une position (position: ${index + 1}/${totalCount})`}
+                title={`Monter d'un rang (${index + 1}/${totalCount})`}
               >
                 <ChevronUp className="w-3 h-3" />
               </button>
               <button
                 onClick={() => {
-                  console.log(`DOWN ARROW: ${appointment.patient?.nom} (priority: ${appointment.priority})`);
+                  console.log(`DOWN ARROW: ${appointment.patient?.nom} (position: ${index + 1}/${totalCount})`);
                   onPatientReorder(appointment.id, 'move_down');
                 }}
                 disabled={index === totalCount - 1}
                 className={`p-1 rounded text-xs ${
                   index === totalCount - 1 
                     ? 'text-gray-300 cursor-not-allowed' 
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                    : 'text-blue-500 hover:text-blue-700 hover:bg-blue-50'
                 }`}
-                title={`Descendre d'une position (position: ${index + 1}/${totalCount})`}
+                title={`Descendre d'un rang (${index + 1}/${totalCount})`}
               >
                 <ChevronDown className="w-3 h-3" />
               </button>
