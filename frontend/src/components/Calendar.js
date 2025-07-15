@@ -1354,11 +1354,14 @@ const WorkflowCard = React.memo(({
       <div className="flex items-center justify-between">
         {/* Partie gauche - Info patient */}
         <div className="flex items-center space-x-4 flex-1">
-          {/* Reorder buttons for waiting room */}
+          {/* Reorder buttons for waiting room - DEBUGGED */}
           {sectionType === 'attente' && totalCount > 1 && onPatientReorder && (
             <div className="flex flex-col space-y-1">
               <button
-                onClick={() => onPatientReorder(appointment.id, 'move_up')}
+                onClick={() => {
+                  console.log(`UP ARROW: ${appointment.patient?.nom} (priority: ${appointment.priority})`);
+                  onPatientReorder(appointment.id, 'move_up');
+                }}
                 disabled={appointment.priority === 0}
                 className={`p-1 rounded text-xs ${
                   appointment.priority === 0 
@@ -1370,7 +1373,10 @@ const WorkflowCard = React.memo(({
                 <ChevronUp className="w-3 h-3" />
               </button>
               <button
-                onClick={() => onPatientReorder(appointment.id, 'move_down')}
+                onClick={() => {
+                  console.log(`DOWN ARROW: ${appointment.patient?.nom} (priority: ${appointment.priority})`);
+                  onPatientReorder(appointment.id, 'move_down');
+                }}
                 disabled={appointment.priority === totalCount - 1}
                 className={`p-1 rounded text-xs ${
                   appointment.priority === totalCount - 1 
