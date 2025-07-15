@@ -712,6 +712,7 @@ const Calendar = ({ user }) => {
             onDelete={handleDeleteAppointment}
             onViewPatient={viewPatientDetails}
             onDragEnd={handleDragEnd}
+            onPatientReorder={handlePatientReorder}
           />
           
           {/* 2. RDV Programmés */}
