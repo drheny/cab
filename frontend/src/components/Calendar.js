@@ -158,21 +158,18 @@ const Calendar = ({ user }) => {
   }, [formData, selectedAppointment, API_BASE_URL, resetForm, fetchData]);
 
   const handleDeleteAppointment = useCallback(async (appointmentId) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce rendez-vous ?')) {
-      // Optimistic update - remove from UI immediately
-      setAppointments(prevAppointments => 
-        prevAppointments.filter(apt => apt.id !== appointmentId)
-      );
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce rendez-vous ?')) return;
 
-      try {
-        await axios.delete(`${API_BASE_URL}/api/appointments/${appointmentId}`);
-        toast.success('Rendez-vous supprimé avec succès');
-      } catch (error) {
-        console.error('Error deleting appointment:', error);
-        toast.error('Erreur lors de la suppression du rendez-vous');
-        // Revert optimistic update on error
-        await fetchData();
-      }
+    setAppointments(prevAppointments => 
+      prevAppointments.filter(apt => apt.id !== appointmentId)
+    );
+
+    try {
+      await axios.delete(`${API_BASE_URL}/api/appointments/${appointmentId}`);
+      toast.success('Rendez-vous supprimé avec succès');
+    } catch (error) {
+      toast.error('Erreur lors de la suppression du rendez-vous');
+      await fetchData();
     }
   }, [API_BASE_URL, fetchData]);
 
