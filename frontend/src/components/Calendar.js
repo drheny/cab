@@ -453,10 +453,16 @@ const Calendar = ({ user }) => {
       const statusDiff = (statusOrder[a.statut] || 0) - (statusOrder[b.statut] || 0);
       if (statusDiff !== 0) return statusDiff;
       
-      // For waiting room patients, sort by priority field (0-based, with fallback to 999)
+      // For waiting room patients, sort by priority field (handle null values)
       if (a.statut === 'attente' && b.statut === 'attente') {
         const priorityA = typeof a.priority === 'number' ? a.priority : 999;
         const priorityB = typeof b.priority === 'number' ? b.priority : 999;
+        
+        // If both have null priority, sort by appointment ID for consistency
+        if (priorityA === 999 && priorityB === 999) {
+          return a.id.localeCompare(b.id);
+        }
+        
         const priorityDiff = priorityA - priorityB;
         if (priorityDiff !== 0) return priorityDiff;
       }
