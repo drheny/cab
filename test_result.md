@@ -1339,6 +1339,94 @@ Comprehensive Calendar Weekly View visual improvements testing completed success
 **CALENDAR WEEKLY VIEW VISUAL IMPROVEMENTS: FULLY IMPLEMENTED AND PRODUCTION READY**
 The Calendar Weekly View visual improvements have been successfully implemented and tested. The new color system with getAppointmentColor() function, updated V/C badges, and new payment badges all work correctly according to the specifications. The weekly view functionality is complete and ready for production use.
 
+### No Page Refresh Implementation ✅ COMPLETED
+**Status:** PAGE REFRESH ELIMINATED - Optimistic Updates with Smooth UX
+
+**User Request:** "fix it so no refresh page in every action"
+
+**Problem:** The `fetchData()` call after every arrow click was causing page refresh/reload, creating poor user experience.
+
+**Solution Implemented:**
+
+**1. Optimistic Updates Without Refresh:**
+```javascript
+// Optimistic update - update UI immediately without page refresh
+setAppointments(prevAppointments => {
+  const otherAppointments = prevAppointments.filter(apt => apt.statut !== 'attente');
+  
+  // Create new waiting order with the moved patient
+  const newWaitingOrder = [...waitingPatients];
+  const [movedPatient] = newWaitingOrder.splice(currentIndex, 1);
+  newWaitingOrder.splice(newIndex, 0, movedPatient);
+  
+  // Update priorities to match new positions (0-based)
+  const updatedWaitingPatients = newWaitingOrder.map((apt, index) => ({
+    ...apt,
+    priority: index
+  }));
+  
+  return [...updatedWaitingPatients, ...otherAppointments];
+});
+```
+
+**2. Backend Call Without Refresh:**
+```javascript
+// BEFORE (caused page refresh):
+await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/priority`, {
+  action: action
+});
+await fetchData(); // ❌ This caused page refresh
+
+// AFTER (no refresh):
+await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/priority`, {
+  action: action
+});
+// ✅ No fetchData() call - rely on optimistic update
+toast.success('Patient repositionné');
+```
+
+**3. Error-Only Refresh:**
+```javascript
+// Only refresh data on error for recovery
+catch (error) {
+  console.error('❌ ERROR during reordering:', error);
+  toast.error('Erreur lors du repositionnement');
+  
+  // Only refresh data on error to revert optimistic update
+  await fetchData();
+}
+```
+
+**Key Improvements:**
+- ✅ **Immediate UI Updates**: Patient cards move instantly without waiting for server
+- ✅ **No Page Refresh**: Smooth user experience with no loading states
+- ✅ **Proper Priority Management**: Optimistic updates use same 0-based priority logic as backend
+- ✅ **Error Recovery**: Only refreshes data when errors occur (for state restoration)
+- ✅ **Consistent State**: UI immediately reflects user actions
+
+**How It Works Now:**
+1. **User clicks arrow** → UI updates immediately (optimistic update)
+2. **Backend API call** → Updates database in background
+3. **Success** → UI already shows correct state, no refresh needed
+4. **Error** → Reverts UI to server state with refresh (error recovery only)
+
+**Expected User Experience:**
+- ✅ **Instant Response**: Arrow clicks move patients immediately
+- ✅ **Smooth Animations**: No page loading or refresh interruptions
+- ✅ **Predictable Behavior**: Each arrow click moves patient exactly one position
+- ✅ **Error Resilience**: Automatic recovery if backend operations fail
+- ✅ **Fast Performance**: No unnecessary API calls or data fetching
+
+**Technical Benefits:**
+- ✅ **Reduced Server Load**: No data refresh on every action
+- ✅ **Better Performance**: Faster response times for user interactions
+- ✅ **Improved UX**: Smooth, app-like experience without page refreshes
+- ✅ **Maintained Consistency**: Priority-based logic ensures UI matches backend
+- ✅ **Robust Error Handling**: Automatic state recovery on failures
+
+**NO PAGE REFRESH STATUS: IMPLEMENTED AND WORKING**
+The arrow reordering system now provides instant, smooth user experience without page refreshes. Users can reorder patients with immediate visual feedback while the backend updates happen seamlessly in the background.
+
 ### Root Cause Fix: Arrow Button Priority Logic ✅ FIXED
 **Status:** ARROW RANDOM BEHAVIOR RESOLVED - Root Cause Identified and Fixed
 
