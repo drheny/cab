@@ -174,12 +174,10 @@ const Calendar = ({ user }) => {
   }, [API_BASE_URL, fetchData]);
 
   const handleStatusUpdate = useCallback(async (appointmentId, newStatus) => {
-    // Optimistic update - update UI immediately
-    setAppointments(prevAppointments => 
+    setAppointments(prevAppointments =>
       prevAppointments.map(apt => {
         if (apt.id === appointmentId) {
           const updatedApt = { ...apt, statut: newStatus };
-          // When moving to waiting room, record the arrival time
           if (newStatus === 'attente') {
             updatedApt.heure_arrivee_attente = new Date().toISOString();
           }
@@ -191,8 +189,6 @@ const Calendar = ({ user }) => {
 
     try {
       const updateData = { statut: newStatus };
-      
-      // When moving to waiting room, record the arrival time
       if (newStatus === 'attente') {
         updateData.heure_arrivee_attente = new Date().toISOString();
       }
@@ -200,40 +196,28 @@ const Calendar = ({ user }) => {
       await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/statut`, updateData);
       toast.success('Statut mis à jour');
     } catch (error) {
-      console.error('Error updating status:', error);
       toast.error('Erreur lors de la mise à jour du statut');
-      // Revert optimistic update on error
       await fetchData();
     }
   }, [API_BASE_URL, fetchData]);
 
-  // Basculer entre Contrôle/Visite
   const handleTypeToggle = useCallback(async (appointmentId, currentType) => {
     const newType = currentType === 'visite' ? 'controle' : 'visite';
     
-    // Optimistic update - update UI immediately
     setAppointments(prevAppointments => 
-      prevAppointments.map(apt => {
-        if (apt.id === appointmentId) {
-          return { ...apt, type_rdv: newType };
-        }
-        return apt;
-      })
+      prevAppointments.map(apt => 
+        apt.id === appointmentId ? { ...apt, type_rdv: newType } : apt
+      )
     );
 
     try {
       await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}`, { type_rdv: newType });
       
-      // Si on change vers contrôle, mettre automatiquement en gratuit
       if (newType === 'controle') {
-        // Also update payment status optimistically
         setAppointments(prevAppointments => 
-          prevAppointments.map(apt => {
-            if (apt.id === appointmentId) {
-              return { ...apt, paye: false };
-            }
-            return apt;
-          })
+          prevAppointments.map(apt => 
+            apt.id === appointmentId ? { ...apt, paye: false } : apt
+          )
         );
         
         await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/paiement`, {
@@ -246,9 +230,7 @@ const Calendar = ({ user }) => {
       
       toast.success(`Type changé vers ${newType === 'visite' ? 'Visite' : 'Contrôle'}`);
     } catch (error) {
-      console.error('Error toggling type:', error);
       toast.error('Erreur lors du changement de type');
-      // Revert optimistic update on error
       await fetchData();
     }
   }, [API_BASE_URL, fetchData]);
