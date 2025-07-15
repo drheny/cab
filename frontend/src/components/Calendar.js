@@ -1364,6 +1364,7 @@ const WorkflowCard = React.memo(({
   onEdit, 
   onDelete, 
   onViewPatient,
+  onPatientReorder,
   isCompleted,
   dragHandleProps,
   isDragging = false
