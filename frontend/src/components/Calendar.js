@@ -1203,7 +1203,6 @@ const WorkflowSection = ({
   onEdit, 
   onDelete, 
   onViewPatient,
-  onDragEnd,
   onPatientReorder,
   isCompleted = false 
 }) => {
