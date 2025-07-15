@@ -1395,7 +1395,7 @@ const WorkflowCard = React.memo(({
   const paymentStatus = getPaymentStatus();
 
   return (
-    <div className={`p-4 hover:bg-white/50 transition-colors ${isDragging ? 'shadow-lg' : ''}`}>
+    <div className="p-4 hover:bg-white/50 transition-colors">
       <div className="flex items-center justify-between">
         {/* Partie gauche - Info patient */}
         <div className="flex items-center space-x-4 flex-1">
@@ -1426,17 +1426,6 @@ const WorkflowCard = React.memo(({
               >
                 <ChevronDown className="w-3 h-3" />
               </button>
-            </div>
-          )}
-          
-          {/* Drag handle for waiting room (backup method) */}
-          {sectionType === 'attente' && totalCount > 1 && (
-            <div 
-              {...dragHandleProps}
-              className="p-1 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing"
-              title="Glisser pour réorganiser (ou utilisez les flèches)"
-            >
-              <GripVertical className="w-4 h-4" />
             </div>
           )}
           
