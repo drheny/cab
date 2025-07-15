@@ -272,10 +272,9 @@ const Calendar = ({ user }) => {
     try {
       await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/statut`, { statut: 'termine' });
       toast.success('Consultation terminée');
-      fetchData();
+      await fetchData();
     } catch (error) {
-      console.error('Error finishing consultation:', error);
-      toast.error('Erreur lors de la fin de consultation');
+      toast.error('Erreur lors de la finalisation de la consultation');
     }
   }, [API_BASE_URL, fetchData]);
 
