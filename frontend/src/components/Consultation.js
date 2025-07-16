@@ -80,9 +80,21 @@ const Consultation = ({ user }) => {
       
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/rdv/jour/${today}`);
       console.log('API Response:', response.data);
+      console.log('First appointment:', JSON.stringify(response.data[0], null, 2));
+      
+      // Log each appointment status
+      response.data.forEach((apt, index) => {
+        console.log(`Appointment ${index}:`, {
+          id: apt.id,
+          statut: apt.statut,
+          patient: apt.patient?.nom,
+          salle: apt.salle
+        });
+      });
       
       const inProgressAppointments = response.data.filter(apt => apt.statut === 'en_cours');
       console.log('Filtered consultations:', inProgressAppointments);
+      console.log('Number of en_cours appointments:', inProgressAppointments.length);
       
       setActiveConsultations(inProgressAppointments);
       
