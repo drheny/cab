@@ -172,7 +172,7 @@ const Consultation = ({ user }) => {
   const deleteConsultation = async (consultationId) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cette consultation ?')) {
       try {
-        await axios.delete(`/api/consultations/${consultationId}`);
+        await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/consultations/${consultationId}`);
         toast.success('Consultation supprimée avec succès');
         
         // Refresh patient history
