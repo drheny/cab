@@ -817,6 +817,13 @@ const Consultation = ({ user }) => {
                     {/* Actions */}
                     <div className="flex justify-end space-x-3">
                       <button
+                        onClick={handleQuitConsultation}
+                        className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+                      >
+                        <X className="w-4 h-4" />
+                        <span>Quitter consultation</span>
+                      </button>
+                      <button
                         onClick={handleSaveConsultation}
                         className="btn-primary flex items-center space-x-2"
                       >
