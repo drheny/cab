@@ -452,12 +452,21 @@ const Consultation = ({ user }) => {
                             <div className="flex items-center space-x-2">
                               <Clock className="w-4 h-4 text-gray-500" />
                               <span className="text-gray-600">Âge:</span>
-                              <span className="font-medium">{consultation.patient?.age || 'N/A'}</span>
+                              <span className="font-medium">
+                                {consultation.patient?.age || 
+                                 (consultation.patient?.date_naissance ? 
+                                   new Date().getFullYear() - new Date(consultation.patient.date_naissance).getFullYear() : 'N/A')}
+                              </span>
                             </div>
                             <div className="flex items-center space-x-2">
                               <MapPin className="w-4 h-4 text-gray-500" />
                               <span className="text-gray-600">Adresse:</span>
                               <span className="font-medium">{consultation.patient?.adresse || 'N/A'}</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Phone className="w-4 h-4 text-gray-500" />
+                              <span className="text-gray-600">Téléphone:</span>
+                              <span className="font-medium">{consultation.patient?.numero_whatsapp || 'N/A'}</span>
                             </div>
                             <div className="flex items-center space-x-2">
                               <Users className="w-4 h-4 text-gray-500" />
