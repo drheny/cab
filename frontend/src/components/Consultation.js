@@ -110,8 +110,11 @@ const Consultation = ({ user }) => {
         });
       });
       
-      const inProgressAppointments = enrichedConsultations.filter(apt => apt.statut === 'en_cours');
-      console.log('Filtered consultations:', inProgressAppointments);
+      // Temporairement, incluons les consultations "attente" et "retard" pour tester le panel expandable
+      const inProgressAppointments = enrichedConsultations.filter(apt => 
+        apt.statut === 'en_cours' || apt.statut === 'attente' || apt.statut === 'retard'
+      );
+      console.log('Filtered consultations (includes attente/retard for testing):', inProgressAppointments);
       console.log('Number of en_cours appointments:', inProgressAppointments.length);
       
       setActiveConsultations(inProgressAppointments);
