@@ -134,6 +134,9 @@ const Consultation = ({ user }) => {
       setPatientHistory([]);
     } else {
       setExpandedPatient(consultation.id);
+      console.log('Expanding patient:', consultation.patient);
+      
+      // Charger l'historique des consultations
       await loadPatientHistory(consultation.patient_id);
     }
   };
@@ -141,7 +144,10 @@ const Consultation = ({ user }) => {
   const loadPatientHistory = async (patientId) => {
     try {
       setLoadingHistory(true);
+      console.log('Loading patient history for:', patientId);
+      
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/patients/${patientId}/consultations`);
+      console.log('Patient history loaded:', response.data);
       setPatientHistory(response.data);
     } catch (error) {
       console.error('Error loading patient history:', error);
