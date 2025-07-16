@@ -255,47 +255,98 @@ const Consultation = ({ user }) => {
           <div className="lg:col-span-2">
             {selectedConsultation && (
               <div className="space-y-6">
-                {/* Patient Info & Timer */}
+                {/* Patient Info & Timer - Enhanced Banner */}
                 <div className="bg-white rounded-xl shadow-sm border p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-4">
-                      <div className="bg-primary-100 p-3 rounded-full">
-                        <User className="w-6 h-6 text-primary-600" />
-                      </div>
-                      <div>
-                        <h2 className="text-xl font-semibold text-gray-900">
-                          {selectedConsultation.patient?.prenom} {selectedConsultation.patient?.nom}
-                        </h2>
-                        <p className="text-gray-600">
-                          {selectedConsultation.heure} - {selectedConsultation.salle}
-                        </p>
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Patient Info Section */}
+                    <div className="lg:col-span-2">
+                      <div className="flex items-start space-x-4">
+                        <div className="bg-primary-100 p-3 rounded-full">
+                          <User className="w-6 h-6 text-primary-600" />
+                        </div>
+                        <div className="flex-1">
+                          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                            {selectedConsultation.patient?.prenom} {selectedConsultation.patient?.nom}
+                          </h2>
+                          
+                          {/* Appointment Details Grid */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <div className="flex items-center space-x-2">
+                                <Clock className="w-4 h-4 text-gray-500" />
+                                <span className="text-sm text-gray-600">Horaire:</span>
+                                <span className="text-sm font-medium text-gray-900">
+                                  {selectedConsultation.heure}
+                                </span>
+                              </div>
+                              
+                              <div className="flex items-center space-x-2">
+                                <div className="w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center">
+                                  <span className="text-xs text-white font-bold">W</span>
+                                </div>
+                                <span className="text-sm text-gray-600">Durée d'attente:</span>
+                                <span className="text-sm font-medium text-orange-600">
+                                  {calculateWaitingTime(selectedConsultation)}
+                                </span>
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <div className="flex items-center space-x-2">
+                                <div className="w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center">
+                                  <span className="text-xs text-white font-bold">S</span>
+                                </div>
+                                <span className="text-sm text-gray-600">Salle:</span>
+                                <span className="text-sm font-medium text-purple-600">
+                                  {getSalleDisplayName(selectedConsultation.salle)}
+                                </span>
+                              </div>
+                              
+                              <div className="flex items-center space-x-2">
+                                <div className="w-4 h-4 bg-indigo-500 rounded-full flex items-center justify-center">
+                                  <span className="text-xs text-white font-bold">T</span>
+                                </div>
+                                <span className="text-sm text-gray-600">Type:</span>
+                                <span className={`text-xs px-2 py-1 rounded-full font-medium ${getTypeColor(selectedConsultation.type_rdv)}`}>
+                                  {getTypeDisplayName(selectedConsultation.type_rdv)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                     
-                    {/* Timer */}
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-primary-600 mb-2">
-                        {formatTime(timer)}
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={startTimer}
-                          className="p-2 bg-green-500 hover:bg-green-600 text-white rounded-lg"
-                        >
-                          <Play className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={pauseTimer}
-                          className="p-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg"
-                        >
-                          <Pause className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={stopTimer}
-                          className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-lg"
-                        >
-                          <Square className="w-4 h-4" />
-                        </button>
+                    {/* Timer Section */}
+                    <div className="lg:col-span-1">
+                      <div className="text-center bg-gray-50 rounded-lg p-4">
+                        <div className="text-2xl font-bold text-primary-600 mb-2">
+                          {formatTime(timer)}
+                        </div>
+                        <p className="text-xs text-gray-500 mb-3">Durée de consultation</p>
+                        <div className="flex items-center justify-center space-x-2">
+                          <button
+                            onClick={startTimer}
+                            className="p-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
+                            title="Démarrer le chronomètre"
+                          >
+                            <Play className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={pauseTimer}
+                            className="p-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition-colors"
+                            title="Pause"
+                          >
+                            <Pause className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={stopTimer}
+                            className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+                            title="Arrêter"
+                          >
+                            <Square className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
