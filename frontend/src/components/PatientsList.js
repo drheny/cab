@@ -237,6 +237,153 @@ const PatientsListComponent = ({ user }) => {
     }
   };
 
+  const viewSingleConsultation = async (consultationId) => {
+    try {
+      const consultation = consultationDetails.find(c => c.id === consultationId);
+      if (consultation) {
+        setSelectedConsultation(consultation);
+        setShowConsultationDetailsModal(true);
+      }
+    } catch (error) {
+      console.error('Error viewing consultation:', error);
+      toast.error('Erreur lors de l\'affichage de la consultation');
+    }
+  };
+
+  const editConsultation = (consultation) => {
+    setEditingConsultation(consultation);
+    setConsultationFormData({
+      poids: consultation.poids?.toString() || '',
+      taille: consultation.taille?.toString() || '',
+      pc: consultation.pc?.toString() || '',
+      observations: consultation.observations || '',
+      traitement: consultation.traitement || '',
+      bilan: consultation.bilan || '',
+      relance_date: consultation.relance_date || '',
+      duree: consultation.duree?.toString() || ''
+    });
+    setShowEditConsultationModal(true);
+  };
+
+  const saveConsultation = async () => {
+    try {
+      if (!editingConsultation) return;
+      
+      const updatedConsultation = {
+        ...editingConsultation,
+        poids: parseFloat(consultationFormData.poids) || 0,
+        taille: parseFloat(consultationFormData.taille) || 0,
+        pc: parseFloat(consultationFormData.pc) || 0,
+        observations: consultationFormData.observations,
+        traitement: consultationFormData.traitement,
+        bilan: consultationFormData.bilan,
+        relance_date: consultationFormData.relance_date,
+        duree: parseInt(consultationFormData.duree) || 0
+      };
+
+      await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/consultations/${editingConsultation.id}`, updatedConsultation);
+      
+      toast.success('Consultation mise à jour avec succès');
+      setShowEditConsultationModal(false);
+      setEditingConsultation(null);
+      
+      // Refresh consultations
+      if (selectedPatient) {
+        viewConsultationDetails(selectedPatient.id);
+      }
+    } catch (error) {
+      console.error('Error saving consultation:', error);
+      toast.error('Erreur lors de la sauvegarde de la consultation');
+    }
+  };
+
+  const deleteConsultation = async (consultationId) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette consultation ?')) {
+      try {
+        await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/consultations/${consultationId}`);
+        toast.success('Consultation supprimée avec succès');
+        
+        // Refresh consultations
+        if (selectedPatient) {
+          viewConsultationDetails(selectedPatient.id);
+        }
+      } catch (error) {
+        console.error('Error deleting consultation:', error);
+        toast.error('Erreur lors de la suppression de la consultation');
+      }
+    }
+  };
+
+  const addNewConsultation = () => {
+    setConsultationFormData({
+      poids: '',
+      taille: '',
+      pc: '',
+      observations: '',
+      traitement: '',
+      bilan: '',
+      relance_date: '',
+      duree: ''
+    });
+    setShowAddConsultationModal(true);
+  };
+
+  const createConsultation = async () => {
+    try {
+      if (!selectedPatient) return;
+      
+      const newConsultation = {
+        patient_id: selectedPatient.id,
+        appointment_id: 'manual_' + Date.now(),
+        date: new Date().toISOString().split('T')[0],
+        poids: parseFloat(consultationFormData.poids) || 0,
+        taille: parseFloat(consultationFormData.taille) || 0,
+        pc: parseFloat(consultationFormData.pc) || 0,
+        observations: consultationFormData.observations,
+        traitement: consultationFormData.traitement,
+        bilan: consultationFormData.bilan,
+        relance_date: consultationFormData.relance_date,
+        duree: parseInt(consultationFormData.duree) || 0
+      };
+
+      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/consultations`, newConsultation);
+      
+      toast.success('Consultation créée avec succès');
+      setShowAddConsultationModal(false);
+      
+      // Refresh consultations
+      viewConsultationDetails(selectedPatient.id);
+    } catch (error) {
+      console.error('Error creating consultation:', error);
+      toast.error('Erreur lors de la création de la consultation');
+    }
+  };
+
+  const addNewAppointment = () => {
+    // Navigate to calendar with patient pre-selected
+    navigate('/calendar', { state: { selectedPatient: selectedPatient } });
+  };
+
+  const getConsultationTypeColor = (type) => {
+    switch (type) {
+      case 'visite':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'controle':
+        return 'bg-green-100 text-green-800 border-green-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
   const resetForm = () => {
     setFormData({
       nom: '',
