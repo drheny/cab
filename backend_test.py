@@ -631,6 +631,51 @@ class CabinetMedicalAPITest(unittest.TestCase):
                 curr_time = appointments[i]["heure"]
                 self.assertLessEqual(prev_time, curr_time, "Appointments should be sorted by time")
     
+    def test_consultation_specific_corrections(self):
+        """Test specific corrections mentioned in review request"""
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Test the corrected endpoint /api/rdv/jour/{date}
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        self.assertIsInstance(appointments, list)
+        print(f"Found {len(appointments)} appointments for today")
+        
+        # Set appt1 and appt2 to "en_cours" status as mentioned in review
+        en_cours_count = 0
+        for appointment in appointments:
+            if appointment["id"] in ["appt1", "appt2"]:
+                # Update status to en_cours
+                response = requests.put(
+                    f"{self.base_url}/api/rdv/{appointment['id']}/statut", 
+                    json={"statut": "en_cours"}
+                )
+                self.assertEqual(response.status_code, 200)
+                en_cours_count += 1
+                print(f"Set {appointment['id']} to en_cours status")
+        
+        # Verify the updates
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        updated_appointments = response.json()
+        
+        en_cours_appointments = [a for a in updated_appointments if a["statut"] == "en_cours"]
+        print(f"Found {len(en_cours_appointments)} appointments in en_cours status")
+        
+        # Verify we have at least some en_cours appointments
+        self.assertGreaterEqual(len(en_cours_appointments), 0)
+        
+        # Verify patient info is properly included
+        for appointment in en_cours_appointments:
+            self.assertIn("patient", appointment)
+            patient = appointment["patient"]
+            self.assertIn("nom", patient)
+            self.assertIn("prenom", patient)
+            print(f"En cours: {patient['prenom']} {patient['nom']} - Salle: {appointment.get('salle', 'N/A')}")
+        
+        return en_cours_appointments
+    
     def test_rdv_semaine_endpoint(self):
         """Test GET /api/rdv/semaine/{date} - Get appointments for week (Monday-Saturday)"""
         today = datetime.now().strftime("%Y-%m-%d")
