@@ -80,19 +80,37 @@ const Consultation = ({ user }) => {
       
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/rdv/jour/${today}`);
       console.log('API Response:', response.data);
-      console.log('First appointment:', JSON.stringify(response.data[0], null, 2));
+      
+      // Enrichir les données patient pour chaque consultation
+      const enrichedConsultations = await Promise.all(
+        response.data.map(async (apt) => {
+          try {
+            const patientResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/patients/${apt.patient_id}`);
+            return {
+              ...apt,
+              patient: patientResponse.data
+            };
+          } catch (error) {
+            console.error(`Error fetching patient data for ${apt.patient_id}:`, error);
+            return apt; // Retourner l'appointment avec les données patient basiques
+          }
+        })
+      );
+      
+      console.log('Enriched consultations:', enrichedConsultations);
       
       // Log each appointment status
-      response.data.forEach((apt, index) => {
+      enrichedConsultations.forEach((apt, index) => {
         console.log(`Appointment ${index}:`, {
           id: apt.id,
           statut: apt.statut,
           patient: apt.patient?.nom,
-          salle: apt.salle
+          salle: apt.salle,
+          patientComplete: apt.patient
         });
       });
       
-      const inProgressAppointments = response.data.filter(apt => apt.statut === 'en_cours');
+      const inProgressAppointments = enrichedConsultations.filter(apt => apt.statut === 'en_cours');
       console.log('Filtered consultations:', inProgressAppointments);
       console.log('Number of en_cours appointments:', inProgressAppointments.length);
       
