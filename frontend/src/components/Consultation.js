@@ -19,7 +19,8 @@ import {
   MapPin,
   Phone,
   Users,
-  X
+  X,
+  MessageCircle
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
