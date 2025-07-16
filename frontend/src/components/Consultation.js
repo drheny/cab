@@ -76,12 +76,19 @@ const Consultation = ({ user }) => {
   const fetchActiveConsultations = async () => {
     try {
       const today = new Date().toISOString().split('T')[0];
+      console.log('Fetching consultations for date:', today);
+      
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/rdv/jour/${today}`);
+      console.log('API Response:', response.data);
+      
       const inProgressAppointments = response.data.filter(apt => apt.statut === 'en_cours');
+      console.log('Filtered consultations:', inProgressAppointments);
+      
       setActiveConsultations(inProgressAppointments);
       
       if (inProgressAppointments.length > 0 && !selectedConsultation) {
         setSelectedConsultation(inProgressAppointments[0]);
+        console.log('Selected consultation:', inProgressAppointments[0]);
       }
     } catch (error) {
       console.error('Error fetching consultations:', error);
