@@ -350,48 +350,152 @@ const Consultation = ({ user }) => {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Sidebar - Active Consultations */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-sm border p-6">
+        <div className="flex gap-6 min-h-screen">
+          {/* Colonne gauche - Consultations actives */}
+          <div className="w-80 flex-shrink-0 space-y-4">
+            <div className="bg-white rounded-xl shadow-sm border p-4">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                Consultations actives
+                Consultations actives ({activeConsultations.length})
               </h2>
               <div className="space-y-3">
                 {activeConsultations.map((consultation) => (
-                  <div
-                    key={consultation.id}
-                    onClick={() => setSelectedConsultation(consultation)}
-                    className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                      selectedConsultation?.id === consultation.id
-                        ? 'bg-primary-100 border-primary-200'
-                        : 'bg-gray-50 hover:bg-gray-100'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-primary-500 p-2 rounded-full">
-                        <User className="w-4 h-4 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="font-medium text-gray-900">
-                          {consultation.patient?.prenom} {consultation.patient?.nom}
-                        </h3>
-                        <p className="text-sm text-gray-500">
-                          {consultation.heure} - {consultation.salle}
-                        </p>
+                  <div key={consultation.id} className="space-y-2">
+                    <div
+                      onClick={() => setSelectedConsultation(consultation)}
+                      className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                        selectedConsultation?.id === consultation.id
+                          ? 'bg-primary-100 border-primary-200 border-2'
+                          : 'bg-gray-50 hover:bg-gray-100'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="bg-primary-500 p-2 rounded-full">
+                            <User className="w-4 h-4 text-white" />
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-gray-900">
+                              {consultation.patient?.prenom} {consultation.patient?.nom}
+                            </h3>
+                            <p className="text-sm text-gray-500">
+                              {consultation.heure} - {getSalleDisplayName(consultation.salle)}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            togglePatientExpansion(consultation);
+                          }}
+                          className="text-gray-400 hover:text-gray-600"
+                        >
+                          {expandedPatient === consultation.id ? (
+                            <ChevronUp className="w-5 h-5" />
+                          ) : (
+                            <ChevronDown className="w-5 h-5" />
+                          )}
+                        </button>
                       </div>
                     </div>
+
+                    {/* Panel expandable */}
+                    {expandedPatient === consultation.id && (
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-4">
+                        {/* Informations du patient */}
+                        <div>
+                          <h4 className="font-medium text-gray-900 mb-3">Informations Patient</h4>
+                          <div className="grid grid-cols-1 gap-3 text-sm">
+                            <div className="flex items-center space-x-2">
+                              <Clock className="w-4 h-4 text-gray-500" />
+                              <span className="text-gray-600">Âge:</span>
+                              <span className="font-medium">{consultation.patient?.age || 'N/A'}</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <MapPin className="w-4 h-4 text-gray-500" />
+                              <span className="text-gray-600">Adresse:</span>
+                              <span className="font-medium">{consultation.patient?.adresse || 'N/A'}</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Users className="w-4 h-4 text-gray-500" />
+                              <span className="text-gray-600">Père:</span>
+                              <span className="font-medium">
+                                {consultation.patient?.pere?.nom || 'N/A'}
+                                {consultation.patient?.pere?.fonction && ` (${consultation.patient.pere.fonction})`}
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Users className="w-4 h-4 text-gray-500" />
+                              <span className="text-gray-600">Mère:</span>
+                              <span className="font-medium">
+                                {consultation.patient?.mere?.nom || 'N/A'}
+                                {consultation.patient?.mere?.fonction && ` (${consultation.patient.mere.fonction})`}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Historique des consultations */}
+                        <div>
+                          <h4 className="font-medium text-gray-900 mb-3">Historique des consultations</h4>
+                          {loadingHistory ? (
+                            <div className="flex items-center justify-center h-16">
+                              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500"></div>
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              {patientHistory.length > 0 ? (
+                                patientHistory.map((historyItem) => (
+                                  <div key={historyItem.id} className="flex items-center justify-between p-2 bg-white rounded border">
+                                    <div className="flex items-center space-x-2">
+                                      <Stethoscope className="w-3 h-3 text-gray-500" />
+                                      <span className="text-sm font-medium">{historyItem.date}</span>
+                                      <span className={`text-xs px-2 py-1 rounded-full ${getConsultationTypeColor(historyItem.type)}`}>
+                                        {historyItem.type === 'visite' ? 'Visite' : 'Contrôle'}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center space-x-1">
+                                      <button
+                                        onClick={() => viewConsultationDetail(historyItem)}
+                                        className="text-blue-600 hover:text-blue-800 text-xs"
+                                      >
+                                        <Eye className="w-3 h-3" />
+                                      </button>
+                                      <button
+                                        onClick={() => editConsultation(historyItem)}
+                                        className="text-green-600 hover:text-green-800 text-xs"
+                                      >
+                                        <Edit className="w-3 h-3" />
+                                      </button>
+                                      <button
+                                        onClick={() => deleteConsultation(historyItem.id)}
+                                        className="text-red-600 hover:text-red-800 text-xs"
+                                      >
+                                        <Trash2 className="w-3 h-3" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))
+                              ) : (
+                                <p className="text-sm text-gray-500 text-center py-2">
+                                  Aucune consultation dans l'historique
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
             </div>
           </div>
 
-          {/* Main Content */}
-          <div className="lg:col-span-2">
+          {/* Contenu principal */}
+          <div className="flex-1">
             {selectedConsultation && (
               <div className="space-y-6">
-                {/* Patient Info & Timer - Enhanced Banner */}
+                {/* Bannière améliorée */}
                 <div className="bg-white rounded-xl shadow-sm border p-6">
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Patient Info Section */}
@@ -631,6 +735,259 @@ const Consultation = ({ user }) => {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Consultation Detail Modal */}
+      {showConsultationDetailModal && selectedConsultationDetail && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-900">
+                  Détails de la consultation
+                </h2>
+                <button
+                  onClick={() => setShowConsultationDetailModal(false)}
+                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Informations générales</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-sm font-medium text-gray-700">Date:</span>
+                      <p className="text-gray-900">{selectedConsultationDetail.date}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-700">Type:</span>
+                      <span className={`ml-2 text-xs px-2 py-1 rounded-full ${getConsultationTypeColor(selectedConsultationDetail.type)}`}>
+                        {selectedConsultationDetail.type === 'visite' ? 'Visite' : 'Contrôle'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-700">Durée:</span>
+                      <p className="text-gray-900">{selectedConsultationDetail.duree > 0 ? `${selectedConsultationDetail.duree} minutes` : 'Non spécifiée'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Mesures</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-sm font-medium text-gray-700">Poids:</span>
+                      <span className="text-gray-900">{selectedConsultationDetail.poids > 0 ? `${selectedConsultationDetail.poids} kg` : 'Non mesuré'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm font-medium text-gray-700">Taille:</span>
+                      <span className="text-gray-900">{selectedConsultationDetail.taille > 0 ? `${selectedConsultationDetail.taille} cm` : 'Non mesurée'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm font-medium text-gray-700">PC:</span>
+                      <span className="text-gray-900">{selectedConsultationDetail.pc > 0 ? `${selectedConsultationDetail.pc} cm` : 'Non mesuré'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 space-y-4">
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2">Observations</h4>
+                  <p className="text-gray-700 bg-gray-50 p-3 rounded-lg">
+                    {selectedConsultationDetail.observations || 'Aucune observation'}
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2">Traitement</h4>
+                  <p className="text-gray-700 bg-gray-50 p-3 rounded-lg">
+                    {selectedConsultationDetail.traitement || 'Aucun traitement'}
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2">Bilan</h4>
+                  <p className="text-gray-700 bg-gray-50 p-3 rounded-lg">
+                    {selectedConsultationDetail.bilan || 'Aucun bilan'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowConsultationDetailModal(false);
+                    editConsultation(selectedConsultationDetail);
+                  }}
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+                >
+                  <Edit className="w-4 h-4" />
+                  <span>Modifier</span>
+                </button>
+                <button
+                  onClick={() => setShowConsultationDetailModal(false)}
+                  className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
+                >
+                  Fermer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Consultation Modal */}
+      {showEditConsultationModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-900">
+                  Modifier la consultation
+                </h2>
+                <button
+                  onClick={() => setShowEditConsultationModal(false)}
+                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Mesures */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Mesures</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <Weight className="w-4 h-4 inline mr-1" />
+                        Poids (kg)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={consultationFormData.poids}
+                        onChange={(e) => setConsultationFormData({...consultationFormData, poids: e.target.value})}
+                        className="input-field"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <Ruler className="w-4 h-4 inline mr-1" />
+                        Taille (cm)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={consultationFormData.taille}
+                        onChange={(e) => setConsultationFormData({...consultationFormData, taille: e.target.value})}
+                        className="input-field"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <Brain className="w-4 h-4 inline mr-1" />
+                        PC (cm)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={consultationFormData.pc}
+                        onChange={(e) => setConsultationFormData({...consultationFormData, pc: e.target.value})}
+                        className="input-field"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <Clock className="w-4 h-4 inline mr-1" />
+                        Durée (min)
+                      </label>
+                      <input
+                        type="number"
+                        value={consultationFormData.duree}
+                        onChange={(e) => setConsultationFormData({...consultationFormData, duree: e.target.value})}
+                        className="input-field"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Observations */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Observations cliniques
+                  </label>
+                  <textarea
+                    value={consultationFormData.observations}
+                    onChange={(e) => setConsultationFormData({...consultationFormData, observations: e.target.value})}
+                    className="input-field"
+                    rows="4"
+                    placeholder="Observations et examens cliniques..."
+                  />
+                </div>
+
+                {/* Traitement */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Traitement prescrit
+                  </label>
+                  <textarea
+                    value={consultationFormData.traitement}
+                    onChange={(e) => setConsultationFormData({...consultationFormData, traitement: e.target.value})}
+                    className="input-field"
+                    rows="3"
+                    placeholder="Médicaments et posologie..."
+                  />
+                </div>
+
+                {/* Bilan */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Bilan/Examens
+                  </label>
+                  <textarea
+                    value={consultationFormData.bilan}
+                    onChange={(e) => setConsultationFormData({...consultationFormData, bilan: e.target.value})}
+                    className="input-field"
+                    rows="3"
+                    placeholder="Examens complémentaires demandés..."
+                  />
+                </div>
+
+                {/* Relance */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Date de relance
+                  </label>
+                  <input
+                    type="date"
+                    value={consultationFormData.relance_date}
+                    onChange={(e) => setConsultationFormData({...consultationFormData, relance_date: e.target.value})}
+                    className="input-field"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  onClick={() => setShowEditConsultationModal(false)}
+                  className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={saveConsultation}
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Sauvegarder</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
