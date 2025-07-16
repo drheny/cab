@@ -361,7 +361,7 @@ const Consultation = ({ user }) => {
         relance_date: ''
       });
       
-      stopTimer();
+      resetTimer();
       fetchActiveConsultations();
     } catch (error) {
       console.error('Error saving consultation:', error);
