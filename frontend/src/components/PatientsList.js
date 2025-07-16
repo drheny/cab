@@ -857,6 +857,135 @@ const PatientsListComponent = ({ user }) => {
           </div>
         </div>
       )}
+
+      {/* Consultation Details Modal */}
+      {showConsultationModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-900">
+                  Historique des consultations
+                  {selectedPatient && (
+                    <span className="text-lg font-medium text-gray-600 ml-2">
+                      - {selectedPatient.prenom} {selectedPatient.nom}
+                    </span>
+                  )}
+                </h2>
+                <button
+                  onClick={() => setShowConsultationModal(false)}
+                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                >
+                  <span className="sr-only">Fermer</span>
+                  ×
+                </button>
+              </div>
+
+              {loadingConsultations ? (
+                <div className="flex items-center justify-center h-32">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {consultationDetails.length > 0 ? (
+                    consultationDetails.map((consultation, index) => (
+                      <div key={consultation.id} className="border rounded-lg p-4 bg-gray-50">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center space-x-3">
+                            <div className="bg-primary-100 p-2 rounded-full">
+                              <Clock className="w-4 h-4 text-primary-600" />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-gray-900">{consultation.date}</h3>
+                              <p className="text-sm text-gray-600">
+                                {consultation.type === 'visite' ? 'Visite' : 'Contrôle'} - 
+                                {consultation.duree > 0 ? ` ${consultation.duree} min` : ' Durée non spécifiée'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <span className={`px-2 py-1 text-xs rounded-full ${
+                              consultation.type === 'visite' 
+                                ? 'bg-blue-100 text-blue-800' 
+                                : 'bg-green-100 text-green-800'
+                            }`}>
+                              {consultation.type === 'visite' ? 'Visite' : 'Contrôle'}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <h4 className="font-medium text-gray-900 mb-2">Mesures</h4>
+                            <div className="space-y-1 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Poids:</span>
+                                <span className="font-medium">{consultation.poids > 0 ? `${consultation.poids} kg` : 'Non mesurée'}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Taille:</span>
+                                <span className="font-medium">{consultation.taille > 0 ? `${consultation.taille} cm` : 'Non mesurée'}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">PC:</span>
+                                <span className="font-medium">{consultation.pc > 0 ? `${consultation.pc} cm` : 'Non mesurée'}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div>
+                            <h4 className="font-medium text-gray-900 mb-2">Résumé</h4>
+                            <div className="space-y-1 text-sm">
+                              <div>
+                                <span className="text-gray-600">Observations:</span>
+                                <p className="text-gray-900 mt-1">{consultation.observations || 'Aucune observation'}</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 space-y-3">
+                          <div>
+                            <h4 className="font-medium text-gray-900 mb-1">Traitement</h4>
+                            <p className="text-sm text-gray-600 bg-white p-2 rounded">
+                              {consultation.traitement || 'Aucun traitement prescrit'}
+                            </p>
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-gray-900 mb-1">Bilan</h4>
+                            <p className="text-sm text-gray-600 bg-white p-2 rounded">
+                              {consultation.bilan || 'Aucun bilan'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8">
+                      <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">
+                        Aucune consultation trouvée
+                      </h3>
+                      <p className="text-gray-500">
+                        Ce patient n'a pas encore d'historique de consultations.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={() => setShowConsultationModal(false)}
+                  className="btn-primary"
+                >
+                  Fermer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
