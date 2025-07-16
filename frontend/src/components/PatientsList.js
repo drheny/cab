@@ -310,9 +310,9 @@ const PatientsListComponent = ({ user }) => {
       setShowEditConsultationModal(false);
       setEditingConsultation(null);
       
-      // Refresh consultations
+      // Refresh consultations data
       if (selectedPatient) {
-        viewConsultationDetails(selectedPatient.id);
+        loadConsultationsData(selectedPatient.id);
       }
     } catch (error) {
       console.error('Error saving consultation:', error);
@@ -326,9 +326,9 @@ const PatientsListComponent = ({ user }) => {
         await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/consultations/${consultationId}`);
         toast.success('Consultation supprimée avec succès');
         
-        // Refresh consultations
+        // Refresh consultations data
         if (selectedPatient) {
-          viewConsultationDetails(selectedPatient.id);
+          loadConsultationsData(selectedPatient.id);
         }
       } catch (error) {
         console.error('Error deleting consultation:', error);
@@ -374,8 +374,8 @@ const PatientsListComponent = ({ user }) => {
       toast.success('Consultation créée avec succès');
       setShowAddConsultationModal(false);
       
-      // Refresh consultations
-      viewConsultationDetails(selectedPatient.id);
+      // Refresh consultations data
+      loadConsultationsData(selectedPatient.id);
     } catch (error) {
       console.error('Error creating consultation:', error);
       toast.error('Erreur lors de la création de la consultation');
