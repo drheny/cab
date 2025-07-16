@@ -38,6 +38,20 @@ const PatientsListComponent = ({ user }) => {
   const [selectedConsultation, setSelectedConsultation] = useState(null);
   const [consultationDetails, setConsultationDetails] = useState([]);
   const [loadingConsultations, setLoadingConsultations] = useState(false);
+  const [showConsultationDetailsModal, setShowConsultationDetailsModal] = useState(false);
+  const [showEditConsultationModal, setShowEditConsultationModal] = useState(false);
+  const [showAddConsultationModal, setShowAddConsultationModal] = useState(false);
+  const [editingConsultation, setEditingConsultation] = useState(null);
+  const [consultationFormData, setConsultationFormData] = useState({
+    poids: '',
+    taille: '',
+    pc: '',
+    observations: '',
+    traitement: '',
+    bilan: '',
+    relance_date: '',
+    duree: ''
+  });
   const searchInputRef = useRef(null);
   const [formData, setFormData] = useState({
     nom: '',
