@@ -33,6 +33,10 @@ const PatientsListComponent = ({ user }) => {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [showPatientModal, setShowPatientModal] = useState(false);
+  const [showConsultationModal, setShowConsultationModal] = useState(false);
+  const [selectedConsultation, setSelectedConsultation] = useState(null);
+  const [consultationDetails, setConsultationDetails] = useState([]);
+  const [loadingConsultations, setLoadingConsultations] = useState(false);
   const searchInputRef = useRef(null);
   const [formData, setFormData] = useState({
     nom: '',
