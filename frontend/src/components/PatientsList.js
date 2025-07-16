@@ -14,7 +14,8 @@ import {
   Eye,
   MapPin,
   Clock,
-  Users
+  Users,
+  FileText
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
