@@ -225,11 +225,24 @@ const PatientsListComponent = ({ user }) => {
       setSelectedPatient(response.data);
       setShowPatientModal(true);
       
-      // Load consultations automatically
-      viewConsultationDetails(patientId);
+      // Load consultations data without opening the overlay
+      loadConsultationsData(patientId);
     } catch (error) {
       console.error('Error fetching patient details:', error);
       toast.error('Erreur lors du chargement des détails du patient');
+    }
+  };
+
+  const loadConsultationsData = async (patientId) => {
+    try {
+      setLoadingConsultations(true);
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/patients/${patientId}/consultations`);
+      setConsultationDetails(response.data);
+    } catch (error) {
+      console.error('Error fetching consultation details:', error);
+      toast.error('Erreur lors du chargement des détails des consultations');
+    } finally {
+      setLoadingConsultations(false);
     }
   };
 
