@@ -90,6 +90,104 @@ const Consultation = ({ user }) => {
     }
   };
 
+  const togglePatientExpansion = async (consultation) => {
+    if (expandedPatient === consultation.id) {
+      setExpandedPatient(null);
+      setPatientHistory([]);
+    } else {
+      setExpandedPatient(consultation.id);
+      await loadPatientHistory(consultation.patient_id);
+    }
+  };
+
+  const loadPatientHistory = async (patientId) => {
+    try {
+      setLoadingHistory(true);
+      const response = await axios.get(`/api/patients/${patientId}/consultations`);
+      setPatientHistory(response.data);
+    } catch (error) {
+      console.error('Error loading patient history:', error);
+      toast.error('Erreur lors du chargement de l\'historique');
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  const viewConsultationDetail = (consultation) => {
+    setSelectedConsultationDetail(consultation);
+    setShowConsultationDetailModal(true);
+  };
+
+  const editConsultation = (consultation) => {
+    setEditingConsultation(consultation);
+    setConsultationFormData({
+      poids: consultation.poids?.toString() || '',
+      taille: consultation.taille?.toString() || '',
+      pc: consultation.pc?.toString() || '',
+      observations: consultation.observations || '',
+      traitement: consultation.traitement || '',
+      bilan: consultation.bilan || '',
+      relance_date: consultation.relance_date || '',
+      duree: consultation.duree?.toString() || ''
+    });
+    setShowEditConsultationModal(true);
+  };
+
+  const saveConsultation = async () => {
+    try {
+      if (!editingConsultation) return;
+      
+      const updatedConsultation = {
+        ...editingConsultation,
+        poids: parseFloat(consultationFormData.poids) || 0,
+        taille: parseFloat(consultationFormData.taille) || 0,
+        pc: parseFloat(consultationFormData.pc) || 0,
+        observations: consultationFormData.observations,
+        traitement: consultationFormData.traitement,
+        bilan: consultationFormData.bilan,
+        relance_date: consultationFormData.relance_date,
+        duree: parseInt(consultationFormData.duree) || 0
+      };
+
+      await axios.put(`/api/consultations/${editingConsultation.id}`, updatedConsultation);
+      
+      toast.success('Consultation mise à jour avec succès');
+      setShowEditConsultationModal(false);
+      setEditingConsultation(null);
+      
+      // Refresh patient history
+      if (expandedPatient) {
+        const consultation = activeConsultations.find(c => c.id === expandedPatient);
+        if (consultation) {
+          await loadPatientHistory(consultation.patient_id);
+        }
+      }
+    } catch (error) {
+      console.error('Error saving consultation:', error);
+      toast.error('Erreur lors de la sauvegarde de la consultation');
+    }
+  };
+
+  const deleteConsultation = async (consultationId) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette consultation ?')) {
+      try {
+        await axios.delete(`/api/consultations/${consultationId}`);
+        toast.success('Consultation supprimée avec succès');
+        
+        // Refresh patient history
+        if (expandedPatient) {
+          const consultation = activeConsultations.find(c => c.id === expandedPatient);
+          if (consultation) {
+            await loadPatientHistory(consultation.patient_id);
+          }
+        }
+      } catch (error) {
+        console.error('Error deleting consultation:', error);
+        toast.error('Erreur lors de la suppression de la consultation');
+      }
+    }
+  };
+
   const startTimer = () => {
     setIsRunning(true);
   };
@@ -162,6 +260,17 @@ const Consultation = ({ user }) => {
         return 'bg-green-100 text-green-800';
       default:
         return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getConsultationTypeColor = (type) => {
+    switch (type) {
+      case 'visite':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'controle':
+        return 'bg-green-100 text-green-800 border-green-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
