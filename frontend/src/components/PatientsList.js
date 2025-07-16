@@ -813,13 +813,24 @@ const PatientsListComponent = ({ user }) => {
                             <p className="text-sm font-medium text-gray-900">{consultation.date}</p>
                             <p className="text-xs text-gray-600">{consultation.type}</p>
                           </div>
-                          <button className="text-primary-600 hover:text-primary-800 text-sm">
+                          <button 
+                            onClick={() => viewConsultationDetails(selectedPatient.id)}
+                            className="text-primary-600 hover:text-primary-800 text-sm font-medium"
+                          >
                             Voir détails
                           </button>
                         </div>
                       ))
                     ) : (
-                      <p className="text-gray-500">Aucune consultation</p>
+                      <div className="text-center py-4">
+                        <p className="text-gray-500">Aucune consultation</p>
+                        <button 
+                          onClick={() => viewConsultationDetails(selectedPatient.id)}
+                          className="text-primary-600 hover:text-primary-800 text-sm font-medium mt-2"
+                        >
+                          Voir historique complet
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
