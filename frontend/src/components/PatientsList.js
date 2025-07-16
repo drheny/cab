@@ -1195,6 +1195,411 @@ const PatientsListComponent = ({ user }) => {
           </div>
         </div>
       )}
+
+      {/* Single Consultation Details Modal */}
+      {showConsultationDetailsModal && selectedConsultation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-900">
+                  Détails de la consultation
+                </h2>
+                <button
+                  onClick={() => setShowConsultationDetailsModal(false)}
+                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Informations générales</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-sm font-medium text-gray-700">Date:</span>
+                      <p className="text-gray-900">{selectedConsultation.date}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-700">Type:</span>
+                      <span className={`ml-2 text-xs px-2 py-1 rounded-full ${getConsultationTypeColor(selectedConsultation.type)}`}>
+                        {selectedConsultation.type === 'visite' ? 'Visite' : 'Contrôle'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-700">Durée:</span>
+                      <p className="text-gray-900">{selectedConsultation.duree > 0 ? `${selectedConsultation.duree} minutes` : 'Non spécifiée'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Mesures</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-sm font-medium text-gray-700">Poids:</span>
+                      <span className="text-gray-900">{selectedConsultation.poids > 0 ? `${selectedConsultation.poids} kg` : 'Non mesuré'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm font-medium text-gray-700">Taille:</span>
+                      <span className="text-gray-900">{selectedConsultation.taille > 0 ? `${selectedConsultation.taille} cm` : 'Non mesurée'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm font-medium text-gray-700">PC:</span>
+                      <span className="text-gray-900">{selectedConsultation.pc > 0 ? `${selectedConsultation.pc} cm` : 'Non mesuré'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 space-y-4">
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2">Observations</h4>
+                  <p className="text-gray-700 bg-gray-50 p-3 rounded-lg">
+                    {selectedConsultation.observations || 'Aucune observation'}
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2">Traitement</h4>
+                  <p className="text-gray-700 bg-gray-50 p-3 rounded-lg">
+                    {selectedConsultation.traitement || 'Aucun traitement'}
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2">Bilan</h4>
+                  <p className="text-gray-700 bg-gray-50 p-3 rounded-lg">
+                    {selectedConsultation.bilan || 'Aucun bilan'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowConsultationDetailsModal(false);
+                    editConsultation(selectedConsultation);
+                  }}
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+                >
+                  <Edit className="w-4 h-4" />
+                  <span>Modifier</span>
+                </button>
+                <button
+                  onClick={() => setShowConsultationDetailsModal(false)}
+                  className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
+                >
+                  Fermer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Consultation Modal */}
+      {showEditConsultationModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-900">
+                  Modifier la consultation
+                </h2>
+                <button
+                  onClick={() => setShowEditConsultationModal(false)}
+                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Mesures */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Mesures</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <Weight className="w-4 h-4 inline mr-1" />
+                        Poids (kg)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={consultationFormData.poids}
+                        onChange={(e) => setConsultationFormData({...consultationFormData, poids: e.target.value})}
+                        className="input-field"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <Ruler className="w-4 h-4 inline mr-1" />
+                        Taille (cm)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={consultationFormData.taille}
+                        onChange={(e) => setConsultationFormData({...consultationFormData, taille: e.target.value})}
+                        className="input-field"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <Brain className="w-4 h-4 inline mr-1" />
+                        PC (cm)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={consultationFormData.pc}
+                        onChange={(e) => setConsultationFormData({...consultationFormData, pc: e.target.value})}
+                        className="input-field"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <Clock className="w-4 h-4 inline mr-1" />
+                        Durée (min)
+                      </label>
+                      <input
+                        type="number"
+                        value={consultationFormData.duree}
+                        onChange={(e) => setConsultationFormData({...consultationFormData, duree: e.target.value})}
+                        className="input-field"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Observations */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Observations cliniques
+                  </label>
+                  <textarea
+                    value={consultationFormData.observations}
+                    onChange={(e) => setConsultationFormData({...consultationFormData, observations: e.target.value})}
+                    className="input-field"
+                    rows="4"
+                    placeholder="Observations et examens cliniques..."
+                  />
+                </div>
+
+                {/* Traitement */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Traitement prescrit
+                  </label>
+                  <textarea
+                    value={consultationFormData.traitement}
+                    onChange={(e) => setConsultationFormData({...consultationFormData, traitement: e.target.value})}
+                    className="input-field"
+                    rows="3"
+                    placeholder="Médicaments et posologie..."
+                  />
+                </div>
+
+                {/* Bilan */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Bilan/Examens
+                  </label>
+                  <textarea
+                    value={consultationFormData.bilan}
+                    onChange={(e) => setConsultationFormData({...consultationFormData, bilan: e.target.value})}
+                    className="input-field"
+                    rows="3"
+                    placeholder="Examens complémentaires demandés..."
+                  />
+                </div>
+
+                {/* Relance */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Date de relance
+                  </label>
+                  <input
+                    type="date"
+                    value={consultationFormData.relance_date}
+                    onChange={(e) => setConsultationFormData({...consultationFormData, relance_date: e.target.value})}
+                    className="input-field"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  onClick={() => setShowEditConsultationModal(false)}
+                  className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={saveConsultation}
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Sauvegarder</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Consultation Modal */}
+      {showAddConsultationModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-900">
+                  Nouvelle consultation
+                </h2>
+                <button
+                  onClick={() => setShowAddConsultationModal(false)}
+                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Mesures */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Mesures</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <Weight className="w-4 h-4 inline mr-1" />
+                        Poids (kg)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={consultationFormData.poids}
+                        onChange={(e) => setConsultationFormData({...consultationFormData, poids: e.target.value})}
+                        className="input-field"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <Ruler className="w-4 h-4 inline mr-1" />
+                        Taille (cm)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={consultationFormData.taille}
+                        onChange={(e) => setConsultationFormData({...consultationFormData, taille: e.target.value})}
+                        className="input-field"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <Brain className="w-4 h-4 inline mr-1" />
+                        PC (cm)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={consultationFormData.pc}
+                        onChange={(e) => setConsultationFormData({...consultationFormData, pc: e.target.value})}
+                        className="input-field"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <Clock className="w-4 h-4 inline mr-1" />
+                        Durée (min)
+                      </label>
+                      <input
+                        type="number"
+                        value={consultationFormData.duree}
+                        onChange={(e) => setConsultationFormData({...consultationFormData, duree: e.target.value})}
+                        className="input-field"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Observations */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Observations cliniques
+                  </label>
+                  <textarea
+                    value={consultationFormData.observations}
+                    onChange={(e) => setConsultationFormData({...consultationFormData, observations: e.target.value})}
+                    className="input-field"
+                    rows="4"
+                    placeholder="Observations et examens cliniques..."
+                  />
+                </div>
+
+                {/* Traitement */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Traitement prescrit
+                  </label>
+                  <textarea
+                    value={consultationFormData.traitement}
+                    onChange={(e) => setConsultationFormData({...consultationFormData, traitement: e.target.value})}
+                    className="input-field"
+                    rows="3"
+                    placeholder="Médicaments et posologie..."
+                  />
+                </div>
+
+                {/* Bilan */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Bilan/Examens
+                  </label>
+                  <textarea
+                    value={consultationFormData.bilan}
+                    onChange={(e) => setConsultationFormData({...consultationFormData, bilan: e.target.value})}
+                    className="input-field"
+                    rows="3"
+                    placeholder="Examens complémentaires demandés..."
+                  />
+                </div>
+
+                {/* Relance */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Date de relance
+                  </label>
+                  <input
+                    type="date"
+                    value={consultationFormData.relance_date}
+                    onChange={(e) => setConsultationFormData({...consultationFormData, relance_date: e.target.value})}
+                    className="input-field"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  onClick={() => setShowAddConsultationModal(false)}
+                  className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={createConsultation}
+                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Créer</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
