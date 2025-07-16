@@ -208,6 +208,20 @@ const PatientsListComponent = ({ user }) => {
     }
   };
 
+  const viewConsultationDetails = async (patientId) => {
+    try {
+      setLoadingConsultations(true);
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/patients/${patientId}/consultations`);
+      setConsultationDetails(response.data);
+      setShowConsultationModal(true);
+    } catch (error) {
+      console.error('Error fetching consultation details:', error);
+      toast.error('Erreur lors du chargement des détails des consultations');
+    } finally {
+      setLoadingConsultations(false);
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       nom: '',
