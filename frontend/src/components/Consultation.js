@@ -82,6 +82,62 @@ const Consultation = ({ user }) => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const calculateWaitingTime = (appointment) => {
+    if (!appointment || !appointment.heure_arrivee_attente) {
+      return 'N/A';
+    }
+    
+    try {
+      const arrivalTime = new Date(appointment.heure_arrivee_attente);
+      const now = new Date();
+      const waitingMinutes = Math.floor((now - arrivalTime) / (1000 * 60));
+      
+      if (waitingMinutes < 0) return '0 min';
+      if (waitingMinutes < 60) return `${waitingMinutes} min`;
+      
+      const hours = Math.floor(waitingMinutes / 60);
+      const minutes = waitingMinutes % 60;
+      return `${hours}h ${minutes}min`;
+    } catch (error) {
+      return 'N/A';
+    }
+  };
+
+  const getSalleDisplayName = (salle) => {
+    switch (salle) {
+      case 'salle1':
+        return 'Salle 1';
+      case 'salle2':
+        return 'Salle 2';
+      case '':
+        return 'Aucune salle';
+      default:
+        return salle || 'N/A';
+    }
+  };
+
+  const getTypeDisplayName = (type) => {
+    switch (type) {
+      case 'visite':
+        return 'Visite';
+      case 'controle':
+        return 'Contrôle';
+      default:
+        return type || 'N/A';
+    }
+  };
+
+  const getTypeColor = (type) => {
+    switch (type) {
+      case 'visite':
+        return 'bg-blue-100 text-blue-800';
+      case 'controle':
+        return 'bg-green-100 text-green-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   const handleSaveConsultation = async () => {
     if (!selectedConsultation) return;
 
