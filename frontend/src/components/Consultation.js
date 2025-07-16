@@ -239,11 +239,12 @@ const Consultation = ({ user }) => {
     setIsRunning(true);
   };
 
-  const pauseTimer = () => {
+  const stopTimer = () => {
     setIsRunning(false);
+    // Ne pas remettre à zéro, juste arrêter
   };
 
-  const stopTimer = () => {
+  const resetTimer = () => {
     setIsRunning(false);
     setTimer(0);
   };
