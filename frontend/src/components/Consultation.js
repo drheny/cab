@@ -9,7 +9,17 @@ import {
   Save,
   Play,
   Pause,
-  Square
+  Square,
+  ChevronDown,
+  ChevronUp,
+  Edit,
+  Trash2,
+  Eye,
+  Stethoscope,
+  MapPin,
+  Phone,
+  Users,
+  X
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -20,6 +30,23 @@ const Consultation = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [timer, setTimer] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
+  const [expandedPatient, setExpandedPatient] = useState(null);
+  const [patientHistory, setPatientHistory] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [showConsultationDetailModal, setShowConsultationDetailModal] = useState(false);
+  const [selectedConsultationDetail, setSelectedConsultationDetail] = useState(null);
+  const [showEditConsultationModal, setShowEditConsultationModal] = useState(false);
+  const [editingConsultation, setEditingConsultation] = useState(null);
+  const [consultationFormData, setConsultationFormData] = useState({
+    poids: '',
+    taille: '',
+    pc: '',
+    observations: '',
+    traitement: '',
+    bilan: '',
+    relance_date: '',
+    duree: ''
+  });
   const [consultationData, setConsultationData] = useState({
     poids: '',
     taille: '',
