@@ -388,7 +388,7 @@ const Consultation = ({ user }) => {
           relance_date: ''
         });
         
-        stopTimer();
+        resetTimer();
         toast.success('Consultation annulée');
         fetchActiveConsultations();
       } catch (error) {
