@@ -224,6 +224,9 @@ const PatientsListComponent = ({ user }) => {
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/patients/${patientId}`);
       setSelectedPatient(response.data);
       setShowPatientModal(true);
+      
+      // Load consultations automatically
+      viewConsultationDetails(patientId);
     } catch (error) {
       console.error('Error fetching patient details:', error);
       toast.error('Erreur lors du chargement des détails du patient');
