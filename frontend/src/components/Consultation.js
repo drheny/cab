@@ -293,7 +293,7 @@ const Consultation = ({ user }) => {
         relance_date: consultationData.relance_date
       };
 
-      await axios.post('/api/consultations', consultationPayload);
+      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/consultations`, consultationPayload);
       
       // Mettre à jour le statut du rendez-vous
       const updatedAppointment = {
@@ -301,7 +301,7 @@ const Consultation = ({ user }) => {
         statut: 'termine'
       };
       
-      await axios.put(`/api/appointments/${selectedConsultation.id}`, updatedAppointment);
+      await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/rdv/${selectedConsultation.id}/statut`, { statut: 'termine' });
       
       toast.success('Consultation enregistrée avec succès');
       
