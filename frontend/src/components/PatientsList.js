@@ -1000,61 +1000,79 @@ const PatientsListComponent = ({ user }) => {
                     </div>
                   </div>
                   
-                  <div className="space-y-2">
-                    {consultationDetails.length > 0 ? (
-                      consultationDetails.map((consultation, index) => (
-                        <div key={consultation.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
-                          <div className="flex items-center space-x-3">
-                            <div className="flex flex-col">
-                              <div className="flex items-center space-x-2">
-                                <Stethoscope className="w-4 h-4 text-gray-500" />
-                                <span className="text-sm font-medium text-gray-900">{consultation.date}</span>
-                                <span className={`text-xs px-2 py-1 rounded-full border ${getConsultationTypeColor(consultation.type)}`}>
-                                  {consultation.type === 'visite' ? 'Visite' : 'Contrôle'}
-                                </span>
+                  {loadingConsultations ? (
+                    <div className="flex items-center justify-center h-20">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500"></div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {consultationDetails.length > 0 ? (
+                        <>
+                          {consultationDetails.slice(0, 3).map((consultation, index) => (
+                            <div key={consultation.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                              <div className="flex items-center space-x-3">
+                                <div className="flex flex-col">
+                                  <div className="flex items-center space-x-2">
+                                    <Stethoscope className="w-4 h-4 text-gray-500" />
+                                    <span className="text-sm font-medium text-gray-900">{consultation.date}</span>
+                                    <span className={`text-xs px-2 py-1 rounded-full border ${getConsultationTypeColor(consultation.type)}`}>
+                                      {consultation.type === 'visite' ? 'Visite' : 'Contrôle'}
+                                    </span>
+                                  </div>
+                                  <div className="text-xs text-gray-600 mt-1">
+                                    {consultation.duree > 0 ? `${consultation.duree} min` : 'Durée non spécifiée'}
+                                    {consultation.observations && (
+                                      <span className="ml-2">• {consultation.observations.substring(0, 40)}{consultation.observations.length > 40 ? '...' : ''}</span>
+                                    )}
+                                  </div>
+                                </div>
                               </div>
-                              <div className="text-xs text-gray-600 mt-1">
-                                {consultation.duree > 0 ? `${consultation.duree} min` : 'Durée non spécifiée'}
-                                {consultation.observations && (
-                                  <span className="ml-2">• {consultation.observations.substring(0, 50)}{consultation.observations.length > 50 ? '...' : ''}</span>
-                                )}
+                              <div className="flex items-center space-x-2">
+                                <button
+                                  onClick={() => viewSingleConsultation(consultation.id)}
+                                  className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => editConsultation(consultation)}
+                                  className="text-green-600 hover:text-green-800 text-sm font-medium"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => deleteConsultation(consultation.id)}
+                                  className="text-red-600 hover:text-red-800 text-sm font-medium"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
                               </div>
                             </div>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <button
-                              onClick={() => viewSingleConsultation(consultation.id)}
-                              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => editConsultation(consultation)}
-                              className="text-green-600 hover:text-green-800 text-sm font-medium"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => deleteConsultation(consultation.id)}
-                              className="text-red-600 hover:text-red-800 text-sm font-medium"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
+                          ))}
+                          {consultationDetails.length > 3 && (
+                            <div className="text-center pt-2">
+                              <button
+                                onClick={() => viewConsultationDetails(selectedPatient.id)}
+                                className="text-primary-600 hover:text-primary-800 text-sm font-medium"
+                              >
+                                Voir toutes les consultations ({consultationDetails.length})
+                              </button>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <div className="text-center py-4">
+                          <p className="text-gray-500">Aucune consultation trouvée</p>
+                          <button 
+                            onClick={addNewConsultation}
+                            className="text-blue-600 hover:text-blue-800 text-sm font-medium mt-2"
+                          >
+                            Créer la première consultation
+                          </button>
                         </div>
-                      ))
-                    ) : (
-                      <div className="text-center py-4">
-                        <p className="text-gray-500">Aucune consultation trouvée</p>
-                        <button 
-                          onClick={addNewConsultation}
-                          className="text-blue-600 hover:text-blue-800 text-sm font-medium mt-2"
-                        >
-                          Créer la première consultation
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
