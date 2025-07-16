@@ -104,7 +104,7 @@ const Consultation = ({ user }) => {
   const loadPatientHistory = async (patientId) => {
     try {
       setLoadingHistory(true);
-      const response = await axios.get(`/api/patients/${patientId}/consultations`);
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/patients/${patientId}/consultations`);
       setPatientHistory(response.data);
     } catch (error) {
       console.error('Error loading patient history:', error);
