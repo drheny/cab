@@ -513,6 +513,22 @@ const Consultation = ({ user }) => {
                                 {consultation.patient?.mere?.fonction && ` (${consultation.patient.mere.fonction})`}
                               </span>
                             </div>
+                            <div className="flex items-center space-x-2">
+                              <MessageCircle className="w-4 h-4 text-green-500" />
+                              <span className="text-gray-600">WhatsApp:</span>
+                              {consultation.patient?.numero_whatsapp ? (
+                                <a 
+                                  href={`https://wa.me/${consultation.patient.numero_whatsapp}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="font-medium text-green-600 hover:text-green-800 underline"
+                                >
+                                  {consultation.patient.numero_whatsapp}
+                                </a>
+                              ) : (
+                                <span className="font-medium text-gray-400">N/A</span>
+                              )}
+                            </div>
                           </div>
                         </div>
 
