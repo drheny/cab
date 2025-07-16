@@ -75,7 +75,8 @@ const Consultation = ({ user }) => {
 
   const fetchActiveConsultations = async () => {
     try {
-      const response = await axios.get('/api/appointments/today');
+      const today = new Date().toISOString().split('T')[0];
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/rdv/jour/${today}`);
       const inProgressAppointments = response.data.filter(apt => apt.statut === 'en_cours');
       setActiveConsultations(inProgressAppointments);
       
