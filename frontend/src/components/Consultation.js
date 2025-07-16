@@ -330,23 +330,20 @@ const Consultation = ({ user }) => {
         appointment_id: selectedConsultation.id,
         date: new Date().toISOString().split('T')[0],
         duree: Math.floor(timer / 60),
-        poids: parseFloat(consultationData.poids) || 0,
-        taille: parseFloat(consultationData.taille) || 0,
-        pc: parseFloat(consultationData.pc) || 0,
+        poids: consultationData.poids ? parseFloat(consultationData.poids) : 0,
+        taille: consultationData.taille ? parseFloat(consultationData.taille) : 0,
+        pc: consultationData.pc ? parseFloat(consultationData.pc) : 0,
         observations: consultationData.observations,
         traitement: consultationData.traitement,
         bilan: consultationData.bilan,
         relance_date: consultationData.relance_date
       };
 
+      console.log('Saving consultation with data:', consultationPayload);
+
       await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/consultations`, consultationPayload);
       
       // Mettre à jour le statut du rendez-vous
-      const updatedAppointment = {
-        ...selectedConsultation,
-        statut: 'termine'
-      };
-      
       await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/rdv/${selectedConsultation.id}/statut`, { statut: 'termine' });
       
       toast.success('Consultation enregistrée avec succès');
@@ -367,6 +364,35 @@ const Consultation = ({ user }) => {
     } catch (error) {
       console.error('Error saving consultation:', error);
       toast.error('Erreur lors de l\'enregistrement');
+    }
+  };
+
+  const handleQuitConsultation = async () => {
+    if (!selectedConsultation) return;
+
+    if (window.confirm('Êtes-vous sûr de vouloir quitter cette consultation ?')) {
+      try {
+        // Remettre le statut à "attente"
+        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/rdv/${selectedConsultation.id}/statut`, { statut: 'attente' });
+        
+        // Reset form
+        setConsultationData({
+          poids: '',
+          taille: '',
+          pc: '',
+          observations: '',
+          traitement: '',
+          bilan: '',
+          relance_date: ''
+        });
+        
+        stopTimer();
+        toast.success('Consultation annulée');
+        fetchActiveConsultations();
+      } catch (error) {
+        console.error('Error quitting consultation:', error);
+        toast.error('Erreur lors de l\'annulation');
+      }
     }
   };
 
