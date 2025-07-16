@@ -665,25 +665,19 @@ const Consultation = ({ user }) => {
                         <p className="text-xs text-gray-500 mb-3">Durée de consultation</p>
                         <div className="flex items-center justify-center space-x-2">
                           <button
-                            onClick={startTimer}
-                            className="p-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
-                            title="Démarrer le chronomètre"
+                            onClick={isRunning ? stopTimer : startTimer}
+                            className={`p-2 text-white rounded-lg transition-colors ${
+                              isRunning 
+                                ? 'bg-red-500 hover:bg-red-600' 
+                                : 'bg-green-500 hover:bg-green-600'
+                            }`}
+                            title={isRunning ? 'Arrêter le chronomètre' : 'Démarrer le chronomètre'}
                           >
-                            <Play className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={pauseTimer}
-                            className="p-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition-colors"
-                            title="Pause"
-                          >
-                            <Pause className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={stopTimer}
-                            className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
-                            title="Arrêter"
-                          >
-                            <Square className="w-4 h-4" />
+                            {isRunning ? (
+                              <Square className="w-4 h-4" />
+                            ) : (
+                              <Play className="w-4 h-4" />
+                            )}
                           </button>
                         </div>
                       </div>
