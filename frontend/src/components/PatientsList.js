@@ -15,7 +15,14 @@ import {
   MapPin,
   Clock,
   Users,
-  FileText
+  FileText,
+  Save,
+  X,
+  Weight,
+  Ruler,
+  Brain,
+  Stethoscope,
+  CalendarPlus
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
