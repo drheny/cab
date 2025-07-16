@@ -1181,6 +1181,35 @@ async def create_consultation(consultation: Consultation):
     consultations_collection.insert_one(consultation_dict)
     return {"message": "Consultation created successfully", "consultation_id": consultation.id}
 
+@app.get("/api/consultations/{consultation_id}")
+async def get_consultation(consultation_id: str):
+    """Get consultation by ID"""
+    consultation = consultations_collection.find_one({"id": consultation_id}, {"_id": 0})
+    if not consultation:
+        raise HTTPException(status_code=404, detail="Consultation not found")
+    return consultation
+
+@app.put("/api/consultations/{consultation_id}")
+async def update_consultation(consultation_id: str, consultation: Consultation):
+    """Update consultation"""
+    consultation_dict = consultation.dict()
+    consultation_dict["updated_at"] = datetime.now()
+    result = consultations_collection.update_one(
+        {"id": consultation_id}, 
+        {"$set": consultation_dict}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Consultation not found")
+    return {"message": "Consultation updated successfully"}
+
+@app.delete("/api/consultations/{consultation_id}")
+async def delete_consultation(consultation_id: str):
+    """Delete consultation"""
+    result = consultations_collection.delete_one({"id": consultation_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Consultation not found")
+    return {"message": "Consultation deleted successfully"}
+
 @app.get("/api/payments")
 async def get_payments():
     """Get all payments"""
