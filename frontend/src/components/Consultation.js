@@ -150,7 +150,7 @@ const Consultation = ({ user }) => {
         duree: parseInt(consultationFormData.duree) || 0
       };
 
-      await axios.put(`/api/consultations/${editingConsultation.id}`, updatedConsultation);
+      await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/consultations/${editingConsultation.id}`, updatedConsultation);
       
       toast.success('Consultation mise à jour avec succès');
       setShowEditConsultationModal(false);
