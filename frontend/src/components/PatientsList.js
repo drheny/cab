@@ -964,31 +964,77 @@ const PatientsListComponent = ({ user }) => {
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Consultations</h3>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Consultations</h3>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={addNewConsultation}
+                        className="flex items-center space-x-1 bg-blue-500 hover:bg-blue-600 text-white text-sm px-3 py-1 rounded-lg transition-colors"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>Consultation</span>
+                      </button>
+                      <button
+                        onClick={addNewAppointment}
+                        className="flex items-center space-x-1 bg-green-500 hover:bg-green-600 text-white text-sm px-3 py-1 rounded-lg transition-colors"
+                      >
+                        <CalendarPlus className="w-4 h-4" />
+                        <span>RDV</span>
+                      </button>
+                    </div>
+                  </div>
+                  
                   <div className="space-y-2">
-                    {selectedPatient.consultations && selectedPatient.consultations.length > 0 ? (
-                      selectedPatient.consultations.map((consultation, index) => (
-                        <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">{consultation.date}</p>
-                            <p className="text-xs text-gray-600">{consultation.type}</p>
+                    {consultationDetails.length > 0 ? (
+                      consultationDetails.map((consultation, index) => (
+                        <div key={consultation.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                          <div className="flex items-center space-x-3">
+                            <div className="flex flex-col">
+                              <div className="flex items-center space-x-2">
+                                <Stethoscope className="w-4 h-4 text-gray-500" />
+                                <span className="text-sm font-medium text-gray-900">{consultation.date}</span>
+                                <span className={`text-xs px-2 py-1 rounded-full border ${getConsultationTypeColor(consultation.type)}`}>
+                                  {consultation.type === 'visite' ? 'Visite' : 'Contrôle'}
+                                </span>
+                              </div>
+                              <div className="text-xs text-gray-600 mt-1">
+                                {consultation.duree > 0 ? `${consultation.duree} min` : 'Durée non spécifiée'}
+                                {consultation.observations && (
+                                  <span className="ml-2">• {consultation.observations.substring(0, 50)}{consultation.observations.length > 50 ? '...' : ''}</span>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                          <button 
-                            onClick={() => viewConsultationDetails(selectedPatient.id)}
-                            className="text-primary-600 hover:text-primary-800 text-sm font-medium"
-                          >
-                            Voir détails
-                          </button>
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => viewSingleConsultation(consultation.id)}
+                              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => editConsultation(consultation)}
+                              className="text-green-600 hover:text-green-800 text-sm font-medium"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => deleteConsultation(consultation.id)}
+                              className="text-red-600 hover:text-red-800 text-sm font-medium"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
                       ))
                     ) : (
                       <div className="text-center py-4">
-                        <p className="text-gray-500">Aucune consultation</p>
+                        <p className="text-gray-500">Aucune consultation trouvée</p>
                         <button 
-                          onClick={() => viewConsultationDetails(selectedPatient.id)}
-                          className="text-primary-600 hover:text-primary-800 text-sm font-medium mt-2"
+                          onClick={addNewConsultation}
+                          className="text-blue-600 hover:text-blue-800 text-sm font-medium mt-2"
                         >
-                          Voir historique complet
+                          Créer la première consultation
                         </button>
                       </div>
                     )}
