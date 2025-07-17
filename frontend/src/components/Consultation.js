@@ -889,15 +889,15 @@ const Consultation = ({ user }) => {
                   <div className="space-y-3">
                     <div className="flex justify-between">
                       <span className="text-sm font-medium text-gray-700">Poids:</span>
-                      <span className="text-gray-900">{selectedConsultationDetail.poids > 0 ? `${selectedConsultationDetail.poids} kg` : 'Non mesuré'}</span>
+                      <span className="text-gray-900">{selectedConsultationDetail.poids && selectedConsultationDetail.poids > 0 ? `${selectedConsultationDetail.poids} kg` : 'Non mesuré'}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm font-medium text-gray-700">Taille:</span>
-                      <span className="text-gray-900">{selectedConsultationDetail.taille > 0 ? `${selectedConsultationDetail.taille} cm` : 'Non mesurée'}</span>
+                      <span className="text-gray-900">{selectedConsultationDetail.taille && selectedConsultationDetail.taille > 0 ? `${selectedConsultationDetail.taille} cm` : 'Non mesurée'}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm font-medium text-gray-700">PC:</span>
-                      <span className="text-gray-900">{selectedConsultationDetail.pc > 0 ? `${selectedConsultationDetail.pc} cm` : 'Non mesuré'}</span>
+                      <span className="text-gray-900">{selectedConsultationDetail.pc && selectedConsultationDetail.pc > 0 ? `${selectedConsultationDetail.pc} cm` : 'Non mesuré'}</span>
                     </div>
                   </div>
                 </div>
