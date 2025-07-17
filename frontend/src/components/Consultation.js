@@ -173,6 +173,9 @@ const Consultation = ({ user }) => {
     try {
       if (!editingConsultation) return;
       
+      console.log('Editing consultation:', editingConsultation);
+      console.log('Form data:', consultationFormData);
+      
       const updatedConsultation = {
         ...editingConsultation,
         observations: consultationFormData.observations,
@@ -182,7 +185,11 @@ const Consultation = ({ user }) => {
         duree: parseInt(consultationFormData.duree) || 0
       };
 
-      await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/consultations/${editingConsultation.id}`, updatedConsultation);
+      console.log('Updated consultation payload:', updatedConsultation);
+
+      const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/consultations/${editingConsultation.id}`, updatedConsultation);
+      
+      console.log('Update response:', response.data);
       
       toast.success('Consultation mise à jour avec succès');
       setShowEditConsultationModal(false);
@@ -197,6 +204,7 @@ const Consultation = ({ user }) => {
       }
     } catch (error) {
       console.error('Error saving consultation:', error);
+      console.error('Error response:', error.response?.data);
       toast.error('Erreur lors de la sauvegarde de la consultation');
     }
   };
