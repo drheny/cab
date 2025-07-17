@@ -163,9 +163,6 @@ const Consultation = ({ user }) => {
   const editConsultation = (consultation) => {
     setEditingConsultation(consultation);
     setConsultationFormData({
-      poids: consultation.poids?.toString() || '',
-      taille: consultation.taille?.toString() || '',
-      pc: consultation.pc?.toString() || '',
       observations: consultation.observations || '',
       traitement: consultation.traitement || '',
       bilan: consultation.bilan || '',
