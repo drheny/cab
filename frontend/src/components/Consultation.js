@@ -178,9 +178,6 @@ const Consultation = ({ user }) => {
       
       const updatedConsultation = {
         ...editingConsultation,
-        poids: parseFloat(consultationFormData.poids) || 0,
-        taille: parseFloat(consultationFormData.taille) || 0,
-        pc: parseFloat(consultationFormData.pc) || 0,
         observations: consultationFormData.observations,
         traitement: consultationFormData.traitement,
         bilan: consultationFormData.bilan,
