@@ -39,9 +39,6 @@ const Consultation = ({ user }) => {
   const [showEditConsultationModal, setShowEditConsultationModal] = useState(false);
   const [editingConsultation, setEditingConsultation] = useState(null);
   const [consultationFormData, setConsultationFormData] = useState({
-    poids: '',
-    taille: '',
-    pc: '',
     observations: '',
     traitement: '',
     bilan: '',
