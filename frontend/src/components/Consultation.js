@@ -327,21 +327,27 @@ const Consultation = ({ user }) => {
     if (!selectedConsultation) return;
 
     try {
+      // Debug: Log des valeurs du formulaire
+      console.log('Données du formulaire avant sauvegarde:', consultationData);
+      console.log('Poids:', consultationData.poids, 'Type:', typeof consultationData.poids);
+      console.log('Taille:', consultationData.taille, 'Type:', typeof consultationData.taille);
+      console.log('PC:', consultationData.pc, 'Type:', typeof consultationData.pc);
+
       const consultationPayload = {
         patient_id: selectedConsultation.patient_id,
         appointment_id: selectedConsultation.id,
         date: new Date().toISOString().split('T')[0],
         duree: Math.floor(timer / 60),
-        poids: consultationData.poids ? parseFloat(consultationData.poids) : 0,
-        taille: consultationData.taille ? parseFloat(consultationData.taille) : 0,
-        pc: consultationData.pc ? parseFloat(consultationData.pc) : 0,
+        poids: consultationData.poids && consultationData.poids !== '' ? parseFloat(consultationData.poids) : null,
+        taille: consultationData.taille && consultationData.taille !== '' ? parseFloat(consultationData.taille) : null,
+        pc: consultationData.pc && consultationData.pc !== '' ? parseFloat(consultationData.pc) : null,
         observations: consultationData.observations,
         traitement: consultationData.traitement,
         bilan: consultationData.bilan,
         relance_date: consultationData.relance_date
       };
 
-      console.log('Saving consultation with data:', consultationPayload);
+      console.log('Payload à envoyer:', consultationPayload);
 
       await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/consultations`, consultationPayload);
       
