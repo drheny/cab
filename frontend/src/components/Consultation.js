@@ -383,9 +383,6 @@ const Consultation = ({ user }) => {
         
         // Reset form
         setConsultationData({
-          poids: '',
-          taille: '',
-          pc: '',
           observations: '',
           traitement: '',
           bilan: '',
