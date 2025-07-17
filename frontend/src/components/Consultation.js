@@ -49,9 +49,6 @@ const Consultation = ({ user }) => {
     duree: ''
   });
   const [consultationData, setConsultationData] = useState({
-    poids: '',
-    taille: '',
-    pc: '',
     observations: '',
     traitement: '',
     bilan: '',
