@@ -351,13 +351,13 @@ const Consultation = ({ user }) => {
         poids: poidsCondition ? parseFloat(consultationData.poids) : null,
         taille: tailleCondition ? parseFloat(consultationData.taille) : null,
         pc: pcCondition ? parseFloat(consultationData.pc) : null,
-        observations: consultationData.observations,
-        traitement: consultationData.traitement,
-        bilan: consultationData.bilan,
-        relance_date: consultationData.relance_date
+        observations: consultationData.observations || '',
+        traitement: consultationData.traitement || '',
+        bilan: consultationData.bilan || '',
+        relance_date: consultationData.relance_date || ''
       };
 
-      console.log('Payload à envoyer:', consultationPayload);
+      console.log('Payload à envoyer:', JSON.stringify(consultationPayload, null, 2));
 
       await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/consultations`, consultationPayload);
       
