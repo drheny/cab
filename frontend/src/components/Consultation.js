@@ -797,7 +797,6 @@ const Consultation = ({ user }) => {
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Informations générales</h3>
                   <div className="space-y-3">
@@ -817,25 +816,6 @@ const Consultation = ({ user }) => {
                     </div>
                   </div>
                 </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Mesures</h3>
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-sm font-medium text-gray-700">Poids:</span>
-                      <span className="text-gray-900">{selectedConsultationDetail.poids && selectedConsultationDetail.poids > 0 ? `${selectedConsultationDetail.poids} kg` : 'Non mesuré'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm font-medium text-gray-700">Taille:</span>
-                      <span className="text-gray-900">{selectedConsultationDetail.taille && selectedConsultationDetail.taille > 0 ? `${selectedConsultationDetail.taille} cm` : 'Non mesurée'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm font-medium text-gray-700">PC:</span>
-                      <span className="text-gray-900">{selectedConsultationDetail.pc && selectedConsultationDetail.pc > 0 ? `${selectedConsultationDetail.pc} cm` : 'Non mesuré'}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
 
               <div className="mt-6 space-y-4">
                 <div>
