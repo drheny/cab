@@ -1244,7 +1244,7 @@ const PatientsListComponent = ({ user }) => {
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-3">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Informations générales</h3>
                   <div className="space-y-3">
@@ -1261,24 +1261,6 @@ const PatientsListComponent = ({ user }) => {
                     <div>
                       <span className="text-sm font-medium text-gray-700">Durée:</span>
                       <p className="text-gray-900">{selectedConsultation.duree > 0 ? `${selectedConsultation.duree} minutes` : 'Non spécifiée'}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Mesures</h3>
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-sm font-medium text-gray-700">Poids:</span>
-                      <span className="text-gray-900">{selectedConsultation.poids > 0 ? `${selectedConsultation.poids} kg` : 'Non mesuré'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm font-medium text-gray-700">Taille:</span>
-                      <span className="text-gray-900">{selectedConsultation.taille > 0 ? `${selectedConsultation.taille} cm` : 'Non mesurée'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm font-medium text-gray-700">PC:</span>
-                      <span className="text-gray-900">{selectedConsultation.pc > 0 ? `${selectedConsultation.pc} cm` : 'Non mesuré'}</span>
                     </div>
                   </div>
                 </div>
