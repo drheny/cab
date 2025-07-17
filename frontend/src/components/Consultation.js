@@ -2,9 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { 
   Clock, 
   User, 
-  Weight, 
-  Ruler, 
-  Brain,
   FileText,
   Save,
   Play,
