@@ -879,64 +879,6 @@ const Consultation = ({ user }) => {
               </div>
 
               <div className="space-y-6">
-                {/* Mesures */}
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Mesures</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        <Weight className="w-4 h-4 inline mr-1" />
-                        Poids (kg)
-                      </label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={consultationFormData.poids}
-                        onChange={(e) => setConsultationFormData({...consultationFormData, poids: e.target.value})}
-                        className="input-field"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        <Ruler className="w-4 h-4 inline mr-1" />
-                        Taille (cm)
-                      </label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={consultationFormData.taille}
-                        onChange={(e) => setConsultationFormData({...consultationFormData, taille: e.target.value})}
-                        className="input-field"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        <Brain className="w-4 h-4 inline mr-1" />
-                        PC (cm)
-                      </label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={consultationFormData.pc}
-                        onChange={(e) => setConsultationFormData({...consultationFormData, pc: e.target.value})}
-                        className="input-field"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        <Clock className="w-4 h-4 inline mr-1" />
-                        Durée (min)
-                      </label>
-                      <input
-                        type="number"
-                        value={consultationFormData.duree}
-                        onChange={(e) => setConsultationFormData({...consultationFormData, duree: e.target.value})}
-                        className="input-field"
-                      />
-                    </div>
-                  </div>
-                </div>
-
                 {/* Observations */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
