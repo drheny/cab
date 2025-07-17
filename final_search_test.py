@@ -26,7 +26,7 @@ class FinalSearchPerformanceTest(unittest.TestCase):
     
     def setUp(self):
         # Use the correct backend URL from environment
-        backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://3389e576-bdbc-485e-bdc3-00374f489362.preview.emergentagent.com')
+        backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://1fb31e4b-51b3-4865-9aeb-aafab30b5994.preview.emergentagent.com')
         self.base_url = backend_url
         print(f"\n=== FINAL SEARCH PERFORMANCE TEST ===")
         print(f"Testing backend at: {self.base_url}")

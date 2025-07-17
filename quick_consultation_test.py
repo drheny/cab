@@ -5,7 +5,7 @@ import json
 from datetime import datetime
 
 # Use the public backend URL
-BASE_URL = "https://3389e576-bdbc-485e-bdc3-00374f489362.preview.emergentagent.com"
+BASE_URL = "https://1fb31e4b-51b3-4865-9aeb-aafab30b5994.preview.emergentagent.com"
 
 def test_consultation_setup():
     """Test and setup consultation data for testing"""

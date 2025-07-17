@@ -7,7 +7,7 @@ from datetime import datetime
 
 def test_consultation_editing():
     """Test consultation editing functionality"""
-    base_url = "https://3389e576-bdbc-485e-bdc3-00374f489362.preview.emergentagent.com"
+    base_url = "https://1fb31e4b-51b3-4865-9aeb-aafab30b5994.preview.emergentagent.com"
     
     print("🏥 CONSULTATION EDITING TEST")
     print("=" * 50)

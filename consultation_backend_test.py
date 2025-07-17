@@ -6,7 +6,7 @@ from datetime import datetime
 import json
 
 class ConsultationAPITester:
-    def __init__(self, base_url="https://3389e576-bdbc-485e-bdc3-00374f489362.preview.emergentagent.com"):
+    def __init__(self, base_url="https://1fb31e4b-51b3-4865-9aeb-aafab30b5994.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0
