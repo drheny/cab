@@ -709,61 +709,6 @@ const Consultation = ({ user }) => {
                   </h3>
 
                   <div className="space-y-6">
-                    {/* Mesures */}
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-3">Mesures</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            <Weight className="w-4 h-4 inline mr-1" />
-                            Poids (kg)
-                          </label>
-                          <input
-                            type="number"
-                            step="0.1"
-                            value={consultationData.poids}
-                            onChange={(e) => setConsultationData({
-                              ...consultationData,
-                              poids: e.target.value
-                            })}
-                            className="input-field"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            <Ruler className="w-4 h-4 inline mr-1" />
-                            Taille (cm)
-                          </label>
-                          <input
-                            type="number"
-                            step="0.1"
-                            value={consultationData.taille}
-                            onChange={(e) => setConsultationData({
-                              ...consultationData,
-                              taille: e.target.value
-                            })}
-                            className="input-field"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            <Brain className="w-4 h-4 inline mr-1" />
-                            PC (cm)
-                          </label>
-                          <input
-                            type="number"
-                            step="0.1"
-                            value={consultationData.pc}
-                            onChange={(e) => setConsultationData({
-                              ...consultationData,
-                              pc: e.target.value
-                            })}
-                            className="input-field"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
                     {/* Observations */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
