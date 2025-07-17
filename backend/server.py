@@ -101,9 +101,6 @@ class Consultation(BaseModel):
     appointment_id: str
     date: str
     duree: int = 0  # en minutes
-    poids: float = 0.0
-    taille: float = 0.0
-    pc: float = 0.0  # périmètre crânien
     observations: str = ""
     traitement: str = ""
     bilan: str = ""
