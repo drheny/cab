@@ -333,14 +333,24 @@ const Consultation = ({ user }) => {
       console.log('Taille:', consultationData.taille, 'Type:', typeof consultationData.taille);
       console.log('PC:', consultationData.pc, 'Type:', typeof consultationData.pc);
 
+      // Debug: Test chaque condition individuellement
+      const poidsCondition = consultationData.poids && consultationData.poids.trim() !== '';
+      const tailleCondition = consultationData.taille && consultationData.taille.trim() !== '';
+      const pcCondition = consultationData.pc && consultationData.pc.trim() !== '';
+      
+      console.log('Conditions:');
+      console.log('- Poids condition:', poidsCondition, '- Valeur:', consultationData.poids);
+      console.log('- Taille condition:', tailleCondition, '- Valeur:', consultationData.taille);
+      console.log('- PC condition:', pcCondition, '- Valeur:', consultationData.pc);
+
       const consultationPayload = {
         patient_id: selectedConsultation.patient_id,
         appointment_id: selectedConsultation.id,
         date: new Date().toISOString().split('T')[0],
         duree: Math.floor(timer / 60),
-        poids: consultationData.poids && consultationData.poids.trim() !== '' ? parseFloat(consultationData.poids) : null,
-        taille: consultationData.taille && consultationData.taille.trim() !== '' ? parseFloat(consultationData.taille) : null,
-        pc: consultationData.pc && consultationData.pc.trim() !== '' ? parseFloat(consultationData.pc) : null,
+        poids: poidsCondition ? parseFloat(consultationData.poids) : null,
+        taille: tailleCondition ? parseFloat(consultationData.taille) : null,
+        pc: pcCondition ? parseFloat(consultationData.pc) : null,
         observations: consultationData.observations,
         traitement: consultationData.traitement,
         bilan: consultationData.bilan,
