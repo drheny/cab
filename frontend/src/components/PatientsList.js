@@ -17,7 +17,6 @@ import toast from 'react-hot-toast';
 
 const PatientsListComponent = ({ user }) => {
   const location = useLocation();
-  const navigate = useNavigate();
   const [patients, setPatients] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
