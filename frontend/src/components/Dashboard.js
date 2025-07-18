@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { 
   Users, 
   Calendar, 
   Clock, 
-  CheckCircle, 
   DollarSign, 
-  TrendingUp,
   MessageCircle,
   Phone,
   AlertCircle,
@@ -34,7 +32,7 @@ const Dashboard = ({ user }) => {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [showPatientModal, setShowPatientModal] = useState(false);
   
-  const [messages, setMessages] = useState([
+  const [messages] = useState([
     {
       id: 1,
       type: 'anniversaire',

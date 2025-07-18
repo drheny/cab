@@ -4,7 +4,6 @@ import {
   Home, 
   Users, 
   Calendar, 
-  Clock, 
   Stethoscope, 
   CreditCard, 
   Settings,
