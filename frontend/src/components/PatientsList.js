@@ -175,7 +175,7 @@ const PatientsListComponent = ({ user }) => {
     }
   };
 
-  const handleDeletePatient = async (patientId) => {
+  const handleDeletePatient = useCallback(async (patientId) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce patient ?')) {
       try {
         await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/patients/${patientId}`);
@@ -186,7 +186,7 @@ const PatientsListComponent = ({ user }) => {
         toast.error('Erreur lors de la suppression du patient');
       }
     }
-  };
+  }, [fetchPatients]);
 
   const viewPatientDetails = async (patientId) => {
     try {
