@@ -735,7 +735,6 @@ const Calendar = ({ user }) => {
           weekData={weekData}
           onStatusUpdate={handleStatusUpdate}
           onEdit={openModal}
-          onEdit={openModal}
           onDelete={handleDeleteAppointment}
           onViewPatient={viewPatientDetails}
           onCreateAppointment={openModalWithDateTime}
