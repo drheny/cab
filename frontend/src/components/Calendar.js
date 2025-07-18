@@ -316,6 +316,94 @@ const Calendar = ({ user }) => {
     setTimer(0);
   }, []);
 
+  // Réduire le modal de consultation
+  const reduireModalConsultation = () => {
+    setConsultationModal(prev => ({
+      ...prev,
+      isMinimized: true
+    }));
+  };
+
+  // Restaurer le modal de consultation
+  const restaurerModalConsultation = () => {
+    setConsultationModal(prev => ({
+      ...prev,
+      isMinimized: false
+    }));
+  };
+
+  // Fermer le modal de consultation
+  const fermerModalConsultation = () => {
+    setConsultationModal({
+      isOpen: false,
+      isMinimized: false,
+      appointmentId: null,
+      patientInfo: null
+    });
+    setIsRunning(false);
+    setTimer(0);
+    resetConsultationData();
+  };
+
+  // Reset des données de consultation
+  const resetConsultationData = () => {
+    setConsultationData({
+      poids: '',
+      taille: '',
+      pc: '',
+      observation_medicale: '',
+      traitement: '',
+      bilans: '',
+      relance_telephonique: false,
+      date_relance: '',
+      duree: 0
+    });
+  };
+
+  // Sauvegarder la consultation
+  const sauvegarderConsultation = async () => {
+    try {
+      // Arrêter le chronomètre
+      setIsRunning(false);
+      
+      // Préparer les données
+      const consultationPayload = {
+        ...consultationData,
+        duree: Math.floor(timer / 60), // Convertir en minutes
+        patient_id: appointments.find(a => a.id === consultationModal.appointmentId)?.patient_id,
+        appointment_id: consultationModal.appointmentId,
+        date: new Date().toISOString().split('T')[0]
+      };
+
+      // Sauvegarder la consultation
+      await axios.post('/api/consultations', consultationPayload);
+      
+      // Changer le statut du RDV à "terminé"
+      await axios.put(`${API_BASE_URL}/api/rdv/${consultationModal.appointmentId}/statut`, {
+        statut: "termine"
+      });
+
+      toast.success('Consultation sauvegardée avec succès');
+      fermerModalConsultation();
+      fetchData(); // Refresh data
+    } catch (error) {
+      console.error('Error saving consultation:', error);
+      toast.error('Erreur lors de la sauvegarde');
+    }
+  };
+
+  // Formater le temps
+  const formatTimer = (seconds) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${minutes}:${secs.toString().padStart(2, '0')}`;
+  };
+
   // Marquer patient en salle d'attente avec timestamp
   const handlePatientToWaitingRoom = useCallback(async (appointmentId) => {
     try {
