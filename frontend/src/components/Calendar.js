@@ -49,6 +49,31 @@ const Calendar = ({ user }) => {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [showPatientModal, setShowPatientModal] = useState(false);
   
+  // Modal consultation states
+  const [consultationModal, setConsultationModal] = useState({
+    isOpen: false,
+    isMinimized: false,
+    appointmentId: null,
+    patientInfo: null
+  });
+  
+  // Chronomètre pour consultation
+  const [timer, setTimer] = useState(0);
+  const [isRunning, setIsRunning] = useState(false);
+  
+  // Données de la consultation
+  const [consultationData, setConsultationData] = useState({
+    poids: '',
+    taille: '',
+    pc: '',
+    observation_medicale: '',
+    traitement: '',
+    bilans: '',
+    relance_telephonique: false,
+    date_relance: '',
+    duree: 0
+  });
+  
   // Form states
   const [formData, setFormData] = useState({
     patient_id: '',
