@@ -12,8 +12,7 @@ import {
   Square,
   Minimize2,
   Maximize2,
-  Phone,
-  Calendar
+  Phone
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
