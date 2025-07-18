@@ -137,6 +137,19 @@ const Calendar = ({ user }) => {
     }
   }, [selectedDate, viewMode]); // openModal is defined later, will be handled by React
 
+  // Gestion du chronomètre de consultation
+  useEffect(() => {
+    let interval;
+    if (isRunning) {
+      interval = setInterval(() => {
+        setTimer(timer => timer + 1);
+      }, 1000);
+    } else if (!isRunning && timer !== 0) {
+      clearInterval(interval);
+    }
+    return () => clearInterval(interval);
+  }, [isRunning, timer]);
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
