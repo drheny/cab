@@ -6,15 +6,11 @@ import {
   Edit, 
   Trash2, 
   Phone, 
-  Calendar, 
   User,
   MessageCircle,
   ChevronLeft,
   ChevronRight,
-  Eye,
-  MapPin,
-  Clock,
-  Users
+  MapPin
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
