@@ -376,7 +376,7 @@ const Calendar = ({ user }) => {
       };
 
       // Sauvegarder la consultation
-      await axios.post('/api/consultations', consultationPayload);
+      await axios.post(`${API_BASE_URL}/api/consultations`, consultationPayload);
       
       // Changer le statut du RDV à "terminé"
       await axios.put(`${API_BASE_URL}/api/rdv/${consultationModal.appointmentId}/statut`, {
