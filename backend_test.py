@@ -11,7 +11,7 @@ load_dotenv('/app/frontend/.env')
 class CabinetMedicalAPITest(unittest.TestCase):
     def setUp(self):
         # Use the correct backend URL from environment
-        backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://189cf242-5572-47ba-b2e8-ae8bb83bb108.preview.emergentagent.com')
+        backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://cbd199ac-e82c-4b53-a71c-648951cb9dec.preview.emergentagent.com')
         self.base_url = backend_url
         print(f"Testing backend at: {self.base_url}")
         # Initialize demo data before running tests
