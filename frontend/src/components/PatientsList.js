@@ -779,27 +779,6 @@ const PatientsListComponent = ({ user }) => {
                     </div>
                   </div>
                 </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Consultations</h3>
-                  <div className="space-y-2">
-                    {selectedPatient.consultations && selectedPatient.consultations.length > 0 ? (
-                      selectedPatient.consultations.map((consultation, index) => (
-                        <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">{consultation.date}</p>
-                            <p className="text-xs text-gray-600">{consultation.type}</p>
-                          </div>
-                          <button className="text-primary-600 hover:text-primary-800 text-sm">
-                            Voir détails
-                          </button>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-gray-500">Aucune consultation</p>
-                    )}
-                  </div>
-                </div>
               </div>
 
               <div className="flex justify-end space-x-3 mt-6">
