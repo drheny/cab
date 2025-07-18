@@ -15,7 +15,18 @@ import {
   List,
   Grid,
   CheckCircle,
-  Building2
+  Building2,
+  Weight,
+  Ruler,
+  Brain,
+  FileText,
+  Save,
+  Play,
+  Pause,
+  Square,
+  Minimize2,
+  Maximize2,
+  Phone
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
