@@ -253,6 +253,11 @@ const Calendar = ({ user }) => {
     }
   }, [API_BASE_URL, fetchData]);
 
+  // Ouvrir consultation (pour patients en cours)
+  const handleOpenConsultation = useCallback((appointment) => {
+    navigate('/consultation', { state: { appointment } });
+  }, [navigate]);
+
   // Marquer patient en salle d'attente avec timestamp
   const handlePatientToWaitingRoom = useCallback(async (appointmentId) => {
     try {
