@@ -57,6 +57,60 @@ const PatientsListComponent = ({ user }) => {
     allergies: ''
   });
 
+  // Format date function
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  const resetForm = () => {
+    setFormData({
+      nom: '',
+      prenom: '',
+      date_naissance: '',
+      adresse: '',
+      pere: {
+        nom: '',
+        telephone: '',
+        fonction: ''
+      },
+      mere: {
+        nom: '',
+        telephone: '',
+        fonction: ''
+      },
+      numero_whatsapp: '',
+      notes: '',
+      antecedents: '',
+      sexe: 'M',
+      telephone: '',
+      nom_parent: '',
+      telephone_parent: '',
+      assurance: '',
+      numero_assurance: '',
+      allergies: ''
+    });
+    setSelectedPatient(null);
+  };
+
+  const openModal = useCallback((patient = null) => {
+    if (patient) {
+      setSelectedPatient(patient);
+      setFormData({
+        ...patient,
+        pere: patient.pere || { nom: '', telephone: '', fonction: '' },
+        mere: patient.mere || { nom: '', telephone: '', fonction: '' }
+      });
+    } else {
+      resetForm();
+    }
+    setShowModal(true);
+  }, []);
+
   // Optimized fetchPatients with separated loading states
   const fetchPatients = useCallback(async (isSearch = false) => {
     try {
