@@ -11299,5 +11299,589 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
             for appointment_id in test_appointments:
                 requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
 
+    # ========== CONSULTATION MODAL INTEGRATION TESTS ==========
+    
+    def test_consultation_modal_workflow_complete(self):
+        """Test complete consultation modal integration workflow as specified in review request"""
+        print("\n=== CONSULTATION MODAL INTEGRATION WORKFLOW TEST ===")
+        
+        # Step 1: Get appointments for today
+        today = datetime.now().strftime("%Y-%m-%d")
+        print(f"Step 1: Getting appointments for today ({today})")
+        
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        print(f"✅ Found {len(appointments)} appointments for today")
+        
+        # Step 2: Create a test appointment in "attente" status if none exist
+        waiting_appointments = [apt for apt in appointments if apt["statut"] == "attente"]
+        
+        if len(waiting_appointments) == 0:
+            print("Step 2: No waiting appointments found, creating test appointment")
+            
+            # Get a patient for testing
+            response = requests.get(f"{self.base_url}/api/patients")
+            self.assertEqual(response.status_code, 200)
+            patients_data = response.json()
+            patients = patients_data["patients"]
+            self.assertTrue(len(patients) > 0, "No patients found for testing")
+            
+            patient_id = patients[0]["id"]
+            
+            # Create test appointment in "attente" status
+            test_appointment = {
+                "patient_id": patient_id,
+                "date": today,
+                "heure": "14:00",
+                "type_rdv": "visite",
+                "statut": "attente",
+                "motif": "Test consultation workflow",
+                "notes": "Created for consultation modal testing",
+                "paye": False
+            }
+            
+            response = requests.post(f"{self.base_url}/api/appointments", json=test_appointment)
+            self.assertEqual(response.status_code, 200)
+            test_appointment_id = response.json()["appointment_id"]
+            print(f"✅ Created test appointment in 'attente' status: {test_appointment_id}")
+            
+        else:
+            test_appointment_id = waiting_appointments[0]["id"]
+            patient_id = waiting_appointments[0]["patient_id"]
+            print(f"✅ Using existing waiting appointment: {test_appointment_id}")
+        
+        try:
+            # Step 3: Change appointment status from "attente" to "en_cours" (simulating "ENTRER" button)
+            print("Step 3: Changing status from 'attente' to 'en_cours' (ENTRER button)")
+            
+            response = requests.put(f"{self.base_url}/api/rdv/{test_appointment_id}/statut", 
+                                  json={"statut": "en_cours"})
+            self.assertEqual(response.status_code, 200)
+            status_data = response.json()
+            self.assertEqual(status_data["statut"], "en_cours")
+            print("✅ Status changed to 'en_cours' successfully")
+            
+            # Verify status change
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            updated_appointments = response.json()
+            
+            updated_appointment = None
+            for apt in updated_appointments:
+                if apt["id"] == test_appointment_id:
+                    updated_appointment = apt
+                    break
+            
+            self.assertIsNotNone(updated_appointment)
+            self.assertEqual(updated_appointment["statut"], "en_cours")
+            print("✅ Status change verified in database")
+            
+            # Step 4: Create consultation data and test POST /api/consultations
+            print("Step 4: Creating consultation record")
+            
+            consultation_data = {
+                "patient_id": patient_id,
+                "appointment_id": test_appointment_id,
+                "date": today,
+                "duree": 25,
+                "poids": 15.2,
+                "taille": 92.0,
+                "pc": 48.5,
+                "observations": "Enfant en bonne santé générale. Développement normal pour son âge.",
+                "traitement": "Vitamines D3 - 1 goutte par jour pendant 3 mois",
+                "bilan": "Consultation de routine - RAS. Prochain contrôle dans 6 mois.",
+                "relance_date": ""
+            }
+            
+            response = requests.post(f"{self.base_url}/api/consultations", json=consultation_data)
+            self.assertEqual(response.status_code, 200)
+            consultation_create_data = response.json()
+            self.assertIn("consultation_id", consultation_create_data)
+            consultation_id = consultation_create_data["consultation_id"]
+            print(f"✅ Consultation created successfully: {consultation_id}")
+            
+            # Verify consultation was created
+            response = requests.get(f"{self.base_url}/api/consultations/patient/{patient_id}")
+            self.assertEqual(response.status_code, 200)
+            patient_consultations = response.json()
+            
+            created_consultation = None
+            for cons in patient_consultations:
+                if cons["id"] == consultation_id:
+                    created_consultation = cons
+                    break
+            
+            self.assertIsNotNone(created_consultation)
+            self.assertEqual(created_consultation["patient_id"], patient_id)
+            self.assertEqual(created_consultation["appointment_id"], test_appointment_id)
+            self.assertEqual(created_consultation["duree"], 25)
+            self.assertEqual(created_consultation["poids"], 15.2)
+            print("✅ Consultation data verified in database")
+            
+            # Step 5: Change appointment status from "en_cours" to "termine" (completing consultation)
+            print("Step 5: Changing status from 'en_cours' to 'termine' (completing consultation)")
+            
+            response = requests.put(f"{self.base_url}/api/rdv/{test_appointment_id}/statut", 
+                                  json={"statut": "termine"})
+            self.assertEqual(response.status_code, 200)
+            final_status_data = response.json()
+            self.assertEqual(final_status_data["statut"], "termine")
+            print("✅ Status changed to 'termine' successfully")
+            
+            # Verify final status change
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            final_appointments = response.json()
+            
+            final_appointment = None
+            for apt in final_appointments:
+                if apt["id"] == test_appointment_id:
+                    final_appointment = apt
+                    break
+            
+            self.assertIsNotNone(final_appointment)
+            self.assertEqual(final_appointment["statut"], "termine")
+            print("✅ Final status change verified in database")
+            
+            print("\n=== CONSULTATION MODAL WORKFLOW COMPLETED SUCCESSFULLY ===")
+            print("✅ All workflow steps completed:")
+            print("  1. ✅ Retrieved appointments for today")
+            print("  2. ✅ Created/used test appointment in 'attente' status")
+            print("  3. ✅ Changed status 'attente' → 'en_cours' (ENTRER button)")
+            print("  4. ✅ Created consultation record via POST /api/consultations")
+            print("  5. ✅ Changed status 'en_cours' → 'termine' (completing consultation)")
+            
+        finally:
+            # Clean up: Delete the test appointment if we created it
+            if len(waiting_appointments) == 0:
+                print("Cleaning up test appointment...")
+                requests.delete(f"{self.base_url}/api/appointments/{test_appointment_id}")
+                print("✅ Test appointment cleaned up")
+    
+    def test_consultation_modal_api_endpoints_individual(self):
+        """Test individual API endpoints used in consultation modal workflow"""
+        print("\n=== INDIVIDUAL CONSULTATION MODAL API ENDPOINTS TEST ===")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Test 1: GET /api/rdv/jour/{date} endpoint
+        print("Test 1: GET /api/rdv/jour/{date} - Calendar API endpoint")
+        
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        self.assertIsInstance(appointments, list)
+        
+        # Verify appointment structure for consultation modal
+        for appointment in appointments:
+            required_fields = ["id", "patient_id", "date", "heure", "type_rdv", "statut", "patient"]
+            for field in required_fields:
+                self.assertIn(field, appointment, f"Missing field {field} in appointment")
+            
+            # Verify patient info structure
+            patient_info = appointment["patient"]
+            patient_required_fields = ["nom", "prenom", "numero_whatsapp", "lien_whatsapp"]
+            for field in patient_required_fields:
+                self.assertIn(field, patient_info, f"Missing patient field {field}")
+        
+        print(f"✅ GET /api/rdv/jour/{today} working correctly - {len(appointments)} appointments loaded")
+        
+        # Test 2: PUT /api/rdv/{rdv_id}/statut endpoint for status updates
+        print("Test 2: PUT /api/rdv/{rdv_id}/statut - Status update functionality")
+        
+        if len(appointments) > 0:
+            test_appointment = appointments[0]
+            rdv_id = test_appointment["id"]
+            original_status = test_appointment["statut"]
+            
+            # Test status change to "en_cours"
+            response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/statut", 
+                                  json={"statut": "en_cours"})
+            self.assertEqual(response.status_code, 200)
+            status_data = response.json()
+            self.assertIn("message", status_data)
+            self.assertEqual(status_data["statut"], "en_cours")
+            print("✅ Status update 'attente' → 'en_cours' working correctly")
+            
+            # Test status change to "termine"
+            response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/statut", 
+                                  json={"statut": "termine"})
+            self.assertEqual(response.status_code, 200)
+            status_data = response.json()
+            self.assertEqual(status_data["statut"], "termine")
+            print("✅ Status update 'en_cours' → 'termine' working correctly")
+            
+            # Restore original status
+            requests.put(f"{self.base_url}/api/rdv/{rdv_id}/statut", 
+                        json={"statut": original_status})
+        else:
+            print("⚠️ No appointments found for status update testing")
+        
+        # Test 3: POST /api/consultations endpoint
+        print("Test 3: POST /api/consultations - Consultation creation")
+        
+        # Get a patient for testing
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        
+        if len(patients) > 0 and len(appointments) > 0:
+            patient_id = patients[0]["id"]
+            appointment_id = appointments[0]["id"]
+            
+            # Create test consultation
+            consultation_data = {
+                "patient_id": patient_id,
+                "appointment_id": appointment_id,
+                "date": today,
+                "duree": 20,
+                "poids": 12.8,
+                "taille": 88.0,
+                "pc": 47.2,
+                "observations": "Test consultation via modal integration",
+                "traitement": "Test treatment plan",
+                "bilan": "Test consultation results",
+                "relance_date": ""
+            }
+            
+            response = requests.post(f"{self.base_url}/api/consultations", json=consultation_data)
+            self.assertEqual(response.status_code, 200)
+            consultation_create_data = response.json()
+            self.assertIn("consultation_id", consultation_create_data)
+            self.assertIn("message", consultation_create_data)
+            consultation_id = consultation_create_data["consultation_id"]
+            print(f"✅ POST /api/consultations working correctly - consultation created: {consultation_id}")
+            
+            # Verify consultation was created
+            response = requests.get(f"{self.base_url}/api/consultations/patient/{patient_id}")
+            self.assertEqual(response.status_code, 200)
+            patient_consultations = response.json()
+            
+            found_consultation = None
+            for cons in patient_consultations:
+                if cons["id"] == consultation_id:
+                    found_consultation = cons
+                    break
+            
+            self.assertIsNotNone(found_consultation)
+            self.assertEqual(found_consultation["duree"], 20)
+            self.assertEqual(found_consultation["poids"], 12.8)
+            print("✅ Consultation data persistence verified")
+            
+        else:
+            print("⚠️ No patients or appointments found for consultation testing")
+        
+        print("\n=== INDIVIDUAL API ENDPOINTS TEST COMPLETED ===")
+        print("✅ All consultation modal API endpoints working correctly:")
+        print("  1. ✅ GET /api/rdv/jour/{date} - Appointments loading")
+        print("  2. ✅ PUT /api/rdv/{rdv_id}/statut - Status updates")
+        print("  3. ✅ POST /api/consultations - Consultation creation")
+    
+    def test_consultation_modal_error_handling(self):
+        """Test error handling for consultation modal workflow"""
+        print("\n=== CONSULTATION MODAL ERROR HANDLING TEST ===")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Test 1: Invalid status updates
+        print("Test 1: Invalid status updates")
+        
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        
+        if len(appointments) > 0:
+            rdv_id = appointments[0]["id"]
+            
+            # Test invalid status
+            response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/statut", 
+                                  json={"statut": "invalid_status"})
+            self.assertEqual(response.status_code, 400)
+            print("✅ Invalid status properly rejected with 400 error")
+            
+            # Test non-existent appointment
+            response = requests.put(f"{self.base_url}/api/rdv/non_existent_id/statut", 
+                                  json={"statut": "en_cours"})
+            self.assertEqual(response.status_code, 404)
+            print("✅ Non-existent appointment properly rejected with 404 error")
+        
+        # Test 2: Invalid consultation data
+        print("Test 2: Invalid consultation data")
+        
+        # Test with missing required fields
+        invalid_consultation = {
+            "date": today,
+            "duree": 20
+            # Missing patient_id and appointment_id
+        }
+        
+        response = requests.post(f"{self.base_url}/api/consultations", json=invalid_consultation)
+        self.assertNotEqual(response.status_code, 200)
+        print("✅ Invalid consultation data properly rejected")
+        
+        # Test 3: Invalid date format
+        print("Test 3: Invalid date format")
+        
+        response = requests.get(f"{self.base_url}/api/rdv/jour/invalid-date")
+        # Should handle gracefully (might return empty list or error)
+        self.assertIn(response.status_code, [200, 400])
+        print("✅ Invalid date format handled gracefully")
+        
+        print("\n=== ERROR HANDLING TEST COMPLETED ===")
+        print("✅ All error scenarios handled correctly")
+    
+    def test_consultation_modal_performance(self):
+        """Test performance of consultation modal workflow endpoints"""
+        print("\n=== CONSULTATION MODAL PERFORMANCE TEST ===")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Test 1: GET /api/rdv/jour/{date} performance
+        print("Test 1: Calendar API performance")
+        
+        start_time = datetime.now()
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        end_time = datetime.now()
+        
+        self.assertEqual(response.status_code, 200)
+        response_time = (end_time - start_time).total_seconds() * 1000
+        print(f"✅ GET /api/rdv/jour/{today} response time: {response_time:.1f}ms")
+        self.assertLess(response_time, 1000, "Calendar API should respond within 1 second")
+        
+        appointments = response.json()
+        
+        # Test 2: Status update performance
+        if len(appointments) > 0:
+            print("Test 2: Status update performance")
+            
+            rdv_id = appointments[0]["id"]
+            original_status = appointments[0]["statut"]
+            
+            start_time = datetime.now()
+            response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/statut", 
+                                  json={"statut": "en_cours"})
+            end_time = datetime.now()
+            
+            self.assertEqual(response.status_code, 200)
+            response_time = (end_time - start_time).total_seconds() * 1000
+            print(f"✅ PUT /api/rdv/{rdv_id}/statut response time: {response_time:.1f}ms")
+            self.assertLess(response_time, 1000, "Status update should respond within 1 second")
+            
+            # Restore original status
+            requests.put(f"{self.base_url}/api/rdv/{rdv_id}/statut", 
+                        json={"statut": original_status})
+        
+        # Test 3: Consultation creation performance
+        print("Test 3: Consultation creation performance")
+        
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        
+        if len(patients) > 0 and len(appointments) > 0:
+            patient_id = patients[0]["id"]
+            appointment_id = appointments[0]["id"]
+            
+            consultation_data = {
+                "patient_id": patient_id,
+                "appointment_id": appointment_id,
+                "date": today,
+                "duree": 15,
+                "poids": 11.5,
+                "taille": 85.0,
+                "pc": 46.8,
+                "observations": "Performance test consultation",
+                "traitement": "Performance test treatment",
+                "bilan": "Performance test results",
+                "relance_date": ""
+            }
+            
+            start_time = datetime.now()
+            response = requests.post(f"{self.base_url}/api/consultations", json=consultation_data)
+            end_time = datetime.now()
+            
+            self.assertEqual(response.status_code, 200)
+            response_time = (end_time - start_time).total_seconds() * 1000
+            print(f"✅ POST /api/consultations response time: {response_time:.1f}ms")
+            self.assertLess(response_time, 1000, "Consultation creation should respond within 1 second")
+        
+        print("\n=== PERFORMANCE TEST COMPLETED ===")
+        print("✅ All consultation modal endpoints meet performance requirements (<1000ms)")
+    
+    def test_consultation_modal_data_integrity(self):
+        """Test data integrity throughout consultation modal workflow"""
+        print("\n=== CONSULTATION MODAL DATA INTEGRITY TEST ===")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Create a complete test scenario
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for testing")
+        
+        patient_id = patients[0]["id"]
+        
+        # Create test appointment
+        test_appointment = {
+            "patient_id": patient_id,
+            "date": today,
+            "heure": "15:30",
+            "type_rdv": "visite",
+            "statut": "attente",
+            "motif": "Data integrity test",
+            "notes": "Testing data consistency",
+            "paye": False
+        }
+        
+        response = requests.post(f"{self.base_url}/api/appointments", json=test_appointment)
+        self.assertEqual(response.status_code, 200)
+        appointment_id = response.json()["appointment_id"]
+        
+        try:
+            print("Step 1: Verifying initial appointment data")
+            
+            # Verify appointment was created correctly
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            created_appointment = None
+            for apt in appointments:
+                if apt["id"] == appointment_id:
+                    created_appointment = apt
+                    break
+            
+            self.assertIsNotNone(created_appointment)
+            self.assertEqual(created_appointment["statut"], "attente")
+            self.assertEqual(created_appointment["patient_id"], patient_id)
+            print("✅ Initial appointment data integrity verified")
+            
+            print("Step 2: Testing status change data integrity")
+            
+            # Change status and verify data consistency
+            response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/statut", 
+                                  json={"statut": "en_cours"})
+            self.assertEqual(response.status_code, 200)
+            
+            # Verify status change across all endpoints
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            updated_appointments = response.json()
+            
+            updated_appointment = None
+            for apt in updated_appointments:
+                if apt["id"] == appointment_id:
+                    updated_appointment = apt
+                    break
+            
+            self.assertIsNotNone(updated_appointment)
+            self.assertEqual(updated_appointment["statut"], "en_cours")
+            
+            # Verify via general appointments endpoint
+            response = requests.get(f"{self.base_url}/api/appointments?date={today}")
+            self.assertEqual(response.status_code, 200)
+            general_appointments = response.json()
+            
+            general_appointment = None
+            for apt in general_appointments:
+                if apt["id"] == appointment_id:
+                    general_appointment = apt
+                    break
+            
+            self.assertIsNotNone(general_appointment)
+            self.assertEqual(general_appointment["statut"], "en_cours")
+            print("✅ Status change data integrity verified across all endpoints")
+            
+            print("Step 3: Testing consultation creation data integrity")
+            
+            # Create consultation
+            consultation_data = {
+                "patient_id": patient_id,
+                "appointment_id": appointment_id,
+                "date": today,
+                "duree": 30,
+                "poids": 14.5,
+                "taille": 90.0,
+                "pc": 48.0,
+                "observations": "Data integrity test - comprehensive examination",
+                "traitement": "Data integrity test - treatment plan",
+                "bilan": "Data integrity test - positive results",
+                "relance_date": ""
+            }
+            
+            response = requests.post(f"{self.base_url}/api/consultations", json=consultation_data)
+            self.assertEqual(response.status_code, 200)
+            consultation_id = response.json()["consultation_id"]
+            
+            # Verify consultation data across endpoints
+            response = requests.get(f"{self.base_url}/api/consultations/patient/{patient_id}")
+            self.assertEqual(response.status_code, 200)
+            patient_consultations = response.json()
+            
+            created_consultation = None
+            for cons in patient_consultations:
+                if cons["id"] == consultation_id:
+                    created_consultation = cons
+                    break
+            
+            self.assertIsNotNone(created_consultation)
+            self.assertEqual(created_consultation["duree"], 30)
+            self.assertEqual(created_consultation["poids"], 14.5)
+            self.assertEqual(created_consultation["appointment_id"], appointment_id)
+            
+            # Verify via general consultations endpoint
+            response = requests.get(f"{self.base_url}/api/consultations")
+            self.assertEqual(response.status_code, 200)
+            all_consultations = response.json()
+            
+            general_consultation = None
+            for cons in all_consultations:
+                if cons["id"] == consultation_id:
+                    general_consultation = cons
+                    break
+            
+            self.assertIsNotNone(general_consultation)
+            self.assertEqual(general_consultation["patient_id"], patient_id)
+            print("✅ Consultation creation data integrity verified across all endpoints")
+            
+            print("Step 4: Testing final status change data integrity")
+            
+            # Final status change
+            response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/statut", 
+                                  json={"statut": "termine"})
+            self.assertEqual(response.status_code, 200)
+            
+            # Verify final status across all endpoints
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            final_appointments = response.json()
+            
+            final_appointment = None
+            for apt in final_appointments:
+                if apt["id"] == appointment_id:
+                    final_appointment = apt
+                    break
+            
+            self.assertIsNotNone(final_appointment)
+            self.assertEqual(final_appointment["statut"], "termine")
+            print("✅ Final status change data integrity verified")
+            
+            print("\n=== DATA INTEGRITY TEST COMPLETED ===")
+            print("✅ All data integrity checks passed:")
+            print("  1. ✅ Initial appointment creation")
+            print("  2. ✅ Status changes consistent across endpoints")
+            print("  3. ✅ Consultation creation and linkage")
+            print("  4. ✅ Final status change persistence")
+            
+        finally:
+            # Clean up
+            requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+            print("✅ Test data cleaned up")
+
 if __name__ == "__main__":
     unittest.main()
