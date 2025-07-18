@@ -1244,6 +1244,7 @@ const WorkflowCard = React.memo(({
   onPaymentUpdate,
   onStartConsultation,
   onFinishConsultation,
+  onOpenConsultation,
   onRoomAssignment,
   onEdit, 
   onDelete, 
