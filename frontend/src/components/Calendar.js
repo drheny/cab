@@ -1169,6 +1169,7 @@ const WorkflowSection = ({
   onPaymentUpdate,
   onStartConsultation,
   onFinishConsultation,
+  onOpenConsultation,
   onRoomAssignment,
   onEdit, 
   onDelete, 
