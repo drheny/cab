@@ -23,6 +23,7 @@ import AppointmentModal from './AppointmentModal';
 
 const Calendar = ({ user }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [appointments, setAppointments] = useState([]);
   const [patients, setPatients] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
