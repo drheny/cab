@@ -304,8 +304,17 @@ const Calendar = ({ user }) => {
 
   // Ouvrir consultation (pour patients en cours)
   const handleOpenConsultation = useCallback((appointment) => {
-    navigate('/consultation', { state: { appointment } });
-  }, [navigate]);
+    setConsultationModal({
+      isOpen: true,
+      isMinimized: false,
+      appointmentId: appointment.id,
+      patientInfo: appointment.patient
+    });
+    
+    // Démarrer le chronomètre automatiquement
+    setIsRunning(true);
+    setTimer(0);
+  }, []);
 
   // Marquer patient en salle d'attente avec timestamp
   const handlePatientToWaitingRoom = useCallback(async (appointmentId) => {
