@@ -692,6 +692,7 @@ const Calendar = ({ user }) => {
             onTypeToggle={handleTypeToggle}
             onPaymentUpdate={handlePaymentUpdate}
             onFinishConsultation={handleFinishConsultation}
+            onOpenConsultation={handleOpenConsultation}
             onEdit={openModal}
             onDelete={handleDeleteAppointment}
             onViewPatient={viewPatientDetails}
