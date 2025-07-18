@@ -229,7 +229,7 @@ const PatientsListComponent = ({ user }) => {
     setSelectedPatient(null);
   };
 
-  const openModal = (patient = null) => {
+  const openModal = useCallback((patient = null) => {
     if (patient) {
       setSelectedPatient(patient);
       setFormData({
@@ -241,7 +241,7 @@ const PatientsListComponent = ({ user }) => {
       resetForm();
     }
     setShowModal(true);
-  };
+  }, []);
 
   // Memoize the patients list rendering to prevent unnecessary re-renders
   const patientsListContent = useMemo(() => {
