@@ -9,31 +9,48 @@ import {
   Save,
   Play,
   Pause,
-  Square
+  Square,
+  Minimize2,
+  Maximize2,
+  Phone,
+  Calendar
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
 const Consultation = ({ user }) => {
-  const [activeConsultations, setActiveConsultations] = useState([]);
-  const [selectedConsultation, setSelectedConsultation] = useState(null);
+  const [consultationsEnCours, setConsultationsEnCours] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [consultationModal, setConsultationModal] = useState({
+    isOpen: false,
+    isMinimized: false,
+    appointmentId: null,
+    patientInfo: null
+  });
+  
+  // Chronomètre
   const [timer, setTimer] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
+  
+  // Données de la consultation
   const [consultationData, setConsultationData] = useState({
     poids: '',
     taille: '',
     pc: '',
-    observations: '',
+    observation_medicale: '',
     traitement: '',
-    bilan: '',
-    relance_date: ''
+    bilans: '',
+    relance_telephonique: false,
+    date_relance: '',
+    duree: 0
   });
 
+  // Charger les consultations en cours
   useEffect(() => {
-    fetchActiveConsultations();
+    fetchConsultationsEnCours();
   }, []);
 
+  // Gestion du chronomètre
   useEffect(() => {
     let interval;
     if (isRunning) {
@@ -46,15 +63,14 @@ const Consultation = ({ user }) => {
     return () => clearInterval(interval);
   }, [isRunning, timer]);
 
-  const fetchActiveConsultations = async () => {
+  const fetchConsultationsEnCours = async () => {
     try {
-      const response = await axios.get('/api/appointments/today');
-      const inProgressAppointments = response.data.filter(apt => apt.statut === 'en_cours');
-      setActiveConsultations(inProgressAppointments);
+      const today = new Date().toISOString().split('T')[0];
+      const response = await axios.get(`/api/rdv/jour/${today}`);
       
-      if (inProgressAppointments.length > 0 && !selectedConsultation) {
-        setSelectedConsultation(inProgressAppointments[0]);
-      }
+      // Filtrer les patients en consultation (statut "en_cours")
+      const consultations = response.data.filter(rdv => rdv.statut === "en_cours");
+      setConsultationsEnCours(consultations);
     } catch (error) {
       console.error('Error fetching consultations:', error);
       toast.error('Erreur lors du chargement des consultations');
@@ -63,72 +79,106 @@ const Consultation = ({ user }) => {
     }
   };
 
-  const startTimer = () => {
+  // Ouvrir le modal de consultation
+  const ouvrirConsultation = (appointment) => {
+    setConsultationModal({
+      isOpen: true,
+      isMinimized: false,
+      appointmentId: appointment.id,
+      patientInfo: appointment.patient
+    });
+    
+    // Démarrer le chronomètre automatiquement
     setIsRunning(true);
-  };
-
-  const pauseTimer = () => {
-    setIsRunning(false);
-  };
-
-  const stopTimer = () => {
-    setIsRunning(false);
     setTimer(0);
   };
 
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  // Réduire le modal
+  const reduireModal = () => {
+    setConsultationModal(prev => ({
+      ...prev,
+      isMinimized: true
+    }));
   };
 
-  const handleSaveConsultation = async () => {
-    if (!selectedConsultation) return;
+  // Restaurer le modal
+  const restaurerModal = () => {
+    setConsultationModal(prev => ({
+      ...prev,
+      isMinimized: false
+    }));
+  };
 
+  // Fermer le modal
+  const fermerModal = () => {
+    setConsultationModal({
+      isOpen: false,
+      isMinimized: false,
+      appointmentId: null,
+      patientInfo: null
+    });
+    setIsRunning(false);
+    setTimer(0);
+    resetConsultationData();
+  };
+
+  // Reset des données
+  const resetConsultationData = () => {
+    setConsultationData({
+      poids: '',
+      taille: '',
+      pc: '',
+      observation_medicale: '',
+      traitement: '',
+      bilans: '',
+      relance_telephonique: false,
+      date_relance: '',
+      duree: 0
+    });
+  };
+
+  // Sauvegarder la consultation
+  const sauvegarderConsultation = async () => {
     try {
+      // Arrêter le chronomètre
+      setIsRunning(false);
+      
+      // Préparer les données
       const consultationPayload = {
-        patient_id: selectedConsultation.patient_id,
-        appointment_id: selectedConsultation.id,
-        date: new Date().toISOString().split('T')[0],
-        duree: Math.floor(timer / 60),
-        poids: parseFloat(consultationData.poids) || 0,
-        taille: parseFloat(consultationData.taille) || 0,
-        pc: parseFloat(consultationData.pc) || 0,
-        observations: consultationData.observations,
-        traitement: consultationData.traitement,
-        bilan: consultationData.bilan,
-        relance_date: consultationData.relance_date
+        ...consultationData,
+        duree: Math.floor(timer / 60), // Convertir en minutes
+        patient_id: consultationsEnCours.find(c => c.id === consultationModal.appointmentId)?.patient_id,
+        appointment_id: consultationModal.appointmentId,
+        date: new Date().toISOString().split('T')[0]
       };
 
+      // Sauvegarder la consultation
       await axios.post('/api/consultations', consultationPayload);
       
-      // Mettre à jour le statut du rendez-vous
-      const updatedAppointment = {
-        ...selectedConsultation,
-        statut: 'termine'
-      };
-      
-      await axios.put(`/api/appointments/${selectedConsultation.id}`, updatedAppointment);
-      
-      toast.success('Consultation enregistrée avec succès');
-      
-      // Reset form
-      setConsultationData({
-        poids: '',
-        taille: '',
-        pc: '',
-        observations: '',
-        traitement: '',
-        bilan: '',
-        relance_date: ''
+      // Changer le statut du RDV à "terminé"
+      await axios.put(`/api/rdv/${consultationModal.appointmentId}/statut`, {
+        statut: "termine"
       });
-      
-      stopTimer();
-      fetchActiveConsultations();
+
+      toast.success('Consultation sauvegardée avec succès');
+      fermerModal();
+      fetchConsultationsEnCours();
     } catch (error) {
       console.error('Error saving consultation:', error);
-      toast.error('Erreur lors de l\'enregistrement');
+      toast.error('Erreur lors de la sauvegarde');
     }
+  };
+
+  // Formater le temps
+  const formatTimer = (seconds) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${minutes}:${secs.toString().padStart(2, '0')}`;
   };
 
   if (loading) {
@@ -142,254 +192,297 @@ const Consultation = ({ user }) => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Consultation</h1>
-        <p className="text-gray-600">Suivi des consultations en cours</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
+        <div>
+          <h1 className="responsive-title font-bold text-gray-900">Consultations</h1>
+          <p className="text-gray-600 responsive-text">Gestion des consultations en cours</p>
+        </div>
       </div>
 
-      {activeConsultations.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm border p-8 text-center">
-          <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            Aucune consultation en cours
-          </h3>
-          <p className="text-gray-500">
-            Démarrez une consultation depuis les salles d'attente
-          </p>
+      {/* Liste des consultations en cours */}
+      {consultationsEnCours.length === 0 ? (
+        <div className="text-center py-12">
+          <Clock className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune consultation en cours</h3>
+          <p className="text-gray-500">Les patients en consultation apparaîtront ici</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Sidebar - Active Consultations */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-sm border p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                Consultations actives
-              </h2>
-              <div className="space-y-3">
-                {activeConsultations.map((consultation) => (
-                  <div
-                    key={consultation.id}
-                    onClick={() => setSelectedConsultation(consultation)}
-                    className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                      selectedConsultation?.id === consultation.id
-                        ? 'bg-primary-100 border-primary-200'
-                        : 'bg-gray-50 hover:bg-gray-100'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-primary-500 p-2 rounded-full">
-                        <User className="w-4 h-4 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="font-medium text-gray-900">
-                          {consultation.patient?.prenom} {consultation.patient?.nom}
-                        </h3>
-                        <p className="text-sm text-gray-500">
-                          {consultation.heure} - {consultation.salle}
-                        </p>
-                      </div>
-                    </div>
+        <div className="grid gap-4">
+          {consultationsEnCours.map((consultation) => (
+            <div key={consultation.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="bg-blue-100 p-3 rounded-full">
+                    <User className="w-6 h-6 text-blue-600" />
                   </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Main Content */}
-          <div className="lg:col-span-2">
-            {selectedConsultation && (
-              <div className="space-y-6">
-                {/* Patient Info & Timer */}
-                <div className="bg-white rounded-xl shadow-sm border p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-4">
-                      <div className="bg-primary-100 p-3 rounded-full">
-                        <User className="w-6 h-6 text-primary-600" />
-                      </div>
-                      <div>
-                        <h2 className="text-xl font-semibold text-gray-900">
-                          {selectedConsultation.patient?.prenom} {selectedConsultation.patient?.nom}
-                        </h2>
-                        <p className="text-gray-600">
-                          {selectedConsultation.heure} - {selectedConsultation.salle}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    {/* Timer */}
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-primary-600 mb-2">
-                        {formatTime(timer)}
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={startTimer}
-                          className="p-2 bg-green-500 hover:bg-green-600 text-white rounded-lg"
-                        >
-                          <Play className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={pauseTimer}
-                          className="p-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg"
-                        >
-                          <Pause className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={stopTimer}
-                          className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-lg"
-                        >
-                          <Square className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {consultation.patient?.prenom} {consultation.patient?.nom}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      RDV {consultation.heure} - {consultation.type_rdv}
+                    </p>
+                    <p className="text-sm text-gray-500">{consultation.motif}</p>
                   </div>
                 </div>
+                <div className="flex items-center space-x-3">
+                  <span className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
+                    En cours
+                  </span>
+                  <button
+                    onClick={() => ouvrirConsultation(consultation)}
+                    className="btn-primary flex items-center space-x-2"
+                  >
+                    <FileText className="w-4 h-4" />
+                    <span>Consultation</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
-                {/* Consultation Form */}
-                <div className="bg-white rounded-xl shadow-sm border p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-6">
-                    Fiche de consultation
-                  </h3>
-
-                  <div className="space-y-6">
-                    {/* Mesures */}
+      {/* Modal de consultation */}
+      {consultationModal.isOpen && (
+        <>
+          {/* Modal réduit */}
+          {consultationModal.isMinimized ? (
+            <div className="fixed bottom-4 right-4 z-50">
+              <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-4 min-w-[300px]">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Clock className="w-5 h-5 text-blue-600" />
+                    <span className="font-medium text-gray-900">
+                      {consultationModal.patientInfo?.prenom} {consultationModal.patientInfo?.nom}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-lg font-mono text-blue-600">
+                      {formatTimer(timer)}
+                    </span>
+                    <button
+                      onClick={restaurerModal}
+                      className="p-1 hover:bg-gray-100 rounded"
+                    >
+                      <Maximize2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* Modal complet */
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="p-6">
+                  {/* Header du modal */}
+                  <div className="flex items-center justify-between mb-6">
                     <div>
-                      <h4 className="font-medium text-gray-900 mb-3">Mesures</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            <Weight className="w-4 h-4 inline mr-1" />
-                            Poids (kg)
-                          </label>
-                          <input
-                            type="number"
-                            step="0.1"
-                            value={consultationData.poids}
-                            onChange={(e) => setConsultationData({
-                              ...consultationData,
-                              poids: e.target.value
-                            })}
-                            className="input-field"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            <Ruler className="w-4 h-4 inline mr-1" />
-                            Taille (cm)
-                          </label>
-                          <input
-                            type="number"
-                            step="0.1"
-                            value={consultationData.taille}
-                            onChange={(e) => setConsultationData({
-                              ...consultationData,
-                              taille: e.target.value
-                            })}
-                            className="input-field"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            <Brain className="w-4 h-4 inline mr-1" />
-                            PC (cm)
-                          </label>
-                          <input
-                            type="number"
-                            step="0.1"
-                            value={consultationData.pc}
-                            onChange={(e) => setConsultationData({
-                              ...consultationData,
-                              pc: e.target.value
-                            })}
-                            className="input-field"
-                          />
-                        </div>
-                      </div>
+                      <h2 className="text-xl font-bold text-gray-900">
+                        Consultation - {consultationModal.patientInfo?.prenom} {consultationModal.patientInfo?.nom}
+                      </h2>
+                      <p className="text-gray-600">
+                        {new Date().toLocaleDateString('fr-FR')} - {formatTimer(timer)}
+                      </p>
                     </div>
-
-                    {/* Observations */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Observations cliniques
-                      </label>
-                      <textarea
-                        value={consultationData.observations}
-                        onChange={(e) => setConsultationData({
-                          ...consultationData,
-                          observations: e.target.value
-                        })}
-                        className="input-field"
-                        rows="4"
-                        placeholder="Observations et examens cliniques..."
-                      />
-                    </div>
-
-                    {/* Traitement */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Traitement prescrit
-                      </label>
-                      <textarea
-                        value={consultationData.traitement}
-                        onChange={(e) => setConsultationData({
-                          ...consultationData,
-                          traitement: e.target.value
-                        })}
-                        className="input-field"
-                        rows="3"
-                        placeholder="Médicaments et posologie..."
-                      />
-                    </div>
-
-                    {/* Bilan */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Bilan/Examens
-                      </label>
-                      <textarea
-                        value={consultationData.bilan}
-                        onChange={(e) => setConsultationData({
-                          ...consultationData,
-                          bilan: e.target.value
-                        })}
-                        className="input-field"
-                        rows="3"
-                        placeholder="Examens complémentaires demandés..."
-                      />
-                    </div>
-
-                    {/* Relance */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Date de relance
-                      </label>
-                      <input
-                        type="date"
-                        value={consultationData.relance_date}
-                        onChange={(e) => setConsultationData({
-                          ...consultationData,
-                          relance_date: e.target.value
-                        })}
-                        className="input-field"
-                      />
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex justify-end space-x-3">
+                    <div className="flex items-center space-x-2">
                       <button
-                        onClick={handleSaveConsultation}
-                        className="btn-primary flex items-center space-x-2"
+                        onClick={reduireModal}
+                        className="p-2 hover:bg-gray-100 rounded-lg"
                       >
-                        <Save className="w-4 h-4" />
-                        <span>Enregistrer la consultation</span>
+                        <Minimize2 className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={fermerModal}
+                        className="p-2 hover:bg-gray-100 rounded-lg"
+                      >
+                        ×
                       </button>
                     </div>
                   </div>
+
+                  {/* Chronomètre */}
+                  <div className="bg-blue-50 rounded-lg p-4 mb-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <Clock className="w-6 h-6 text-blue-600" />
+                        <span className="text-lg font-semibold text-blue-900">
+                          Durée: {formatTimer(timer)}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => setIsRunning(!isRunning)}
+                          className={`p-2 rounded-lg ${
+                            isRunning 
+                              ? 'bg-red-100 text-red-600 hover:bg-red-200' 
+                              : 'bg-green-100 text-green-600 hover:bg-green-200'
+                          }`}
+                        >
+                          {isRunning ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setIsRunning(false);
+                            setTimer(0);
+                          }}
+                          className="p-2 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-lg"
+                        >
+                          <Square className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Formulaire de consultation */}
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    sauvegarderConsultation();
+                  }}>
+                    <div className="space-y-6">
+                      {/* Mesures */}
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Mesures</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              <Weight className="w-4 h-4 inline mr-1" />
+                              Poids (kg)
+                            </label>
+                            <input
+                              type="number"
+                              step="0.1"
+                              value={consultationData.poids}
+                              onChange={(e) => setConsultationData({...consultationData, poids: e.target.value})}
+                              className="input-field"
+                              placeholder="0.0"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              <Ruler className="w-4 h-4 inline mr-1" />
+                              Taille (cm)
+                            </label>
+                            <input
+                              type="number"
+                              value={consultationData.taille}
+                              onChange={(e) => setConsultationData({...consultationData, taille: e.target.value})}
+                              className="input-field"
+                              placeholder="0"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              <Brain className="w-4 h-4 inline mr-1" />
+                              PC (cm)
+                            </label>
+                            <input
+                              type="number"
+                              value={consultationData.pc}
+                              onChange={(e) => setConsultationData({...consultationData, pc: e.target.value})}
+                              className="input-field"
+                              placeholder="0"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Observations et traitement */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Observation médicale
+                          </label>
+                          <textarea
+                            value={consultationData.observation_medicale}
+                            onChange={(e) => setConsultationData({...consultationData, observation_medicale: e.target.value})}
+                            className="input-field"
+                            rows="4"
+                            placeholder="Observations du médecin..."
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Traitement
+                          </label>
+                          <textarea
+                            value={consultationData.traitement}
+                            onChange={(e) => setConsultationData({...consultationData, traitement: e.target.value})}
+                            className="input-field"
+                            rows="4"
+                            placeholder="Traitement prescrit..."
+                          />
+                        </div>
+                      </div>
+
+                      {/* Bilans */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Bilans
+                        </label>
+                        <textarea
+                          value={consultationData.bilans}
+                          onChange={(e) => setConsultationData({...consultationData, bilans: e.target.value})}
+                          className="input-field"
+                          rows="3"
+                          placeholder="Bilans demandés..."
+                        />
+                      </div>
+
+                      {/* Relance téléphonique */}
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Relance téléphonique</h3>
+                        <div className="flex items-center space-x-4">
+                          <label className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              checked={consultationData.relance_telephonique}
+                              onChange={(e) => setConsultationData({...consultationData, relance_telephonique: e.target.checked})}
+                              className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                            />
+                            <span className="text-sm font-medium text-gray-700">
+                              <Phone className="w-4 h-4 inline mr-1" />
+                              Programmer une relance
+                            </span>
+                          </label>
+                          {consultationData.relance_telephonique && (
+                            <div>
+                              <input
+                                type="date"
+                                value={consultationData.date_relance}
+                                onChange={(e) => setConsultationData({...consultationData, date_relance: e.target.value})}
+                                className="input-field"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Boutons */}
+                    <div className="flex justify-end space-x-3 mt-6">
+                      <button
+                        type="button"
+                        onClick={fermerModal}
+                        className="btn-outline"
+                      >
+                        Annuler
+                      </button>
+                      <button
+                        type="submit"
+                        className="btn-primary flex items-center space-x-2"
+                      >
+                        <Save className="w-4 h-4" />
+                        <span>Sauvegarder</span>
+                      </button>
+                    </div>
+                  </form>
                 </div>
               </div>
-            )}
-          </div>
-        </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
