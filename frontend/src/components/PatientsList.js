@@ -100,7 +100,7 @@ const PatientsListComponent = ({ user }) => {
       // Nettoyer l'URL
       window.history.replaceState({}, '', '/patients');
     }
-  }, [location]);
+  }, [location, fetchPatients, openModal]);
 
   // Page change effect
   useEffect(() => {
