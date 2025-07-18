@@ -243,50 +243,6 @@ const PatientsListComponent = ({ user }) => {
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      nom: '',
-      prenom: '',
-      date_naissance: '',
-      adresse: '',
-      pere: {
-        nom: '',
-        telephone: '',
-        fonction: ''
-      },
-      mere: {
-        nom: '',
-        telephone: '',
-        fonction: ''
-      },
-      numero_whatsapp: '',
-      notes: '',
-      antecedents: '',
-      sexe: 'M',
-      telephone: '',
-      nom_parent: '',
-      telephone_parent: '',
-      assurance: '',
-      numero_assurance: '',
-      allergies: ''
-    });
-    setSelectedPatient(null);
-  };
-
-  const openModal = useCallback((patient = null) => {
-    if (patient) {
-      setSelectedPatient(patient);
-      setFormData({
-        ...patient,
-        pere: patient.pere || { nom: '', telephone: '', fonction: '' },
-        mere: patient.mere || { nom: '', telephone: '', fonction: '' }
-      });
-    } else {
-      resetForm();
-    }
-    setShowModal(true);
-  }, []);
-
   // Memoize the patients list rendering to prevent unnecessary re-renders
   const patientsListContent = useMemo(() => {
     return patients.map((patient) => (
