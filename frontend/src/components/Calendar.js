@@ -1517,6 +1517,17 @@ const WorkflowCard = React.memo(({
             </button>
           )}
 
+          {/* Bouton Consultation pour patients en cours */}
+          {sectionType === 'en_cours' && (
+            <button
+              onClick={() => onOpenConsultation(appointment)}
+              className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded font-medium transition-colors"
+              title="Ouvrir la consultation"
+            >
+              Consultation
+            </button>
+          )}
+
           {/* Bouton WhatsApp */}
           <a
             href={getWhatsAppLink(appointment.patient?.numero_whatsapp || appointment.patient?.telephone)}
