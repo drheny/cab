@@ -203,6 +203,37 @@ const Billing = ({ user }) => {
     toast.success('Export CSV téléchargé avec succès');
   };
 
+  const handleMarkAsPaid = async (appointment) => {
+    try {
+      // Calculer le montant par défaut (300 pour visite)
+      const defaultAmount = appointment.type_rdv === 'visite' ? 300 : 0;
+      
+      const paymentData = {
+        paye: true,
+        montant: defaultAmount,
+        type_paiement: 'espece',
+        assure: false,
+        taux_remboursement: 0,
+        notes: 'Marqué comme payé depuis la facturation'
+      };
+
+      await axios.put(`${API_BASE_URL}/api/rdv/${appointment.id}/paiement`, paymentData);
+      
+      toast.success('Paiement marqué comme payé');
+      
+      // Refresh data
+      await Promise.all([
+        fetchPayments(),
+        fetchUnpaidAppointments(),
+        fetchStats()
+      ]);
+      
+    } catch (error) {
+      console.error('Error marking as paid:', error);
+      toast.error('Erreur lors de la mise à jour du paiement');
+    }
+  };
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-TN', {
       style: 'currency',
