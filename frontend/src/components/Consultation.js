@@ -145,6 +145,7 @@ const Consultation = ({ user }) => {
     setConsultationData({
       patient_id: selectedPatient.id,
       date: new Date().toISOString().split('T')[0],
+      type_rdv: 'visite', // Par défaut une visite
       poids: '',
       taille: '',
       pc: '',
