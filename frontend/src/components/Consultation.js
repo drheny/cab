@@ -119,7 +119,9 @@ const Consultation = ({ user }) => {
   // Charger les consultations d'un patient
   const fetchPatientConsultations = useCallback(async (patientId) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/consultations/patient/${patientId}`);
+      // Force fresh data by adding timestamp to prevent caching
+      const timestamp = Date.now();
+      const response = await axios.get(`${API_BASE_URL}/api/consultations/patient/${patientId}?_t=${timestamp}`);
       setConsultations(response.data || []);
     } catch (error) {
       console.error('Error fetching consultations:', error);
