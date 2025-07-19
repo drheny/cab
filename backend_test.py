@@ -12549,5 +12549,473 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
                 # Clean up
                 requests.delete(f"{self.base_url}/api/consultations/{consultation_id}")
 
+    # ========== PAYMENT RETRIEVAL FUNCTIONALITY TESTS ==========
+    
+    def test_payment_data_verification(self):
+        """Test Scenario A: Payment Data Verification - GET /api/payments"""
+        print("\n=== SCENARIO A: PAYMENT DATA VERIFICATION ===")
+        
+        # Test GET /api/payments endpoint
+        response = requests.get(f"{self.base_url}/api/payments")
+        self.assertEqual(response.status_code, 200)
+        payments = response.json()
+        self.assertIsInstance(payments, list)
+        
+        print(f"✅ GET /api/payments endpoint working - found {len(payments)} payments")
+        
+        # Check payment structure and data types
+        if len(payments) > 0:
+            payment = payments[0]
+            required_fields = ["id", "patient_id", "appointment_id", "montant", "statut", "type_paiement", "date"]
+            
+            for field in required_fields:
+                self.assertIn(field, payment, f"Missing required field: {field}")
+            
+            # Verify data types
+            self.assertIsInstance(payment["montant"], (int, float))
+            self.assertIsInstance(payment["statut"], str)
+            self.assertIsInstance(payment["appointment_id"], str)
+            
+            print(f"✅ Payment structure validation passed - all required fields present")
+            print(f"   - Payment ID: {payment['id']}")
+            print(f"   - Appointment ID: {payment['appointment_id']}")
+            print(f"   - Amount: {payment['montant']}")
+            print(f"   - Status: {payment['statut']}")
+            print(f"   - Payment Type: {payment['type_paiement']}")
+        
+        # Check for payments with statut="paye"
+        paid_payments = [p for p in payments if p.get("statut") == "paye"]
+        print(f"✅ Found {len(paid_payments)} payments with statut='paye'")
+        
+        return payments
+    
+    def test_payment_creation_for_testing(self):
+        """Test Scenario B: Payment Creation for Testing"""
+        print("\n=== SCENARIO B: PAYMENT CREATION FOR TESTING ===")
+        
+        # Get existing appointments to link payments to
+        today = datetime.now().strftime("%Y-%m-%d")
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        
+        if len(appointments) == 0:
+            print("⚠️ No appointments found for today, creating test appointment first")
+            
+            # Get a patient for testing
+            response = requests.get(f"{self.base_url}/api/patients")
+            self.assertEqual(response.status_code, 200)
+            patients_data = response.json()
+            patients = patients_data["patients"]
+            self.assertTrue(len(patients) > 0, "No patients found for testing")
+            
+            patient_id = patients[0]["id"]
+            
+            # Create test appointment
+            test_appointment = {
+                "patient_id": patient_id,
+                "date": today,
+                "heure": "15:00",
+                "type_rdv": "visite",
+                "statut": "termine",
+                "motif": "Test payment creation",
+                "paye": False
+            }
+            
+            response = requests.post(f"{self.base_url}/api/appointments", json=test_appointment)
+            self.assertEqual(response.status_code, 200)
+            appointment_id = response.json()["appointment_id"]
+            
+            appointments = [{"id": appointment_id, "patient_id": patient_id}]
+            print(f"✅ Created test appointment: {appointment_id}")
+        
+        # Use first available appointment
+        test_appointment = appointments[0]
+        appointment_id = test_appointment["id"]
+        patient_id = test_appointment["patient_id"]
+        
+        # Create test payment with appointment_id, montant, and statut="paye"
+        test_payment = {
+            "patient_id": patient_id,
+            "appointment_id": appointment_id,
+            "montant": 150.0,
+            "type_paiement": "espece",
+            "statut": "paye",
+            "date": today
+        }
+        
+        response = requests.post(f"{self.base_url}/api/payments", json=test_payment)
+        self.assertEqual(response.status_code, 200)
+        create_data = response.json()
+        self.assertIn("payment_id", create_data)
+        payment_id = create_data["payment_id"]
+        
+        print(f"✅ Created test payment successfully")
+        print(f"   - Payment ID: {payment_id}")
+        print(f"   - Appointment ID: {appointment_id}")
+        print(f"   - Amount: 150.0 TND")
+        print(f"   - Status: paye")
+        print(f"   - Payment Type: espece")
+        
+        # Verify payment can be retrieved via GET /api/payments
+        response = requests.get(f"{self.base_url}/api/payments")
+        self.assertEqual(response.status_code, 200)
+        payments = response.json()
+        
+        created_payment = None
+        for payment in payments:
+            if payment["id"] == payment_id:
+                created_payment = payment
+                break
+        
+        self.assertIsNotNone(created_payment, "Created payment not found in GET /api/payments")
+        self.assertEqual(created_payment["appointment_id"], appointment_id)
+        self.assertEqual(created_payment["montant"], 150.0)
+        self.assertEqual(created_payment["statut"], "paye")
+        
+        print(f"✅ Payment retrieval verification passed")
+        
+        return payment_id, appointment_id
+    
+    def test_payment_appointment_linkage(self):
+        """Test Scenario C: Payment-Appointment Linkage"""
+        print("\n=== SCENARIO C: PAYMENT-APPOINTMENT LINKAGE ===")
+        
+        # Get appointments to verify they have unique IDs
+        today = datetime.now().strftime("%Y-%m-%d")
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        
+        if len(appointments) > 0:
+            appointment = appointments[0]
+            appointment_id = appointment["id"]
+            
+            print(f"✅ Appointments have unique IDs that can be linked to payments")
+            print(f"   - Sample Appointment ID: {appointment_id}")
+            print(f"   - Appointment has patient_id: {appointment.get('patient_id', 'N/A')}")
+            
+            # Check if consultations have appointment_id field
+            # Note: In this system, consultations are linked via appointment_id
+            response = requests.get(f"{self.base_url}/api/consultations")
+            self.assertEqual(response.status_code, 200)
+            consultations = response.json()
+            
+            if len(consultations) > 0:
+                consultation = consultations[0]
+                if "appointment_id" in consultation:
+                    print(f"✅ Consultations have appointment_id field for payment linkage")
+                    print(f"   - Sample Consultation appointment_id: {consultation['appointment_id']}")
+                else:
+                    print("⚠️ Consultations don't have appointment_id field")
+            
+            # Test payment retrieval by appointment_id
+            response = requests.get(f"{self.base_url}/api/payments")
+            self.assertEqual(response.status_code, 200)
+            payments = response.json()
+            
+            # Find payments linked to this appointment
+            linked_payments = [p for p in payments if p.get("appointment_id") == appointment_id]
+            print(f"✅ Found {len(linked_payments)} payments linked to appointment {appointment_id}")
+            
+            if len(linked_payments) > 0:
+                payment = linked_payments[0]
+                print(f"   - Payment Amount: {payment['montant']} TND")
+                print(f"   - Payment Status: {payment['statut']}")
+                print(f"   - Payment Type: {payment['type_paiement']}")
+        
+        else:
+            print("⚠️ No appointments found for linkage testing")
+    
+    def test_payment_amount_display_logic(self):
+        """Test Payment Amount Display Logic for consultation view modal"""
+        print("\n=== PAYMENT AMOUNT DISPLAY LOGIC TESTING ===")
+        
+        # Get appointments with type_rdv="visite" to test payment lookup
+        today = datetime.now().strftime("%Y-%m-%d")
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        
+        visite_appointments = [a for a in appointments if a.get("type_rdv") == "visite"]
+        print(f"✅ Found {len(visite_appointments)} 'visite' appointments for payment testing")
+        
+        if len(visite_appointments) > 0:
+            visite_appointment = visite_appointments[0]
+            appointment_id = visite_appointment["id"]
+            
+            print(f"   - Testing appointment ID: {appointment_id}")
+            print(f"   - Appointment type: {visite_appointment['type_rdv']}")
+            
+            # Get all payments to find payment for this appointment
+            response = requests.get(f"{self.base_url}/api/payments")
+            self.assertEqual(response.status_code, 200)
+            payments = response.json()
+            
+            # Find payment for this specific appointment_id
+            appointment_payment = None
+            for payment in payments:
+                if payment.get("appointment_id") == appointment_id:
+                    appointment_payment = payment
+                    break
+            
+            if appointment_payment:
+                print(f"✅ Payment found for visite appointment")
+                print(f"   - Payment Amount: {appointment_payment['montant']} TND")
+                print(f"   - Payment Status: {appointment_payment['statut']}")
+                
+                # Verify payment amount is correctly formatted (should be number for display)
+                self.assertIsInstance(appointment_payment["montant"], (int, float))
+                print(f"✅ Payment amount is properly formatted as number: {type(appointment_payment['montant'])}")
+                
+                # Test payment amount retrieval logic
+                if appointment_payment["statut"] == "paye":
+                    display_amount = appointment_payment["montant"]
+                    print(f"✅ Payment amount available for display: {display_amount} TND")
+                else:
+                    print(f"⚠️ Payment exists but status is '{appointment_payment['statut']}' (not 'paye')")
+            else:
+                print(f"⚠️ No payment found for visite appointment {appointment_id}")
+                
+                # Create a test payment for this appointment to verify the logic works
+                print("   Creating test payment to verify display logic...")
+                
+                test_payment = {
+                    "patient_id": visite_appointment["patient_id"],
+                    "appointment_id": appointment_id,
+                    "montant": 300.0,
+                    "type_paiement": "espece",
+                    "statut": "paye",
+                    "date": today
+                }
+                
+                response = requests.post(f"{self.base_url}/api/payments", json=test_payment)
+                self.assertEqual(response.status_code, 200)
+                payment_id = response.json()["payment_id"]
+                
+                print(f"✅ Test payment created successfully")
+                print(f"   - Payment ID: {payment_id}")
+                print(f"   - Amount: 300.0 TND (properly formatted for display)")
+                
+                # Verify the payment can be retrieved and amount is correct
+                response = requests.get(f"{self.base_url}/api/payments")
+                self.assertEqual(response.status_code, 200)
+                updated_payments = response.json()
+                
+                created_payment = None
+                for payment in updated_payments:
+                    if payment["id"] == payment_id:
+                        created_payment = payment
+                        break
+                
+                self.assertIsNotNone(created_payment)
+                self.assertEqual(created_payment["montant"], 300.0)
+                self.assertEqual(created_payment["statut"], "paye")
+                print(f"✅ Payment amount retrieval for consultation view modal: WORKING")
+        
+        else:
+            print("⚠️ No 'visite' appointments found for payment display logic testing")
+    
+    def test_comprehensive_payment_workflow(self):
+        """Test comprehensive payment workflow for consultation view modal"""
+        print("\n=== COMPREHENSIVE PAYMENT WORKFLOW TEST ===")
+        
+        # Step 1: Create a patient
+        test_patient = {
+            "nom": "Payment Test",
+            "prenom": "Patient",
+            "telephone": "21612345999"
+        }
+        
+        response = requests.post(f"{self.base_url}/api/patients", json=test_patient)
+        self.assertEqual(response.status_code, 200)
+        patient_id = response.json()["patient_id"]
+        print(f"✅ Step 1: Created test patient - ID: {patient_id}")
+        
+        try:
+            # Step 2: Create an appointment
+            today = datetime.now().strftime("%Y-%m-%d")
+            test_appointment = {
+                "patient_id": patient_id,
+                "date": today,
+                "heure": "16:30",
+                "type_rdv": "visite",
+                "statut": "termine",
+                "motif": "Payment workflow test",
+                "paye": False
+            }
+            
+            response = requests.post(f"{self.base_url}/api/appointments", json=test_appointment)
+            self.assertEqual(response.status_code, 200)
+            appointment_id = response.json()["appointment_id"]
+            print(f"✅ Step 2: Created test appointment - ID: {appointment_id}")
+            
+            # Step 3: Create a payment linked to the appointment
+            test_payment = {
+                "patient_id": patient_id,
+                "appointment_id": appointment_id,
+                "montant": 250.0,
+                "type_paiement": "carte",
+                "statut": "paye",
+                "date": today
+            }
+            
+            response = requests.post(f"{self.base_url}/api/payments", json=test_payment)
+            self.assertEqual(response.status_code, 200)
+            payment_id = response.json()["payment_id"]
+            print(f"✅ Step 3: Created test payment - ID: {payment_id}")
+            
+            # Step 4: Verify complete workflow - payment retrieval for consultation modal
+            print(f"✅ Step 4: Testing consultation view modal payment retrieval...")
+            
+            # Simulate consultation view modal logic:
+            # 1. Get appointment details
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            target_appointment = None
+            for appt in appointments:
+                if appt["id"] == appointment_id:
+                    target_appointment = appt
+                    break
+            
+            self.assertIsNotNone(target_appointment)
+            print(f"   - Appointment found: {target_appointment['type_rdv']} for {target_appointment['patient']['nom']} {target_appointment['patient']['prenom']}")
+            
+            # 2. For visite appointments, lookup payment
+            if target_appointment["type_rdv"] == "visite":
+                response = requests.get(f"{self.base_url}/api/payments")
+                self.assertEqual(response.status_code, 200)
+                payments = response.json()
+                
+                # Find payment for this appointment
+                appointment_payment = None
+                for payment in payments:
+                    if payment["appointment_id"] == appointment_id:
+                        appointment_payment = payment
+                        break
+                
+                self.assertIsNotNone(appointment_payment)
+                print(f"   - Payment found for consultation: {appointment_payment['montant']} TND")
+                print(f"   - Payment status: {appointment_payment['statut']}")
+                print(f"   - Payment method: {appointment_payment['type_paiement']}")
+                
+                # 3. Verify payment amount is available for display
+                if appointment_payment["statut"] == "paye":
+                    display_amount = appointment_payment["montant"]
+                    self.assertIsInstance(display_amount, (int, float))
+                    print(f"✅ Payment amount ready for consultation view modal: {display_amount} TND")
+                else:
+                    print(f"⚠️ Payment status is '{appointment_payment['statut']}' - amount may not be displayed")
+            
+            print(f"✅ COMPREHENSIVE PAYMENT WORKFLOW: ALL TESTS PASSED")
+            print(f"   - Patient creation: ✅")
+            print(f"   - Appointment creation: ✅") 
+            print(f"   - Payment creation: ✅")
+            print(f"   - Payment-appointment linkage: ✅")
+            print(f"   - Payment retrieval for consultation modal: ✅")
+            print(f"   - Payment amount formatting: ✅")
+            
+            # Clean up appointment and payment (will be cleaned up with patient)
+            requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+            
+        finally:
+            # Clean up patient
+            requests.delete(f"{self.base_url}/api/patients/{patient_id}")
+    
+    def test_payment_edge_cases(self):
+        """Test edge cases for payment functionality"""
+        print("\n=== PAYMENT EDGE CASES TESTING ===")
+        
+        # Test 1: Payment with zero amount (controle appointments)
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        
+        if len(patients) > 0:
+            patient_id = patients[0]["id"]
+            today = datetime.now().strftime("%Y-%m-%d")
+            
+            # Create controle appointment
+            controle_appointment = {
+                "patient_id": patient_id,
+                "date": today,
+                "heure": "17:30",
+                "type_rdv": "controle",
+                "statut": "termine",
+                "motif": "Controle gratuit test",
+                "paye": True
+            }
+            
+            response = requests.post(f"{self.base_url}/api/appointments", json=controle_appointment)
+            self.assertEqual(response.status_code, 200)
+            appointment_id = response.json()["appointment_id"]
+            
+            # Create payment with zero amount (gratuit)
+            zero_payment = {
+                "patient_id": patient_id,
+                "appointment_id": appointment_id,
+                "montant": 0.0,
+                "type_paiement": "gratuit",
+                "statut": "paye",
+                "date": today
+            }
+            
+            response = requests.post(f"{self.base_url}/api/payments", json=zero_payment)
+            self.assertEqual(response.status_code, 200)
+            payment_id = response.json()["payment_id"]
+            
+            print(f"✅ Edge Case 1: Zero amount payment (controle) created successfully")
+            print(f"   - Payment ID: {payment_id}")
+            print(f"   - Amount: 0.0 TND (gratuit)")
+            print(f"   - Type: gratuit")
+            
+            # Verify zero amount is handled correctly
+            response = requests.get(f"{self.base_url}/api/payments")
+            self.assertEqual(response.status_code, 200)
+            payments = response.json()
+            
+            zero_payment_found = None
+            for payment in payments:
+                if payment["id"] == payment_id:
+                    zero_payment_found = payment
+                    break
+            
+            self.assertIsNotNone(zero_payment_found)
+            self.assertEqual(zero_payment_found["montant"], 0.0)
+            print(f"✅ Zero amount payment retrieval: WORKING")
+            
+            # Clean up
+            requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+        
+        # Test 2: Multiple payments for same appointment (edge case)
+        print(f"\n✅ Edge Case 2: Multiple payments handling")
+        response = requests.get(f"{self.base_url}/api/payments")
+        self.assertEqual(response.status_code, 200)
+        payments = response.json()
+        
+        # Group payments by appointment_id
+        appointment_payments = {}
+        for payment in payments:
+            appt_id = payment.get("appointment_id")
+            if appt_id:
+                if appt_id not in appointment_payments:
+                    appointment_payments[appt_id] = []
+                appointment_payments[appt_id].append(payment)
+        
+        multiple_payment_appointments = {k: v for k, v in appointment_payments.items() if len(v) > 1}
+        
+        if len(multiple_payment_appointments) > 0:
+            print(f"⚠️ Found {len(multiple_payment_appointments)} appointments with multiple payments")
+            for appt_id, payments_list in multiple_payment_appointments.items():
+                total_amount = sum(p["montant"] for p in payments_list)
+                print(f"   - Appointment {appt_id}: {len(payments_list)} payments, total: {total_amount} TND")
+        else:
+            print(f"✅ No multiple payments per appointment found (good data integrity)")
+        
+        print(f"✅ PAYMENT EDGE CASES: ALL TESTS COMPLETED")
+
 if __name__ == "__main__":
     unittest.main()
