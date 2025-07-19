@@ -14851,5 +14851,196 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
             "frontend_ready": True
         }
 
+    def test_payment_api_functionality_review_request(self):
+        """Test payment API functionality as mentioned in review request"""
+        print("\n=== TESTING PAYMENT API FUNCTIONALITY (REVIEW REQUEST) ===")
+        
+        # Get patients for testing
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for testing")
+        
+        patient_id = patients[0]["id"]
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Test 1: Create a visite appointment (non-paid by default)
+        print("1. Creating visite appointment (should be non-paid by default)...")
+        visite_appointment = {
+            "patient_id": patient_id,
+            "date": today,
+            "heure": "14:30",
+            "type_rdv": "visite",
+            "statut": "termine",  # Completed appointment
+            "motif": "Test payment functionality",
+            "paye": False
+        }
+        
+        response = requests.post(f"{self.base_url}/api/appointments", json=visite_appointment)
+        self.assertEqual(response.status_code, 200)
+        appointment_id = response.json()["appointment_id"]
+        print(f"✅ Created appointment {appointment_id}")
+        
+        try:
+            # Test 2: Verify appointment is initially unpaid
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            test_appointment = None
+            for appt in appointments:
+                if appt["id"] == appointment_id:
+                    test_appointment = appt
+                    break
+            
+            self.assertIsNotNone(test_appointment)
+            self.assertEqual(test_appointment["paye"], False)
+            print("✅ Appointment is initially unpaid")
+            
+            # Test 3: Test PUT /api/rdv/{id}/paiement - Mark as paid
+            print("2. Testing PUT /api/rdv/{id}/paiement - Mark appointment as paid...")
+            payment_data = {
+                "paye": True,
+                "montant": 350.0,
+                "type_paiement": "espece",
+                "assure": False,
+                "taux_remboursement": 0,
+                "notes": "Payment via API test"
+            }
+            
+            response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/paiement", json=payment_data)
+            self.assertEqual(response.status_code, 200)
+            
+            payment_response = response.json()
+            self.assertIn("message", payment_response)
+            self.assertEqual(payment_response["paye"], True)
+            self.assertEqual(payment_response["montant"], 350.0)
+            self.assertEqual(payment_response["type_paiement"], "espece")
+            print("✅ Payment API response correct")
+            
+            # Test 4: Verify appointment is now marked as paid
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            updated_appointment = None
+            for appt in appointments:
+                if appt["id"] == appointment_id:
+                    updated_appointment = appt
+                    break
+            
+            self.assertIsNotNone(updated_appointment)
+            self.assertEqual(updated_appointment["paye"], True)
+            print("✅ Appointment status updated to paid")
+            
+            # Test 5: Verify payment record was created in payments collection
+            response = requests.get(f"{self.base_url}/api/payments")
+            self.assertEqual(response.status_code, 200)
+            payments = response.json()
+            
+            payment_record = None
+            for payment in payments:
+                if payment.get("appointment_id") == appointment_id:
+                    payment_record = payment
+                    break
+            
+            self.assertIsNotNone(payment_record, "Payment record not found in payments collection")
+            self.assertEqual(payment_record["montant"], 350.0)
+            self.assertEqual(payment_record["type_paiement"], "espece")
+            self.assertEqual(payment_record["statut"], "paye")
+            print("✅ Payment record created in payments collection")
+            
+            # Test 6: Test GET /api/payments/appointment/{appointment_id}
+            response = requests.get(f"{self.base_url}/api/payments/appointment/{appointment_id}")
+            self.assertEqual(response.status_code, 200)
+            appointment_payment = response.json()
+            
+            self.assertEqual(appointment_payment["appointment_id"], appointment_id)
+            self.assertEqual(appointment_payment["montant"], 350.0)
+            self.assertEqual(appointment_payment["type_paiement"], "espece")
+            print("✅ Payment retrieval by appointment ID working")
+            
+            # Test 7: Test marking as unpaid (should remove payment record)
+            print("3. Testing marking appointment as unpaid...")
+            unpaid_data = {
+                "paye": False,
+                "montant": 0,
+                "type_paiement": "espece",
+                "assure": False,
+                "taux_remboursement": 0,
+                "notes": "Marked as unpaid"
+            }
+            
+            response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/paiement", json=unpaid_data)
+            self.assertEqual(response.status_code, 200)
+            
+            # Verify appointment is now unpaid
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            unpaid_appointment = None
+            for appt in appointments:
+                if appt["id"] == appointment_id:
+                    unpaid_appointment = appt
+                    break
+            
+            self.assertIsNotNone(unpaid_appointment)
+            self.assertEqual(unpaid_appointment["paye"], False)
+            print("✅ Appointment marked as unpaid")
+            
+            # Test 8: Verify payment record was removed
+            response = requests.get(f"{self.base_url}/api/payments/appointment/{appointment_id}")
+            self.assertEqual(response.status_code, 404)  # Should not find payment record
+            print("✅ Payment record removed when marked as unpaid")
+            
+            # Test 9: Test controle appointment (should be free)
+            print("4. Testing controle appointment payment logic...")
+            controle_appointment = {
+                "patient_id": patient_id,
+                "date": today,
+                "heure": "15:30",
+                "type_rdv": "controle",
+                "statut": "termine",
+                "motif": "Test controle payment",
+                "paye": False
+            }
+            
+            response = requests.post(f"{self.base_url}/api/appointments", json=controle_appointment)
+            self.assertEqual(response.status_code, 200)
+            controle_id = response.json()["appointment_id"]
+            
+            try:
+                # Try to mark controle as paid (should be forced to gratuit)
+                controle_payment_data = {
+                    "paye": True,
+                    "montant": 100.0,  # Try to set amount, should be overridden to 0
+                    "type_paiement": "espece",
+                    "assure": False,
+                    "taux_remboursement": 0,
+                    "notes": "Controle payment test"
+                }
+                
+                response = requests.put(f"{self.base_url}/api/rdv/{controle_id}/paiement", json=controle_payment_data)
+                self.assertEqual(response.status_code, 200)
+                
+                controle_response = response.json()
+                self.assertEqual(controle_response["paye"], True)
+                self.assertEqual(controle_response["montant"], 0)  # Should be forced to 0
+                self.assertEqual(controle_response["type_paiement"], "gratuit")  # Should be forced to gratuit
+                print("✅ Controle appointment forced to gratuit payment")
+                
+            finally:
+                # Clean up controle appointment
+                requests.delete(f"{self.base_url}/api/appointments/{controle_id}")
+            
+            print("\n=== PAYMENT API FUNCTIONALITY TESTS COMPLETED ===")
+            print("✅ All payment API tests passed successfully")
+            
+        finally:
+            # Clean up test appointment
+            requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+
 if __name__ == "__main__":
     unittest.main()
