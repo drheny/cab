@@ -169,11 +169,29 @@ const Consultation = ({ user }) => {
     setIsRunning(true);
   };
 
-  // Voir une consultation
-  const handleViewConsultation = (consultation) => {
+  // Obtenir le montant payé pour une consultation
+  const getPaymentAmount = useCallback(async (appointmentId) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/payments`);
+      const payments = response.data;
+      const payment = payments.find(p => p.appointment_id === appointmentId && p.statut === 'paye');
+      return payment ? payment.montant : null;
+    } catch (error) {
+      console.error('Error fetching payment:', error);
+      return null;
+    }
+  }, [API_BASE_URL]);
+
+  // Voir une consultation avec montant
+  const handleViewConsultation = async (consultation) => {
+    let paymentAmount = null;
+    if (consultation.type_rdv === 'visite') {
+      paymentAmount = await getPaymentAmount(consultation.appointment_id);
+    }
+    
     setViewModal({
       isOpen: true,
-      consultation: consultation
+      consultation: { ...consultation, paymentAmount }
     });
   };
 
