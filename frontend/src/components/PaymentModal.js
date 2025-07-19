@@ -20,9 +20,8 @@ const PaymentModal = ({
   const [paymentData, setPaymentData] = useState({
     paye: false,
     montant: 0,
-    type_paiement: 'espece',
+    type_paiement: 'espece', // Toujours espèces
     assure: false,
-    taux_remboursement: 0,
     notes: ''
   });
   
