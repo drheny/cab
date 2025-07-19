@@ -1914,7 +1914,7 @@ const WorkflowCard = React.memo(({
 
           {/* Badge Paiement - Cliquable pour modal */}
           <button
-            onClick={() => setShowPaymentModal(true)}
+            onClick={() => handleOpenPaymentModal(appointment)}
             className={`px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer hover:opacity-80 ${paymentStatus.color}`}
             title="Cliquer pour gérer le paiement"
           >
