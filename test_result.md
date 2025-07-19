@@ -990,6 +990,96 @@ Comprehensive consultations page testing completed successfully. The completely 
 **CONSULTATIONS PAGE: MAJOR REDESIGN COMPLETE AND FULLY FUNCTIONAL**
 The patient-centric consultation management system represents a significant improvement in user experience and workflow efficiency. All requirements from the review request have been successfully implemented, providing medical professionals with an intuitive, comprehensive tool for managing patient consultations. The system is production-ready and provides excellent functionality for medical consultation workflows.
 
+### Consultation Save Functionality from Consultations Page Testing ✅ COMPLETED
+**Status:** CONSULTATION SAVE FUNCTIONALITY FULLY WORKING - Bug Fix Successfully Validated
+
+**Test Results Summary (2025-01-19 - Consultation Save Functionality Testing):**
+✅ **Navigation to Consultations Page** - Successfully navigated to /consultation with proper page structure
+✅ **Patient Search and Selection** - Autocomplete search working correctly with patient selection functionality
+✅ **Patient Banner Display** - Blue banner displays patient info with name, age, and consultation count updates
+✅ **Add Consultation Modal** - Modal opens with patient name, automatic stopwatch, and all form fields functional
+✅ **Form Field Functionality** - All consultation form fields working correctly (Poids, Taille, PC, Observation, Traitement, Bilans, Relance)
+✅ **CRITICAL: Save Functionality** - Consultation save working successfully from Consultations page with proper data persistence
+✅ **Patient Consultation Count Updates** - Patient banner correctly updates consultation count after save
+✅ **Consultation History Display** - New consultation appears in patient history with correct type badge and data
+✅ **View Functionality** - Saved consultation data displays correctly in view modal
+✅ **Data Persistence Verification** - All saved data (measurements, observations, treatment) properly stored and retrievable
+
+**Detailed Test Results:**
+
+**CRITICAL BUG FIX VALIDATION: ✅ FULLY WORKING**
+- ✅ **sauvegarderConsultation Function**: Updated function with appointment_id field working correctly
+- ✅ **Consultation Creation**: POST /api/consultations endpoint successfully creating consultations from Consultations page
+- ✅ **Data Payload**: Consultation payload includes all required fields including generated appointment_id
+- ✅ **Success Response**: Consultation save completes successfully with proper data persistence
+- ✅ **Modal Behavior**: Modal closes automatically after successful save operation
+
+**CONSULTATION SAVE WORKFLOW: ✅ COMPREHENSIVE**
+- ✅ **Patient Selection Required**: Add Consultation button properly disabled until patient selected
+- ✅ **Modal Opening**: Consultation modal opens with patient name and automatic stopwatch start
+- ✅ **Form Data Entry**: All form fields accept and validate input correctly
+  - Poids (16.2 kg) - number input working with decimal values
+  - Taille (95 cm) - number input working correctly
+  - PC (48 cm) - number input functional
+  - Observation médicale - textarea accepting medical observations
+  - Traitement - textarea functional for treatment notes
+  - Bilans - textarea working for medical tests
+  - Relance téléphonique - checkbox and date selection working
+- ✅ **Save Operation**: Sauvegarder button processes form data and saves consultation successfully
+- ✅ **Data Persistence**: All consultation data properly saved to backend database
+
+**POST-SAVE VERIFICATION: ✅ EXCELLENT**
+- ✅ **Patient Banner Update**: Consultation count updates from "0 consultation" to "1 consultation"
+- ✅ **History Display**: New consultation appears in patient consultation history
+- ✅ **Type Badge**: Consultation displays with correct type badge (Contrôle/Visite)
+- ✅ **Data Accuracy**: Saved consultation shows correct date, observations, and measurements
+- ✅ **View Modal**: Eye icon opens view modal with all saved data displayed correctly
+
+**NETWORK REQUESTS VALIDATION: ✅ SUCCESSFUL**
+- ✅ **POST /api/consultations**: Consultation creation request successful
+- ✅ **GET /api/consultations/patient/{id}**: Patient consultation retrieval working correctly
+- ✅ **No Console Errors**: No JavaScript errors or console warnings during save operation
+- ✅ **Response Handling**: Backend responses properly handled by frontend
+
+**COMPARISON WITH CALENDAR PAGE: ✅ CONSISTENT**
+- ✅ **Same Backend Endpoint**: Both pages use same POST /api/consultations endpoint
+- ✅ **Same Data Structure**: Consultation payload structure consistent between pages
+- ✅ **Same Success Behavior**: Both pages handle save success and modal closure identically
+- ✅ **Bug Fix Applied**: appointment_id field properly included in payload from Consultations page
+
+**CONSULTATION SAVE FUNCTIONALITY STATUS: FULLY FUNCTIONAL AND PRODUCTION READY**
+The reported bug with consultation save functionality from the Consultations page has been successfully fixed. The sauvegarderConsultation function now properly includes the appointment_id field and all consultation data is saved correctly. The functionality works identically to the Calendar page implementation.
+
+**Testing Agent → Main Agent (2025-01-19 - Consultation Save Functionality Testing):**
+Comprehensive consultation save functionality testing completed successfully. The specific bug fix mentioned in the review request has been thoroughly validated:
+
+✅ **BUG FIX VALIDATION CONFIRMED:**
+- The sauvegarderConsultation function has been successfully updated to include appointment_id field
+- Consultation save functionality now works correctly from the Consultations page
+- All form data (measurements, observations, treatment, relance) saves properly
+- Patient consultation count updates correctly after save operation
+
+✅ **COMPLETE WORKFLOW TESTING:**
+- Navigation to Consultations page working correctly
+- Patient search and selection functionality operational
+- Add Consultation modal opens with patient name and automatic stopwatch
+- All form fields functional and accepting appropriate data types
+- Save operation completes successfully with proper data persistence
+
+✅ **DATA PERSISTENCE VERIFICATION:**
+- New consultation appears in patient history immediately after save
+- All saved data displays correctly in view modal
+- Patient banner updates consultation count accurately
+- Backend API integration working correctly (POST /api/consultations)
+
+✅ **CONSISTENCY WITH CALENDAR PAGE:**
+- Both Consultations page and Calendar page now use identical save functionality
+- Same backend endpoint and data structure used by both implementations
+- Bug fix ensures consistent behavior across both consultation creation methods
+
+**CONSULTATION SAVE FUNCTIONALITY: BUG FIX SUCCESSFUL AND FULLY OPERATIONAL**
+The consultation save functionality from the Consultations page is now working correctly. The bug that prevented saving consultations when created from the Consultations page (while working from Calendar page) has been successfully resolved. Users can now create consultations from either page with identical functionality and success rates.
+
 ### Consultation Endpoints Testing ✅ COMPLETED
 **Status:** ALL CONSULTATION ENDPOINT TESTS PASSED - Complete CRUD Functionality Fully Validated
 
