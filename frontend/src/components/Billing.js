@@ -205,15 +205,14 @@ const Billing = ({ user }) => {
 
   const handleMarkAsPaid = async (appointment) => {
     try {
-      // Calculer le montant par défaut (300 pour visite)
-      const defaultAmount = appointment.type_rdv === 'visite' ? 300 : 0;
+      // Calculer le montant par défaut (65 TND pour visite)
+      const defaultAmount = appointment.type_rdv === 'visite' ? 65 : 0;
       
       const paymentData = {
         paye: true,
         montant: defaultAmount,
-        type_paiement: 'espece',
+        type_paiement: 'espece', // Toujours espèces
         assure: false,
-        taux_remboursement: 0,
         notes: 'Marqué comme payé depuis la facturation'
       };
 
