@@ -13017,5 +13017,369 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
         
         print(f"✅ PAYMENT EDGE CASES: ALL TESTS COMPLETED")
 
+    # ========== PAYMENT-CONSULTATION DATA LINKAGE TESTS ==========
+    
+    def test_payment_consultation_data_linkage(self):
+        """Test creating payment data to match consultation appointment_ids for payment display"""
+        print("\n=== PAYMENT-CONSULTATION DATA LINKAGE TESTING ===")
+        
+        # Step 1: Get existing consultations to see their appointment_id values
+        print("Step 1: Getting existing consultations...")
+        response = requests.get(f"{self.base_url}/api/consultations")
+        self.assertEqual(response.status_code, 200)
+        consultations = response.json()
+        print(f"Found {len(consultations)} existing consultations")
+        
+        # Step 2: Get existing appointments to identify "visite" consultations
+        today = datetime.now().strftime("%Y-%m-%d")
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        
+        visite_appointments = [appt for appt in appointments if appt.get("type_rdv") == "visite"]
+        print(f"Found {len(visite_appointments)} visite appointments for today")
+        
+        # Step 3: Create matching payment records for visite consultations
+        print("Step 3: Creating matching payment records...")
+        created_payments = []
+        
+        for appointment in visite_appointments:
+            appointment_id = appointment["id"]
+            patient_id = appointment["patient_id"]
+            
+            # Create payment record with matching appointment_id
+            payment_data = {
+                "patient_id": patient_id,
+                "appointment_id": appointment_id,  # Exact match with consultation appointment_id
+                "montant": 150.0,
+                "type_paiement": "espece",
+                "statut": "paye",
+                "date": today
+            }
+            
+            response = requests.post(f"{self.base_url}/api/payments", json=payment_data)
+            self.assertEqual(response.status_code, 200)
+            payment_id = response.json()["payment_id"]
+            created_payments.append(payment_id)
+            print(f"Created payment for appointment_id: {appointment_id}")
+        
+        # Step 4: Test payment-consultation linkage
+        print("Step 4: Testing payment-consultation linkage...")
+        response = requests.get(f"{self.base_url}/api/payments")
+        self.assertEqual(response.status_code, 200)
+        all_payments = response.json()
+        
+        # Verify payment records exist with matching appointment_id values
+        matching_payments = []
+        for payment in all_payments:
+            for appointment in visite_appointments:
+                if payment["appointment_id"] == appointment["id"] and payment["statut"] == "paye":
+                    matching_payments.append(payment)
+                    print(f"✅ Found matching payment: appointment_id={payment['appointment_id']}, montant={payment['montant']}")
+        
+        self.assertGreater(len(matching_payments), 0, "No matching payment records found")
+        print(f"Successfully created {len(matching_payments)} matching payment records")
+        
+        # Step 5: Create test consultation + payment pair
+        print("Step 5: Creating test consultation + payment pair...")
+        
+        # Get a patient for testing
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for testing")
+        
+        test_patient_id = patients[0]["id"]
+        
+        # Create new "visite" consultation appointment
+        test_appointment = {
+            "patient_id": test_patient_id,
+            "date": today,
+            "heure": "15:30",
+            "type_rdv": "visite",
+            "statut": "termine",
+            "motif": "Test consultation for payment linkage",
+            "notes": "Testing payment-consultation data linkage"
+        }
+        
+        response = requests.post(f"{self.base_url}/api/appointments", json=test_appointment)
+        self.assertEqual(response.status_code, 200)
+        test_appointment_id = response.json()["appointment_id"]
+        
+        # Create corresponding payment record with same appointment_id
+        test_payment = {
+            "patient_id": test_patient_id,
+            "appointment_id": test_appointment_id,  # Exact match
+            "montant": 150.0,
+            "type_paiement": "espece",
+            "statut": "paye",
+            "date": today
+        }
+        
+        response = requests.post(f"{self.base_url}/api/payments", json=test_payment)
+        self.assertEqual(response.status_code, 200)
+        test_payment_id = response.json()["payment_id"]
+        created_payments.append(test_payment_id)
+        
+        print(f"✅ Created test consultation-payment pair: appointment_id={test_appointment_id}")
+        
+        # Step 6: Verify the complete workflow
+        print("Step 6: Verifying complete workflow...")
+        
+        # Verify payment retrieval logic will find these records
+        response = requests.get(f"{self.base_url}/api/payments")
+        self.assertEqual(response.status_code, 200)
+        all_payments = response.json()
+        
+        # Find our test payment
+        test_payment_found = None
+        for payment in all_payments:
+            if payment["appointment_id"] == test_appointment_id and payment["statut"] == "paye":
+                test_payment_found = payment
+                break
+        
+        self.assertIsNotNone(test_payment_found, "Test payment not found")
+        self.assertEqual(test_payment_found["montant"], 150.0)
+        self.assertEqual(test_payment_found["type_paiement"], "espece")
+        print(f"✅ Payment retrieval working: found payment with montant={test_payment_found['montant']}")
+        
+        # Verify appointment can be retrieved with patient info
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        updated_appointments = response.json()
+        
+        test_appointment_found = None
+        for appt in updated_appointments:
+            if appt["id"] == test_appointment_id:
+                test_appointment_found = appt
+                break
+        
+        self.assertIsNotNone(test_appointment_found, "Test appointment not found")
+        self.assertEqual(test_appointment_found["type_rdv"], "visite")
+        self.assertIn("patient", test_appointment_found)
+        print(f"✅ Appointment retrieval working: found visite appointment with patient info")
+        
+        # Clean up created test data
+        print("Cleaning up test data...")
+        requests.delete(f"{self.base_url}/api/appointments/{test_appointment_id}")
+        
+        # Note: We keep the payment records as they serve the purpose of the task
+        print(f"✅ Payment-consultation data linkage test completed successfully!")
+        print(f"Created {len(created_payments)} payment records for visite consultations")
+        
+        return {
+            "created_payments": len(created_payments),
+            "matching_payments": len(matching_payments),
+            "test_appointment_id": test_appointment_id,
+            "test_payment_id": test_payment_id
+        }
+    
+    def test_payment_amount_display_functionality(self):
+        """Test that payment amounts can be displayed in consultation view modal"""
+        print("\n=== PAYMENT AMOUNT DISPLAY FUNCTIONALITY TESTING ===")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Get appointments for today
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        
+        # Filter for visite appointments (these should have payment amounts)
+        visite_appointments = [appt for appt in appointments if appt.get("type_rdv") == "visite"]
+        print(f"Found {len(visite_appointments)} visite appointments")
+        
+        if len(visite_appointments) == 0:
+            print("No visite appointments found, creating test data...")
+            # Create test visite appointment and payment
+            response = requests.get(f"{self.base_url}/api/patients")
+            self.assertEqual(response.status_code, 200)
+            patients_data = response.json()
+            patients = patients_data["patients"]
+            self.assertTrue(len(patients) > 0, "No patients found")
+            
+            test_patient_id = patients[0]["id"]
+            
+            # Create visite appointment
+            test_appointment = {
+                "patient_id": test_patient_id,
+                "date": today,
+                "heure": "16:00",
+                "type_rdv": "visite",
+                "statut": "termine",
+                "motif": "Test payment display",
+                "notes": "Testing payment amount display"
+            }
+            
+            response = requests.post(f"{self.base_url}/api/appointments", json=test_appointment)
+            self.assertEqual(response.status_code, 200)
+            test_appointment_id = response.json()["appointment_id"]
+            
+            # Create matching payment
+            test_payment = {
+                "patient_id": test_patient_id,
+                "appointment_id": test_appointment_id,
+                "montant": 150.0,
+                "type_paiement": "espece",
+                "statut": "paye",
+                "date": today
+            }
+            
+            response = requests.post(f"{self.base_url}/api/payments", json=test_payment)
+            self.assertEqual(response.status_code, 200)
+            
+            visite_appointments = [{"id": test_appointment_id, "type_rdv": "visite", "patient_id": test_patient_id}]
+        
+        # Test payment retrieval for each visite appointment
+        payment_display_results = []
+        
+        for appointment in visite_appointments:
+            appointment_id = appointment["id"]
+            
+            # Get all payments
+            response = requests.get(f"{self.base_url}/api/payments")
+            self.assertEqual(response.status_code, 200)
+            all_payments = response.json()
+            
+            # Search for payment with matching appointment_id and statut='paye'
+            matching_payment = None
+            for payment in all_payments:
+                if (payment.get("appointment_id") == appointment_id and 
+                    payment.get("statut") == "paye"):
+                    matching_payment = payment
+                    break
+            
+            if matching_payment:
+                payment_amount = matching_payment["montant"]
+                payment_method = matching_payment["type_paiement"]
+                print(f"✅ Found payment for appointment {appointment_id}: {payment_amount} DH ({payment_method})")
+                payment_display_results.append({
+                    "appointment_id": appointment_id,
+                    "payment_amount": payment_amount,
+                    "payment_method": payment_method,
+                    "display_format": f"({payment_amount} DH)"
+                })
+            else:
+                print(f"❌ No payment found for appointment {appointment_id}")
+                payment_display_results.append({
+                    "appointment_id": appointment_id,
+                    "payment_amount": None,
+                    "payment_method": None,
+                    "display_format": None
+                })
+        
+        # Verify that we have payment data for display
+        payments_with_amounts = [result for result in payment_display_results if result["payment_amount"] is not None]
+        self.assertGreater(len(payments_with_amounts), 0, "No payments found for visite appointments")
+        
+        print(f"✅ Payment amount display test completed!")
+        print(f"Found payment amounts for {len(payments_with_amounts)} out of {len(visite_appointments)} visite appointments")
+        
+        # Display summary of payment amounts that would be shown in modal
+        print("\nPayment amounts that would be displayed in consultation view modal:")
+        for result in payments_with_amounts:
+            print(f"  - Appointment {result['appointment_id']}: {result['display_format']}")
+        
+        return payment_display_results
+    
+    def test_consultation_payment_data_consistency(self):
+        """Test data consistency between consultations and payments"""
+        print("\n=== CONSULTATION-PAYMENT DATA CONSISTENCY TESTING ===")
+        
+        # Get all consultations
+        response = requests.get(f"{self.base_url}/api/consultations")
+        self.assertEqual(response.status_code, 200)
+        consultations = response.json()
+        
+        # Get all payments
+        response = requests.get(f"{self.base_url}/api/payments")
+        self.assertEqual(response.status_code, 200)
+        payments = response.json()
+        
+        # Get all appointments
+        response = requests.get(f"{self.base_url}/api/appointments")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        
+        print(f"Found {len(consultations)} consultations, {len(payments)} payments, {len(appointments)} appointments")
+        
+        # Check data linkage consistency
+        linkage_results = {
+            "consultations_with_payments": 0,
+            "consultations_without_payments": 0,
+            "payments_with_consultations": 0,
+            "payments_without_consultations": 0,
+            "visite_appointments_with_payments": 0,
+            "visite_appointments_without_payments": 0
+        }
+        
+        # Check consultations vs payments
+        for consultation in consultations:
+            consultation_appointment_id = consultation.get("appointment_id")
+            if consultation_appointment_id:
+                # Find matching payment
+                matching_payment = None
+                for payment in payments:
+                    if payment.get("appointment_id") == consultation_appointment_id:
+                        matching_payment = payment
+                        break
+                
+                if matching_payment:
+                    linkage_results["consultations_with_payments"] += 1
+                    print(f"✅ Consultation {consultation['id']} has matching payment (appointment_id: {consultation_appointment_id})")
+                else:
+                    linkage_results["consultations_without_payments"] += 1
+                    print(f"❌ Consultation {consultation['id']} has no matching payment (appointment_id: {consultation_appointment_id})")
+        
+        # Check payments vs consultations
+        for payment in payments:
+            payment_appointment_id = payment.get("appointment_id")
+            if payment_appointment_id:
+                # Find matching consultation
+                matching_consultation = None
+                for consultation in consultations:
+                    if consultation.get("appointment_id") == payment_appointment_id:
+                        matching_consultation = consultation
+                        break
+                
+                if matching_consultation:
+                    linkage_results["payments_with_consultations"] += 1
+                else:
+                    linkage_results["payments_without_consultations"] += 1
+        
+        # Check visite appointments vs payments
+        visite_appointments = [appt for appt in appointments if appt.get("type_rdv") == "visite"]
+        for appointment in visite_appointments:
+            appointment_id = appointment["id"]
+            # Find matching payment
+            matching_payment = None
+            for payment in payments:
+                if payment.get("appointment_id") == appointment_id and payment.get("statut") == "paye":
+                    matching_payment = payment
+                    break
+            
+            if matching_payment:
+                linkage_results["visite_appointments_with_payments"] += 1
+            else:
+                linkage_results["visite_appointments_without_payments"] += 1
+        
+        # Print summary
+        print("\nData Consistency Summary:")
+        print(f"  Consultations with payments: {linkage_results['consultations_with_payments']}")
+        print(f"  Consultations without payments: {linkage_results['consultations_without_payments']}")
+        print(f"  Payments with consultations: {linkage_results['payments_with_consultations']}")
+        print(f"  Payments without consultations: {linkage_results['payments_without_consultations']}")
+        print(f"  Visite appointments with payments: {linkage_results['visite_appointments_with_payments']}")
+        print(f"  Visite appointments without payments: {linkage_results['visite_appointments_without_payments']}")
+        
+        # The main goal is to have visite appointments with matching payments
+        if linkage_results["visite_appointments_with_payments"] > 0:
+            print(f"✅ SUCCESS: {linkage_results['visite_appointments_with_payments']} visite appointments have matching payment data")
+        else:
+            print("❌ WARNING: No visite appointments have matching payment data")
+        
+        return linkage_results
+
 if __name__ == "__main__":
     unittest.main()
