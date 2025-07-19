@@ -793,6 +793,87 @@ The backend fully supports payment amount display functionality for consultation
 - Display payment amounts (300 DH) for visite consultations in the consultation overview modal
 - All data structures and APIs are production-ready for payment amount display feature
 
+### New Payment APIs Testing ✅ COMPLETED
+**Status:** ALL NEW PAYMENT APIS TESTS PASSED - Payment System Fully Functional
+
+**Test Results Summary (2025-01-19 - New Payment APIs Testing):**
+✅ **Payment Statistics API** - GET /api/payments/stats working correctly with default and custom date ranges
+✅ **Unpaid Consultations API** - GET /api/payments/unpaid returns only visite appointments that are unpaid with completed status
+✅ **Payment by Appointment API** - GET /api/payments/appointment/{appointment_id} working correctly with existing and non-existent appointments
+✅ **RDV Payment Update API** - PUT /api/rdv/{rdv_id}/paiement working with new PaymentUpdate format and automatic controle logic
+✅ **Payment Update API** - PUT /api/payments/{payment_id} successfully updates existing payment records
+✅ **Payment APIs Integration** - Complete workflow from unpaid to paid appointments working correctly
+✅ **Payment Business Logic** - Controle appointments automatically free, visite appointments payable, assurance logic working
+
+**Detailed Test Results:**
+
+**PAYMENT STATISTICS API TESTING: ✅ FULLY WORKING**
+- ✅ **GET /api/payments/stats**: Returns correct data structure with total_montant, nb_paiements, ca_jour, by_method, assurance
+- ✅ **Default Period**: Works without parameters using current month as default period
+- ✅ **Custom Date Range**: Accepts date_debut and date_fin parameters correctly
+- ✅ **Data Structure**: All required fields present with correct data types
+- ✅ **Payment Methods Breakdown**: by_method object correctly groups payments by type
+- ✅ **Insurance Statistics**: assurance object correctly counts assured vs non-assured payments
+
+**UNPAID CONSULTATIONS API TESTING: ✅ FULLY WORKING**
+- ✅ **GET /api/payments/unpaid**: Returns only visite appointments that are unpaid
+- ✅ **Status Filtering**: Only includes appointments with status termine/absent/retard
+- ✅ **Patient Information**: Each appointment includes complete patient details (nom, prenom, telephone)
+- ✅ **Type Filtering**: Correctly excludes controle appointments from unpaid list
+- ✅ **Payment Status**: All returned appointments have paye=false
+
+**PAYMENT BY APPOINTMENT API TESTING: ✅ FULLY WORKING**
+- ✅ **GET /api/payments/appointment/{appointment_id}**: Successfully retrieves payment for existing appointments
+- ✅ **Existing Payment**: Found payment for appt3 with 300.0 amount and espece type
+- ✅ **Non-existent Appointment**: Correctly returns 404 for invalid appointment IDs
+- ✅ **Controle Logic**: Controle appointments correctly return 0 amount with gratuit type
+- ✅ **Data Structure**: Returns appointment_id, montant, type_paiement, statut, assure fields
+
+**RDV PAYMENT UPDATE API TESTING: ✅ FULLY WORKING**
+- ✅ **PUT /api/rdv/{rdv_id}/paiement**: Accepts new PaymentUpdate format correctly
+- ✅ **Payment Fields**: Successfully updates paye, montant, type_paiement, assure, taux_remboursement, notes
+- ✅ **Automatic Controle Logic**: Controle appointments automatically set to 0 amount and gratuit type
+- ✅ **Assurance Support**: Correctly handles assure and taux_remboursement fields
+- ✅ **Payment Method Validation**: Rejects invalid payment methods with 400 status
+- ✅ **Response Structure**: Returns all updated payment fields in response
+
+**PAYMENT UPDATE API TESTING: ✅ FULLY WORKING**
+- ✅ **PUT /api/payments/{payment_id}**: Successfully updates existing payment records
+- ✅ **Field Updates**: Correctly updates montant, type_paiement, assure, taux_remboursement, notes
+- ✅ **Appointment Sync**: Also updates corresponding appointment payment status
+- ✅ **Non-existent Payment**: Correctly returns 404 for invalid payment IDs
+- ✅ **Data Persistence**: Updated values persist correctly in database
+
+**PAYMENT APIS INTEGRATION TESTING: ✅ COMPREHENSIVE**
+- ✅ **Complete Workflow**: Tested full cycle from unpaid appointment to payment to statistics update
+- ✅ **Unpaid Count Tracking**: Unpaid appointments list correctly updates when payments are made
+- ✅ **Statistics Integration**: Payment statistics correctly reflect new payments
+- ✅ **Cross-API Consistency**: All APIs work together seamlessly
+- ✅ **Data Consistency**: Payment data remains consistent across all endpoints
+
+**PAYMENT BUSINESS LOGIC TESTING: ✅ ROBUST**
+- ✅ **Controle Appointments**: Automatically set to 0 amount with gratuit payment type
+- ✅ **Visite Appointments**: Can have positive amounts with various payment types
+- ✅ **Assurance Logic**: Correctly handles assure flag and taux_remboursement percentage
+- ✅ **Payment Method Validation**: All valid methods accepted (espece, carte, cheque, virement, gratuit)
+- ✅ **Type-Based Logic**: Payment behavior correctly differs between visite and controle appointments
+
+**CRITICAL FINDINGS:**
+- 🔍 **All APIs Functional**: Every payment API endpoint working correctly with proper data structures
+- 🔍 **Business Logic Correct**: Controle=free, visite=payable logic implemented correctly
+- 🔍 **Data Consistency**: Payment data consistent across appointments and payments collections
+- 🔍 **Assurance Support**: Full support for insurance fields and remboursement rates
+- 🔍 **Error Handling**: Proper validation and error responses for invalid inputs
+
+**NEW PAYMENT APIS STATUS: FULLY FUNCTIONAL AND PRODUCTION READY**
+All requirements from the review request have been successfully implemented and validated:
+- Payment statistics API provides comprehensive billing dashboard data
+- Unpaid consultations API correctly identifies visite appointments needing payment
+- Payment by appointment API handles both paid and free consultations correctly
+- RDV payment update API supports new PaymentUpdate format with automatic controle logic
+- Payment update API allows modification of existing payment records
+- All APIs integrate seamlessly with proper business logic and data consistency
+
 ### Frontend Drag and Drop Testing ✅ COMPLETED
 **Status:** FRONTEND DRAG AND DROP TESTING COMPLETED - System Limitations Identified
 
