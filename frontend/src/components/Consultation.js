@@ -649,6 +649,20 @@ const Consultation = ({ user }) => {
                   <p className="text-gray-600">
                     {selectedPatient?.prenom} {selectedPatient?.nom}
                   </p>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      viewModal.consultation.type_rdv === 'visite'
+                        ? 'bg-red-100 text-red-800'
+                        : 'bg-green-100 text-green-800'
+                    }`}>
+                      {viewModal.consultation.type_rdv === 'visite' ? 'Visite' : 'Contrôle'}
+                    </span>
+                    {viewModal.consultation.type_rdv === 'visite' && viewModal.consultation.paymentAmount && (
+                      <span className="text-gray-600">
+                        ({viewModal.consultation.paymentAmount} DH)
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <button
                   onClick={() => setViewModal({ isOpen: false, consultation: null })}
