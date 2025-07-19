@@ -185,10 +185,13 @@ const Consultation = ({ user }) => {
   // Voir une consultation avec montant
   const handleViewConsultation = async (consultation) => {
     let paymentAmount = null;
+    
+    // Attendre la récupération du montant de paiement pour les visites
     if (consultation.type_rdv === 'visite') {
       paymentAmount = await getPaymentAmount(consultation.appointment_id);
     }
     
+    // Ouvrir le modal seulement après avoir récupéré les données de paiement
     setViewModal({
       isOpen: true,
       consultation: { ...consultation, paymentAmount }
