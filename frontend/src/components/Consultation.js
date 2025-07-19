@@ -186,13 +186,17 @@ const Consultation = ({ user }) => {
   const handleViewConsultation = async (consultation) => {
     let paymentAmount = null;
     if (consultation.type_rdv === 'visite') {
+      console.log('Debug: Fetching payment for appointment_id:', consultation.appointment_id);
       paymentAmount = await getPaymentAmount(consultation.appointment_id);
+      console.log('Debug: Payment amount retrieved:', paymentAmount);
     }
     
     setViewModal({
       isOpen: true,
       consultation: { ...consultation, paymentAmount }
     });
+    
+    console.log('Debug: ViewModal data:', { ...consultation, paymentAmount });
   };
 
   // Modifier une consultation
