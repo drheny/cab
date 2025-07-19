@@ -100,6 +100,7 @@ class Consultation(BaseModel):
     patient_id: str
     appointment_id: str
     date: str
+    type_rdv: str = "visite"  # "visite" ou "controle"
     duree: int = 0  # en minutes
     poids: float = 0.0
     taille: float = 0.0
