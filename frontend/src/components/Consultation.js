@@ -135,6 +135,13 @@ const Consultation = ({ user }) => {
     await fetchPatientConsultations(patient.id);
   }, [fetchPatientConsultations]);
 
+  // Actualiser les consultations
+  const refreshConsultations = useCallback(async () => {
+    if (selectedPatient) {
+      await fetchPatientConsultations(selectedPatient.id);
+    }
+  }, [selectedPatient, fetchPatientConsultations]);
+
   // Ouvrir modal d'ajout de consultation
   const handleAddConsultation = () => {
     if (!selectedPatient) {
