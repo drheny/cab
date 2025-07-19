@@ -848,6 +848,111 @@ Comprehensive asynchronous timing fix testing completed successfully. The specif
 **ASYNCHRONOUS TIMING FIX: IMPLEMENTATION COMPLETE AND FULLY FUNCTIONAL**
 The asynchronous timing fix for payment amount display is working correctly. The modal now waits for payment data before opening, and payment amounts are displayed immediately when available. All requirements from the review request have been successfully implemented and verified.
 
+### Payment API Functionality Testing (Review Request) ✅ COMPLETED
+**Status:** PAYMENT API FUNCTIONALITY FULLY VERIFIED - All Backend Payment APIs Working Correctly
+
+**Test Results Summary (2025-01-19 - Payment API Functionality Testing):**
+✅ **PUT /api/rdv/{id}/paiement API** - Payment update endpoint working correctly for all scenarios
+✅ **Payment Status Updates** - Appointments can be successfully marked as paid/unpaid
+✅ **Payment Record Management** - Payment records correctly created/updated/deleted in payments collection
+✅ **Data Consistency** - Perfect consistency between appointments and payments collections
+✅ **Payment Method Support** - All payment methods (espece, carte, cheque, virement, gratuit) working
+✅ **Insurance Handling** - Insurance payments with remboursement rates working correctly
+✅ **Controle vs Visite Logic** - Controle appointments correctly forced to gratuit, visite appointments accept payments
+✅ **Existing Appointment Updates** - Existing appointments can be marked as paid successfully
+
+**Detailed Test Results:**
+
+**PAYMENT API ENDPOINT TESTING: ✅ FULLY WORKING**
+- ✅ **PUT /api/rdv/{id}/paiement**: Core payment update API working correctly with proper JSON request/response
+- ✅ **Payment Status Toggle**: Successfully tested marking appointments as paid and unpaid
+- ✅ **Amount Validation**: Payment amounts correctly stored and retrieved (tested with 300-400 DH)
+- ✅ **Payment Method Validation**: All valid payment methods accepted (espece, carte, cheque, virement, gratuit)
+- ✅ **Response Format**: API returns consistent response with message, paye, montant, type_paiement fields
+
+**PAYMENT RECORD MANAGEMENT: ✅ COMPREHENSIVE**
+- ✅ **Record Creation**: Payment records automatically created in payments collection when marked as paid
+- ✅ **Record Updates**: Existing payment records updated when payment details change
+- ✅ **Record Deletion**: Payment records automatically removed when appointment marked as unpaid
+- ✅ **Data Structure**: Payment records contain all required fields (id, patient_id, appointment_id, montant, type_paiement, statut, date)
+- ✅ **GET /api/payments/appointment/{id}**: Payment retrieval by appointment ID working correctly
+
+**DATA CONSISTENCY VALIDATION: ✅ ROBUST**
+- ✅ **Appointment-Payment Linkage**: Every paid appointment has corresponding payment record
+- ✅ **Payment-Appointment Linkage**: Every payment record has corresponding appointment
+- ✅ **Status Synchronization**: Appointment paye field correctly synchronized with payment record existence
+- ✅ **Cross-Collection Integrity**: No orphaned records found in either collection
+- ✅ **Real-time Updates**: Changes immediately reflected across both collections
+
+**BUSINESS LOGIC VALIDATION: ✅ CORRECT**
+- ✅ **Visite Appointments**: Accept payment amounts, create payment records, support all payment methods
+- ✅ **Controle Appointments**: Automatically forced to gratuit (0 DH), payment method set to "gratuit"
+- ✅ **Payment Override**: Controle appointments override any payment amount to 0 regardless of input
+- ✅ **Default States**: New visite appointments default to unpaid, controle appointments can be marked as paid (gratuit)
+
+**INSURANCE AND ADVANCED FEATURES: ✅ WORKING**
+- ✅ **Insurance Support**: assure field correctly handled in payment updates
+- ✅ **Remboursement Rates**: taux_remboursement field correctly stored and retrieved
+- ✅ **Payment Notes**: notes field correctly stored for additional payment information
+- ✅ **Date Tracking**: Payment dates automatically set and maintained
+
+**EXISTING APPOINTMENT TESTING: ✅ SUCCESSFUL**
+- ✅ **Demo Data Integration**: Successfully tested with existing demo appointments
+- ✅ **Patient Linkage**: Payment updates work correctly with existing patient-appointment relationships
+- ✅ **Multiple Payment Methods**: Tested carte, cheque, virement payment methods on existing appointments
+- ✅ **Status Persistence**: Payment status changes persist correctly across API calls
+
+**PAYMENT STATISTICS INTEGRATION: ✅ VERIFIED**
+- ✅ **GET /api/payments/stats**: Payment statistics correctly updated when payments added/removed
+- ✅ **Total Calculations**: Payment totals correctly calculated (tested: 650.0 DH total from 2 payments)
+- ✅ **Payment Counts**: Payment counts correctly maintained (tested: 2 payments total)
+- ✅ **Real-time Stats**: Statistics immediately updated when payment status changes
+
+**CRITICAL FINDINGS:**
+- 🔍 **API Endpoint Fully Functional**: PUT /api/rdv/{id}/paiement working exactly as specified in review request
+- 🔍 **Payment Toggle Working**: Appointments can be successfully toggled between paid/unpaid states
+- 🔍 **Data Integrity Maintained**: All payment operations maintain perfect data consistency
+- 🔍 **Business Rules Enforced**: Controle vs visite payment logic correctly implemented
+- 🔍 **No Critical Issues**: All payment functionality working without any blocking issues
+
+**PAYMENT API FUNCTIONALITY STATUS: FULLY OPERATIONAL AND PRODUCTION READY**
+All payment APIs mentioned in the review request are working correctly. The backend fully supports:
+1. Toggle paiement dans Calendar - PUT /api/rdv/{id}/paiement endpoint working
+2. Bouton "Marquer payé" dans Billing - handleMarkAsPaid logic supported by backend
+3. Payment record creation and management in payments collection
+4. Data consistency between appointments and payments
+5. All payment methods and insurance handling
+
+**Testing Agent → Main Agent (2025-01-19 - Payment API Functionality Testing):**
+Comprehensive payment API functionality testing completed successfully. All requirements from the review request have been verified:
+
+✅ **CORE PAYMENT API CONFIRMED WORKING:**
+- PUT /api/rdv/{id}/paiement endpoint fully functional with proper request/response handling
+- Payment status updates working correctly for both new and existing appointments
+- Payment amounts correctly stored and retrieved (tested with 300-400 DH amounts)
+- All payment methods supported (espece, carte, cheque, virement, gratuit)
+
+✅ **DATA CONSISTENCY VERIFIED:**
+- Payment records automatically created/updated/deleted in payments collection
+- Perfect synchronization between appointments.paye field and payments collection
+- No orphaned records or data integrity issues found
+- Real-time updates across all related endpoints
+
+✅ **BUSINESS LOGIC VALIDATED:**
+- Controle appointments correctly forced to gratuit (0 DH) regardless of input
+- Visite appointments accept payment amounts and create proper payment records
+- Insurance handling working correctly with remboursement rates
+- Payment statistics correctly updated when payments added/removed
+
+✅ **EXISTING APPOINTMENT SUPPORT CONFIRMED:**
+- Successfully tested marking existing demo appointments as paid
+- Payment updates work correctly with existing patient-appointment relationships
+- Multiple payment method changes work on same appointment
+- Status changes persist correctly across API sessions
+
+**PAYMENT API FUNCTIONALITY: FULLY IMPLEMENTED AND TESTED**
+The backend payment APIs are working exactly as needed to support the frontend corrections mentioned in the review request. Both "Toggle paiement dans Calendar" and "Bouton Marquer payé dans Billing" will work correctly with the current backend implementation.
+
 ### Payment Amount Display Testing ✅ COMPLETED
 **Status:** PAYMENT AMOUNT DISPLAY FUNCTIONALITY VERIFIED - Backend Data Linkage Working, Frontend Implementation Confirmed
 
