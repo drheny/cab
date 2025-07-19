@@ -1253,6 +1253,17 @@ const Calendar = ({ user }) => {
           )}
         </>
       )}
+
+      {/* Payment Modal */}
+      {showPaymentModal && selectedPaymentAppointment && (
+        <PaymentModal
+          isOpen={showPaymentModal}
+          onClose={handleClosePaymentModal}
+          appointment={selectedPaymentAppointment}
+          onPaymentUpdate={handlePaymentUpdate}
+          API_BASE_URL={API_BASE_URL}
+        />
+      )}
     </div>
   );
 };
