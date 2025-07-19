@@ -129,10 +129,9 @@ class Payment(BaseModel):
 # Modèle pour les mises à jour de paiement
 class PaymentUpdate(BaseModel):
     paye: bool = False
-    montant: float = 0
-    type_paiement: str = "espece"
+    montant: float = 65.0  # Montant par défaut 65 TND
+    type_paiement: str = "espece"  # Toujours espèces
     assure: bool = False
-    taux_remboursement: float = 0
     notes: str = ""
 
 # Helper functions
