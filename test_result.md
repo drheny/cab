@@ -7988,3 +7988,46 @@ The only issue is that the current demo data has only 1 patient in waiting room,
 
 **PATIENT REORDERING FUNCTIONALITY STATUS: FULLY IMPLEMENTED AND WORKING CORRECTLY**
 The implementation is complete and functional. Reordering buttons appear only when multiple patients are in waiting room (totalCount > 1), which is the correct business logic. The debug logs confirm all values are working as expected.
+
+**Testing Agent → Main Agent (2025-01-15 - Payment Retrieval Functionality Testing):**
+Comprehensive Payment Retrieval Functionality testing completed successfully. All requirements from the review request have been thoroughly validated:
+
+✅ **PAYMENT DATA VERIFICATION - PASSED:**
+- GET /api/payments endpoint working correctly with proper data structure
+- Found existing payment data with all required fields (appointment_id, montant, statut)
+- Payment amounts stored as numbers (300.0, 150.0) ready for display calculations
+- Payments with statut="paye" properly identified and accessible
+
+✅ **PAYMENT CREATION FOR TESTING - PASSED:**
+- Successfully created test payments with appointment_id linkage
+- Payment persistence working correctly via GET /api/payments retrieval
+- Multiple payment methods supported (espece, carte, cheque, virement, gratuit)
+- Payment-appointment relationships maintained across all operations
+
+✅ **PAYMENT-APPOINTMENT LINKAGE - PASSED:**
+- Appointments have unique IDs that can be linked to payments via appointment_id field
+- Consultations include appointment_id field enabling payment lookup functionality
+- Payment retrieval by appointment_id working correctly for consultation view modal
+- Data consistency maintained across patients, appointments, and payments
+
+✅ **PAYMENT AMOUNT DISPLAY LOGIC - PASSED:**
+- Payment lookup working correctly for type_rdv="visite" appointments
+- Payment amounts properly formatted as numbers for display in consultation modal
+- Payment status validation (statut="paye") working for amount display logic
+- Consultation view modal payment retrieval functionality fully operational
+
+✅ **COMPREHENSIVE WORKFLOW TESTING - PASSED:**
+- Complete end-to-end workflow: patient → appointment → payment → retrieval
+- Payment amounts available for display in consultation view modal
+- All data integration points working correctly (patient info, appointment details, payment amounts)
+- Edge cases handled properly (zero amounts for controle/gratuit, multiple payment types)
+
+**Key Implementation Verification:**
+- Payment data exists in system with proper structure and data types
+- GET /api/payments endpoint provides all necessary data for consultation modal
+- Payment-appointment linkage robust with appointment_id foreign key relationships
+- Payment amounts correctly formatted as numbers for display calculations
+- Demo data includes working payment examples for immediate testing
+
+**PAYMENT RETRIEVAL FUNCTIONALITY: BACKEND IMPLEMENTATION COMPLETE AND FULLY FUNCTIONAL**
+The payment retrieval functionality fully supports consultation view modal requirements. Payment amounts are available and properly formatted for display through the GET /api/payments endpoint with appointment_id filtering. All scenarios from the review request have been successfully validated and are working correctly.
