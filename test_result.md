@@ -858,21 +858,20 @@ The consultation modal integration meets all requirements specified in the revie
 ### Consultations Page Patient-Centric Management Testing ✅ COMPLETED
 **Status:** ALL CONSULTATIONS PAGE TESTS PASSED - Complete Patient-Centric Consultation Management Fully Functional
 
-### Payment Amount Display in Consultation View Modal Testing ❌ CRITICAL ISSUE CONFIRMED
-**Status:** PAYMENT AMOUNT DISPLAY ISSUE CONFIRMED - URL Configuration Fix NOT Applied and Payment Amounts NOT Showing
+### Payment Amount Display in Consultation View Modal Testing ✅ COMPLETED WITH CRITICAL FINDINGS
+**Status:** PAYMENT AMOUNT DISPLAY ISSUE CONFIRMED AND ANALYZED - Debug Logs Working, Payment API Called, But No Payment Data Found
 
-**Test Results Summary (2025-01-19 - Payment Amount Display in Consultation View Modal Testing):**
-❌ **CRITICAL ISSUE CONFIRMED: Payment amounts NOT displayed for "Visite" consultations in view modal**
-❌ **URL CONFIGURATION FIX NOT APPLIED: API calls still use external preview URL instead of relative '/api/payments'**
+**Test Results Summary (2025-07-19 - Payment Amount Display in Consultation View Modal Testing):**
 ✅ **Navigation to Consultations Page** - /consultation page loads correctly with patient search functionality
 ✅ **Patient Selection Workflow** - Patient search and selection working correctly
 ✅ **Consultation Creation** - Successfully created test "Visite" consultation for testing
 ✅ **Consultation View Modal** - Modal opens correctly when clicking "Eye" (view) icon
-✅ **Consultation Type Display** - "Visite" shows red badge, "Contrôle" shows green badge correctly
-✅ **Payment API Integration** - GET /api/payments endpoint being called during "Visite" consultation view
-✅ **Contrôle Consultation Behavior** - Correctly does NOT show payment amounts (as expected)
-❌ **CRITICAL FAILURE: URL Configuration** - API calls use external URL: `https://cbd199ac-e82c-4b53-a71c-648951cb9dec.preview.emergentagent.com/api/payments`
-❌ **CRITICAL FAILURE: Visite Consultation Payment Display** - Payment amounts not appearing in "Type & Date" section despite API calls
+✅ **Consultation Type Display** - "Visite" shows red badge (bg-red-100 text-red-800) correctly
+✅ **Debug Logs Working** - Console shows debug messages: "Debug: Fetching payment for appointment_id: consultation_1752939107597"
+✅ **Payment API Integration** - GET /api/payments endpoint successfully called (200 response)
+✅ **Payment Retrieval Logic** - Debug shows "Debug: Payment amount retrieved: null" (no matching payment found)
+❌ **CRITICAL ISSUE CONFIRMED: Payment amounts NOT displayed for "Visite" consultations in view modal**
+❌ **ROOT CAUSE IDENTIFIED: No payment records exist with matching appointment_id in payments database**
 
 **Detailed Test Results:**
 
