@@ -1358,7 +1358,6 @@ async def update_payment(payment_id: str, payment_data: PaymentUpdate):
             "montant": payment_data.montant,
             "type_paiement": payment_data.type_paiement,
             "assure": payment_data.assure,
-            "taux_remboursement": payment_data.taux_remboursement,
             "notes": payment_data.notes,
             "updated_at": datetime.now()
         }
