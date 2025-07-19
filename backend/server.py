@@ -1171,6 +1171,11 @@ async def get_consultations():
 @app.get("/api/consultations/patient/{patient_id}")
 async def get_patient_consultations(patient_id: str):
     """Get consultations for a specific patient"""
+    # Check if patient exists
+    patient = patients_collection.find_one({"id": patient_id})
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    
     consultations = list(consultations_collection.find({"patient_id": patient_id}, {"_id": 0}))
     return consultations
 
