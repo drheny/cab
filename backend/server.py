@@ -90,6 +90,7 @@ class Appointment(BaseModel):
     motif: str = ""
     notes: str = ""
     paye: bool = False  # statut de paiement
+    assure: bool = False  # Nouveau champ pour assurance
     heure_arrivee_attente: str = ""  # timestamp quand patient arrive en salle d'attente
     priority: int = 999  # ordre dans la salle d'attente (plus petit = plus prioritaire)
     created_at: datetime = Field(default_factory=datetime.now)
