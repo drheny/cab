@@ -683,10 +683,7 @@ const Billing = ({ user }) => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex items-center space-x-2">
                           <button
-                            onClick={() => {
-                              // Open payment modal for this appointment
-                              toast.info('Fonctionnalité de paiement à implémenter');
-                            }}
+                            onClick={() => handleMarkAsPaid(appointment)}
                             className="text-green-600 hover:text-green-900 px-3 py-1 bg-green-100 rounded-lg"
                           >
                             Marquer payé
