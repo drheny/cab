@@ -13637,5 +13637,350 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
         print(f"✅ Frontend payment display logic will now work correctly")
         print(f"✅ Consultation with appointment_id='appt3' will show 300 DH payment amount")
 
+    # ========== PAYMENT AMOUNT DISPLAY FUNCTIONALITY TESTS ==========
+    
+    def test_consultation_data_verification(self):
+        """Test consultation data verification for payment amount display functionality"""
+        print("\n=== CONSULTATION DATA VERIFICATION ===")
+        
+        # Get all patients to find one with consultations
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        
+        # Test GET /api/consultations/patient/{patient_id} for each patient
+        consultation_found = False
+        appt3_consultation = None
+        
+        for patient in patients:
+            patient_id = patient["id"]
+            print(f"Testing consultations for patient: {patient['nom']} {patient['prenom']} (ID: {patient_id})")
+            
+            response = requests.get(f"{self.base_url}/api/consultations/patient/{patient_id}")
+            self.assertEqual(response.status_code, 200)
+            consultations = response.json()
+            
+            if consultations:
+                consultation_found = True
+                print(f"  Found {len(consultations)} consultations")
+                
+                for consultation in consultations:
+                    print(f"  Consultation ID: {consultation.get('id')}")
+                    print(f"  Appointment ID: {consultation.get('appointment_id')}")
+                    print(f"  Date: {consultation.get('date')}")
+                    print(f"  Type RDV: {consultation.get('type_rdv', 'MISSING')}")
+                    
+                    # Check if this is the specific consultation we're looking for
+                    if consultation.get('appointment_id') == 'appt3':
+                        appt3_consultation = consultation
+                        print(f"  *** FOUND TARGET CONSULTATION (appointment_id=appt3) ***")
+                        print(f"      Type RDV: {consultation.get('type_rdv', 'MISSING')}")
+                    
+                    # Verify type_rdv field exists and has valid values
+                    if 'type_rdv' in consultation:
+                        self.assertIn(consultation['type_rdv'], ['visite', 'controle'], 
+                                    f"Invalid type_rdv value: {consultation['type_rdv']}")
+                    else:
+                        print(f"  WARNING: Consultation {consultation.get('id')} missing type_rdv field")
+        
+        # Verify we found the specific consultation mentioned in the review request
+        if appt3_consultation:
+            print(f"\n✅ FOUND TARGET CONSULTATION:")
+            print(f"   Appointment ID: appt3")
+            print(f"   Type RDV: {appt3_consultation.get('type_rdv', 'MISSING')}")
+            print(f"   Expected: visite")
+            
+            if appt3_consultation.get('type_rdv') == 'visite':
+                print("   ✅ Type RDV is correctly set to 'visite'")
+            else:
+                print("   ❌ Type RDV is NOT set to 'visite' as expected")
+        else:
+            print(f"\n❌ TARGET CONSULTATION NOT FOUND:")
+            print(f"   Expected consultation with appointment_id='appt3' not found")
+        
+        self.assertTrue(consultation_found, "No consultations found in the system")
+        return appt3_consultation
+    
+    def test_payment_data_verification(self):
+        """Test payment data verification for payment amount display functionality"""
+        print("\n=== PAYMENT DATA VERIFICATION ===")
+        
+        # Test GET /api/payments endpoint
+        response = requests.get(f"{self.base_url}/api/payments")
+        self.assertEqual(response.status_code, 200)
+        payments = response.json()
+        
+        print(f"Found {len(payments)} payment records")
+        
+        # Look for payment with appointment_id="appt3"
+        appt3_payment = None
+        
+        for payment in payments:
+            print(f"Payment ID: {payment.get('id')}")
+            print(f"  Appointment ID: {payment.get('appointment_id')}")
+            print(f"  Montant: {payment.get('montant')}")
+            print(f"  Statut: {payment.get('statut')}")
+            print(f"  Type Paiement: {payment.get('type_paiement')}")
+            
+            if payment.get('appointment_id') == 'appt3':
+                appt3_payment = payment
+                print(f"  *** FOUND TARGET PAYMENT (appointment_id=appt3) ***")
+                print(f"      Montant: {payment.get('montant')}")
+                print(f"      Expected: 300")
+        
+        # Verify we found the specific payment mentioned in the review request
+        if appt3_payment:
+            print(f"\n✅ FOUND TARGET PAYMENT:")
+            print(f"   Appointment ID: appt3")
+            print(f"   Montant: {appt3_payment.get('montant')}")
+            print(f"   Expected: 300")
+            print(f"   Statut: {appt3_payment.get('statut')}")
+            
+            if appt3_payment.get('montant') == 300.0:
+                print("   ✅ Montant is correctly set to 300")
+            else:
+                print("   ❌ Montant is NOT set to 300 as expected")
+                
+            if appt3_payment.get('statut') == 'paye':
+                print("   ✅ Statut is correctly set to 'paye'")
+            else:
+                print("   ❌ Statut is NOT set to 'paye'")
+        else:
+            print(f"\n❌ TARGET PAYMENT NOT FOUND:")
+            print(f"   Expected payment with appointment_id='appt3' not found")
+        
+        # Verify payment records have matching appointment_id values
+        appointment_ids = [p.get('appointment_id') for p in payments if p.get('appointment_id')]
+        print(f"\nPayment appointment_ids found: {appointment_ids}")
+        
+        return appt3_payment
+    
+    def test_data_linkage_testing(self):
+        """Test data linkage between consultations and payments via appointment_id"""
+        print("\n=== DATA LINKAGE TESTING ===")
+        
+        # Get all consultations
+        response = requests.get(f"{self.base_url}/api/consultations")
+        self.assertEqual(response.status_code, 200)
+        consultations = response.json()
+        
+        # Get all payments
+        response = requests.get(f"{self.base_url}/api/payments")
+        self.assertEqual(response.status_code, 200)
+        payments = response.json()
+        
+        print(f"Total consultations: {len(consultations)}")
+        print(f"Total payments: {len(payments)}")
+        
+        # Create lookup dictionaries
+        consultations_by_appt_id = {c.get('appointment_id'): c for c in consultations if c.get('appointment_id')}
+        payments_by_appt_id = {p.get('appointment_id'): p for p in payments if p.get('appointment_id')}
+        
+        print(f"Consultations with appointment_id: {len(consultations_by_appt_id)}")
+        print(f"Payments with appointment_id: {len(payments_by_appt_id)}")
+        
+        # Test linkage for visite consultations
+        visite_consultations = [c for c in consultations if c.get('type_rdv') == 'visite']
+        print(f"Visite consultations: {len(visite_consultations)}")
+        
+        linked_visite_consultations = 0
+        
+        for consultation in visite_consultations:
+            appointment_id = consultation.get('appointment_id')
+            print(f"\nVisite consultation:")
+            print(f"  Consultation ID: {consultation.get('id')}")
+            print(f"  Appointment ID: {appointment_id}")
+            print(f"  Date: {consultation.get('date')}")
+            
+            # Check if there's a corresponding payment
+            if appointment_id in payments_by_appt_id:
+                payment = payments_by_appt_id[appointment_id]
+                linked_visite_consultations += 1
+                print(f"  ✅ LINKED PAYMENT FOUND:")
+                print(f"     Payment ID: {payment.get('id')}")
+                print(f"     Montant: {payment.get('montant')}")
+                print(f"     Statut: {payment.get('statut')}")
+            else:
+                print(f"  ❌ NO LINKED PAYMENT FOUND")
+        
+        print(f"\nLinkage Summary:")
+        print(f"  Visite consultations with linked payments: {linked_visite_consultations}/{len(visite_consultations)}")
+        
+        # Specifically test the appt3 linkage
+        if 'appt3' in consultations_by_appt_id and 'appt3' in payments_by_appt_id:
+            consultation = consultations_by_appt_id['appt3']
+            payment = payments_by_appt_id['appt3']
+            
+            print(f"\n✅ APPT3 LINKAGE VERIFIED:")
+            print(f"   Consultation type_rdv: {consultation.get('type_rdv')}")
+            print(f"   Payment montant: {payment.get('montant')}")
+            print(f"   Payment statut: {payment.get('statut')}")
+            
+            if consultation.get('type_rdv') == 'visite' and payment.get('montant') == 300.0:
+                print("   ✅ Perfect linkage for payment amount display!")
+            else:
+                print("   ❌ Linkage issues detected")
+        else:
+            print(f"\n❌ APPT3 LINKAGE INCOMPLETE:")
+            print(f"   Consultation exists: {'appt3' in consultations_by_appt_id}")
+            print(f"   Payment exists: {'appt3' in payments_by_appt_id}")
+        
+        return linked_visite_consultations, len(visite_consultations)
+    
+    def test_consultation_crud_endpoints(self):
+        """Test CRUD operations for consultations with type_rdv field handling"""
+        print("\n=== CONSULTATION CRUD ENDPOINTS TESTING ===")
+        
+        # Get patients and appointments for testing
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients = response.json()["patients"]
+        
+        response = requests.get(f"{self.base_url}/api/appointments/today")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        
+        if not patients or not appointments:
+            print("Skipping CRUD test - no patients or appointments available")
+            return
+        
+        patient_id = patients[0]["id"]
+        appointment_id = appointments[0]["id"]
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Test CREATE consultation with type_rdv field
+        print("\n--- Testing CREATE consultation ---")
+        new_consultation = {
+            "patient_id": patient_id,
+            "appointment_id": appointment_id,
+            "date": today,
+            "type_rdv": "visite",  # Explicitly set type_rdv
+            "duree": 25,
+            "poids": 13.0,
+            "taille": 87.0,
+            "pc": 48.0,
+            "observations": "Test consultation for payment display",
+            "traitement": "Test treatment",
+            "bilan": "Test results"
+        }
+        
+        response = requests.post(f"{self.base_url}/api/consultations", json=new_consultation)
+        self.assertEqual(response.status_code, 200)
+        create_data = response.json()
+        consultation_id = create_data["consultation_id"]
+        print(f"✅ Created consultation ID: {consultation_id}")
+        
+        # Test READ consultation
+        print("\n--- Testing READ consultation ---")
+        response = requests.get(f"{self.base_url}/api/consultations/patient/{patient_id}")
+        self.assertEqual(response.status_code, 200)
+        consultations = response.json()
+        
+        created_consultation = None
+        for consultation in consultations:
+            if consultation.get('id') == consultation_id:
+                created_consultation = consultation
+                break
+        
+        self.assertIsNotNone(created_consultation, "Created consultation not found")
+        print(f"✅ Found consultation with type_rdv: {created_consultation.get('type_rdv')}")
+        self.assertEqual(created_consultation.get('type_rdv'), 'visite')
+        
+        # Test UPDATE consultation type_rdv field
+        print("\n--- Testing UPDATE consultation ---")
+        update_data = {
+            "type_rdv": "controle",  # Change from visite to controle
+            "observations": "Updated observation - changed to controle"
+        }
+        
+        response = requests.put(f"{self.base_url}/api/consultations/{consultation_id}", json=update_data)
+        self.assertEqual(response.status_code, 200)
+        print("✅ Updated consultation type_rdv to controle")
+        
+        # Verify the update
+        response = requests.get(f"{self.base_url}/api/consultations/patient/{patient_id}")
+        self.assertEqual(response.status_code, 200)
+        consultations = response.json()
+        
+        updated_consultation = None
+        for consultation in consultations:
+            if consultation.get('id') == consultation_id:
+                updated_consultation = consultation
+                break
+        
+        self.assertIsNotNone(updated_consultation, "Updated consultation not found")
+        print(f"✅ Verified updated type_rdv: {updated_consultation.get('type_rdv')}")
+        self.assertEqual(updated_consultation.get('type_rdv'), 'controle')
+        
+        # Test DELETE consultation
+        print("\n--- Testing DELETE consultation ---")
+        response = requests.delete(f"{self.base_url}/api/consultations/{consultation_id}")
+        self.assertEqual(response.status_code, 200)
+        print("✅ Deleted consultation successfully")
+        
+        # Verify deletion
+        response = requests.get(f"{self.base_url}/api/consultations/patient/{patient_id}")
+        self.assertEqual(response.status_code, 200)
+        consultations = response.json()
+        
+        deleted_consultation = None
+        for consultation in consultations:
+            if consultation.get('id') == consultation_id:
+                deleted_consultation = consultation
+                break
+        
+        self.assertIsNone(deleted_consultation, "Consultation was not properly deleted")
+        print("✅ Verified consultation deletion")
+    
+    def test_payment_amount_display_comprehensive(self):
+        """Comprehensive test of payment amount display functionality"""
+        print("\n=== COMPREHENSIVE PAYMENT AMOUNT DISPLAY TEST ===")
+        
+        # Run all sub-tests and collect results
+        print("Running consultation data verification...")
+        appt3_consultation = self.test_consultation_data_verification()
+        
+        print("\nRunning payment data verification...")
+        appt3_payment = self.test_payment_data_verification()
+        
+        print("\nRunning data linkage testing...")
+        linked_count, total_visite = self.test_data_linkage_testing()
+        
+        print("\nRunning CRUD endpoints testing...")
+        self.test_consultation_crud_endpoints()
+        
+        # Final assessment
+        print("\n=== FINAL ASSESSMENT ===")
+        
+        issues_found = []
+        
+        # Check appt3 consultation
+        if not appt3_consultation:
+            issues_found.append("Target consultation (appointment_id=appt3) not found")
+        elif appt3_consultation.get('type_rdv') != 'visite':
+            issues_found.append(f"Target consultation type_rdv is '{appt3_consultation.get('type_rdv')}', expected 'visite'")
+        
+        # Check appt3 payment
+        if not appt3_payment:
+            issues_found.append("Target payment (appointment_id=appt3) not found")
+        elif appt3_payment.get('montant') != 300.0:
+            issues_found.append(f"Target payment montant is {appt3_payment.get('montant')}, expected 300")
+        elif appt3_payment.get('statut') != 'paye':
+            issues_found.append(f"Target payment statut is '{appt3_payment.get('statut')}', expected 'paye'")
+        
+        # Check data linkage
+        if linked_count == 0 and total_visite > 0:
+            issues_found.append("No visite consultations have linked payment records")
+        
+        if issues_found:
+            print("❌ ISSUES FOUND:")
+            for issue in issues_found:
+                print(f"   - {issue}")
+        else:
+            print("✅ ALL TESTS PASSED - Payment amount display functionality ready!")
+        
+        return len(issues_found) == 0
+
 if __name__ == "__main__":
     unittest.main()
