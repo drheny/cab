@@ -14,8 +14,9 @@ class CabinetMedicalAPITest(unittest.TestCase):
         backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://7f0fc308-b01e-4d0d-a7a9-0ac9925617bd.preview.emergentagent.com')
         self.base_url = backend_url
         print(f"Testing backend at: {self.base_url}")
-        # Initialize demo data before running tests
-        self.init_demo_data()
+        # Initialize demo data before running tests (skip for payment display tests)
+        if not hasattr(self, '_skip_demo_init'):
+            self.init_demo_data()
     
     def init_demo_data(self):
         """Initialize demo data for testing"""
