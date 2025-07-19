@@ -32,6 +32,8 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import AppointmentModal from './AppointmentModal';
 
+import PaymentModal from './PaymentModal';
+
 const Calendar = ({ user }) => {
   const location = useLocation();
   const navigate = useNavigate();
