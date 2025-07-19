@@ -252,11 +252,17 @@ const Consultation = ({ user }) => {
       setIsRunning(false);
       
       const consultationPayload = {
-        ...consultationData,
+        patient_id: consultationData.patient_id,
+        appointment_id: consultationData.appointment_id || `consultation_${Date.now()}`, // Generate ID if not from appointment
+        date: consultationData.date,
         duree: Math.floor(timer / 60), // Convertir en minutes
+        poids: parseFloat(consultationData.poids) || 0,
+        taille: parseFloat(consultationData.taille) || 0,
+        pc: parseFloat(consultationData.pc) || 0,
         observations: consultationData.observation_medicale,
+        traitement: consultationData.traitement,
         bilan: consultationData.bilans,
-        relance_date: consultationData.relance_telephonique ? consultationData.date_relance : null
+        relance_date: consultationData.relance_telephonique ? consultationData.date_relance : ""
       };
 
       if (consultationModal.mode === 'create') {
