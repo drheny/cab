@@ -442,6 +442,17 @@ const Calendar = ({ user }) => {
     }
   }, [API_BASE_URL, fetchData]);
 
+  // Gestion des paiements avec nouveau modal
+  const handleOpenPaymentModal = useCallback((appointment) => {
+    setSelectedPaymentAppointment(appointment);
+    setShowPaymentModal(true);
+  }, []);
+
+  const handleClosePaymentModal = useCallback(() => {
+    setShowPaymentModal(false);
+    setSelectedPaymentAppointment(null);
+  }, []);
+
   // Gestion des paiements
   const handlePaymentUpdate = useCallback(async (appointmentId, paymentData) => {
     setAppointments(prevAppointments =>
