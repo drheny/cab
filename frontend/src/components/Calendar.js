@@ -1614,6 +1614,7 @@ const WorkflowSection = ({
   onDelete, 
   onViewPatient,
   onPatientReorder,
+  onOpenPaymentModal,
   isCompleted = false 
 }) => {
   const getSectionColor = () => {
