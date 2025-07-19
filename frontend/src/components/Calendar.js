@@ -366,11 +366,15 @@ const Calendar = ({ user }) => {
       // Arrêter le chronomètre
       setIsRunning(false);
       
+      // Obtenir le type de RDV depuis l'appointment
+      const appointment = appointments.find(a => a.id === consultationModal.appointmentId);
+      
       // Préparer les données
       const consultationPayload = {
-        patient_id: appointments.find(a => a.id === consultationModal.appointmentId)?.patient_id,
+        patient_id: appointment?.patient_id,
         appointment_id: consultationModal.appointmentId,
         date: new Date().toISOString().split('T')[0],
+        type_rdv: appointment?.type_rdv || 'visite', // Utiliser le type de l'appointment
         duree: Math.floor(timer / 60), // Convertir en minutes
         poids: parseFloat(consultationData.poids) || 0,
         taille: parseFloat(consultationData.taille) || 0,
