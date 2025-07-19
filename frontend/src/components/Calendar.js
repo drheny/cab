@@ -368,11 +368,17 @@ const Calendar = ({ user }) => {
       
       // Préparer les données
       const consultationPayload = {
-        ...consultationData,
-        duree: Math.floor(timer / 60), // Convertir en minutes
         patient_id: appointments.find(a => a.id === consultationModal.appointmentId)?.patient_id,
         appointment_id: consultationModal.appointmentId,
-        date: new Date().toISOString().split('T')[0]
+        date: new Date().toISOString().split('T')[0],
+        duree: Math.floor(timer / 60), // Convertir en minutes
+        poids: parseFloat(consultationData.poids) || 0,
+        taille: parseFloat(consultationData.taille) || 0,
+        pc: parseFloat(consultationData.pc) || 0,
+        observations: consultationData.observation_medicale,
+        traitement: consultationData.traitement,
+        bilan: consultationData.bilans,
+        relance_date: consultationData.relance_telephonique ? consultationData.date_relance : ""
       };
 
       // Sauvegarder la consultation
