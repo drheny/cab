@@ -833,17 +833,32 @@ const Consultation = ({ user }) => {
                     sauvegarderConsultation();
                   }}>
                     <div className="space-y-6">
-                      {/* Date de consultation */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Date de consultation
-                        </label>
-                        <input
-                          type="date"
-                          value={consultationData.date}
-                          onChange={(e) => setConsultationData({...consultationData, date: e.target.value})}
-                          className="input-field"
-                        />
+                      {/* Date et type de consultation */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Date de consultation
+                          </label>
+                          <input
+                            type="date"
+                            value={consultationData.date}
+                            onChange={(e) => setConsultationData({...consultationData, date: e.target.value})}
+                            className="input-field"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Type de consultation
+                          </label>
+                          <select
+                            value={consultationData.type_rdv}
+                            onChange={(e) => setConsultationData({...consultationData, type_rdv: e.target.value})}
+                            className="input-field"
+                          >
+                            <option value="visite">Visite</option>
+                            <option value="controle">Contrôle</option>
+                          </select>
+                        </div>
                       </div>
 
                       {/* Mesures */}
