@@ -142,8 +142,33 @@ Comprehensive payment amount display testing completed with detailed debug analy
 **RECOMMENDATION FOR MAIN AGENT:**
 The payment amount display code is working correctly. The issue is data consistency - payment records need to be created with matching appointment_id values, or the appointment_id generation/linkage logic needs to be standardized between consultations and payments systems.
 
+**Testing Agent → Main Agent (2025-07-19 - Payment Amount Display Debug Testing):**
+Comprehensive payment amount display testing completed with detailed debug analysis. The functionality is working correctly but reveals a data linkage issue:
+
+✅ **DEBUG FUNCTIONALITY CONFIRMED:**
+- All debug console.log statements executing correctly
+- Payment API calls successful (200 response)  
+- Payment search logic working properly
+- UI display logic correct and would show amounts if data existed
+
+✅ **TECHNICAL IMPLEMENTATION VERIFIED:**
+- handleViewConsultation function correctly calls getPaymentAmount for visite consultations
+- getPaymentAmount function successfully calls /api/payments endpoint
+- Payment filtering logic searches for matching appointment_id and statut='paye'
+- Modal template correctly displays paymentAmount in (XXX DH) format when available
+
+❌ **ROOT CAUSE IDENTIFIED:**
+- Payment database does not contain records with appointment_id matching consultation appointment_ids
+- Consultations use appointment_id format "consultation_TIMESTAMP"
+- Payment records may use different appointment_id format or values
+- Data linkage between consultations and payments is broken
+
+**RECOMMENDATION FOR MAIN AGENT:**
+The payment amount display code is working correctly. The issue is data consistency - payment records need to be created with matching appointment_id values, or the appointment_id generation/linkage logic needs to be standardized between consultations and payments systems.
+
 **PAYMENT AMOUNT DISPLAY: CODE IMPLEMENTATION WORKING CORRECTLY - DATA LINKAGE ISSUE IDENTIFIED**
 The frontend payment display functionality is implemented correctly and all debug features are working. The issue is that payment records do not exist with matching appointment_id values to link with consultations. This is a data consistency issue rather than a code implementation problem.
+
 
 ### Frontend Drag and Drop Testing ✅ COMPLETED
 **Status:** FRONTEND DRAG AND DROP TESTING COMPLETED - System Limitations Identified
