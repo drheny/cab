@@ -1460,16 +1460,23 @@ const WeekView = ({ weekData, onStatusUpdate, onRoomAssignment, onEdit, onDelete
                                   {apt.salle === 'salle1' ? 'S1' : 'S2'}
                                 </span>
                               )}
-                              {/* Badge de paiement */}
-                              <span className={`px-1 py-0.5 rounded text-xs ${
-                                apt.type_rdv === 'controle' 
-                                  ? 'bg-green-200 text-green-800' 
-                                  : apt.paye 
+                              {/* Badge de paiement - Cliquable */}
+                              <button 
+                                className={`px-1 py-0.5 rounded text-xs cursor-pointer hover:opacity-80 transition-opacity ${
+                                  apt.type_rdv === 'controle' 
                                     ? 'bg-green-200 text-green-800' 
-                                    : 'bg-red-200 text-red-800'
-                              }`}>
+                                    : apt.paye 
+                                      ? 'bg-green-200 text-green-800' 
+                                      : 'bg-red-200 text-red-800'
+                                }`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenPaymentModal(apt);
+                                }}
+                                title="Cliquer pour gérer le paiement"
+                              >
                                 {apt.type_rdv === 'controle' ? 'Gratuit' : apt.paye ? 'Payé' : 'Non Payé'}
-                              </span>
+                              </button>
                             </div>
                           </div>
                         ))}
