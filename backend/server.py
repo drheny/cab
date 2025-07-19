@@ -1262,12 +1262,133 @@ async def get_payments():
     payments = list(payments_collection.find({}, {"_id": 0}))
     return payments
 
-@app.post("/api/payments")
-async def create_payment(payment: Payment):
-    """Create new payment"""
-    payment_dict = payment.dict()
-    payments_collection.insert_one(payment_dict)
-    return {"message": "Payment created successfully", "payment_id": payment.id}
+@app.get("/api/payments/stats")
+async def get_payments_stats(
+    date_debut: Optional[str] = Query(None),
+    date_fin: Optional[str] = Query(None)
+):
+    """Get payment statistics for billing dashboard"""
+    try:
+        # Default to current month if no dates provided
+        if not date_debut or not date_fin:
+            today = datetime.now()
+            date_debut = today.replace(day=1).strftime("%Y-%m-%d")
+            date_fin = today.strftime("%Y-%m-%d")
+        
+        # Build query
+        query = {
+            "date": {"$gte": date_debut, "$lte": date_fin},
+            "statut": "paye"
+        }
+        
+        payments = list(payments_collection.find(query, {"_id": 0}))
+        
+        # Calculate statistics
+        total_montant = sum(p.get("montant", 0) for p in payments)
+        nb_paiements = len(payments)
+        
+        # Group by payment method
+        by_method = {}
+        for payment in payments:
+            method = payment.get("type_paiement", "espece")
+            if method not in by_method:
+                by_method[method] = {"count": 0, "total": 0}
+            by_method[method]["count"] += 1
+            by_method[method]["total"] += payment.get("montant", 0)
+        
+        # Count insurance payments
+        assures = len([p for p in payments if p.get("assure", False)])
+        non_assures = nb_paiements - assures
+        
+        # Today's stats
+        today_str = datetime.now().strftime("%Y-%m-%d")
+        today_payments = [p for p in payments if p.get("date") == today_str]
+        ca_jour = sum(p.get("montant", 0) for p in today_payments)
+        
+        return {
+            "periode": {
+                "debut": date_debut,
+                "fin": date_fin
+            },
+            "total_montant": total_montant,
+            "nb_paiements": nb_paiements,
+            "ca_jour": ca_jour,
+            "by_method": by_method,
+            "assurance": {
+                "assures": assures,
+                "non_assures": non_assures
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error calculating payment stats: {str(e)}")
+
+@app.get("/api/payments/unpaid")
+async def get_unpaid_appointments():
+    """Get list of unpaid appointments (visites only)"""
+    try:
+        # Get unpaid appointments that are visites
+        unpaid_appointments = list(appointments_collection.find({
+            "type_rdv": "visite",
+            "paye": False,
+            "statut": {"$in": ["termine", "absent", "retard"]}  # Completed appointments only
+        }, {"_id": 0}))
+        
+        # Add patient info for each appointment
+        for appointment in unpaid_appointments:
+            patient = patients_collection.find_one({"id": appointment["patient_id"]}, {"_id": 0})
+            if patient:
+                appointment["patient"] = {
+                    "nom": patient.get("nom", ""),
+                    "prenom": patient.get("prenom", ""),
+                    "telephone": patient.get("numero_whatsapp", "")
+                }
+        
+        return unpaid_appointments
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching unpaid appointments: {str(e)}")
+
+@app.put("/api/payments/{payment_id}")
+async def update_payment(payment_id: str, payment_data: PaymentUpdate):
+    """Update existing payment record"""
+    try:
+        # Check if payment exists
+        existing_payment = payments_collection.find_one({"id": payment_id})
+        if not existing_payment:
+            raise HTTPException(status_code=404, detail="Payment not found")
+        
+        # Prepare update data
+        update_data = {
+            "montant": payment_data.montant,
+            "type_paiement": payment_data.type_paiement,
+            "assure": payment_data.assure,
+            "taux_remboursement": payment_data.taux_remboursement,
+            "notes": payment_data.notes,
+            "updated_at": datetime.now()
+        }
+        
+        # Update payment record
+        result = payments_collection.update_one(
+            {"id": payment_id},
+            {"$set": update_data}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Failed to update payment")
+        
+        # Also update appointment payment status
+        appointments_collection.update_one(
+            {"id": existing_payment["appointment_id"]},
+            {"$set": {"paye": payment_data.paye, "assure": payment_data.assure}}
+        )
+        
+        return {"message": "Payment updated successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating payment: {str(e)}")
 
 
 @app.put("/api/rdv/{rdv_id}/priority")
