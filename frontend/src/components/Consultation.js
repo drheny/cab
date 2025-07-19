@@ -258,6 +258,7 @@ const Consultation = ({ user }) => {
         patient_id: consultationData.patient_id,
         appointment_id: consultationData.appointment_id || `consultation_${Date.now()}`, // Generate ID if not from appointment
         date: consultationData.date,
+        type_rdv: consultationData.type_rdv,
         duree: Math.floor(timer / 60), // Convertir en minutes
         poids: parseFloat(consultationData.poids) || 0,
         taille: parseFloat(consultationData.taille) || 0,
