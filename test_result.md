@@ -858,18 +858,20 @@ The consultation modal integration meets all requirements specified in the revie
 ### Consultations Page Patient-Centric Management Testing ✅ COMPLETED
 **Status:** ALL CONSULTATIONS PAGE TESTS PASSED - Complete Patient-Centric Consultation Management Fully Functional
 
-### Payment Amount Display in Consultation View Modal Testing ❌ CRITICAL ISSUE FOUND
-**Status:** PAYMENT AMOUNT DISPLAY ISSUE CONFIRMED - Payment Amounts NOT Showing for "Visite" Consultations
+### Payment Amount Display in Consultation View Modal Testing ❌ CRITICAL ISSUE CONFIRMED
+**Status:** PAYMENT AMOUNT DISPLAY ISSUE CONFIRMED - URL Configuration Fix NOT Applied and Payment Amounts NOT Showing
 
 **Test Results Summary (2025-01-19 - Payment Amount Display in Consultation View Modal Testing):**
 ❌ **CRITICAL ISSUE CONFIRMED: Payment amounts NOT displayed for "Visite" consultations in view modal**
+❌ **URL CONFIGURATION FIX NOT APPLIED: API calls still use external preview URL instead of relative '/api/payments'**
 ✅ **Navigation to Consultations Page** - /consultation page loads correctly with patient search functionality
 ✅ **Patient Selection Workflow** - Patient search and selection working correctly
+✅ **Consultation Creation** - Successfully created test "Visite" consultation for testing
 ✅ **Consultation View Modal** - Modal opens correctly when clicking "Eye" (view) icon
 ✅ **Consultation Type Display** - "Visite" shows red badge, "Contrôle" shows green badge correctly
-✅ **Payment API Integration** - GET /api/payments endpoint working and being called during consultation view
-✅ **Payment Data Availability** - Payment data exists in system (300 TND payment found for appointment appt3)
+✅ **Payment API Integration** - GET /api/payments endpoint being called during "Visite" consultation view
 ✅ **Contrôle Consultation Behavior** - Correctly does NOT show payment amounts (as expected)
+❌ **CRITICAL FAILURE: URL Configuration** - API calls use external URL: `https://cbd199ac-e82c-4b53-a71c-648951cb9dec.preview.emergentagent.com/api/payments`
 ❌ **CRITICAL FAILURE: Visite Consultation Payment Display** - Payment amounts not appearing in "Type & Date" section despite API calls
 
 **Detailed Test Results:**
