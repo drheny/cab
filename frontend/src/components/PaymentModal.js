@@ -30,15 +30,14 @@ const PaymentModal = ({
   // Initialize payment data when modal opens
   useEffect(() => {
     if (isOpen && appointment) {
-      // Set default amount based on appointment type
-      const defaultAmount = appointment.type_rdv === 'visite' ? 300 : 0;
+      // Set default amount based on appointment type - 65 TND par défaut
+      const defaultAmount = appointment.type_rdv === 'visite' ? 65 : 0;
       
       setPaymentData({
         paye: appointment.paye || false,
         montant: appointment.paye ? (appointment.montant_paye || defaultAmount) : defaultAmount,
-        type_paiement: appointment.type_rdv === 'controle' ? 'gratuit' : 'espece',
+        type_paiement: 'espece', // Toujours espèces
         assure: appointment.assure || false,
-        taux_remboursement: 0,
         notes: ''
       });
     }
