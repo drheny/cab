@@ -1481,7 +1481,7 @@ const WeekView = ({
                                 }`}
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleOpenPaymentModal(apt);
+                                  onOpenPaymentModal(apt);
                                 }}
                                 title="Cliquer pour gérer le paiement"
                               >
