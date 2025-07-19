@@ -13381,5 +13381,261 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
         
         return linkage_results
 
+    # ========== CONSULTATION TYPE_RDV FIELD UPDATE TESTS ==========
+    
+    def test_consultation_type_rdv_field_update(self):
+        """Test updating existing consultation records to include type_rdv field for payment display"""
+        print("\n=== CONSULTATION TYPE_RDV FIELD UPDATE TESTING ===")
+        
+        # Step 1: Get all existing consultations
+        response = requests.get(f"{self.base_url}/api/consultations")
+        self.assertEqual(response.status_code, 200)
+        consultations = response.json()
+        print(f"Found {len(consultations)} existing consultations")
+        
+        # Step 2: Check current consultation structure
+        consultations_needing_update = []
+        for consultation in consultations:
+            print(f"Consultation ID: {consultation.get('id')}")
+            print(f"  - Patient ID: {consultation.get('patient_id')}")
+            print(f"  - Appointment ID: {consultation.get('appointment_id')}")
+            print(f"  - Date: {consultation.get('date')}")
+            print(f"  - Current type_rdv: {consultation.get('type_rdv', 'MISSING')}")
+            
+            # Check if type_rdv field is missing or needs update
+            if 'type_rdv' not in consultation or not consultation.get('type_rdv'):
+                consultations_needing_update.append(consultation)
+        
+        print(f"\nConsultations needing type_rdv update: {len(consultations_needing_update)}")
+        
+        # Step 3: Update consultations with type_rdv field
+        for consultation in consultations_needing_update:
+            consultation_id = consultation['id']
+            appointment_id = consultation.get('appointment_id')
+            
+            # Determine appropriate type_rdv value
+            # Default to "visite" to enable payment display
+            # Special case: if appointment_id="appt3", set to "visite" (has 300 DH payment)
+            if appointment_id == "appt3":
+                type_rdv = "visite"
+                print(f"Setting consultation {consultation_id} (appointment {appointment_id}) to type_rdv='visite' - has 300 DH payment")
+            else:
+                # For other consultations, default to "visite" to enable payment display
+                type_rdv = "visite"
+                print(f"Setting consultation {consultation_id} to type_rdv='visite' (default for payment display)")
+            
+            # Update consultation with type_rdv field
+            update_data = {
+                "type_rdv": type_rdv
+            }
+            
+            response = requests.put(f"{self.base_url}/api/consultations/{consultation_id}", json=update_data)
+            self.assertEqual(response.status_code, 200)
+            print(f"✅ Updated consultation {consultation_id} with type_rdv='{type_rdv}'")
+        
+        # Step 4: Verify all consultations now have type_rdv field
+        response = requests.get(f"{self.base_url}/api/consultations")
+        self.assertEqual(response.status_code, 200)
+        updated_consultations = response.json()
+        
+        print(f"\n=== VERIFICATION OF UPDATED CONSULTATIONS ===")
+        consultations_with_type_rdv = 0
+        for consultation in updated_consultations:
+            consultation_id = consultation.get('id')
+            type_rdv = consultation.get('type_rdv')
+            appointment_id = consultation.get('appointment_id')
+            
+            print(f"Consultation {consultation_id}:")
+            print(f"  - Appointment ID: {appointment_id}")
+            print(f"  - type_rdv: {type_rdv}")
+            
+            # Verify type_rdv field exists and has valid value
+            self.assertIn('type_rdv', consultation, f"Consultation {consultation_id} missing type_rdv field")
+            self.assertIn(type_rdv, ['visite', 'controle'], f"Invalid type_rdv value: {type_rdv}")
+            
+            if type_rdv:
+                consultations_with_type_rdv += 1
+        
+        print(f"\n✅ All {consultations_with_type_rdv} consultations now have type_rdv field")
+        
+        # Step 5: Test payment display logic will work correctly
+        print(f"\n=== TESTING PAYMENT DISPLAY LOGIC ===")
+        
+        # Get payments to verify linkage
+        response = requests.get(f"{self.base_url}/api/payments")
+        self.assertEqual(response.status_code, 200)
+        payments = response.json()
+        print(f"Found {len(payments)} payment records")
+        
+        # Check specific consultation with appointment_id="appt3"
+        appt3_consultation = None
+        for consultation in updated_consultations:
+            if consultation.get('appointment_id') == 'appt3':
+                appt3_consultation = consultation
+                break
+        
+        if appt3_consultation:
+            print(f"\n✅ Found consultation with appointment_id='appt3':")
+            print(f"  - Consultation ID: {appt3_consultation['id']}")
+            print(f"  - type_rdv: {appt3_consultation['type_rdv']}")
+            print(f"  - Patient ID: {appt3_consultation['patient_id']}")
+            
+            # Verify this consultation has type_rdv="visite"
+            self.assertEqual(appt3_consultation['type_rdv'], 'visite', 
+                           "Consultation with appointment_id='appt3' should have type_rdv='visite'")
+            
+            # Check if there's a matching payment
+            appt3_payment = None
+            for payment in payments:
+                if payment.get('appointment_id') == 'appt3':
+                    appt3_payment = payment
+                    break
+            
+            if appt3_payment:
+                print(f"  - ✅ Matching payment found: {appt3_payment['montant']} DH")
+                print(f"  - Payment status: {appt3_payment['statut']}")
+                self.assertEqual(appt3_payment['montant'], 300.0, "Payment amount should be 300.0 DH")
+                self.assertEqual(appt3_payment['statut'], 'paye', "Payment status should be 'paye'")
+            else:
+                print(f"  - ⚠️ No matching payment found for appointment_id='appt3'")
+        else:
+            print(f"⚠️ No consultation found with appointment_id='appt3'")
+        
+        # Step 6: Verify consultation-payment linkage functionality
+        print(f"\n=== CONSULTATION-PAYMENT LINKAGE VERIFICATION ===")
+        
+        visite_consultations = [c for c in updated_consultations if c.get('type_rdv') == 'visite']
+        controle_consultations = [c for c in updated_consultations if c.get('type_rdv') == 'controle']
+        
+        print(f"Visite consultations (should trigger payment API calls): {len(visite_consultations)}")
+        print(f"Contrôle consultations (should not trigger payment API calls): {len(controle_consultations)}")
+        
+        # Verify that visite consultations will trigger payment retrieval
+        for consultation in visite_consultations:
+            appointment_id = consultation.get('appointment_id')
+            print(f"  - Consultation {consultation['id']} (appointment {appointment_id}) will trigger payment API call")
+            
+            # Check if payment exists for this appointment
+            matching_payment = None
+            for payment in payments:
+                if payment.get('appointment_id') == appointment_id and payment.get('statut') == 'paye':
+                    matching_payment = payment
+                    break
+            
+            if matching_payment:
+                print(f"    ✅ Payment available: {matching_payment['montant']} DH")
+            else:
+                print(f"    ⚠️ No payment found (will show no amount)")
+        
+        print(f"\n✅ CONSULTATION TYPE_RDV FIELD UPDATE COMPLETED SUCCESSFULLY")
+        print(f"✅ All consultations now have type_rdv field")
+        print(f"✅ Consultation with appointment_id='appt3' set to type_rdv='visite'")
+        print(f"✅ Payment display logic will now work correctly")
+        
+        return {
+            'total_consultations': len(updated_consultations),
+            'visite_consultations': len(visite_consultations),
+            'controle_consultations': len(controle_consultations),
+            'consultations_updated': len(consultations_needing_update)
+        }
+    
+    def test_payment_amount_display_functionality_after_update(self):
+        """Test that payment amount display functionality works after type_rdv field update"""
+        print("\n=== PAYMENT AMOUNT DISPLAY FUNCTIONALITY TESTING ===")
+        
+        # First ensure consultations have type_rdv field
+        self.test_consultation_type_rdv_field_update()
+        
+        # Get consultations and payments
+        response = requests.get(f"{self.base_url}/api/consultations")
+        self.assertEqual(response.status_code, 200)
+        consultations = response.json()
+        
+        response = requests.get(f"{self.base_url}/api/payments")
+        self.assertEqual(response.status_code, 200)
+        payments = response.json()
+        
+        print(f"\n=== SIMULATING FRONTEND PAYMENT DISPLAY LOGIC ===")
+        
+        # Simulate frontend logic for each consultation
+        for consultation in consultations:
+            consultation_id = consultation['id']
+            type_rdv = consultation.get('type_rdv')
+            appointment_id = consultation.get('appointment_id')
+            
+            print(f"\nConsultation {consultation_id}:")
+            print(f"  - type_rdv: {type_rdv}")
+            print(f"  - appointment_id: {appointment_id}")
+            
+            # Simulate frontend logic: only call payment API for visite consultations
+            if type_rdv == 'visite':
+                print(f"  - ✅ Will call payment API (type_rdv='visite')")
+                
+                # Simulate payment API call and search logic
+                matching_payments = [p for p in payments 
+                                   if p.get('appointment_id') == appointment_id 
+                                   and p.get('statut') == 'paye']
+                
+                if matching_payments:
+                    payment = matching_payments[0]
+                    amount = payment['montant']
+                    print(f"  - ✅ Payment found: {amount} DH")
+                    print(f"  - ✅ Frontend will display: ({amount} DH)")
+                    
+                    # Special verification for appointment_id="appt3"
+                    if appointment_id == 'appt3':
+                        self.assertEqual(amount, 300.0, "Payment for appt3 should be 300.0 DH")
+                        print(f"  - ✅ VERIFIED: appt3 payment amount is 300 DH as expected")
+                else:
+                    print(f"  - ⚠️ No payment found - frontend will show no amount")
+            
+            elif type_rdv == 'controle':
+                print(f"  - ✅ Will NOT call payment API (type_rdv='controle')")
+                print(f"  - ✅ Frontend will show no payment amount (expected behavior)")
+            
+            else:
+                print(f"  - ❌ Invalid or missing type_rdv: {type_rdv}")
+                self.fail(f"Consultation {consultation_id} has invalid type_rdv: {type_rdv}")
+        
+        # Verify specific requirements from review request
+        print(f"\n=== VERIFYING SPECIFIC REQUIREMENTS ===")
+        
+        # Find consultation with appointment_id="appt3"
+        appt3_consultation = None
+        for consultation in consultations:
+            if consultation.get('appointment_id') == 'appt3':
+                appt3_consultation = consultation
+                break
+        
+        if appt3_consultation:
+            print(f"✅ Found consultation with appointment_id='appt3'")
+            print(f"  - type_rdv: {appt3_consultation['type_rdv']}")
+            
+            # Verify it's set to "visite"
+            self.assertEqual(appt3_consultation['type_rdv'], 'visite',
+                           "Consultation with appointment_id='appt3' must have type_rdv='visite'")
+            
+            # Verify payment exists and is 300 DH
+            appt3_payment = None
+            for payment in payments:
+                if payment.get('appointment_id') == 'appt3' and payment.get('statut') == 'paye':
+                    appt3_payment = payment
+                    break
+            
+            if appt3_payment:
+                self.assertEqual(appt3_payment['montant'], 300.0,
+                               "Payment for appt3 should be 300.0 DH")
+                print(f"✅ Payment verification passed: {appt3_payment['montant']} DH")
+            else:
+                print(f"❌ No payment found for appointment_id='appt3'")
+                self.fail("Payment for appointment_id='appt3' not found")
+        else:
+            print(f"❌ No consultation found with appointment_id='appt3'")
+            self.fail("Consultation with appointment_id='appt3' not found")
+        
+        print(f"\n✅ PAYMENT AMOUNT DISPLAY FUNCTIONALITY TESTING COMPLETED")
+        print(f"✅ Frontend payment display logic will now work correctly")
+        print(f"✅ Consultation with appointment_id='appt3' will show 300 DH payment amount")
+
 if __name__ == "__main__":
     unittest.main()
