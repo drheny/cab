@@ -881,12 +881,43 @@ The consultation modal integration meets all requirements specified in the revie
 - ✅ **Patient Selection**: Clicking search results properly selects patient and loads consultation history
 - ✅ **UI Components**: All page elements (search, patient banner, consultation list) render correctly
 
-**CONSULTATION VIEW MODAL FUNCTIONALITY: ✅ PARTIALLY WORKING**
+**CONSULTATION VIEW MODAL FUNCTIONALITY: ✅ WORKING WITH PAYMENT ISSUE**
 - ✅ **Modal Opening**: View modal opens correctly when clicking "Eye" icon on consultation cards
 - ✅ **Patient Information**: Modal displays correct patient name and consultation date
-- ✅ **Consultation Type Badges**: "Visite" displays with red badge (bg-red-100 text-red-800), "Contrôle" with green badge (bg-green-100 text-green-800)
+- ✅ **Consultation Type Badges**: "Visite" displays with red badge (bg-red-100 text-red-800) correctly
 - ✅ **Modal Structure**: All sections present (Mesures, Type & Date, Observations médicales, etc.)
-- ✅ **Modal Controls**: Close button and modal interactions working correctly
+- ✅ **Modal Controls**: Close button and modal functionality working properly
+
+**DEBUG LOGGING FUNCTIONALITY: ✅ FULLY WORKING**
+- ✅ **Debug Messages Captured**: Console shows "Debug: Fetching payment for appointment_id: consultation_1752939107597"
+- ✅ **Payment Retrieval Debug**: Console shows "Debug: Payment amount retrieved: null"
+- ✅ **ViewModal Data Debug**: Console shows complete consultation object with paymentAmount: null
+- ✅ **Debug Code Execution**: All debug console.log statements in handleViewConsultation function executing correctly
+
+**PAYMENT API INTEGRATION: ✅ WORKING BUT NO DATA**
+- ✅ **API Call Execution**: GET /api/payments endpoint successfully called (200 response)
+- ✅ **Network Request**: Request URL: https://cbd199ac-e82c-4b53-a71c-648951cb9dec.preview.emergentagent.com/api/payments
+- ✅ **API Response**: 200 status indicates successful API call
+- ✅ **Payment Search Logic**: Code correctly searches for payment with matching appointment_id and statut='paye'
+- ❌ **CRITICAL FINDING**: No payment records found with appointment_id "consultation_1752939107597"
+
+**PAYMENT AMOUNT DISPLAY LOGIC: ✅ CODE WORKING, ❌ NO DATA TO DISPLAY**
+- ✅ **Conditional Display**: Code correctly checks if consultation.type_rdv === 'visite' before fetching payment
+- ✅ **Payment Amount Integration**: paymentAmount correctly added to viewModal consultation object
+- ✅ **UI Rendering Logic**: Modal template correctly checks for paymentAmount and displays (XXX DH) format
+- ❌ **CRITICAL ISSUE**: No payment amount displayed because paymentAmount is null (no matching payment data)
+- ❌ **Root Cause**: Payment database does not contain records with matching appointment_id values
+
+**APPOINTMENT_ID ANALYSIS: ✅ IDENTIFIED MISMATCH ISSUE**
+- ✅ **Appointment ID Generation**: Consultation created with appointment_id: "consultation_1752939107597"
+- ✅ **Payment Search**: Code searches payments for appointment_id: "consultation_1752939107597"
+- ❌ **CRITICAL MISMATCH**: Payment records likely use different appointment_id format or values
+- ❌ **Data Linkage Issue**: Consultations and payments not properly linked via appointment_id field
+
+**CONTRÔLE CONSULTATION BEHAVIOR: ✅ WORKING AS EXPECTED**
+- ✅ **Conditional Logic**: Code correctly skips payment fetching for contrôle consultations
+- ✅ **No Payment Display**: Contrôle consultations correctly do not show payment amounts
+- ✅ **Type-Based Logic**: Payment display logic properly restricted to visite consultations only interactions working correctly
 
 **PAYMENT API INTEGRATION: ✅ WORKING BUT NOT DISPLAYING**
 - ✅ **API Accessibility**: GET /api/payments endpoint accessible and returning data
