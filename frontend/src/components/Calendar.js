@@ -907,6 +907,7 @@ const Calendar = ({ user }) => {
           onDelete={handleDeleteAppointment}
           onViewPatient={viewPatientDetails}
           onCreateAppointment={openModalWithDateTime}
+          onOpenPaymentModal={handleOpenPaymentModal}
           selectedDate={selectedDate}
         />
       )}
