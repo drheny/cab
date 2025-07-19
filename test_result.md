@@ -855,9 +855,73 @@ Comprehensive consultation modal integration testing completed successfully. All
 **CONSULTATION MODAL INTEGRATION: IMPLEMENTATION COMPLETE AND FULLY FUNCTIONAL**
 The consultation modal integration meets all requirements specified in the review request. The modal opens as an overlay within the Calendar page, provides complete consultation functionality, and maintains proper patient workflow management. The implementation is production-ready and provides an excellent user experience for medical consultations.
 
+### Consultations Page Backend Functionality Testing ✅ COMPLETED
+**Status:** CONSULTATION BACKEND TESTING COMPLETED - Critical Missing Endpoints Identified
+
+**Test Results Summary (2025-01-15 - Consultations Page Backend Functionality Testing):**
+✅ **GET /api/patients** - Patient search functionality working correctly with pagination and search
+✅ **GET /api/consultations/patient/{patient_id}** - Fetches consultations for specific patient (with minor validation issue)
+✅ **POST /api/consultations** - Create new consultation working correctly with full data validation
+❌ **PUT /api/consultations/{consultation_id}** - Update consultation endpoint NOT IMPLEMENTED
+❌ **DELETE /api/consultations/{consultation_id}** - Delete consultation endpoint NOT IMPLEMENTED
+✅ **Data Validation** - Consultation data structure and response format working correctly
+✅ **Workflow Integration** - Complete patient-centric consultation workflow functional
+
+**Detailed Test Results:**
+
+**PATIENT SEARCH FUNCTIONALITY: ✅ FULLY WORKING**
+- ✅ **GET /api/patients**: Returns paginated patient list with all required fields (nom, prenom, telephone, date_naissance)
+- ✅ **Search Functionality**: Search by name working correctly for patient selection
+- ✅ **Response Structure**: Proper pagination with patients array, total_count, page, limit, total_pages
+- ✅ **Patient Data**: All required fields present for consultation management workflow
+
+**PATIENT CONSULTATIONS RETRIEVAL: ✅ MOSTLY WORKING**
+- ✅ **GET /api/consultations/patient/{patient_id}**: Returns consultation list for specific patient
+- ✅ **Data Structure**: Consultations include all required fields (id, date, duree, observations, traitement, bilan)
+- ✅ **Response Format**: Proper array format with complete consultation data
+- ⚠️ **Minor Issue**: Non-existent patient returns 200 instead of 404 (validation could be improved)
+
+**CONSULTATION CREATION: ✅ FULLY WORKING**
+- ✅ **POST /api/consultations**: Creates new consultations with complete data validation
+- ✅ **Required Fields**: Accepts patient_id, appointment_id, date, measurements (poids, taille, pc)
+- ✅ **Medical Data**: Properly stores observations, traitement, bilans, relance_date, duree
+- ✅ **Data Persistence**: Created consultations immediately available in patient consultation list
+- ✅ **Response Format**: Returns consultation_id for frontend integration
+
+**CONSULTATION UPDATE: ❌ NOT IMPLEMENTED**
+- ❌ **PUT /api/consultations/{consultation_id}**: Endpoint returns 404 - NOT IMPLEMENTED
+- ❌ **Missing Functionality**: Cannot update existing consultation measurements or notes
+- ❌ **Critical Gap**: Edit consultation feature cannot work without this endpoint
+
+**CONSULTATION DELETE: ❌ NOT IMPLEMENTED**
+- ❌ **DELETE /api/consultations/{consultation_id}**: Endpoint returns 404 - NOT IMPLEMENTED
+- ❌ **Missing Functionality**: Cannot delete consultations from patient history
+- ❌ **Critical Gap**: Delete consultation feature cannot work without this endpoint
+
+**DATA VALIDATION AND RESPONSE FORMAT: ✅ COMPREHENSIVE**
+- ✅ **Field Validation**: All consultation fields properly validated and stored
+- ✅ **Data Types**: Correct handling of numeric fields (poids, taille, pc, duree)
+- ✅ **Response Structure**: Consistent JSON response format for frontend consumption
+- ✅ **Patient Integration**: Consultations properly linked to patients via patient_id
+
+**WORKFLOW INTEGRATION: ✅ FUNCTIONAL**
+- ✅ **Patient Search → Consultation History**: Complete workflow from patient search to consultation viewing
+- ✅ **Create New Consultation**: Full workflow for adding new consultations to patient records
+- ✅ **Data Consistency**: Patient consultation lists update immediately after creation
+- ✅ **Frontend Compatibility**: All response formats compatible with patient-centric consultation management
+
+**CRITICAL FINDINGS:**
+- 🔍 **2 Missing Endpoints**: PUT and DELETE consultation endpoints not implemented
+- 🔍 **Core Functionality Gap**: Edit and delete consultation features cannot work without missing endpoints
+- 🔍 **Partial Implementation**: Create and read operations working perfectly, update/delete missing
+- 🔍 **Frontend Impact**: Consultation management UI will have limited functionality without update/delete
+
+**CONSULTATIONS PAGE BACKEND STATUS: PARTIALLY FUNCTIONAL - MISSING CRITICAL ENDPOINTS**
+The consultation backend provides excellent support for patient search and consultation creation/viewing, but lacks the essential update and delete endpoints required for complete consultation management. The patient-centric workflow is well-implemented for read and create operations, but edit and delete functionality cannot be implemented without the missing API endpoints.
+
 agent_communication:
     -agent: "testing"
-    -message: "Consultation Modal Integration Testing Completed Successfully - All Critical Requirements Validated. The consultation modal now opens as an overlay within the Calendar page instead of redirecting to a separate page. Complete patient workflow tested: navigation to Calendar → patient status transitions (attente → en_cours) → consultation modal opening as overlay → form functionality → save consultation → patient moves to terminé section. All functionality working perfectly as specified in the review request. No issues found - implementation is production ready."
+    -message: "Consultations Page Backend Functionality Testing Completed - Critical Missing Endpoints Identified. The backend provides excellent support for patient search (GET /api/patients) and consultation retrieval (GET /api/consultations/patient/{patient_id}) with proper data structure. Consultation creation (POST /api/consultations) works perfectly with full data validation. However, two critical endpoints are missing: PUT /api/consultations/{consultation_id} for updating consultations and DELETE /api/consultations/{consultation_id} for deleting consultations. These missing endpoints prevent the frontend from implementing complete consultation management functionality. The patient-centric workflow is well-designed and functional for read/create operations, but edit/delete features cannot work without the missing API endpoints."
 
 ### Calendar Backend Comprehensive Testing ✅ COMPLETED
 **Status:** COMPREHENSIVE CALENDAR BACKEND TESTING COMPLETED - Critical Issues Identified
