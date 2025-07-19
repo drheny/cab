@@ -858,8 +858,8 @@ The consultation modal integration meets all requirements specified in the revie
 ### Consultations Page Patient-Centric Management Testing ✅ COMPLETED
 **Status:** ALL CONSULTATIONS PAGE TESTS PASSED - Complete Patient-Centric Consultation Management Fully Functional
 
-### Payment Retrieval Functionality Testing ✅ COMPLETED
-**Status:** ALL PAYMENT RETRIEVAL FUNCTIONALITY TESTS PASSED - Payment Amounts Available for Consultation View Modal
+### Payment Amount Display in Consultation View Modal Testing ❌ CRITICAL ISSUE FOUND
+**Status:** PAYMENT AMOUNT DISPLAY ISSUE CONFIRMED - Payment Amounts NOT Showing for "Visite" Consultations
 
 **Test Results Summary (2025-01-15 - Payment Retrieval Functionality Testing):**
 ✅ **GET /api/payments Endpoint** - Payment data exists and is retrievable with proper structure (appointment_id, montant, statut fields)
