@@ -15042,5 +15042,211 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
             # Clean up test appointment
             requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
 
+    def test_existing_appointment_payment_update(self):
+        """Test marking existing appointments as paid - specific to review request"""
+        print("\n=== TESTING EXISTING APPOINTMENT PAYMENT UPDATE ===")
+        
+        # Get existing appointments from demo data
+        today = datetime.now().strftime("%Y-%m-%d")
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        
+        # Find an existing unpaid visite appointment
+        unpaid_visite = None
+        for appt in appointments:
+            if appt.get("type_rdv") == "visite" and not appt.get("paye", False):
+                unpaid_visite = appt
+                break
+        
+        if unpaid_visite is None:
+            # Create a test appointment if none exists
+            response = requests.get(f"{self.base_url}/api/patients")
+            self.assertEqual(response.status_code, 200)
+            patients = response.json()["patients"]
+            self.assertTrue(len(patients) > 0)
+            
+            test_appointment = {
+                "patient_id": patients[0]["id"],
+                "date": today,
+                "heure": "16:00",
+                "type_rdv": "visite",
+                "statut": "termine",
+                "motif": "Test existing appointment payment",
+                "paye": False
+            }
+            
+            response = requests.post(f"{self.base_url}/api/appointments", json=test_appointment)
+            self.assertEqual(response.status_code, 200)
+            appointment_id = response.json()["appointment_id"]
+            
+            # Get the created appointment
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            appointments = response.json()
+            
+            for appt in appointments:
+                if appt["id"] == appointment_id:
+                    unpaid_visite = appt
+                    break
+        
+        self.assertIsNotNone(unpaid_visite, "No unpaid visite appointment found for testing")
+        appointment_id = unpaid_visite["id"]
+        
+        print(f"Testing with appointment ID: {appointment_id}")
+        print(f"Patient: {unpaid_visite['patient']['nom']} {unpaid_visite['patient']['prenom']}")
+        print(f"Initial payment status: {unpaid_visite.get('paye', False)}")
+        
+        try:
+            # Test marking existing appointment as paid
+            payment_data = {
+                "paye": True,
+                "montant": 300.0,
+                "type_paiement": "espece",
+                "assure": False,
+                "taux_remboursement": 0,
+                "notes": "Marked as paid via test"
+            }
+            
+            response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/paiement", json=payment_data)
+            self.assertEqual(response.status_code, 200)
+            
+            payment_response = response.json()
+            self.assertEqual(payment_response["paye"], True)
+            self.assertEqual(payment_response["montant"], 300.0)
+            print("✅ Existing appointment successfully marked as paid")
+            
+            # Verify the appointment is updated
+            response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+            self.assertEqual(response.status_code, 200)
+            updated_appointments = response.json()
+            
+            updated_appointment = None
+            for appt in updated_appointments:
+                if appt["id"] == appointment_id:
+                    updated_appointment = appt
+                    break
+            
+            self.assertIsNotNone(updated_appointment)
+            self.assertEqual(updated_appointment["paye"], True)
+            print("✅ Appointment status correctly updated in database")
+            
+            # Verify payment record exists
+            response = requests.get(f"{self.base_url}/api/payments/appointment/{appointment_id}")
+            self.assertEqual(response.status_code, 200)
+            payment_record = response.json()
+            
+            self.assertEqual(payment_record["montant"], 300.0)
+            self.assertEqual(payment_record["statut"], "paye")
+            print("✅ Payment record created and accessible")
+            
+            # Test different payment methods
+            payment_methods = ["carte", "cheque", "virement"]
+            for method in payment_methods:
+                test_payment_data = {
+                    "paye": True,
+                    "montant": 350.0,
+                    "type_paiement": method,
+                    "assure": False,
+                    "taux_remboursement": 0,
+                    "notes": f"Payment via {method}"
+                }
+                
+                response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/paiement", json=test_payment_data)
+                self.assertEqual(response.status_code, 200)
+                
+                response_data = response.json()
+                self.assertEqual(response_data["type_paiement"], method)
+                print(f"✅ Payment method '{method}' accepted")
+            
+            # Test with insurance
+            insured_payment_data = {
+                "paye": True,
+                "montant": 400.0,
+                "type_paiement": "espece",
+                "assure": True,
+                "taux_remboursement": 70.0,
+                "notes": "Payment with insurance"
+            }
+            
+            response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/paiement", json=insured_payment_data)
+            self.assertEqual(response.status_code, 200)
+            
+            response_data = response.json()
+            self.assertEqual(response_data["assure"], True)
+            self.assertEqual(response_data["taux_remboursement"], 70.0)
+            print("✅ Insurance payment handling working")
+            
+            print("\n=== EXISTING APPOINTMENT PAYMENT UPDATE TESTS COMPLETED ===")
+            
+        except Exception as e:
+            print(f"❌ Error during testing: {str(e)}")
+            raise
+        
+        finally:
+            # Clean up if we created a test appointment
+            if unpaid_visite and unpaid_visite.get("motif") == "Test existing appointment payment":
+                requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+
+    def test_payment_data_consistency(self):
+        """Test data consistency between appointments and payments collections"""
+        print("\n=== TESTING PAYMENT DATA CONSISTENCY ===")
+        
+        # Get all appointments and payments
+        response = requests.get(f"{self.base_url}/api/appointments")
+        self.assertEqual(response.status_code, 200)
+        all_appointments = response.json()
+        
+        response = requests.get(f"{self.base_url}/api/payments")
+        self.assertEqual(response.status_code, 200)
+        all_payments = response.json()
+        
+        print(f"Total appointments: {len(all_appointments)}")
+        print(f"Total payments: {len(all_payments)}")
+        
+        # Check consistency: every paid appointment should have a payment record
+        paid_appointments = [appt for appt in all_appointments if appt.get("paye", False)]
+        print(f"Paid appointments: {len(paid_appointments)}")
+        
+        for paid_appt in paid_appointments:
+            appointment_id = paid_appt["id"]
+            
+            # Find corresponding payment record
+            payment_record = None
+            for payment in all_payments:
+                if payment.get("appointment_id") == appointment_id:
+                    payment_record = payment
+                    break
+            
+            if paid_appt.get("type_rdv") == "controle":
+                # Controle appointments might not have payment records (they're free)
+                print(f"✅ Controle appointment {appointment_id} - payment record optional")
+            else:
+                # Visite appointments should have payment records
+                if payment_record is None:
+                    print(f"⚠️ Paid visite appointment {appointment_id} missing payment record")
+                else:
+                    self.assertEqual(payment_record["statut"], "paye")
+                    print(f"✅ Paid appointment {appointment_id} has matching payment record")
+        
+        # Check reverse consistency: every payment should have a corresponding appointment
+        for payment in all_payments:
+            appointment_id = payment.get("appointment_id")
+            if appointment_id:
+                corresponding_appt = None
+                for appt in all_appointments:
+                    if appt["id"] == appointment_id:
+                        corresponding_appt = appt
+                        break
+                
+                if corresponding_appt is None:
+                    print(f"⚠️ Payment record for appointment {appointment_id} has no corresponding appointment")
+                else:
+                    if payment["statut"] == "paye":
+                        self.assertEqual(corresponding_appt.get("paye", False), True)
+                        print(f"✅ Payment record {payment.get('id', 'unknown')} matches appointment status")
+        
+        print("\n=== PAYMENT DATA CONSISTENCY TESTS COMPLETED ===")
+
 if __name__ == "__main__":
     unittest.main()
