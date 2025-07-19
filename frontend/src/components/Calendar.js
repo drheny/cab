@@ -546,7 +546,7 @@ const Calendar = ({ user }) => {
   }, [API_BASE_URL, fetchData]);
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [selectedPayment, setSelectedPayment] = useState(null);
+  const [selectedPaymentAppointment, setSelectedPaymentAppointment] = useState(null);
 
   const viewPatientDetails = useCallback(async (patientId) => {
     try {
