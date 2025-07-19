@@ -915,9 +915,56 @@ The consultation modal integration meets all requirements specified in the revie
 - ✅ **Console Debugging**: No JavaScript errors detected in browser console
 - ✅ **Data Structure**: Payment records have correct fields (montant, statut, appointment_id)
 
-**ROOT CAUSE ANALYSIS: 🔍 IDENTIFIED**
-- 🔍 **Payment Retrieval Logic Issue**: getPaymentAmount function may not be finding correct payment records
-- 🔍 **Appointment ID Mismatch**: Possible mismatch between consultation.appointment_id and payment.appointment_id
+**ROOT CAUSE ANALYSIS: 🔍 CRITICAL ISSUES IDENTIFIED**
+- 🔍 **URL Configuration Fix NOT Applied**: API calls use external URL instead of relative `/api/payments`
+- 🔍 **CORS Potential Issues**: External URL calls may cause cross-origin request failures
+- 🔍 **Payment Display Integration**: Payment data not integrated into modal display even when API calls succeed
+- 🔍 **Frontend Code Issue**: The fix mentioned in review request has not been implemented in the codebase
+
+**CRITICAL FINDINGS:**
+- ❌ **Main Fix NOT Applied**: The URL configuration change from `${API_BASE_URL}/api/payments` to `/api/payments` has NOT been implemented
+- ❌ **Payment Amount Display**: Even when API calls are made, payment amounts are not displayed in the modal
+- ✅ **API Call Triggering**: Payment API is correctly called for "Visite" consultations
+- ✅ **Modal Functionality**: Consultation view modal works correctly for all other aspects
+
+**PAYMENT AMOUNT DISPLAY STATUS: CRITICAL FIXES REQUIRED - NOT PRODUCTION READY**
+The payment amount display functionality has two critical issues that prevent it from working:
+1. **URL Configuration**: The main fix mentioned in the review request has NOT been applied to the codebase
+2. **Payment Display Logic**: Payment amounts are not displayed in the modal even when API calls are made
+
+**Testing Agent → Main Agent (2025-01-19 - Payment Amount Display in Consultation View Modal Testing):**
+Comprehensive payment amount display testing completed with critical issues confirmed. The reported fix has NOT been applied to the codebase:
+
+❌ **CRITICAL ISSUE 1: URL CONFIGURATION FIX NOT APPLIED:**
+- API calls still use external URL: `https://cbd199ac-e82c-4b53-a71c-648951cb9dec.preview.emergentagent.com/api/payments`
+- Should use relative URL: `/api/payments` as mentioned in review request
+- This causes potential CORS errors and prevents proper payment data retrieval
+
+❌ **CRITICAL ISSUE 2: PAYMENT AMOUNT NOT DISPLAYED:**
+- "Visite" consultations do NOT show payment amounts in "Type & Date" section
+- Expected format "(XXX DH)" or "(XXX TND)" is missing from modal display
+- Payment API calls are made but data is not integrated into modal UI
+
+✅ **FUNCTIONALITY WORKING CORRECTLY:**
+- Consultation page navigation and patient selection working perfectly
+- Consultation view modal opening and display working correctly
+- Consultation type badges display correctly (Visite=red, Contrôle=green)
+- "Contrôle" consultations correctly do NOT show payment amounts (as expected)
+- Modal structure and all other sections display properly
+
+✅ **TESTING METHODOLOGY SUCCESSFUL:**
+- Successfully created test "Visite" consultation for comprehensive testing
+- Successfully monitored network requests to verify API call behavior
+- Confirmed payment API integration is triggered for "Visite" consultations only
+- Verified different behavior for "Visite" vs "Contrôle" consultations
+
+**IMMEDIATE ACTION REQUIRED:**
+1. **Apply URL Configuration Fix**: Change API calls in Consultation.js from external URL to relative `/api/payments`
+2. **Fix Payment Display Logic**: Ensure payment amounts are displayed in modal "Type & Date" section for "Visite" consultations
+3. **Test Payment Data Integration**: Verify payment data is properly retrieved and formatted for display
+
+**PAYMENT AMOUNT DISPLAY: CRITICAL FIXES REQUIRED - MAIN AGENT MUST IMPLEMENT THE REPORTED FIX**
+The payment amount display functionality requires immediate implementation of the URL configuration fix mentioned in the review request, plus ensuring payment amounts are properly displayed in the consultation view modal for "Visite" consultations.
 - 🔍 **State Management Issue**: Payment amount may not be properly passed to viewModal state
 - 🔍 **Display Logic Problem**: Payment amount not being rendered in modal template despite being retrieved
 
