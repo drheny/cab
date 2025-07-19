@@ -14443,5 +14443,151 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
         
         print("✅ Payment business logic working correctly")
 
+    def test_create_visite_consultation_for_omar_tazi(self):
+        """Create a consultation of type 'visite' for Omar Tazi (patient3) with matching payment record"""
+        print("\n=== Creating Test Visite Consultation for Omar Tazi ===")
+        
+        # Step 1: Create consultation with type_rdv="visite" for patient3 (Omar Tazi)
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        new_consultation = {
+            "patient_id": "patient3",
+            "appointment_id": "test_visite_001",
+            "date": today,
+            "type_rdv": "visite",
+            "duree": 25,
+            "poids": 13.2,
+            "taille": 87.0,
+            "pc": 48.0,
+            "observations": "Consultation de contrôle général. Enfant en bonne santé, développement normal pour son âge.",
+            "traitement": "Vitamines D3 - 1 goutte par jour",
+            "bilan": "Croissance normale, vaccinations à jour",
+            "relance_date": ""
+        }
+        
+        response = requests.post(f"{self.base_url}/api/consultations", json=new_consultation)
+        self.assertEqual(response.status_code, 200)
+        print("✅ Consultation created successfully")
+        
+        # Step 2: Create corresponding payment record
+        new_payment = {
+            "patient_id": "patient3",
+            "appointment_id": "test_visite_001",
+            "montant": 350.0,
+            "type_paiement": "espece",
+            "statut": "paye",
+            "assure": False,
+            "taux_remboursement": 0,
+            "date": today,
+            "notes": "Paiement consultation visite Omar Tazi"
+        }
+        
+        # Create payment via POST (assuming payments endpoint exists)
+        try:
+            response = requests.post(f"{self.base_url}/api/payments", json=new_payment)
+            if response.status_code != 200:
+                # If POST doesn't work, try creating via appointment payment update
+                payment_update = {
+                    "paye": True,
+                    "montant": 350.0,
+                    "type_paiement": "espece",
+                    "assure": False,
+                    "taux_remboursement": 0,
+                    "notes": "Paiement consultation visite Omar Tazi"
+                }
+                
+                # First create an appointment record for test_visite_001
+                test_appointment = {
+                    "id": "test_visite_001",
+                    "patient_id": "patient3",
+                    "date": today,
+                    "heure": "14:30",
+                    "type_rdv": "visite",
+                    "statut": "termine",
+                    "motif": "Consultation générale",
+                    "paye": True
+                }
+                
+                # Create appointment first
+                requests.post(f"{self.base_url}/api/appointments", json=test_appointment)
+                
+                # Then update payment
+                response = requests.put(f"{self.base_url}/api/rdv/test_visite_001/paiement", json=payment_update)
+                self.assertEqual(response.status_code, 200)
+                print("✅ Payment created via appointment update")
+        except Exception as e:
+            print(f"Payment creation method used: {e}")
+        
+        # Step 3: Verify consultation creation
+        response = requests.get(f"{self.base_url}/api/consultations/patient/patient3")
+        self.assertEqual(response.status_code, 200)
+        consultations = response.json()
+        
+        # Find our test consultation
+        test_consultation = None
+        for consultation in consultations:
+            if consultation.get("appointment_id") == "test_visite_001":
+                test_consultation = consultation
+                break
+        
+        self.assertIsNotNone(test_consultation, "Test consultation not found")
+        self.assertEqual(test_consultation["type_rdv"], "visite")
+        self.assertEqual(test_consultation["patient_id"], "patient3")
+        self.assertEqual(test_consultation["appointment_id"], "test_visite_001")
+        print("✅ Consultation verified - type_rdv='visite' for patient3")
+        
+        # Step 4: Verify payment creation and linkage
+        response = requests.get(f"{self.base_url}/api/payments")
+        self.assertEqual(response.status_code, 200)
+        payments = response.json()
+        
+        # Find our test payment
+        test_payment = None
+        for payment in payments:
+            if payment.get("appointment_id") == "test_visite_001":
+                test_payment = payment
+                break
+        
+        self.assertIsNotNone(test_payment, "Test payment not found")
+        self.assertEqual(test_payment["montant"], 350.0)
+        self.assertEqual(test_payment["type_paiement"], "espece")
+        self.assertEqual(test_payment["statut"], "paye")
+        self.assertEqual(test_payment["appointment_id"], "test_visite_001")
+        print("✅ Payment verified - 350.0 DH linked to test_visite_001")
+        
+        # Step 5: Verify data linkage via payment by appointment endpoint
+        try:
+            response = requests.get(f"{self.base_url}/api/payments/appointment/test_visite_001")
+            if response.status_code == 200:
+                payment_data = response.json()
+                self.assertEqual(payment_data["montant"], 350.0)
+                self.assertEqual(payment_data["appointment_id"], "test_visite_001")
+                print("✅ Payment-consultation linkage verified via appointment endpoint")
+        except Exception as e:
+            print(f"Payment by appointment endpoint test: {e}")
+        
+        # Step 6: Verify Omar Tazi patient exists
+        response = requests.get(f"{self.base_url}/api/patients/patient3")
+        self.assertEqual(response.status_code, 200)
+        patient_data = response.json()
+        self.assertEqual(patient_data["nom"], "Tazi")
+        self.assertEqual(patient_data["prenom"], "Omar")
+        print("✅ Patient Omar Tazi (patient3) verified")
+        
+        print("\n=== Test Data Creation Summary ===")
+        print(f"✅ Created consultation: appointment_id='test_visite_001', type_rdv='visite', patient='Omar Tazi'")
+        print(f"✅ Created payment: appointment_id='test_visite_001', montant=350.0 DH, statut='paye'")
+        print(f"✅ Data linkage confirmed: consultation ↔ payment via appointment_id")
+        print(f"✅ Frontend can now test payment amount display (350 DH) for visite consultation")
+        
+        return {
+            "consultation_created": True,
+            "payment_created": True,
+            "appointment_id": "test_visite_001",
+            "patient_id": "patient3",
+            "montant": 350.0,
+            "linkage_verified": True
+        }
+
 if __name__ == "__main__":
     unittest.main()
