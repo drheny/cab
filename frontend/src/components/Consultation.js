@@ -713,7 +713,7 @@ const Consultation = ({ user }) => {
                         }`}>
                           {viewModal.consultation.type_rdv === 'visite' ? 'Visite' : 'Contrôle'}
                         </span>
-                        {viewModal.consultation.type_rdv === 'visite' && viewModal.consultation.paymentAmount && (
+                        {viewModal.consultation.type_rdv === 'visite' && viewModal.consultation.paymentAmount != null && (
                           <span className="text-gray-600 text-sm">
                             ({viewModal.consultation.paymentAmount} DH)
                           </span>
