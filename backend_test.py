@@ -13938,6 +13938,16 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
         """Comprehensive test of payment amount display functionality"""
         print("\n=== COMPREHENSIVE PAYMENT AMOUNT DISPLAY TEST ===")
         
+        # Skip demo data initialization for this test
+        self._skip_demo_init = True
+        
+        # Ensure we have the correct consultation data
+        print("Ensuring consultation has type_rdv field...")
+        update_data = {'type_rdv': 'visite'}
+        response = requests.put(f"{self.base_url}/api/consultations/cons1", json=update_data)
+        if response.status_code == 200:
+            print("✅ Updated consultation cons1 with type_rdv='visite'")
+        
         # Run all sub-tests and collect results
         print("Running consultation data verification...")
         appt3_consultation = self.test_consultation_data_verification()
