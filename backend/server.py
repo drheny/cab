@@ -936,7 +936,6 @@ async def update_rdv_paiement(rdv_id: str, payment_data: PaymentUpdate):
         montant = payment_data.montant
         type_paiement = payment_data.type_paiement
         assure = payment_data.assure
-        taux_remboursement = payment_data.taux_remboursement
         notes = payment_data.notes
         
         # Validate payment method - Seul espèces accepté
@@ -976,7 +975,6 @@ async def update_rdv_paiement(rdv_id: str, payment_data: PaymentUpdate):
                 "type_paiement": type_paiement,
                 "statut": "paye",
                 "assure": assure,
-                "taux_remboursement": taux_remboursement,
                 "date": datetime.now().strftime("%Y-%m-%d"),
                 "notes": notes,
                 "created_at": datetime.now(),
@@ -998,8 +996,7 @@ async def update_rdv_paiement(rdv_id: str, payment_data: PaymentUpdate):
             "paye": paye,
             "montant": montant,
             "type_paiement": type_paiement,
-            "assure": assure,
-            "taux_remboursement": taux_remboursement
+            "assure": assure
         }
         
     except HTTPException:
