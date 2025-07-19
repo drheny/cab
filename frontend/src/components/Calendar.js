@@ -1269,7 +1269,17 @@ const Calendar = ({ user }) => {
 };
 
 // Composant WeekView pour la vue semaine
-const WeekView = ({ weekData, onStatusUpdate, onRoomAssignment, onEdit, onDelete, onViewPatient, selectedDate, onCreateAppointment }) => {
+const WeekView = ({ 
+  weekData, 
+  onStatusUpdate, 
+  onRoomAssignment, 
+  onEdit, 
+  onDelete, 
+  onViewPatient, 
+  selectedDate, 
+  onCreateAppointment, 
+  onOpenPaymentModal 
+}) => {
   const [contextMenu, setContextMenu] = useState({ show: false, x: 0, y: 0, appointment: null });
   const [hoveredSlot, setHoveredSlot] = useState(null);
 
