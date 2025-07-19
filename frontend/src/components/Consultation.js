@@ -178,28 +178,44 @@ const Consultation = ({ user }) => {
     setIsRunning(true);
   };
 
-  // Obtenir le montant payé pour une consultation
+  // Récupérer le montant du paiement pour une consultation
   const getPaymentAmount = useCallback(async (appointmentId) => {
     try {
-      // Add cache-busting parameter and headers to ensure fresh data
-      const timestamp = Date.now();
-      const response = await axios.get(`${API_BASE_URL}/api/payments?_t=${timestamp}`, {
+      console.log(`🔍 Fetching payment for appointment: ${appointmentId}`);
+      
+      // Use dedicated endpoint for better reliability
+      const response = await axios.get(`${API_BASE_URL}/api/payments/appointment/${appointmentId}`, {
         headers: {
           'Cache-Control': 'no-cache',
           'Pragma': 'no-cache'
         }
       });
-      const payments = response.data || [];
       
-      // Find payment with matching appointment_id and statut='paye'
-      const payment = payments.find(p => 
-        p.appointment_id === appointmentId && p.statut === 'paye'
-      );
+      const payment = response.data;
+      console.log(`💰 Payment found:`, payment);
       
       return payment ? payment.montant : null;
     } catch (error) {
-      console.error('Error fetching payment amount:', error);
-      return null;
+      console.error('❌ Error fetching payment amount:', error);
+      
+      // Fallback: try the general payments endpoint
+      try {
+        console.log(`🔄 Trying fallback method for appointment: ${appointmentId}`);
+        const fallbackResponse = await axios.get(`${API_BASE_URL}/api/payments`, {
+          headers: { 'Cache-Control': 'no-cache' }
+        });
+        
+        const payments = fallbackResponse.data || [];
+        const payment = payments.find(p => 
+          p.appointment_id === appointmentId && p.statut === 'paye'
+        );
+        
+        console.log(`🔍 Fallback payment found:`, payment);
+        return payment ? payment.montant : null;
+      } catch (fallbackError) {
+        console.error('❌ Fallback also failed:', fallbackError);
+        return null;
+      }
     }
   }, [API_BASE_URL]);
 
