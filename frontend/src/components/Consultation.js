@@ -182,6 +182,7 @@ const Consultation = ({ user }) => {
     setConsultationData({
       patient_id: consultation.patient_id,
       date: consultation.date,
+      type_rdv: consultation.type_rdv || 'visite',
       poids: consultation.poids || '',
       taille: consultation.taille || '',
       pc: consultation.pc || '',
