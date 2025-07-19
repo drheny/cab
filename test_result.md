@@ -858,6 +858,74 @@ The consultation modal integration meets all requirements specified in the revie
 ### Consultations Page Patient-Centric Management Testing ✅ COMPLETED
 **Status:** ALL CONSULTATIONS PAGE TESTS PASSED - Complete Patient-Centric Consultation Management Fully Functional
 
+### Payment Retrieval Functionality Testing ✅ COMPLETED
+**Status:** ALL PAYMENT RETRIEVAL FUNCTIONALITY TESTS PASSED - Payment Amounts Available for Consultation View Modal
+
+**Test Results Summary (2025-01-15 - Payment Retrieval Functionality Testing):**
+✅ **GET /api/payments Endpoint** - Payment data exists and is retrievable with proper structure (appointment_id, montant, statut fields)
+✅ **Payment Data Structure** - All required fields present with correct data types (montant as number, statut as string)
+✅ **Payment Creation Testing** - Successfully created test payments with appointment_id linkage and statut="paye"
+✅ **Payment-Appointment Linkage** - Appointments have unique IDs that can be linked to payments via appointment_id field
+✅ **Payment Amount Display Logic** - Payment amounts properly formatted as numbers for display in consultation view modal
+✅ **Consultation-Payment Integration** - Consultations have appointment_id field enabling payment lookup for "visite" appointments
+✅ **Comprehensive Workflow** - Complete patient→appointment→payment→retrieval workflow working correctly
+✅ **Edge Cases Handling** - Zero amount payments (controle/gratuit) and multiple payment scenarios handled correctly
+
+**Detailed Test Results:**
+
+**SCENARIO A - PAYMENT DATA VERIFICATION: ✅ FULLY WORKING**
+- ✅ **GET /api/payments**: Endpoint working correctly, found existing payment data in system
+- ✅ **Payment Structure**: All required fields present (id, patient_id, appointment_id, montant, statut, type_paiement, date)
+- ✅ **Data Types**: Payment amounts stored as numbers (float/int), statut as string, appointment_id as string
+- ✅ **Paid Payments**: Found payments with statut="paye" linked to appointments for consultation display
+- ✅ **Demo Data**: System contains demo payment (pay1) with 300.0 TND amount linked to appointment appt3
+
+**SCENARIO B - PAYMENT CREATION FOR TESTING: ✅ FULLY WORKING**
+- ✅ **Test Payment Creation**: Successfully created payment with appointment_id, montant=150.0, statut="paye"
+- ✅ **Payment Persistence**: Created payment properly stored and retrievable via GET /api/payments
+- ✅ **Appointment Linkage**: Payment correctly linked to existing appointment via appointment_id field
+- ✅ **Payment Retrieval**: Payment data accessible for consultation view modal display logic
+- ✅ **Multiple Payment Types**: Supports espece, carte, cheque, virement, gratuit payment methods
+
+**SCENARIO C - PAYMENT-APPOINTMENT LINKAGE: ✅ FULLY WORKING**
+- ✅ **Unique Appointment IDs**: Appointments have unique IDs that can be linked to payments
+- ✅ **Consultation Integration**: Consultations have appointment_id field enabling payment lookup
+- ✅ **Payment Lookup**: Successfully retrieve payments by appointment_id for specific consultations
+- ✅ **Data Consistency**: Payment-appointment relationships maintained across all API endpoints
+- ✅ **Patient Integration**: Patient information properly included in appointment responses for consultation modal
+
+**PAYMENT AMOUNT DISPLAY LOGIC: ✅ FULLY WORKING**
+- ✅ **Visite Appointment Testing**: Successfully tested payment lookup for type_rdv="visite" appointments
+- ✅ **Payment Amount Formatting**: Payment amounts stored as numbers (300.0, 150.0) ready for display
+- ✅ **Status Validation**: Payments with statut="paye" properly identified for amount display
+- ✅ **Consultation Modal Logic**: Payment retrieval logic working for consultation view modal requirements
+- ✅ **Test Payment Creation**: Created test payment (300.0 TND) to verify display logic functionality
+
+**COMPREHENSIVE PAYMENT WORKFLOW: ✅ FULLY WORKING**
+- ✅ **End-to-End Testing**: Complete workflow from patient creation → appointment → payment → retrieval
+- ✅ **Patient Creation**: Created test patient (Payment Test Patient) with proper ID generation
+- ✅ **Appointment Creation**: Created visite appointment linked to patient with unique appointment_id
+- ✅ **Payment Creation**: Created payment (250.0 TND, carte) linked to appointment via appointment_id
+- ✅ **Consultation Modal Simulation**: Successfully retrieved payment amount for consultation view display
+- ✅ **Data Integration**: Patient info, appointment details, and payment amount all accessible for modal
+
+**EDGE CASES HANDLING: ✅ COMPREHENSIVE**
+- ✅ **Zero Amount Payments**: Controle appointments with 0.0 TND (gratuit) payments handled correctly
+- ✅ **Payment Method Validation**: All payment types (espece, carte, cheque, virement, gratuit) working
+- ✅ **Data Integrity**: No multiple payments per appointment found (good data consistency)
+- ✅ **Payment Status**: Both "paye" and "non_paye" statuses properly handled
+- ✅ **Amount Formatting**: All payment amounts stored as proper numbers for display calculations
+
+**CRITICAL FINDINGS:**
+- 🔍 **Payment System Fully Functional**: All payment retrieval functionality working correctly for consultation view modal
+- 🔍 **No Backend Issues Found**: Payment amounts are available and properly formatted for display
+- 🔍 **Excellent Data Structure**: Payment-appointment linkage robust with proper foreign key relationships
+- 🔍 **Production Ready**: Payment retrieval system fully supports consultation modal display requirements
+- 🔍 **Demo Data Available**: System contains working demo payment data for immediate testing
+
+**PAYMENT RETRIEVAL FUNCTIONALITY STATUS: FULLY FUNCTIONAL AND PRODUCTION READY**
+All requirements from the review request have been successfully validated. The payment retrieval functionality is working correctly with proper data structure, appointment linkage, and amount formatting. Payment amounts are available for display in consultation view modal for "visite" appointments through the GET /api/payments endpoint with appointment_id filtering.
+
 ### Consultation Page Improvements Testing ✅ COMPLETED
 **Status:** ALL CONSULTATION PAGE IMPROVEMENTS TESTS PASSED - All Critical Changes Successfully Validated
 
