@@ -58,6 +58,7 @@ const Consultation = ({ user }) => {
   const [consultationData, setConsultationData] = useState({
     patient_id: '',
     date: new Date().toISOString().split('T')[0],
+    type_rdv: 'visite', // Par défaut une visite
     poids: '',
     taille: '',
     pc: '',
