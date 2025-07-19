@@ -117,10 +117,23 @@ class Payment(BaseModel):
     patient_id: str
     appointment_id: str
     montant: float
-    type_paiement: str  # "espece", "carte", "cheque"
-    statut: str = "non_paye"  # "paye", "non_paye"
+    type_paiement: str = "espece"  # espece, carte, cheque, virement, gratuit
+    statut: str = "paye"  # paye, en_attente, rembourse
+    assure: bool = False  # Si le patient est assuré
+    taux_remboursement: float = 0  # Pourcentage de remboursement assurance
     date: str
+    notes: str = ""
     created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
+
+# Modèle pour les mises à jour de paiement
+class PaymentUpdate(BaseModel):
+    paye: bool = False
+    montant: float = 0
+    type_paiement: str = "espece"
+    assure: bool = False
+    taux_remboursement: float = 0
+    notes: str = ""
 
 # Helper functions
 def calculate_age(date_naissance: str) -> str:
