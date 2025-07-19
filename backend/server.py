@@ -939,10 +939,9 @@ async def update_rdv_paiement(rdv_id: str, payment_data: PaymentUpdate):
         taux_remboursement = payment_data.taux_remboursement
         notes = payment_data.notes
         
-        # Validate payment method
-        valid_methods = ["espece", "carte", "cheque", "virement", "gratuit"]
-        if type_paiement not in valid_methods:
-            raise HTTPException(status_code=400, detail=f"Invalid payment method. Must be one of: {valid_methods}")
+        # Validate payment method - Seul espèces accepté
+        if type_paiement != "espece" and type_paiement != "gratuit":
+            type_paiement = "espece"  # Force espèces par défaut
         
         # Business logic for payment handling
         if appointment.get("type_rdv") == "controle":
