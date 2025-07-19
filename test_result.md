@@ -102,15 +102,48 @@
 - ✅ **Priority Field Accuracy**: Database priority values match expected order after all operations
 - ✅ **Rollback Safety**: Failed operations don't leave database in inconsistent state
 
-**CRITICAL FINDINGS:**
-- 🔍 **Backend Implementation Fully Functional**: All priority reordering functionality working correctly at API level
-- 🔍 **No Backend Issues Found**: All drag and drop backend requirements properly implemented
-- 🔍 **Excellent Performance**: All reordering operations complete in <100ms with proper database persistence
-- 🔍 **Robust Error Handling**: Comprehensive validation prevents invalid operations and provides clear error messages
-- 🔍 **Production Ready**: Backend APIs fully support frontend drag and drop functionality requirements
+**CRITICAL FINDINGS AND ROOT CAUSE ANALYSIS:**
+- 🔍 **Debug Logging Confirmed Working**: All console.log statements in handleViewConsultation function executing correctly
+- 🔍 **Payment API Successfully Called**: GET /api/payments endpoint returns 200 status with successful response
+- 🔍 **Payment Search Logic Working**: Code correctly searches for payments with matching appointment_id and statut='paye'
+- 🔍 **UI Display Logic Correct**: Modal template properly checks for paymentAmount and would display (XXX DH) format if data existed
+- 🔍 **ROOT CAUSE IDENTIFIED**: Payment database does not contain records with appointment_id matching consultation appointment_ids
+- 🔍 **Data Linkage Issue**: Consultations use appointment_id format "consultation_TIMESTAMP" but payments may use different format
+- 🔍 **No Backend API Issues**: All backend functionality working correctly - issue is data consistency/linkage
 
-**DRAG AND DROP / PATIENT REORDERING STATUS: BACKEND IMPLEMENTATION COMPLETE AND FULLY FUNCTIONAL**
-All requirements from the review request have been successfully validated. The backend PUT /api/rdv/{rdv_id}/priority endpoint correctly handles all reordering actions (move_up, move_down, set_first, set_position) with multiple patients in the waiting room. The priority field is properly updated in the database, and GET /api/rdv/jour/{date} returns appointments in the correct priority order. The reported issue with visual repositioning not working correctly with 3+ patients is NOT a backend problem - the backend APIs are working perfectly and provide all necessary functionality for frontend drag and drop implementation.
+**PAYMENT AMOUNT DISPLAY STATUS: FUNCTIONALITY WORKING BUT NO MATCHING DATA**
+The payment amount display functionality is working correctly at the code level. The debug logs confirm that:
+1. Payment API is being called successfully for "Visite" consultations
+2. Payment search logic is executing properly
+3. UI display logic would show payment amounts if data existed
+4. The issue is that no payment records exist with matching appointment_id values
+
+**Testing Agent → Main Agent (2025-07-19 - Payment Amount Display Debug Testing):**
+Comprehensive payment amount display testing completed with detailed debug analysis. The functionality is working correctly but reveals a data linkage issue:
+
+✅ **DEBUG FUNCTIONALITY CONFIRMED:**
+- All debug console.log statements executing correctly
+- Payment API calls successful (200 response)
+- Payment search logic working properly
+- UI display logic correct and would show amounts if data existed
+
+✅ **TECHNICAL IMPLEMENTATION VERIFIED:**
+- handleViewConsultation function correctly calls getPaymentAmount for visite consultations
+- getPaymentAmount function successfully calls /api/payments endpoint
+- Payment filtering logic searches for matching appointment_id and statut='paye'
+- Modal template correctly displays paymentAmount in (XXX DH) format when available
+
+❌ **ROOT CAUSE IDENTIFIED:**
+- Payment database does not contain records with appointment_id matching consultation appointment_ids
+- Consultations use appointment_id format "consultation_TIMESTAMP" 
+- Payment records may use different appointment_id format or values
+- Data linkage between consultations and payments is broken
+
+**RECOMMENDATION FOR MAIN AGENT:**
+The payment amount display code is working correctly. The issue is data consistency - payment records need to be created with matching appointment_id values, or the appointment_id generation/linkage logic needs to be standardized between consultations and payments systems.
+
+**PAYMENT AMOUNT DISPLAY: CODE IMPLEMENTATION WORKING CORRECTLY - DATA LINKAGE ISSUE IDENTIFIED**
+The frontend payment display functionality is implemented correctly and all debug features are working. The issue is that payment records do not exist with matching appointment_id values to link with consultations. This is a data consistency issue rather than a code implementation problem.
 
 ### Frontend Drag and Drop Testing ✅ COMPLETED
 **Status:** FRONTEND DRAG AND DROP TESTING COMPLETED - System Limitations Identified
