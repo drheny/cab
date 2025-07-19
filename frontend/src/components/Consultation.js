@@ -1,9 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  Clock, 
-  User, 
-  Weight, 
-  Ruler, 
+  Search,
+  User,
+  Phone,
+  MapPin,
+  UserCheck,
+  Calendar,
+  Plus,
+  Eye,
+  Edit,
+  Trash2,
+  MessageCircle,
+  Clock,
+  Weight,
+  Ruler,
   Brain,
   FileText,
   Save,
@@ -12,19 +22,32 @@ import {
   Square,
   Minimize2,
   Maximize2,
-  Phone
+  X
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
 const Consultation = ({ user }) => {
-  const [consultationsEnCours, setConsultationsEnCours] = useState([]);
+  // États principaux
+  const [patients, setPatients] = useState([]);
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [consultations, setConsultations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredPatients, setFilteredPatients] = useState([]);
+  
+  // États du modal consultation
   const [consultationModal, setConsultationModal] = useState({
     isOpen: false,
     isMinimized: false,
-    appointmentId: null,
-    patientInfo: null
+    mode: 'create', // 'create', 'view', 'edit'
+    consultationId: null
+  });
+  
+  // États du modal de visualisation
+  const [viewModal, setViewModal] = useState({
+    isOpen: false,
+    consultation: null
   });
   
   // Chronomètre
@@ -33,6 +56,8 @@ const Consultation = ({ user }) => {
   
   // Données de la consultation
   const [consultationData, setConsultationData] = useState({
+    patient_id: '',
+    date: new Date().toISOString().split('T')[0],
     poids: '',
     taille: '',
     pc: '',
