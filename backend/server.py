@@ -924,40 +924,40 @@ async def update_rdv_salle(rdv_id: str, salle: str):
     return {"message": "Room assignment updated successfully", "salle": salle}
 
 @app.put("/api/rdv/{rdv_id}/paiement")
-async def update_rdv_paiement(rdv_id: str, payment_data: dict):
-    """Update appointment payment status"""
+async def update_rdv_paiement(rdv_id: str, payment_data: PaymentUpdate):
+    """Update appointment payment status with unified payment logic"""
     try:
+        # Get appointment details
+        appointment = appointments_collection.find_one({"id": rdv_id})
+        if not appointment:
+            raise HTTPException(status_code=404, detail="Appointment not found")
+        
         # Extract payment data
-        paye = payment_data.get("paye", False)
-        montant_paye = payment_data.get("montant_paye", 0)
-        methode_paiement = payment_data.get("methode_paiement", "espece")
-        date_paiement = payment_data.get("date_paiement")
+        paye = payment_data.paye
+        montant = payment_data.montant
+        type_paiement = payment_data.type_paiement
+        assure = payment_data.assure
+        taux_remboursement = payment_data.taux_remboursement
+        notes = payment_data.notes
         
         # Validate payment method
-        valid_methods = ["", "espece", "carte", "cheque", "virement", "gratuit"]
-        if methode_paiement not in valid_methods:
+        valid_methods = ["espece", "carte", "cheque", "virement", "gratuit"]
+        if type_paiement not in valid_methods:
             raise HTTPException(status_code=400, detail=f"Invalid payment method. Must be one of: {valid_methods}")
         
-        # Update appointment
+        # Business logic for payment handling
+        if appointment.get("type_rdv") == "controle":
+            # Contrôle is always free
+            paye = True
+            montant = 0
+            type_paiement = "gratuit"
+        
+        # Update appointment with basic payment status
         update_data = {
             "paye": paye,
+            "assure": assure,
             "updated_at": datetime.now()
         }
-        
-        # Add payment details if paid
-        if paye:
-            update_data.update({
-                "montant_paye": montant_paye,
-                "methode_paiement": methode_paiement,
-                "date_paiement": date_paiement
-            })
-        else:
-            # Clear payment details if unpaid
-            update_data.update({
-                "montant_paye": 0,
-                "methode_paiement": "",
-                "date_paiement": None
-            })
         
         result = appointments_collection.update_one(
             {"id": rdv_id},
@@ -965,48 +965,68 @@ async def update_rdv_paiement(rdv_id: str, payment_data: dict):
         )
         
         if result.matched_count == 0:
-            raise HTTPException(status_code=404, detail="Appointment not found")
+            raise HTTPException(status_code=404, detail="Failed to update appointment")
         
-        # Also create/update payment record
-        if paye and montant_paye > 0:
+        # Handle payment record in payments collection
+        if paye and montant >= 0:
+            # Create or update payment record
             payment_record = {
                 "id": str(uuid.uuid4()),
-                "patient_id": "",  # Will be filled from appointment
+                "patient_id": appointment.get("patient_id", ""),
                 "appointment_id": rdv_id,
-                "montant": montant_paye,
-                "type_paiement": methode_paiement,
+                "montant": montant,
+                "type_paiement": type_paiement,
                 "statut": "paye",
+                "assure": assure,
+                "taux_remboursement": taux_remboursement,
                 "date": datetime.now().strftime("%Y-%m-%d"),
-                "created_at": datetime.now()
+                "notes": notes,
+                "created_at": datetime.now(),
+                "updated_at": datetime.now()
             }
             
-            # Get patient_id from appointment
-            appointment = appointments_collection.find_one({"id": rdv_id})
-            if appointment:
-                payment_record["patient_id"] = appointment.get("patient_id", "")
-            
-            # Insert or update payment record
+            # Upsert payment record (create or update)
             payments_collection.update_one(
                 {"appointment_id": rdv_id},
                 {"$set": payment_record},
                 upsert=True
             )
         else:
-            # Remove payment record if unpaid
+            # Remove payment record if unpaid or refunded
             payments_collection.delete_one({"appointment_id": rdv_id})
         
         return {
-            "message": "Payment status updated successfully", 
+            "message": "Payment updated successfully", 
             "paye": paye,
-            "montant_paye": montant_paye,
-            "methode_paiement": methode_paiement
+            "montant": montant,
+            "type_paiement": type_paiement,
+            "assure": assure,
+            "taux_remboursement": taux_remboursement
         }
         
     except HTTPException:
-        # Re-raise HTTPException to maintain proper status codes
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating payment: {str(e)}")
+
+@app.get("/api/payments/appointment/{appointment_id}")
+async def get_payment_by_appointment(appointment_id: str):
+    """Get payment details for a specific appointment"""
+    payment = payments_collection.find_one({"appointment_id": appointment_id}, {"_id": 0})
+    if not payment:
+        # Check if appointment exists and is a controle (free)
+        appointment = appointments_collection.find_one({"id": appointment_id})
+        if appointment and appointment.get("type_rdv") == "controle":
+            return {
+                "appointment_id": appointment_id,
+                "montant": 0,
+                "type_paiement": "gratuit",
+                "statut": "paye",
+                "assure": appointment.get("assure", False)
+            }
+        raise HTTPException(status_code=404, detail="Payment not found")
+    
+    return payment
 
 @app.put("/api/rdv/{rdv_id}/whatsapp")
 async def update_rdv_whatsapp(rdv_id: str, whatsapp_data: dict):
