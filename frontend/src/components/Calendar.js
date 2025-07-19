@@ -1663,6 +1663,7 @@ const WorkflowSection = ({
               onDelete={onDelete}
               onViewPatient={onViewPatient}
               onPatientReorder={onPatientReorder}
+              onOpenPaymentModal={onOpenPaymentModal}
               isCompleted={isCompleted}
             />
           ))
