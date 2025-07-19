@@ -181,15 +181,27 @@ const Consultation = ({ user }) => {
   // Obtenir le montant payé pour une consultation
   const getPaymentAmount = useCallback(async (appointmentId) => {
     try {
-      const response = await axios.get('/api/payments');
-      const payments = response.data;
-      const payment = payments.find(p => p.appointment_id === appointmentId && p.statut === 'paye');
+      // Add cache-busting parameter and headers to ensure fresh data
+      const timestamp = Date.now();
+      const response = await axios.get(`${API_BASE_URL}/api/payments?_t=${timestamp}`, {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
+      const payments = response.data || [];
+      
+      // Find payment with matching appointment_id and statut='paye'
+      const payment = payments.find(p => 
+        p.appointment_id === appointmentId && p.statut === 'paye'
+      );
+      
       return payment ? payment.montant : null;
     } catch (error) {
-      console.error('Error fetching payment:', error);
+      console.error('Error fetching payment amount:', error);
       return null;
     }
-  }, []);
+  }, [API_BASE_URL]);
 
   // Voir une consultation avec montant
   const handleViewConsultation = async (consultation) => {
