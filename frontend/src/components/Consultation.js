@@ -69,9 +69,82 @@ const Consultation = ({ user }) => {
     duree: 0
   });
 
-  // Charger les consultations en cours
+import React, { useState, useEffect, useCallback } from 'react';
+import { 
+  Search,
+  User,
+  Phone,
+  MapPin,
+  UserCheck,
+  Calendar,
+  Plus,
+  Eye,
+  Edit,
+  Trash2,
+  MessageCircle,
+  Clock,
+  Weight,
+  Ruler,
+  Brain,
+  FileText,
+  Save,
+  Play,
+  Pause,
+  Square,
+  Minimize2,
+  Maximize2,
+  X
+} from 'lucide-react';
+import axios from 'axios';
+import toast from 'react-hot-toast';
+
+const Consultation = ({ user }) => {
+  // États principaux
+  const [patients, setPatients] = useState([]);
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [consultations, setConsultations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredPatients, setFilteredPatients] = useState([]);
+  
+  // États du modal consultation
+  const [consultationModal, setConsultationModal] = useState({
+    isOpen: false,
+    isMinimized: false,
+    mode: 'create', // 'create', 'view', 'edit'
+    consultationId: null
+  });
+  
+  // États du modal de visualisation
+  const [viewModal, setViewModal] = useState({
+    isOpen: false,
+    consultation: null
+  });
+  
+  // Chronomètre
+  const [timer, setTimer] = useState(0);
+  const [isRunning, setIsRunning] = useState(false);
+  
+  // Données de la consultation
+  const [consultationData, setConsultationData] = useState({
+    patient_id: '',
+    date: new Date().toISOString().split('T')[0],
+    poids: '',
+    taille: '',
+    pc: '',
+    observation_medicale: '',
+    traitement: '',
+    bilans: '',
+    relance_telephonique: false,
+    date_relance: '',
+    duree: 0
+  });
+
+  const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+
+  // Chargement initial des patients
   useEffect(() => {
-    fetchConsultationsEnCours();
+    fetchPatients();
   }, []);
 
   // Gestion du chronomètre
@@ -87,68 +160,61 @@ const Consultation = ({ user }) => {
     return () => clearInterval(interval);
   }, [isRunning, timer]);
 
-  const fetchConsultationsEnCours = async () => {
+  // Filtrage des patients
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setFilteredPatients([]);
+    } else {
+      const filtered = patients.filter(patient =>
+        `${patient.prenom} ${patient.nom}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        patient.telephone?.includes(searchTerm)
+      );
+      setFilteredPatients(filtered.slice(0, 10)); // Limite à 10 résultats
+    }
+  }, [searchTerm, patients]);
+
+  // Charger tous les patients
+  const fetchPatients = useCallback(async () => {
     try {
-      const today = new Date().toISOString().split('T')[0];
-      const response = await axios.get(`/api/rdv/jour/${today}`);
-      
-      // Filtrer les patients en consultation (statut "en_cours")
-      const consultations = response.data.filter(rdv => rdv.statut === "en_cours");
-      setConsultationsEnCours(consultations);
+      const response = await axios.get(`${API_BASE_URL}/api/patients`);
+      setPatients(response.data.patients || []);
     } catch (error) {
-      console.error('Error fetching consultations:', error);
-      toast.error('Erreur lors du chargement des consultations');
+      console.error('Error fetching patients:', error);
+      toast.error('Erreur lors du chargement des patients');
     } finally {
       setLoading(false);
     }
-  };
+  }, [API_BASE_URL]);
 
-  // Ouvrir le modal de consultation
-  const ouvrirConsultation = (appointment) => {
-    setConsultationModal({
-      isOpen: true,
-      isMinimized: false,
-      appointmentId: appointment.id,
-      patientInfo: appointment.patient
-    });
-    
-    // Démarrer le chronomètre automatiquement
-    setIsRunning(true);
-    setTimer(0);
-  };
+  // Charger les consultations d'un patient
+  const fetchPatientConsultations = useCallback(async (patientId) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/consultations/patient/${patientId}`);
+      setConsultations(response.data || []);
+    } catch (error) {
+      console.error('Error fetching consultations:', error);
+      toast.error('Erreur lors du chargement des consultations');
+    }
+  }, [API_BASE_URL]);
 
-  // Réduire le modal
-  const reduireModal = () => {
-    setConsultationModal(prev => ({
-      ...prev,
-      isMinimized: true
-    }));
-  };
+  // Sélectionner un patient
+  const handlePatientSelect = useCallback(async (patient) => {
+    setSelectedPatient(patient);
+    setSearchTerm(`${patient.prenom} ${patient.nom}`);
+    setFilteredPatients([]);
+    await fetchPatientConsultations(patient.id);
+  }, [fetchPatientConsultations]);
 
-  // Restaurer le modal
-  const restaurerModal = () => {
-    setConsultationModal(prev => ({
-      ...prev,
-      isMinimized: false
-    }));
-  };
+  // Ouvrir modal d'ajout de consultation
+  const handleAddConsultation = () => {
+    if (!selectedPatient) {
+      toast.error('Veuillez sélectionner un patient');
+      return;
+    }
 
-  // Fermer le modal
-  const fermerModal = () => {
-    setConsultationModal({
-      isOpen: false,
-      isMinimized: false,
-      appointmentId: null,
-      patientInfo: null
-    });
-    setIsRunning(false);
-    setTimer(0);
-    resetConsultationData();
-  };
-
-  // Reset des données
-  const resetConsultationData = () => {
     setConsultationData({
+      patient_id: selectedPatient.id,
+      date: new Date().toISOString().split('T')[0],
       poids: '',
       taille: '',
       pc: '',
@@ -159,34 +225,123 @@ const Consultation = ({ user }) => {
       date_relance: '',
       duree: 0
     });
+
+    setConsultationModal({
+      isOpen: true,
+      isMinimized: false,
+      mode: 'create',
+      consultationId: null
+    });
+
+    // Démarrer le chronomètre
+    setTimer(0);
+    setIsRunning(true);
+  };
+
+  // Voir une consultation
+  const handleViewConsultation = (consultation) => {
+    setViewModal({
+      isOpen: true,
+      consultation: consultation
+    });
+  };
+
+  // Modifier une consultation
+  const handleEditConsultation = (consultation) => {
+    setConsultationData({
+      patient_id: consultation.patient_id,
+      date: consultation.date,
+      poids: consultation.poids || '',
+      taille: consultation.taille || '',
+      pc: consultation.pc || '',
+      observation_medicale: consultation.observations || '',
+      traitement: consultation.traitement || '',
+      bilans: consultation.bilan || '',
+      relance_telephonique: consultation.relance_date ? true : false,
+      date_relance: consultation.relance_date || '',
+      duree: consultation.duree || 0
+    });
+
+    setConsultationModal({
+      isOpen: true,
+      isMinimized: false,
+      mode: 'edit',
+      consultationId: consultation.id
+    });
+
+    setTimer(consultation.duree * 60 || 0); // Convertir minutes en secondes
+    setIsRunning(false);
+  };
+
+  // Supprimer une consultation
+  const handleDeleteConsultation = async (consultationId) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette consultation ?')) return;
+
+    try {
+      await axios.delete(`${API_BASE_URL}/api/consultations/${consultationId}`);
+      toast.success('Consultation supprimée avec succès');
+      if (selectedPatient) {
+        await fetchPatientConsultations(selectedPatient.id);
+      }
+    } catch (error) {
+      console.error('Error deleting consultation:', error);
+      toast.error('Erreur lors de la suppression');
+    }
+  };
+
+  // Fermer le modal de consultation
+  const fermerModalConsultation = () => {
+    setConsultationModal({
+      isOpen: false,
+      isMinimized: false,
+      mode: 'create',
+      consultationId: null
+    });
+    setIsRunning(false);
+    setTimer(0);
+  };
+
+  // Réduire le modal
+  const reduireModalConsultation = () => {
+    setConsultationModal(prev => ({
+      ...prev,
+      isMinimized: true
+    }));
+  };
+
+  // Restaurer le modal
+  const restaurerModalConsultation = () => {
+    setConsultationModal(prev => ({
+      ...prev,
+      isMinimized: false
+    }));
   };
 
   // Sauvegarder la consultation
   const sauvegarderConsultation = async () => {
     try {
-      // Arrêter le chronomètre
       setIsRunning(false);
       
-      // Préparer les données
       const consultationPayload = {
         ...consultationData,
         duree: Math.floor(timer / 60), // Convertir en minutes
-        patient_id: consultationsEnCours.find(c => c.id === consultationModal.appointmentId)?.patient_id,
-        appointment_id: consultationModal.appointmentId,
-        date: new Date().toISOString().split('T')[0]
+        observations: consultationData.observation_medicale,
+        bilan: consultationData.bilans,
+        relance_date: consultationData.relance_telephonique ? consultationData.date_relance : null
       };
 
-      // Sauvegarder la consultation
-      await axios.post('/api/consultations', consultationPayload);
-      
-      // Changer le statut du RDV à "terminé"
-      await axios.put(`/api/rdv/${consultationModal.appointmentId}/statut`, {
-        statut: "termine"
-      });
+      if (consultationModal.mode === 'create') {
+        await axios.post(`${API_BASE_URL}/api/consultations`, consultationPayload);
+        toast.success('Consultation créée avec succès');
+      } else if (consultationModal.mode === 'edit') {
+        await axios.put(`${API_BASE_URL}/api/consultations/${consultationModal.consultationId}`, consultationPayload);
+        toast.success('Consultation modifiée avec succès');
+      }
 
-      toast.success('Consultation sauvegardée avec succès');
-      fermerModal();
-      fetchConsultationsEnCours();
+      fermerModalConsultation();
+      if (selectedPatient) {
+        await fetchPatientConsultations(selectedPatient.id);
+      }
     } catch (error) {
       console.error('Error saving consultation:', error);
       toast.error('Erreur lors de la sauvegarde');
@@ -205,6 +360,35 @@ const Consultation = ({ user }) => {
     return `${minutes}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Obtenir le lien WhatsApp
+  const getWhatsAppLink = (numero) => {
+    if (!numero) return '#';
+    const cleanNumber = numero.replace(/\D/g, '');
+    return `https://wa.me/212${cleanNumber.startsWith('0') ? cleanNumber.substring(1) : cleanNumber}`;
+  };
+
+  // Formater la date
+  const formatDate = (dateStr) => {
+    return new Date(dateStr).toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
+  // Calculer l'âge
+  const calculateAge = (dateOfBirth) => {
+    if (!dateOfBirth) return 'N/A';
+    const today = new Date();
+    const birth = new Date(dateOfBirth);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -216,58 +400,401 @@ const Consultation = ({ user }) => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="responsive-title font-bold text-gray-900">Consultations</h1>
-          <p className="text-gray-600 responsive-text">Gestion des consultations en cours</p>
+          <h1 className="text-2xl font-bold text-gray-900">Consultations</h1>
+          <p className="text-gray-600">Gestion des consultations par patient</p>
         </div>
+        <button
+          onClick={handleAddConsultation}
+          disabled={!selectedPatient}
+          className={`btn-primary flex items-center space-x-2 ${
+            !selectedPatient ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
+        >
+          <Plus className="w-5 h-5" />
+          <span>Ajouter Consultation</span>
+        </button>
       </div>
 
-      {/* Liste des consultations en cours */}
-      {consultationsEnCours.length === 0 ? (
-        <div className="text-center py-12">
-          <Clock className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune consultation en cours</h3>
-          <p className="text-gray-500">Les patients en consultation apparaîtront ici</p>
+      {/* Champ de recherche patient */}
+      <div className="relative">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Rechercher un patient (nom, prénom, téléphone)..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 input-field w-full"
+          />
         </div>
-      ) : (
-        <div className="grid gap-4">
-          {consultationsEnCours.map((consultation) => (
-            <div key={consultation.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="bg-blue-100 p-3 rounded-full">
-                    <User className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {consultation.patient?.prenom} {consultation.patient?.nom}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      RDV {consultation.heure} - {consultation.type_rdv}
-                    </p>
-                    <p className="text-sm text-gray-500">{consultation.motif}</p>
-                  </div>
+        
+        {/* Dropdown des résultats */}
+        {filteredPatients.length > 0 && (
+          <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
+            {filteredPatients.map((patient) => (
+              <button
+                key={patient.id}
+                onClick={() => handlePatientSelect(patient)}
+                className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
+              >
+                <div className="font-medium text-gray-900">
+                  {patient.prenom} {patient.nom}
                 </div>
-                <div className="flex items-center space-x-3">
-                  <span className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
-                    En cours
-                  </span>
-                  <button
-                    onClick={() => ouvrirConsultation(consultation)}
-                    className="btn-primary flex items-center space-x-2"
-                  >
-                    <FileText className="w-4 h-4" />
-                    <span>Consultation</span>
-                  </button>
+                <div className="text-sm text-gray-600">
+                  {patient.telephone} • {calculateAge(patient.date_naissance)} ans
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {selectedPatient && (
+        <>
+          {/* Bannière patient sélectionné */}
+          <div className="bg-primary-50 border border-primary-200 rounded-xl p-6">
+            <div className="flex items-center space-x-4">
+              <div className="bg-primary-100 p-3 rounded-full">
+                <User className="w-8 h-8 text-primary-600" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-primary-900">
+                  {selectedPatient.prenom} {selectedPatient.nom}
+                </h2>
+                <p className="text-primary-700">
+                  {calculateAge(selectedPatient.date_naissance)} ans • {consultations.length} consultation{consultations.length > 1 ? 's' : ''}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Colonne gauche - Détails du patient */}
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sticky top-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Informations Patient</h3>
+                
+                <div className="space-y-4">
+                  {/* Informations personnelles */}
+                  <div>
+                    <div className="flex items-center space-x-2 mb-2">
+                      <User className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm font-medium text-gray-700">Âge</span>
+                    </div>
+                    <p className="text-gray-900 ml-6">{calculateAge(selectedPatient.date_naissance)} ans</p>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Calendar className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm font-medium text-gray-700">Date de naissance</span>
+                    </div>
+                    <p className="text-gray-900 ml-6">{selectedPatient.date_naissance ? formatDate(selectedPatient.date_naissance) : 'N/A'}</p>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center space-x-2 mb-2">
+                      <MapPin className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm font-medium text-gray-700">Adresse</span>
+                    </div>
+                    <p className="text-gray-900 ml-6">{selectedPatient.adresse || 'Non renseignée'}</p>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Phone className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm font-medium text-gray-700">Téléphone</span>
+                    </div>
+                    <div className="flex items-center space-x-2 ml-6">
+                      <span className="text-gray-900">{selectedPatient.telephone}</span>
+                      {selectedPatient.numero_whatsapp && (
+                        <a
+                          href={getWhatsAppLink(selectedPatient.numero_whatsapp)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-green-600 hover:text-green-700"
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Informations des parents */}
+                  {(selectedPatient.pere || selectedPatient.mere) && (
+                    <div>
+                      <h4 className="text-md font-semibold text-gray-900 mb-3">Parents</h4>
+                      
+                      {selectedPatient.pere && (
+                        <div className="mb-3">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <UserCheck className="w-4 h-4 text-gray-500" />
+                            <span className="text-sm font-medium text-gray-700">Père</span>
+                          </div>
+                          <div className="ml-6 space-y-1">
+                            <p className="text-gray-900">{selectedPatient.pere.nom}</p>
+                            <p className="text-sm text-gray-600">{selectedPatient.pere.fonction}</p>
+                            <p className="text-sm text-gray-600">{selectedPatient.pere.telephone}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedPatient.mere && (
+                        <div>
+                          <div className="flex items-center space-x-2 mb-1">
+                            <UserCheck className="w-4 h-4 text-gray-500" />
+                            <span className="text-sm font-medium text-gray-700">Mère</span>
+                          </div>
+                          <div className="ml-6 space-y-1">
+                            <p className="text-gray-900">{selectedPatient.mere.nom}</p>
+                            <p className="text-sm text-gray-600">{selectedPatient.mere.fonction}</p>
+                            <p className="text-sm text-gray-600">{selectedPatient.mere.telephone}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Antécédents */}
+                  <div>
+                    <div className="flex items-center space-x-2 mb-2">
+                      <FileText className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm font-medium text-gray-700">Antécédents</span>
+                    </div>
+                    <p className="text-gray-900 ml-6 text-sm">{selectedPatient.antecedents || 'Aucun antécédent'}</p>
+                  </div>
+
+                  {/* Notes */}
+                  <div>
+                    <div className="flex items-center space-x-2 mb-2">
+                      <FileText className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm font-medium text-gray-700">Notes</span>
+                    </div>
+                    <p className="text-gray-900 ml-6 text-sm">{selectedPatient.notes || 'Aucune note'}</p>
+                  </div>
                 </div>
               </div>
             </div>
-          ))}
+
+            {/* Partie centrale - Historique des consultations */}
+            <div className="lg:col-span-3">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+                <div className="p-6 border-b border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Historique des Consultations ({consultations.length})
+                  </h3>
+                </div>
+
+                <div className="p-6">
+                  {consultations.length === 0 ? (
+                    <div className="text-center py-12">
+                      <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                      <h4 className="text-lg font-medium text-gray-900 mb-2">Aucune consultation</h4>
+                      <p className="text-gray-600 mb-6">Ce patient n'a pas encore de consultations enregistrées</p>
+                      <button
+                        onClick={handleAddConsultation}
+                        className="btn-primary inline-flex items-center space-x-2"
+                      >
+                        <Plus className="w-5 h-5" />
+                        <span>Première consultation</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {consultations
+                        .sort((a, b) => new Date(b.date) - new Date(a.date))
+                        .map((consultation) => (
+                          <div
+                            key={consultation.id}
+                            className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-4">
+                                {/* Badge type consultation */}
+                                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                  consultation.type_rdv === 'visite'
+                                    ? 'bg-green-100 text-green-800'
+                                    : 'bg-blue-100 text-blue-800'
+                                }`}>
+                                  {consultation.type_rdv === 'visite' ? 'Visite' : 'Contrôle'}
+                                </span>
+                                
+                                <div>
+                                  <div className="flex items-center space-x-2">
+                                    <Calendar className="w-4 h-4 text-gray-500" />
+                                    <span className="font-medium text-gray-900">
+                                      {formatDate(consultation.date)}
+                                    </span>
+                                    {consultation.duree && (
+                                      <>
+                                        <Clock className="w-4 h-4 text-gray-500 ml-4" />
+                                        <span className="text-gray-600">{consultation.duree} min</span>
+                                      </>
+                                    )}
+                                  </div>
+                                  {consultation.observations && (
+                                    <p className="text-gray-600 text-sm mt-1 line-clamp-2">
+                                      {consultation.observations}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="flex items-center space-x-2">
+                                <button
+                                  onClick={() => handleViewConsultation(consultation)}
+                                  className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                                  title="Voir"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleEditConsultation(consultation)}
+                                  className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
+                                  title="Modifier"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteConsultation(consultation.id)}
+                                  className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                                  title="Supprimer"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Modal de visualisation des consultations */}
+      {viewModal.isOpen && viewModal.consultation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">
+                    Consultation du {formatDate(viewModal.consultation.date)}
+                  </h2>
+                  <p className="text-gray-600">
+                    {selectedPatient?.prenom} {selectedPatient?.nom}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setViewModal({ isOpen: false, consultation: null })}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Mesures */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Mesures</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Poids :</span>
+                      <span className="font-medium">{viewModal.consultation.poids || 'N/A'} kg</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Taille :</span>
+                      <span className="font-medium">{viewModal.consultation.taille || 'N/A'} cm</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">PC :</span>
+                      <span className="font-medium">{viewModal.consultation.pc || 'N/A'} cm</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Durée :</span>
+                      <span className="font-medium">{viewModal.consultation.duree || 'N/A'} min</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Informations consultation */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Type & Date</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Type :</span>
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        viewModal.consultation.type_rdv === 'visite'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        {viewModal.consultation.type_rdv === 'visite' ? 'Visite' : 'Contrôle'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Date :</span>
+                      <span className="font-medium">{formatDate(viewModal.consultation.date)}</span>
+                    </div>
+                    {viewModal.consultation.relance_date && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600">Relance :</span>
+                        <span className="font-medium">{formatDate(viewModal.consultation.relance_date)}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Observations et traitement */}
+              <div className="mt-6 space-y-6">
+                {viewModal.consultation.observations && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Observations médicales</h3>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-gray-900 whitespace-pre-wrap">{viewModal.consultation.observations}</p>
+                    </div>
+                  </div>
+                )}
+
+                {viewModal.consultation.traitement && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Traitement</h3>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-gray-900 whitespace-pre-wrap">{viewModal.consultation.traitement}</p>
+                    </div>
+                  </div>
+                )}
+
+                {viewModal.consultation.bilan && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Bilans</h3>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-gray-900 whitespace-pre-wrap">{viewModal.consultation.bilan}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={() => setViewModal({ isOpen: false, consultation: null })}
+                  className="btn-outline"
+                >
+                  Fermer
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Modal de consultation */}
+      {/* Modal de consultation (création/modification) */}
       {consultationModal.isOpen && (
         <>
           {/* Modal réduit */}
@@ -278,7 +805,7 @@ const Consultation = ({ user }) => {
                   <div className="flex items-center space-x-2">
                     <Clock className="w-5 h-5 text-blue-600" />
                     <span className="font-medium text-gray-900">
-                      {consultationModal.patientInfo?.prenom} {consultationModal.patientInfo?.nom}
+                      {selectedPatient?.prenom} {selectedPatient?.nom}
                     </span>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -286,7 +813,7 @@ const Consultation = ({ user }) => {
                       {formatTimer(timer)}
                     </span>
                     <button
-                      onClick={restaurerModal}
+                      onClick={restaurerModalConsultation}
                       className="p-1 hover:bg-gray-100 rounded"
                     >
                       <Maximize2 className="w-4 h-4" />
@@ -304,24 +831,24 @@ const Consultation = ({ user }) => {
                   <div className="flex items-center justify-between mb-6">
                     <div>
                       <h2 className="text-xl font-bold text-gray-900">
-                        Consultation - {consultationModal.patientInfo?.prenom} {consultationModal.patientInfo?.nom}
+                        {consultationModal.mode === 'create' ? 'Nouvelle Consultation' : 'Modifier Consultation'} - {selectedPatient?.prenom} {selectedPatient?.nom}
                       </h2>
                       <p className="text-gray-600">
-                        {new Date().toLocaleDateString('fr-FR')} - {formatTimer(timer)}
+                        {formatDate(consultationData.date)} - {formatTimer(timer)}
                       </p>
                     </div>
                     <div className="flex items-center space-x-2">
                       <button
-                        onClick={reduireModal}
+                        onClick={reduireModalConsultation}
                         className="p-2 hover:bg-gray-100 rounded-lg"
                       >
                         <Minimize2 className="w-5 h-5" />
                       </button>
                       <button
-                        onClick={fermerModal}
+                        onClick={fermerModalConsultation}
                         className="p-2 hover:bg-gray-100 rounded-lg"
                       >
-                        ×
+                        <X className="w-5 h-5" />
                       </button>
                     </div>
                   </div>
@@ -365,6 +892,19 @@ const Consultation = ({ user }) => {
                     sauvegarderConsultation();
                   }}>
                     <div className="space-y-6">
+                      {/* Date de consultation */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Date de consultation
+                        </label>
+                        <input
+                          type="date"
+                          value={consultationData.date}
+                          onChange={(e) => setConsultationData({...consultationData, date: e.target.value})}
+                          className="input-field"
+                        />
+                      </div>
+
                       {/* Mesures */}
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">Mesures</h3>
@@ -488,7 +1028,7 @@ const Consultation = ({ user }) => {
                     <div className="flex justify-end space-x-3 mt-6">
                       <button
                         type="button"
-                        onClick={fermerModal}
+                        onClick={fermerModalConsultation}
                         className="btn-outline"
                       >
                         Annuler
@@ -498,7 +1038,7 @@ const Consultation = ({ user }) => {
                         className="btn-primary flex items-center space-x-2"
                       >
                         <Save className="w-4 h-4" />
-                        <span>Sauvegarder</span>
+                        <span>{consultationModal.mode === 'create' ? 'Sauvegarder' : 'Modifier'}</span>
                       </button>
                     </div>
                   </form>
