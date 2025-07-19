@@ -12230,5 +12230,324 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
         
         print("✅ Complete consultation workflow integration successful")
 
+    # ========== CONSULTATION ENDPOINTS TESTS (NEW IMPLEMENTATION) ==========
+    
+    def test_consultation_crud_operations(self):
+        """Test complete CRUD operations for consultations including new PUT and DELETE endpoints"""
+        # Get patients and appointments for testing
+        patients_response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(patients_response.status_code, 200)
+        patients_data = patients_response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for consultation testing")
+        
+        appointments_response = requests.get(f"{self.base_url}/api/appointments/today")
+        self.assertEqual(appointments_response.status_code, 200)
+        appointments = appointments_response.json()
+        self.assertTrue(len(appointments) > 0, "No appointments found for consultation testing")
+        
+        patient_id = patients[0]["id"]
+        appointment_id = appointments[0]["id"]
+        
+        # Step 1: CREATE consultation (POST)
+        today = datetime.now().strftime("%Y-%m-%d")
+        consultation_data = {
+            "patient_id": patient_id,
+            "appointment_id": appointment_id,
+            "date": today,
+            "duree": 25,
+            "poids": 15.5,
+            "taille": 95.0,
+            "pc": 48.5,
+            "observations": "Patient en bonne santé générale",
+            "traitement": "Vitamines D3 - dose standard",
+            "bilan": "Croissance normale, suivi dans 6 mois",
+            "relance_date": ""
+        }
+        
+        response = requests.post(f"{self.base_url}/api/consultations", json=consultation_data)
+        self.assertEqual(response.status_code, 200)
+        create_data = response.json()
+        self.assertIn("consultation_id", create_data)
+        consultation_id = create_data["consultation_id"]
+        
+        try:
+            # Step 2: RETRIEVE consultation via patient consultations (GET)
+            response = requests.get(f"{self.base_url}/api/consultations/patient/{patient_id}")
+            self.assertEqual(response.status_code, 200)
+            patient_consultations = response.json()
+            self.assertIsInstance(patient_consultations, list)
+            
+            # Find our created consultation
+            created_consultation = None
+            for consultation in patient_consultations:
+                if consultation["id"] == consultation_id:
+                    created_consultation = consultation
+                    break
+            
+            self.assertIsNotNone(created_consultation, "Created consultation not found in patient consultations")
+            self.assertEqual(created_consultation["poids"], 15.5)
+            self.assertEqual(created_consultation["taille"], 95.0)
+            self.assertEqual(created_consultation["observations"], "Patient en bonne santé générale")
+            
+            # Step 3: UPDATE consultation (PUT) - NEW ENDPOINT
+            update_data = {
+                "poids": 16.5,
+                "taille": 97.0,
+                "pc": 49.5,
+                "observations": "Patient en excellente santé après traitement",
+                "traitement": "Vitamines D3 - dose ajustée",
+                "bilan": "Croissance optimale, suivi dans 3 mois"
+            }
+            
+            response = requests.put(f"{self.base_url}/api/consultations/{consultation_id}", json=update_data)
+            self.assertEqual(response.status_code, 200)
+            update_response = response.json()
+            self.assertIn("message", update_response)
+            self.assertEqual(update_response["consultation_id"], consultation_id)
+            
+            # Step 4: RETRIEVE again to verify update
+            response = requests.get(f"{self.base_url}/api/consultations/patient/{patient_id}")
+            self.assertEqual(response.status_code, 200)
+            updated_consultations = response.json()
+            
+            updated_consultation = None
+            for consultation in updated_consultations:
+                if consultation["id"] == consultation_id:
+                    updated_consultation = consultation
+                    break
+            
+            self.assertIsNotNone(updated_consultation, "Updated consultation not found")
+            self.assertEqual(updated_consultation["poids"], 16.5)
+            self.assertEqual(updated_consultation["taille"], 97.0)
+            self.assertEqual(updated_consultation["pc"], 49.5)
+            self.assertEqual(updated_consultation["observations"], "Patient en excellente santé après traitement")
+            self.assertEqual(updated_consultation["traitement"], "Vitamines D3 - dose ajustée")
+            self.assertEqual(updated_consultation["bilan"], "Croissance optimale, suivi dans 3 mois")
+            
+            # Step 5: DELETE consultation (DELETE) - NEW ENDPOINT
+            response = requests.delete(f"{self.base_url}/api/consultations/{consultation_id}")
+            self.assertEqual(response.status_code, 200)
+            delete_response = response.json()
+            self.assertIn("message", delete_response)
+            self.assertEqual(delete_response["consultation_id"], consultation_id)
+            
+            # Step 6: VERIFY deletion
+            response = requests.get(f"{self.base_url}/api/consultations/patient/{patient_id}")
+            self.assertEqual(response.status_code, 200)
+            final_consultations = response.json()
+            
+            # Consultation should no longer exist
+            deleted_consultation = None
+            for consultation in final_consultations:
+                if consultation["id"] == consultation_id:
+                    deleted_consultation = consultation
+                    break
+            
+            self.assertIsNone(deleted_consultation, "Consultation should have been deleted")
+            
+        except Exception as e:
+            # Clean up in case of test failure
+            try:
+                requests.delete(f"{self.base_url}/api/consultations/{consultation_id}")
+            except:
+                pass
+            raise e
+    
+    def test_consultation_put_endpoint_validation(self):
+        """Test PUT /api/consultations/{consultation_id} endpoint validation and error handling"""
+        # Create a test consultation first
+        patients_response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(patients_response.status_code, 200)
+        patients = patients_response.json()["patients"]
+        
+        appointments_response = requests.get(f"{self.base_url}/api/appointments/today")
+        self.assertEqual(appointments_response.status_code, 200)
+        appointments = appointments_response.json()
+        
+        if len(patients) > 0 and len(appointments) > 0:
+            patient_id = patients[0]["id"]
+            appointment_id = appointments[0]["id"]
+            
+            # Create test consultation
+            today = datetime.now().strftime("%Y-%m-%d")
+            consultation_data = {
+                "patient_id": patient_id,
+                "appointment_id": appointment_id,
+                "date": today,
+                "duree": 20,
+                "poids": 14.0,
+                "taille": 90.0,
+                "pc": 47.0,
+                "observations": "Initial observation",
+                "traitement": "Initial treatment",
+                "bilan": "Initial results"
+            }
+            
+            response = requests.post(f"{self.base_url}/api/consultations", json=consultation_data)
+            self.assertEqual(response.status_code, 200)
+            consultation_id = response.json()["consultation_id"]
+            
+            try:
+                # Test successful update
+                valid_update = {
+                    "poids": 14.5,
+                    "taille": 92.0,
+                    "observations": "Updated observation"
+                }
+                
+                response = requests.put(f"{self.base_url}/api/consultations/{consultation_id}", json=valid_update)
+                self.assertEqual(response.status_code, 200)
+                
+                # Test update with non-existent consultation ID
+                response = requests.put(f"{self.base_url}/api/consultations/non_existent_id", json=valid_update)
+                self.assertEqual(response.status_code, 404)
+                error_data = response.json()
+                self.assertIn("detail", error_data)
+                self.assertEqual(error_data["detail"], "Consultation not found")
+                
+            finally:
+                # Clean up
+                requests.delete(f"{self.base_url}/api/consultations/{consultation_id}")
+    
+    def test_consultation_delete_endpoint_validation(self):
+        """Test DELETE /api/consultations/{consultation_id} endpoint validation and error handling"""
+        # Create a test consultation first
+        patients_response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(patients_response.status_code, 200)
+        patients = patients_response.json()["patients"]
+        
+        appointments_response = requests.get(f"{self.base_url}/api/appointments/today")
+        self.assertEqual(appointments_response.status_code, 200)
+        appointments = appointments_response.json()
+        
+        if len(patients) > 0 and len(appointments) > 0:
+            patient_id = patients[0]["id"]
+            appointment_id = appointments[0]["id"]
+            
+            # Create test consultation
+            today = datetime.now().strftime("%Y-%m-%d")
+            consultation_data = {
+                "patient_id": patient_id,
+                "appointment_id": appointment_id,
+                "date": today,
+                "duree": 20,
+                "poids": 13.0,
+                "taille": 88.0,
+                "pc": 46.0,
+                "observations": "Test for deletion",
+                "traitement": "Test treatment",
+                "bilan": "Test results"
+            }
+            
+            response = requests.post(f"{self.base_url}/api/consultations", json=consultation_data)
+            self.assertEqual(response.status_code, 200)
+            consultation_id = response.json()["consultation_id"]
+            
+            # Test successful deletion
+            response = requests.delete(f"{self.base_url}/api/consultations/{consultation_id}")
+            self.assertEqual(response.status_code, 200)
+            delete_data = response.json()
+            self.assertIn("message", delete_data)
+            self.assertEqual(delete_data["consultation_id"], consultation_id)
+            
+            # Test deletion with non-existent consultation ID
+            response = requests.delete(f"{self.base_url}/api/consultations/non_existent_id")
+            self.assertEqual(response.status_code, 404)
+            error_data = response.json()
+            self.assertIn("detail", error_data)
+            self.assertEqual(error_data["detail"], "Consultation not found")
+            
+            # Test deletion of already deleted consultation
+            response = requests.delete(f"{self.base_url}/api/consultations/{consultation_id}")
+            self.assertEqual(response.status_code, 404)
+    
+    def test_consultation_patient_validation_improved(self):
+        """Test GET /api/consultations/patient/{patient_id} with improved patient validation"""
+        # Test with existing patient
+        patients_response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(patients_response.status_code, 200)
+        patients = patients_response.json()["patients"]
+        
+        if len(patients) > 0:
+            existing_patient_id = patients[0]["id"]
+            
+            # Test with existing patient (should return 200)
+            response = requests.get(f"{self.base_url}/api/consultations/patient/{existing_patient_id}")
+            self.assertEqual(response.status_code, 200)
+            consultations = response.json()
+            self.assertIsInstance(consultations, list)
+        
+        # Test with non-existent patient ID (should return 404 now)
+        response = requests.get(f"{self.base_url}/api/consultations/patient/non_existent_patient_id")
+        self.assertEqual(response.status_code, 404)
+        error_data = response.json()
+        self.assertIn("detail", error_data)
+        self.assertEqual(error_data["detail"], "Patient not found")
+    
+    def test_consultation_data_structure_validation(self):
+        """Test consultation data structure and field validation"""
+        # Get test data
+        patients_response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(patients_response.status_code, 200)
+        patients = patients_response.json()["patients"]
+        
+        appointments_response = requests.get(f"{self.base_url}/api/appointments/today")
+        self.assertEqual(appointments_response.status_code, 200)
+        appointments = appointments_response.json()
+        
+        if len(patients) > 0 and len(appointments) > 0:
+            patient_id = patients[0]["id"]
+            appointment_id = appointments[0]["id"]
+            
+            # Test consultation with all fields
+            today = datetime.now().strftime("%Y-%m-%d")
+            complete_consultation = {
+                "patient_id": patient_id,
+                "appointment_id": appointment_id,
+                "date": today,
+                "duree": 30,
+                "poids": 17.2,
+                "taille": 98.5,
+                "pc": 50.0,
+                "observations": "Consultation complète avec tous les champs",
+                "traitement": "Traitement complet prescrit",
+                "bilan": "Bilan détaillé avec recommandations",
+                "relance_date": "2025-02-15"
+            }
+            
+            response = requests.post(f"{self.base_url}/api/consultations", json=complete_consultation)
+            self.assertEqual(response.status_code, 200)
+            consultation_id = response.json()["consultation_id"]
+            
+            try:
+                # Retrieve and verify all fields
+                response = requests.get(f"{self.base_url}/api/consultations/patient/{patient_id}")
+                self.assertEqual(response.status_code, 200)
+                consultations = response.json()
+                
+                created_consultation = None
+                for consultation in consultations:
+                    if consultation["id"] == consultation_id:
+                        created_consultation = consultation
+                        break
+                
+                self.assertIsNotNone(created_consultation)
+                
+                # Verify all fields are present and correct
+                expected_fields = ["id", "date", "duree", "observations", "traitement", "bilan"]
+                for field in expected_fields:
+                    self.assertIn(field, created_consultation)
+                
+                # Verify specific values
+                self.assertEqual(created_consultation["duree"], 30)
+                self.assertEqual(created_consultation["observations"], "Consultation complète avec tous les champs")
+                self.assertEqual(created_consultation["traitement"], "Traitement complet prescrit")
+                self.assertEqual(created_consultation["bilan"], "Bilan détaillé avec recommandations")
+                
+            finally:
+                # Clean up
+                requests.delete(f"{self.base_url}/api/consultations/{consultation_id}")
+
 if __name__ == "__main__":
     unittest.main()
