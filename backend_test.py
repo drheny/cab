@@ -11883,5 +11883,352 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
             requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
             print("✅ Test data cleaned up")
 
+    # ========== CONSULTATION PAGE BACKEND FUNCTIONALITY TESTS ==========
+    
+    def test_consultation_patients_search_endpoint(self):
+        """Test GET /api/patients - Fetch all patients for search functionality"""
+        print("\n=== Testing GET /api/patients for consultation search ===")
+        
+        # Test basic patients endpoint for search functionality
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        # Verify response structure for consultation search
+        self.assertIn("patients", data)
+        self.assertIn("total_count", data)
+        self.assertIsInstance(data["patients"], list)
+        
+        # Verify each patient has required fields for consultation search
+        for patient in data["patients"]:
+            required_fields = ["id", "nom", "prenom", "telephone", "date_naissance"]
+            for field in required_fields:
+                self.assertIn(field, patient, f"Missing required field for consultation search: {field}")
+        
+        print(f"✅ Found {len(data['patients'])} patients for consultation search")
+        
+        # Test search functionality for consultation page
+        if len(data["patients"]) > 0:
+            test_patient = data["patients"][0]
+            search_term = test_patient["nom"][:3]  # Search by first 3 letters of name
+            
+            response = requests.get(f"{self.base_url}/api/patients?search={search_term}")
+            self.assertEqual(response.status_code, 200)
+            search_data = response.json()
+            
+            # Verify search results contain the search term
+            self.assertGreater(len(search_data["patients"]), 0, "Search should return results")
+            print(f"✅ Search functionality working - found {len(search_data['patients'])} results for '{search_term}'")
+    
+    def test_consultation_patient_consultations_endpoint(self):
+        """Test GET /api/consultations/patient/{patient_id} - Fetch all consultations for a specific patient"""
+        print("\n=== Testing GET /api/consultations/patient/{patient_id} ===")
+        
+        # Get a patient to test with
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        
+        if len(patients) == 0:
+            self.skipTest("No patients found for consultation testing")
+        
+        patient_id = patients[0]["id"]
+        print(f"Testing consultations for patient: {patients[0]['nom']} {patients[0]['prenom']}")
+        
+        # Test the consultation endpoint
+        response = requests.get(f"{self.base_url}/api/consultations/patient/{patient_id}")
+        self.assertEqual(response.status_code, 200)
+        consultations = response.json()
+        self.assertIsInstance(consultations, list)
+        
+        print(f"✅ Found {len(consultations)} consultations for patient")
+        
+        # Verify consultation structure if consultations exist
+        if len(consultations) > 0:
+            consultation = consultations[0]
+            required_fields = ["id", "date", "duree", "observations", "traitement", "bilan"]
+            for field in required_fields:
+                self.assertIn(field, consultation, f"Missing required consultation field: {field}")
+            print("✅ Consultation data structure is correct")
+        
+        # Test with non-existent patient
+        response = requests.get(f"{self.base_url}/api/consultations/patient/non_existent_id")
+        self.assertEqual(response.status_code, 404)
+        print("✅ Non-existent patient properly returns 404")
+    
+    def test_consultation_create_endpoint(self):
+        """Test POST /api/consultations - Create new consultation"""
+        print("\n=== Testing POST /api/consultations ===")
+        
+        # Get a patient and appointment for testing
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        
+        if len(patients) == 0:
+            self.skipTest("No patients found for consultation creation testing")
+        
+        patient_id = patients[0]["id"]
+        
+        # Get appointments to use a valid appointment_id
+        today = datetime.now().strftime("%Y-%m-%d")
+        response = requests.get(f"{self.base_url}/api/appointments/today")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        
+        appointment_id = appointments[0]["id"] if len(appointments) > 0 else "test_appointment_id"
+        
+        # Create a new consultation
+        new_consultation = {
+            "patient_id": patient_id,
+            "appointment_id": appointment_id,
+            "date": today,
+            "duree": 25,
+            "poids": 15.5,
+            "taille": 95.0,
+            "pc": 48.5,
+            "observations": "Patient en bonne santé générale. Développement normal pour l'âge.",
+            "traitement": "Vitamines D3 - 1 goutte par jour",
+            "bilan": "Croissance normale, vaccinations à jour",
+            "relance_date": ""
+        }
+        
+        response = requests.post(f"{self.base_url}/api/consultations", json=new_consultation)
+        self.assertEqual(response.status_code, 200)
+        create_data = response.json()
+        self.assertIn("consultation_id", create_data)
+        consultation_id = create_data["consultation_id"]
+        
+        print(f"✅ Created consultation with ID: {consultation_id}")
+        
+        # Verify the consultation was created by retrieving patient consultations
+        response = requests.get(f"{self.base_url}/api/consultations/patient/{patient_id}")
+        self.assertEqual(response.status_code, 200)
+        patient_consultations = response.json()
+        
+        # Find our created consultation
+        created_consultation = None
+        for consultation in patient_consultations:
+            if consultation["id"] == consultation_id:
+                created_consultation = consultation
+                break
+        
+        self.assertIsNotNone(created_consultation, "Created consultation not found in patient consultations")
+        self.assertEqual(created_consultation["poids"], 15.5)
+        self.assertEqual(created_consultation["taille"], 95.0)
+        self.assertEqual(created_consultation["pc"], 48.5)
+        self.assertEqual(created_consultation["observations"], "Patient en bonne santé générale. Développement normal pour l'âge.")
+        
+        print("✅ Consultation data verified successfully")
+        return consultation_id
+    
+    def test_consultation_update_endpoint(self):
+        """Test PUT /api/consultations/{consultation_id} - Update existing consultation"""
+        print("\n=== Testing PUT /api/consultations/{consultation_id} ===")
+        
+        # First create a consultation to update
+        consultation_id = self.test_consultation_create_endpoint()
+        
+        # Check if update endpoint exists
+        updated_consultation = {
+            "poids": 16.0,
+            "taille": 96.0,
+            "pc": 49.0,
+            "observations": "Patient en excellente santé. Croissance accélérée.",
+            "traitement": "Vitamines D3 - 2 gouttes par jour",
+            "bilan": "Croissance excellente, développement optimal",
+            "relance_date": "2025-02-15"
+        }
+        
+        response = requests.put(f"{self.base_url}/api/consultations/{consultation_id}", json=updated_consultation)
+        
+        if response.status_code == 404:
+            print("❌ PUT /api/consultations/{consultation_id} endpoint not implemented")
+            self.fail("PUT /api/consultations/{consultation_id} endpoint is missing - needs to be implemented")
+        elif response.status_code == 405:
+            print("❌ PUT method not allowed for /api/consultations/{consultation_id}")
+            self.fail("PUT method not implemented for consultations update")
+        else:
+            self.assertEqual(response.status_code, 200)
+            print("✅ Consultation update endpoint working")
+            
+            # Verify the update was applied
+            # Since we don't have a direct GET consultation endpoint, we'll check via patient consultations
+            # This would need to be implemented as well
+    
+    def test_consultation_delete_endpoint(self):
+        """Test DELETE /api/consultations/{consultation_id} - Delete consultation"""
+        print("\n=== Testing DELETE /api/consultations/{consultation_id} ===")
+        
+        # First create a consultation to delete
+        consultation_id = self.test_consultation_create_endpoint()
+        
+        # Test delete endpoint
+        response = requests.delete(f"{self.base_url}/api/consultations/{consultation_id}")
+        
+        if response.status_code == 404:
+            print("❌ DELETE /api/consultations/{consultation_id} endpoint not implemented")
+            self.fail("DELETE /api/consultations/{consultation_id} endpoint is missing - needs to be implemented")
+        elif response.status_code == 405:
+            print("❌ DELETE method not allowed for /api/consultations/{consultation_id}")
+            self.fail("DELETE method not implemented for consultations")
+        else:
+            self.assertEqual(response.status_code, 200)
+            print("✅ Consultation delete endpoint working")
+    
+    def test_consultation_data_validation(self):
+        """Test consultation data validation and error handling"""
+        print("\n=== Testing consultation data validation ===")
+        
+        # Test with missing required fields
+        invalid_consultation = {
+            "patient_id": "",  # Missing patient_id
+            "date": datetime.now().strftime("%Y-%m-%d"),
+            "poids": 15.0
+        }
+        
+        response = requests.post(f"{self.base_url}/api/consultations", json=invalid_consultation)
+        # Should handle validation appropriately
+        if response.status_code == 200:
+            print("⚠️ API accepts consultation with missing patient_id - validation could be improved")
+        else:
+            print("✅ API properly validates required fields")
+        
+        # Test with invalid data types
+        invalid_consultation_2 = {
+            "patient_id": "valid_patient_id",
+            "appointment_id": "valid_appointment_id", 
+            "date": datetime.now().strftime("%Y-%m-%d"),
+            "poids": "invalid_weight",  # Should be float
+            "taille": "invalid_height",  # Should be float
+            "pc": "invalid_pc"  # Should be float
+        }
+        
+        response = requests.post(f"{self.base_url}/api/consultations", json=invalid_consultation_2)
+        if response.status_code == 200:
+            print("⚠️ API accepts consultation with invalid data types - validation could be improved")
+        else:
+            print("✅ API properly validates data types")
+    
+    def test_consultation_response_format(self):
+        """Test consultation response format for frontend compatibility"""
+        print("\n=== Testing consultation response format ===")
+        
+        # Get patients to test consultation format
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        
+        if len(patients) == 0:
+            self.skipTest("No patients found for response format testing")
+        
+        patient_id = patients[0]["id"]
+        
+        # Test patient consultations response format
+        response = requests.get(f"{self.base_url}/api/consultations/patient/{patient_id}")
+        self.assertEqual(response.status_code, 200)
+        consultations = response.json()
+        
+        # Verify response is in expected format for frontend
+        self.assertIsInstance(consultations, list)
+        
+        if len(consultations) > 0:
+            consultation = consultations[0]
+            
+            # Verify all required fields for consultation management are present
+            expected_fields = [
+                "id", "date", "duree", "poids", "taille", "pc", 
+                "observations", "traitement", "bilan", "relance_date"
+            ]
+            
+            for field in expected_fields:
+                self.assertIn(field, consultation, f"Missing field in consultation response: {field}")
+            
+            # Verify data types
+            self.assertIsInstance(consultation["id"], str)
+            self.assertIsInstance(consultation["date"], str)
+            self.assertIsInstance(consultation["duree"], (int, float))
+            self.assertIsInstance(consultation["poids"], (int, float))
+            self.assertIsInstance(consultation["taille"], (int, float))
+            self.assertIsInstance(consultation["pc"], (int, float))
+            self.assertIsInstance(consultation["observations"], str)
+            self.assertIsInstance(consultation["traitement"], str)
+            self.assertIsInstance(consultation["bilan"], str)
+            
+            print("✅ Consultation response format is correct for frontend")
+        else:
+            print("ℹ️ No consultations found to verify response format")
+    
+    def test_consultation_workflow_integration(self):
+        """Test complete consultation workflow integration"""
+        print("\n=== Testing complete consultation workflow ===")
+        
+        # Step 1: Search for patients
+        response = requests.get(f"{self.base_url}/api/patients?search=Ben")
+        self.assertEqual(response.status_code, 200)
+        search_results = response.json()
+        
+        if len(search_results["patients"]) == 0:
+            print("⚠️ No patients found with 'Ben' in name for workflow testing")
+            return
+        
+        patient = search_results["patients"][0]
+        patient_id = patient["id"]
+        print(f"Step 1: Found patient {patient['nom']} {patient['prenom']}")
+        
+        # Step 2: Get existing consultations for patient
+        response = requests.get(f"{self.base_url}/api/consultations/patient/{patient_id}")
+        self.assertEqual(response.status_code, 200)
+        existing_consultations = response.json()
+        initial_count = len(existing_consultations)
+        print(f"Step 2: Patient has {initial_count} existing consultations")
+        
+        # Step 3: Create new consultation
+        today = datetime.now().strftime("%Y-%m-%d")
+        new_consultation = {
+            "patient_id": patient_id,
+            "appointment_id": "workflow_test_appointment",
+            "date": today,
+            "duree": 30,
+            "poids": 18.5,
+            "taille": 105.0,
+            "pc": 50.0,
+            "observations": "Consultation de routine - workflow test",
+            "traitement": "Aucun traitement nécessaire",
+            "bilan": "Développement normal",
+            "relance_date": ""
+        }
+        
+        response = requests.post(f"{self.base_url}/api/consultations", json=new_consultation)
+        self.assertEqual(response.status_code, 200)
+        consultation_id = response.json()["consultation_id"]
+        print(f"Step 3: Created new consultation {consultation_id}")
+        
+        # Step 4: Verify consultation appears in patient's consultation list
+        response = requests.get(f"{self.base_url}/api/consultations/patient/{patient_id}")
+        self.assertEqual(response.status_code, 200)
+        updated_consultations = response.json()
+        new_count = len(updated_consultations)
+        
+        self.assertEqual(new_count, initial_count + 1, "New consultation should be added to patient's list")
+        print(f"Step 4: Patient now has {new_count} consultations")
+        
+        # Step 5: Find and verify the new consultation
+        new_consultation_found = None
+        for consultation in updated_consultations:
+            if consultation["id"] == consultation_id:
+                new_consultation_found = consultation
+                break
+        
+        self.assertIsNotNone(new_consultation_found, "New consultation should be in patient's consultation list")
+        self.assertEqual(new_consultation_found["poids"], 18.5)
+        self.assertEqual(new_consultation_found["observations"], "Consultation de routine - workflow test")
+        print("Step 5: New consultation verified in patient's consultation list")
+        
+        print("✅ Complete consultation workflow integration successful")
+
 if __name__ == "__main__":
     unittest.main()
