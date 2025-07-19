@@ -547,15 +547,17 @@ const Consultation = ({ user }) => {
                         .map((consultation) => (
                           <div
                             key={consultation.id}
-                            className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow"
+                            className={`border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow ${
+                              consultation.type_rdv === 'controle' ? 'ml-6' : ''
+                            }`}
                           >
                             <div className="flex items-center justify-between">
                               <div className="flex items-center space-x-4">
-                                {/* Badge type consultation */}
+                                {/* Badge type consultation avec nouveaux codes couleur */}
                                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                                   consultation.type_rdv === 'visite'
-                                    ? 'bg-green-100 text-green-800'
-                                    : 'bg-blue-100 text-blue-800'
+                                    ? 'bg-red-100 text-red-800'
+                                    : 'bg-green-100 text-green-800'
                                 }`}>
                                   {consultation.type_rdv === 'visite' ? 'Visite' : 'Contrôle'}
                                 </span>
