@@ -93,8 +93,10 @@ const Dashboard = ({ user }) => {
   };
 
   const initializeWebSocket = () => {
-    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${wsProtocol}//${window.location.host}/ws`;
+    // Use the backend URL for WebSocket connection
+    const backendUrl = new URL(API_BASE_URL);
+    const wsProtocol = backendUrl.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${wsProtocol}//${backendUrl.host}/ws`;
     
     try {
       const websocket = new WebSocket(wsUrl);
