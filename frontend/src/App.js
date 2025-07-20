@@ -115,7 +115,8 @@ function App() {
         <Sidebar 
           user={user} 
           isOpen={sidebarOpen} 
-          onClose={() => setSidebarOpen(false)} 
+          onClose={() => setSidebarOpen(false)}
+          phoneMessagesCount={phoneMessagesCount}
         />
         
         {/* Main Content */}
