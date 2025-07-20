@@ -29,6 +29,9 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 
 const Consultation = ({ user }) => {
+  // Hook pour les paramètres URL
+  const location = useLocation();
+  
   // États principaux
   const [patients, setPatients] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState(null);
