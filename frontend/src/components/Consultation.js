@@ -145,7 +145,7 @@ const Consultation = ({ user }) => {
     } finally {
       setLoading(false);
     }
-  }, [API_BASE_URL]);
+  }, []);
 
   // Charger les consultations d'un patient
   const fetchPatientConsultations = useCallback(async (patientId) => {
@@ -158,7 +158,7 @@ const Consultation = ({ user }) => {
       console.error('Error fetching consultations:', error);
       toast.error('Erreur lors du chargement des consultations');
     }
-  }, [API_BASE_URL]);
+  }, []);
 
   // Sélectionner un patient
   const handlePatientSelect = useCallback(async (patient) => {
