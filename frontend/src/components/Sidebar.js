@@ -77,14 +77,23 @@ const Sidebar = ({ user, isOpen, onClose, phoneMessagesCount = 0 }) => {
                   <Link
                     to={item.path}
                     onClick={onClose}
-                    className={`flex items-center space-x-2 sm:space-x-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg transition-all duration-200 text-xs sm:text-sm ${
+                    className={`flex items-center justify-between space-x-2 sm:space-x-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg transition-all duration-200 text-xs sm:text-sm ${
                       isActive 
                         ? 'bg-primary-100 text-primary-700 font-medium shadow-sm' 
                         : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                     }`}
                   >
-                    <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span className="hidden sm:inline lg:inline">{item.label}</span>
+                    <div className="flex items-center space-x-2 sm:space-x-3">
+                      <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <span className="hidden sm:inline lg:inline">{item.label}</span>
+                    </div>
+                    
+                    {/* Badge pour Messages */}
+                    {item.id === 'messages' && phoneMessagesCount > 0 && (
+                      <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
+                        {phoneMessagesCount}
+                      </span>
+                    )}
                   </Link>
                 </li>
               );
