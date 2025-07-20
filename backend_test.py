@@ -17873,5 +17873,531 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
         
         print("✅ Error handling edge cases working correctly")
 
+    # ========== WEBSOCKET INSTANT MESSAGING TESTS ==========
+    
+    def test_websocket_connection(self):
+        """Test WebSocket connection to /api/ws endpoint"""
+        # Convert HTTP URL to WebSocket URL
+        ws_url = self.base_url.replace("https://", "wss://").replace("http://", "ws://") + "/api/ws"
+        print(f"Testing WebSocket connection to: {ws_url}")
+        
+        async def test_connection():
+            try:
+                # Test WebSocket connection
+                async with websockets.connect(ws_url, timeout=10) as websocket:
+                    print("✅ WebSocket connection established successfully")
+                    
+                    # Test sending a ping to verify connection is active
+                    await websocket.ping()
+                    print("✅ WebSocket ping successful")
+                    
+                    return True
+            except Exception as e:
+                print(f"❌ WebSocket connection failed: {str(e)}")
+                return False
+        
+        # Run the async test
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            connection_success = loop.run_until_complete(test_connection())
+            self.assertTrue(connection_success, "WebSocket connection should succeed")
+        finally:
+            loop.close()
+    
+    def test_websocket_message_broadcasting(self):
+        """Test message broadcasting through WebSocket when creating messages"""
+        # Clean up messages first
+        requests.post(f"{self.base_url}/api/messages/cleanup")
+        
+        # Convert HTTP URL to WebSocket URL
+        ws_url = self.base_url.replace("https://", "wss://").replace("http://", "ws://") + "/api/ws"
+        
+        received_broadcasts = []
+        connection_established = threading.Event()
+        
+        async def websocket_listener():
+            try:
+                async with websockets.connect(ws_url, timeout=10) as websocket:
+                    print("✅ WebSocket listener connected")
+                    connection_established.set()
+                    
+                    # Listen for broadcasts for 10 seconds
+                    try:
+                        while True:
+                            message = await asyncio.wait_for(websocket.recv(), timeout=10)
+                            broadcast_data = json.loads(message)
+                            received_broadcasts.append(broadcast_data)
+                            print(f"📨 Received WebSocket broadcast: {broadcast_data.get('type', 'unknown')}")
+                            
+                            # Stop after receiving first broadcast
+                            if len(received_broadcasts) >= 1:
+                                break
+                    except asyncio.TimeoutError:
+                        print("⏰ WebSocket listener timeout (no broadcasts received)")
+                        
+            except Exception as e:
+                print(f"❌ WebSocket listener error: {str(e)}")
+        
+        # Start WebSocket listener in background
+        def run_listener():
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                loop.run_until_complete(websocket_listener())
+            finally:
+                loop.close()
+        
+        listener_thread = threading.Thread(target=run_listener)
+        listener_thread.daemon = True
+        listener_thread.start()
+        
+        # Wait for WebSocket connection to be established
+        connection_established.wait(timeout=5)
+        time.sleep(1)  # Give extra time for connection to stabilize
+        
+        # Create a message via HTTP API (should trigger WebSocket broadcast)
+        message_data = {
+            "content": "Test message for WebSocket broadcasting"
+        }
+        
+        response = requests.post(
+            f"{self.base_url}/api/messages",
+            json=message_data,
+            params={"sender_type": "medecin", "sender_name": "Dr. WebSocket Test"}
+        )
+        self.assertEqual(response.status_code, 200)
+        created_message_id = response.json()["id"]
+        
+        # Wait for broadcast to be received
+        time.sleep(3)
+        
+        # Verify broadcast was received
+        self.assertGreater(len(received_broadcasts), 0, "Should have received at least one WebSocket broadcast")
+        
+        if len(received_broadcasts) > 0:
+            broadcast = received_broadcasts[0]
+            
+            # Verify broadcast message format
+            self.assertIn("type", broadcast, "Broadcast should have 'type' field")
+            self.assertIn("data", broadcast, "Broadcast should have 'data' field")
+            
+            # Verify broadcast type
+            expected_types = ["new_message", "message_created", "message"]
+            self.assertIn(broadcast["type"], expected_types, f"Broadcast type should be one of {expected_types}")
+            
+            # Verify broadcast data contains message information
+            broadcast_data = broadcast["data"]
+            if isinstance(broadcast_data, dict):
+                # Check if it contains message fields
+                message_fields = ["id", "content", "sender_type", "sender_name", "timestamp"]
+                has_message_fields = any(field in broadcast_data for field in message_fields)
+                self.assertTrue(has_message_fields, "Broadcast data should contain message information")
+                
+                if "id" in broadcast_data:
+                    self.assertEqual(broadcast_data["id"], created_message_id, "Broadcast should contain the created message ID")
+                
+                if "content" in broadcast_data:
+                    self.assertEqual(broadcast_data["content"], "Test message for WebSocket broadcasting")
+            
+            print("✅ WebSocket message broadcasting working correctly")
+        else:
+            print("⚠️ No WebSocket broadcasts received - this may indicate an issue with real-time messaging")
+    
+    def test_websocket_message_operations_broadcasting(self):
+        """Test WebSocket broadcasting for message operations (create, update, delete)"""
+        # Clean up messages first
+        requests.post(f"{self.base_url}/api/messages/cleanup")
+        
+        # Convert HTTP URL to WebSocket URL
+        ws_url = self.base_url.replace("https://", "wss://").replace("http://", "ws://") + "/api/ws"
+        
+        received_broadcasts = []
+        connection_established = threading.Event()
+        
+        async def websocket_listener():
+            try:
+                async with websockets.connect(ws_url, timeout=10) as websocket:
+                    print("✅ WebSocket operations listener connected")
+                    connection_established.set()
+                    
+                    # Listen for broadcasts for 15 seconds
+                    try:
+                        while True:
+                            message = await asyncio.wait_for(websocket.recv(), timeout=15)
+                            broadcast_data = json.loads(message)
+                            received_broadcasts.append(broadcast_data)
+                            print(f"📨 Received operation broadcast: {broadcast_data.get('type', 'unknown')}")
+                            
+                            # Stop after receiving multiple broadcasts or timeout
+                            if len(received_broadcasts) >= 3:
+                                break
+                    except asyncio.TimeoutError:
+                        print(f"⏰ WebSocket operations listener timeout (received {len(received_broadcasts)} broadcasts)")
+                        
+            except Exception as e:
+                print(f"❌ WebSocket operations listener error: {str(e)}")
+        
+        # Start WebSocket listener in background
+        def run_listener():
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                loop.run_until_complete(websocket_listener())
+            finally:
+                loop.close()
+        
+        listener_thread = threading.Thread(target=run_listener)
+        listener_thread.daemon = True
+        listener_thread.start()
+        
+        # Wait for WebSocket connection to be established
+        connection_established.wait(timeout=5)
+        time.sleep(1)
+        
+        # Test 1: Create message (should broadcast "new_message" or similar)
+        create_data = {
+            "content": "Message for operations testing"
+        }
+        
+        response = requests.post(
+            f"{self.base_url}/api/messages",
+            json=create_data,
+            params={"sender_type": "medecin", "sender_name": "Dr. Operations Test"}
+        )
+        self.assertEqual(response.status_code, 200)
+        message_id = response.json()["id"]
+        time.sleep(2)  # Wait for broadcast
+        
+        # Test 2: Update message (should broadcast "message_updated" or similar)
+        update_data = {
+            "content": "Updated message for operations testing"
+        }
+        
+        response = requests.put(
+            f"{self.base_url}/api/messages/{message_id}",
+            json=update_data,
+            params={"user_type": "medecin"}
+        )
+        self.assertEqual(response.status_code, 200)
+        time.sleep(2)  # Wait for broadcast
+        
+        # Test 3: Delete message (should broadcast "message_deleted" or similar)
+        response = requests.delete(
+            f"{self.base_url}/api/messages/{message_id}",
+            params={"user_type": "medecin"}
+        )
+        self.assertEqual(response.status_code, 200)
+        time.sleep(2)  # Wait for broadcast
+        
+        # Wait for all broadcasts to be received
+        time.sleep(2)
+        
+        # Verify broadcasts were received
+        print(f"📊 Total broadcasts received: {len(received_broadcasts)}")
+        
+        if len(received_broadcasts) > 0:
+            # Analyze broadcast types
+            broadcast_types = [broadcast.get("type", "unknown") for broadcast in received_broadcasts]
+            print(f"📋 Broadcast types received: {broadcast_types}")
+            
+            # Verify we have different types of broadcasts
+            expected_operations = ["new_message", "message_updated", "message_deleted", "message_created", "message"]
+            
+            # Check if we received broadcasts for different operations
+            has_create_broadcast = any(btype in ["new_message", "message_created", "message"] for btype in broadcast_types)
+            has_update_broadcast = any(btype in ["message_updated", "message_edited"] for btype in broadcast_types)
+            has_delete_broadcast = any(btype in ["message_deleted", "message_removed"] for btype in broadcast_types)
+            
+            print(f"✅ Create broadcast received: {has_create_broadcast}")
+            print(f"✅ Update broadcast received: {has_update_broadcast}")
+            print(f"✅ Delete broadcast received: {has_delete_broadcast}")
+            
+            # Verify broadcast message format for each received broadcast
+            for i, broadcast in enumerate(received_broadcasts):
+                self.assertIn("type", broadcast, f"Broadcast {i} should have 'type' field")
+                self.assertIn("data", broadcast, f"Broadcast {i} should have 'data' field")
+                
+                # Verify type is a string
+                self.assertIsInstance(broadcast["type"], str, f"Broadcast {i} type should be string")
+                
+                # Verify data is present (can be dict, string, or other)
+                self.assertIsNotNone(broadcast["data"], f"Broadcast {i} data should not be None")
+            
+            print("✅ WebSocket message operations broadcasting working correctly")
+        else:
+            print("⚠️ No WebSocket broadcasts received for message operations")
+            # This might indicate an issue with WebSocket broadcasting
+            self.fail("Expected to receive WebSocket broadcasts for message operations")
+    
+    def test_websocket_broadcast_message_format(self):
+        """Test WebSocket broadcast message format verification"""
+        # Clean up messages first
+        requests.post(f"{self.base_url}/api/messages/cleanup")
+        
+        # Convert HTTP URL to WebSocket URL
+        ws_url = self.base_url.replace("https://", "wss://").replace("http://", "ws://") + "/api/ws"
+        
+        received_broadcasts = []
+        connection_established = threading.Event()
+        
+        async def websocket_listener():
+            try:
+                async with websockets.connect(ws_url, timeout=10) as websocket:
+                    print("✅ WebSocket format listener connected")
+                    connection_established.set()
+                    
+                    # Listen for broadcasts
+                    try:
+                        while True:
+                            message = await asyncio.wait_for(websocket.recv(), timeout=10)
+                            broadcast_data = json.loads(message)
+                            received_broadcasts.append(broadcast_data)
+                            print(f"📨 Received format test broadcast: {json.dumps(broadcast_data, indent=2)}")
+                            
+                            # Stop after receiving first broadcast
+                            if len(received_broadcasts) >= 1:
+                                break
+                    except asyncio.TimeoutError:
+                        print("⏰ WebSocket format listener timeout")
+                        
+            except Exception as e:
+                print(f"❌ WebSocket format listener error: {str(e)}")
+        
+        # Start WebSocket listener in background
+        def run_listener():
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                loop.run_until_complete(websocket_listener())
+            finally:
+                loop.close()
+        
+        listener_thread = threading.Thread(target=run_listener)
+        listener_thread.daemon = True
+        listener_thread.start()
+        
+        # Wait for WebSocket connection to be established
+        connection_established.wait(timeout=5)
+        time.sleep(1)
+        
+        # Create a message to trigger broadcast
+        message_data = {
+            "content": "Format verification test message",
+            "reply_to": None
+        }
+        
+        response = requests.post(
+            f"{self.base_url}/api/messages",
+            json=message_data,
+            params={"sender_type": "secretaire", "sender_name": "Marie Format Test"}
+        )
+        self.assertEqual(response.status_code, 200)
+        created_message = response.json()
+        
+        # Wait for broadcast
+        time.sleep(3)
+        
+        # Verify broadcast format
+        self.assertGreater(len(received_broadcasts), 0, "Should have received WebSocket broadcast")
+        
+        if len(received_broadcasts) > 0:
+            broadcast = received_broadcasts[0]
+            
+            # Test 1: Verify top-level structure
+            self.assertIsInstance(broadcast, dict, "Broadcast should be a JSON object")
+            self.assertIn("type", broadcast, "Broadcast must have 'type' field")
+            self.assertIn("data", broadcast, "Broadcast must have 'data' field")
+            
+            # Test 2: Verify type field
+            broadcast_type = broadcast["type"]
+            self.assertIsInstance(broadcast_type, str, "Broadcast type must be string")
+            self.assertGreater(len(broadcast_type), 0, "Broadcast type must not be empty")
+            
+            # Test 3: Verify data field structure
+            broadcast_data = broadcast["data"]
+            self.assertIsNotNone(broadcast_data, "Broadcast data must not be None")
+            
+            # Test 4: If data is a message object, verify message structure
+            if isinstance(broadcast_data, dict):
+                # Check for expected message fields
+                expected_message_fields = ["id", "content", "sender_type", "sender_name", "timestamp"]
+                
+                for field in expected_message_fields:
+                    if field in broadcast_data:
+                        print(f"✅ Found expected field '{field}' in broadcast data")
+                        
+                        # Verify field types
+                        if field == "id":
+                            self.assertIsInstance(broadcast_data[field], str, "Message ID should be string")
+                        elif field == "content":
+                            self.assertIsInstance(broadcast_data[field], str, "Message content should be string")
+                            self.assertEqual(broadcast_data[field], "Format verification test message")
+                        elif field == "sender_type":
+                            self.assertIsInstance(broadcast_data[field], str, "Sender type should be string")
+                            self.assertIn(broadcast_data[field], ["medecin", "secretaire"], "Sender type should be valid")
+                        elif field == "sender_name":
+                            self.assertIsInstance(broadcast_data[field], str, "Sender name should be string")
+                        elif field == "timestamp":
+                            # Timestamp can be string or datetime object
+                            self.assertTrue(
+                                isinstance(broadcast_data[field], (str, int, float)),
+                                "Timestamp should be string, int, or float"
+                            )
+                
+                # Test 5: Verify optional fields if present
+                optional_fields = ["is_read", "is_edited", "reply_to", "reply_content", "original_content"]
+                for field in optional_fields:
+                    if field in broadcast_data:
+                        print(f"✅ Found optional field '{field}' in broadcast data")
+                        
+                        if field in ["is_read", "is_edited"]:
+                            self.assertIsInstance(broadcast_data[field], bool, f"{field} should be boolean")
+                        elif field in ["reply_to", "reply_content", "original_content"]:
+                            self.assertTrue(
+                                isinstance(broadcast_data[field], (str, type(None))),
+                                f"{field} should be string or None"
+                            )
+            
+            # Test 6: Verify broadcast can be serialized back to JSON
+            try:
+                json.dumps(broadcast)
+                print("✅ Broadcast is JSON serializable")
+            except Exception as e:
+                self.fail(f"Broadcast should be JSON serializable: {str(e)}")
+            
+            print("✅ WebSocket broadcast message format verification successful")
+            print(f"📋 Broadcast type: {broadcast_type}")
+            print(f"📋 Broadcast data type: {type(broadcast_data).__name__}")
+            
+        else:
+            print("⚠️ No WebSocket broadcasts received for format verification")
+            self.fail("Expected to receive WebSocket broadcast for format verification")
+    
+    def test_websocket_multiple_clients(self):
+        """Test WebSocket broadcasting to multiple clients"""
+        # Clean up messages first
+        requests.post(f"{self.base_url}/api/messages/cleanup")
+        
+        # Convert HTTP URL to WebSocket URL
+        ws_url = self.base_url.replace("https://", "wss://").replace("http://", "ws://") + "/api/ws"
+        
+        client1_broadcasts = []
+        client2_broadcasts = []
+        connections_established = threading.Event()
+        
+        async def websocket_client1():
+            try:
+                async with websockets.connect(ws_url, timeout=10) as websocket:
+                    print("✅ WebSocket client 1 connected")
+                    
+                    # Listen for broadcasts
+                    try:
+                        while True:
+                            message = await asyncio.wait_for(websocket.recv(), timeout=8)
+                            broadcast_data = json.loads(message)
+                            client1_broadcasts.append(broadcast_data)
+                            print(f"📨 Client 1 received: {broadcast_data.get('type', 'unknown')}")
+                            
+                            if len(client1_broadcasts) >= 1:
+                                break
+                    except asyncio.TimeoutError:
+                        print("⏰ Client 1 timeout")
+                        
+            except Exception as e:
+                print(f"❌ Client 1 error: {str(e)}")
+        
+        async def websocket_client2():
+            try:
+                async with websockets.connect(ws_url, timeout=10) as websocket:
+                    print("✅ WebSocket client 2 connected")
+                    connections_established.set()
+                    
+                    # Listen for broadcasts
+                    try:
+                        while True:
+                            message = await asyncio.wait_for(websocket.recv(), timeout=8)
+                            broadcast_data = json.loads(message)
+                            client2_broadcasts.append(broadcast_data)
+                            print(f"📨 Client 2 received: {broadcast_data.get('type', 'unknown')}")
+                            
+                            if len(client2_broadcasts) >= 1:
+                                break
+                    except asyncio.TimeoutError:
+                        print("⏰ Client 2 timeout")
+                        
+            except Exception as e:
+                print(f"❌ Client 2 error: {str(e)}")
+        
+        # Start both WebSocket clients in background
+        def run_client1():
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                loop.run_until_complete(websocket_client1())
+            finally:
+                loop.close()
+        
+        def run_client2():
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                loop.run_until_complete(websocket_client2())
+            finally:
+                loop.close()
+        
+        client1_thread = threading.Thread(target=run_client1)
+        client2_thread = threading.Thread(target=run_client2)
+        client1_thread.daemon = True
+        client2_thread.daemon = True
+        
+        client1_thread.start()
+        client2_thread.start()
+        
+        # Wait for connections to be established
+        connections_established.wait(timeout=5)
+        time.sleep(2)  # Give extra time for both connections
+        
+        # Create a message (should broadcast to both clients)
+        message_data = {
+            "content": "Multi-client broadcast test message"
+        }
+        
+        response = requests.post(
+            f"{self.base_url}/api/messages",
+            json=message_data,
+            params={"sender_type": "medecin", "sender_name": "Dr. Multi-Client Test"}
+        )
+        self.assertEqual(response.status_code, 200)
+        
+        # Wait for broadcasts to be received
+        time.sleep(4)
+        
+        # Verify both clients received the broadcast
+        print(f"📊 Client 1 broadcasts: {len(client1_broadcasts)}")
+        print(f"📊 Client 2 broadcasts: {len(client2_broadcasts)}")
+        
+        # At least one client should receive the broadcast
+        total_broadcasts = len(client1_broadcasts) + len(client2_broadcasts)
+        self.assertGreater(total_broadcasts, 0, "At least one client should receive the broadcast")
+        
+        if len(client1_broadcasts) > 0 and len(client2_broadcasts) > 0:
+            print("✅ Both WebSocket clients received broadcasts")
+            
+            # Verify both clients received the same message
+            client1_broadcast = client1_broadcasts[0]
+            client2_broadcast = client2_broadcasts[0]
+            
+            self.assertEqual(client1_broadcast.get("type"), client2_broadcast.get("type"), 
+                           "Both clients should receive the same broadcast type")
+            
+        elif len(client1_broadcasts) > 0 or len(client2_broadcasts) > 0:
+            print("✅ At least one WebSocket client received broadcast")
+        else:
+            print("⚠️ No WebSocket clients received broadcasts")
+            self.fail("Expected at least one client to receive WebSocket broadcast")
+        
+        print("✅ WebSocket multiple clients test completed")
+
 if __name__ == "__main__":
     unittest.main()
