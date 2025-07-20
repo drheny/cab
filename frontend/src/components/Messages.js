@@ -28,6 +28,11 @@ const Messages = ({ user }) => {
   const [responseContent, setResponseContent] = useState('');
   const [respondingTo, setRespondingTo] = useState(null);
   
+  // Edition
+  const [editingMessage, setEditingMessage] = useState(null);
+  const [editContent, setEditContent] = useState('');
+  const [editPriority, setEditPriority] = useState('normal');
+  
   // Filters
   const [statusFilter, setStatusFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
