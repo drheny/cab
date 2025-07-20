@@ -392,23 +392,46 @@ const Dashboard = ({ user }) => {
   };
 
   const handleDeleteMessage = async (messageId) => {
+    console.log('🗑️ Attempting to delete message:', messageId);
+    
     if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce message ?')) {
+      console.log('❌ Delete cancelled by user');
       return;
     }
 
     try {
-      await axios.delete(`${API_BASE_URL}/api/messages/${messageId}`, {
+      console.log('🔄 Sending delete request for message:', messageId);
+      
+      const response = await axios.delete(`${API_BASE_URL}/api/messages/${messageId}`, {
         params: { user_type: user.type }
       });
+      
+      console.log('✅ Delete request successful:', response.data);
+      
+      // Show success feedback
+      toast.success('Message supprimé avec succès');
       
       // If WebSocket is not connected, fetch messages manually
       if (!ws || ws.readyState !== WebSocket.OPEN) {
         console.log('WebSocket not connected, fetching messages manually after delete');
         await fetchMessages();
+      } else {
+        console.log('WebSocket connected, deletion will be handled via broadcast');
       }
     } catch (error) {
-      console.error('Error deleting message:', error);
-      toast.error('Erreur lors de la suppression du message');
+      console.error('❌ Error deleting message:', error);
+      
+      if (error.response) {
+        if (error.response.status === 403) {
+          toast.error('Vous ne pouvez supprimer que vos propres messages');
+        } else if (error.response.status === 404) {
+          toast.error('Message non trouvé');
+        } else {
+          toast.error(`Erreur: ${error.response.data.detail || 'Erreur inconnue'}`);
+        }
+      } else {
+        toast.error('Erreur lors de la suppression du message');
+      }
     }
   };
 
