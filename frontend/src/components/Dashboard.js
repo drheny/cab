@@ -791,9 +791,21 @@ const Dashboard = ({ user }) => {
 
       {/* Recent Activity - Responsive */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 responsive-padding">
-        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center">
-          <MessageCircle className="w-5 h-5 mr-2 text-primary-500" />
-          Messagerie Interne
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center justify-between">
+          <div className="flex items-center">
+            <MessageCircle className="w-5 h-5 mr-2 text-primary-500" />
+            Messagerie Interne
+          </div>
+          <button
+            onClick={() => {
+              console.log('🔊 Testing notification sound...');
+              playNotificationSound();
+            }}
+            className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors"
+            title="Tester le son de notification"
+          >
+            🔊 Test Son
+          </button>
         </h3>
         
         {/* Messages Container */}
