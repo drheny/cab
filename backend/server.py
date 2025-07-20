@@ -1587,6 +1587,122 @@ async def get_unpaid_appointments():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching unpaid appointments: {str(e)}")
 
+@app.delete("/api/payments/{payment_id}")
+async def delete_payment(payment_id: str):
+    """Delete payment record"""
+    try:
+        # Check if payment exists
+        existing_payment = payments_collection.find_one({"id": payment_id})
+        if not existing_payment:
+            raise HTTPException(status_code=404, detail="Payment not found")
+        
+        # Delete payment record
+        result = payments_collection.delete_one({"id": payment_id})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Failed to delete payment")
+        
+        # Update appointment to unpaid status
+        appointments_collection.update_one(
+            {"id": existing_payment["appointment_id"]},
+            {"$set": {"paye": False, "updated_at": datetime.now()}}
+        )
+        
+        return {"message": "Payment deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting payment: {str(e)}")
+
+@app.get("/api/payments/search")
+async def search_payments(
+    patient_name: Optional[str] = Query(None, description="Search by patient name"),
+    date_debut: Optional[str] = Query(None, description="Start date filter"),
+    date_fin: Optional[str] = Query(None, description="End date filter"),
+    method: Optional[str] = Query(None, description="Payment method filter"),
+    assure: Optional[bool] = Query(None, description="Insurance status filter"),
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(20, ge=1, le=100, description="Items per page")
+):
+    """Advanced search for payments with pagination"""
+    try:
+        # Build search query
+        query = {}
+        
+        # Date range filter
+        if date_debut and date_fin:
+            query["date"] = {"$gte": date_debut, "$lte": date_fin}
+        elif date_debut:
+            query["date"] = {"$gte": date_debut}
+        elif date_fin:
+            query["date"] = {"$lte": date_fin}
+        
+        # Payment method filter
+        if method:
+            query["type_paiement"] = method
+        
+        # Insurance filter
+        if assure is not None:
+            query["assure"] = assure
+        
+        # Get all payments matching basic criteria
+        payments = list(payments_collection.find(query, {"_id": 0}))
+        
+        # Filter by patient name if provided
+        if patient_name:
+            patient_name = patient_name.lower()
+            filtered_payments = []
+            
+            for payment in payments:
+                # Get patient info
+                try:
+                    patient = patients_collection.find_one({"id": payment["patient_id"]}, {"_id": 0})
+                    if patient:
+                        full_name = f"{patient.get('prenom', '')} {patient.get('nom', '')}".lower()
+                        if patient_name in full_name:
+                            payment["patient"] = patient
+                            filtered_payments.append(payment)
+                except:
+                    continue
+            
+            payments = filtered_payments
+        else:
+            # Enrich all payments with patient info
+            for payment in payments:
+                try:
+                    patient = patients_collection.find_one({"id": payment["patient_id"]}, {"_id": 0})
+                    if patient:
+                        payment["patient"] = patient
+                    else:
+                        payment["patient"] = {"nom": "Inconnu", "prenom": ""}
+                except:
+                    payment["patient"] = {"nom": "Inconnu", "prenom": ""}
+        
+        # Sort by date (most recent first)
+        payments.sort(key=lambda x: x.get("date", ""), reverse=True)
+        
+        # Calculate pagination
+        total_count = len(payments)
+        total_pages = (total_count + limit - 1) // limit
+        skip = (page - 1) * limit
+        paginated_payments = payments[skip:skip + limit]
+        
+        return {
+            "payments": paginated_payments,
+            "pagination": {
+                "current_page": page,
+                "total_pages": total_pages,
+                "total_count": total_count,
+                "limit": limit,
+                "has_next": page < total_pages,
+                "has_prev": page > 1
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error searching payments: {str(e)}")
+
 @app.put("/api/payments/{payment_id}")
 async def update_payment(payment_id: str, payment_data: PaymentUpdate):
     """Update existing payment record"""
