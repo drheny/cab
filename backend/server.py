@@ -2239,6 +2239,201 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating priority: {str(e)}")
 
+# ==================== Phone Messages API ====================
+
+@app.get("/api/phone-messages")
+async def get_phone_messages(
+    status: str = Query("", description="Filter by status: nouveau, traité"),
+    priority: str = Query("", description="Filter by priority: urgent, normal"),
+    date_from: str = Query("", description="Filter from date YYYY-MM-DD"),
+    date_to: str = Query("", description="Filter to date YYYY-MM-DD")
+):
+    """Get phone messages with filtering"""
+    try:
+        # Build filter query
+        filter_query = {}
+        
+        if status:
+            filter_query["status"] = status
+        if priority:
+            filter_query["priority"] = priority
+        if date_from:
+            filter_query["call_date"] = {"$gte": date_from}
+        if date_to:
+            if "call_date" in filter_query:
+                filter_query["call_date"]["$lte"] = date_to
+            else:
+                filter_query["call_date"] = {"$lte": date_to}
+        
+        # Get messages sorted by call_date and call_time (newest first)
+        messages = list(phone_messages_collection.find(filter_query, {"_id": 0})
+                       .sort([("call_date", -1), ("call_time", -1)]))
+        
+        return {"phone_messages": messages, "total": len(messages)}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching phone messages: {str(e)}")
+
+@app.post("/api/phone-messages")
+async def create_phone_message(message_data: PhoneMessageCreate):
+    """Create new phone message (secrétaire only)"""
+    try:
+        # Get patient info
+        patient = patients_collection.find_one({"id": message_data.patient_id}, {"_id": 0})
+        if not patient:
+            raise HTTPException(status_code=404, detail="Patient not found")
+        
+        # Create phone message
+        phone_message = PhoneMessage(
+            patient_id=message_data.patient_id,
+            patient_name=f"{patient.get('prenom', '')} {patient.get('nom', '')}".strip(),
+            message_content=message_data.message_content,
+            priority=message_data.priority,
+            call_date=message_data.call_date,
+            call_time=message_data.call_time,
+            created_by="Secrétaire"  # Could be dynamic based on user session
+        )
+        
+        # Insert into database
+        phone_message_dict = phone_message.dict()
+        phone_messages_collection.insert_one(phone_message_dict)
+        
+        # Send WebSocket notification to médecin
+        notification_data = {
+            "type": "new_phone_message",
+            "message_id": phone_message.id,
+            "patient_name": phone_message.patient_name,
+            "priority": phone_message.priority,
+            "timestamp": phone_message.created_at.isoformat()
+        }
+        await manager.broadcast(notification_data)
+        
+        return {"message": "Phone message created successfully", "message_id": phone_message.id}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating phone message: {str(e)}")
+
+@app.put("/api/phone-messages/{message_id}/response")
+async def respond_phone_message(message_id: str, response_data: PhoneMessageResponse):
+    """Add response to phone message (médecin only)"""
+    try:
+        # Find message
+        message = phone_messages_collection.find_one({"id": message_id})
+        if not message:
+            raise HTTPException(status_code=404, detail="Phone message not found")
+        
+        # Update message with response
+        update_data = {
+            "response_content": response_data.response_content,
+            "status": "traité",
+            "responded_by": "Dr Heni Dridi",  # Could be dynamic based on user session
+            "updated_at": datetime.now()
+        }
+        
+        result = phone_messages_collection.update_one(
+            {"id": message_id},
+            {"$set": update_data}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Failed to update message")
+        
+        # Send WebSocket notification about response
+        notification_data = {
+            "type": "phone_message_responded",
+            "message_id": message_id,
+            "patient_name": message.get("patient_name", ""),
+            "timestamp": datetime.now().isoformat()
+        }
+        await manager.broadcast(notification_data)
+        
+        return {"message": "Response added successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error responding to phone message: {str(e)}")
+
+@app.get("/api/phone-messages/stats")
+async def get_phone_messages_stats():
+    """Get phone messages statistics"""
+    try:
+        # Count by status
+        nouveau_count = phone_messages_collection.count_documents({"status": "nouveau"})
+        traite_count = phone_messages_collection.count_documents({"status": "traité"})
+        
+        # Count by priority
+        urgent_count = phone_messages_collection.count_documents({"priority": "urgent"})
+        normal_count = phone_messages_collection.count_documents({"priority": "normal"})
+        
+        # Count by today
+        today = datetime.now().strftime("%Y-%m-%d")
+        today_count = phone_messages_collection.count_documents({"call_date": today})
+        
+        return {
+            "nouveau": nouveau_count,
+            "traité": traite_count,
+            "urgent": urgent_count,
+            "normal": normal_count,
+            "today": today_count,
+            "total": nouveau_count + traite_count
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching phone messages stats: {str(e)}")
+
+@app.delete("/api/phone-messages/{message_id}")
+async def delete_phone_message(message_id: str):
+    """Delete phone message"""
+    try:
+        result = phone_messages_collection.delete_one({"id": message_id})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Phone message not found")
+        
+        return {"message": "Phone message deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting phone message: {str(e)}")
+
+@app.get("/api/patients/search")
+async def search_patients(
+    q: str = Query("", description="Search query for patient name")
+):
+    """Search patients for phone message creation"""
+    try:
+        if not q:
+            return {"patients": []}
+        
+        # Search by name (case insensitive)
+        search_regex = {"$regex": q, "$options": "i"}
+        query = {
+            "$or": [
+                {"nom": search_regex},
+                {"prenom": search_regex}
+            ]
+        }
+        
+        # Get matching patients (limit to 20 results)
+        patients = list(patients_collection.find(query, {
+            "_id": 0,
+            "id": 1,
+            "nom": 1,
+            "prenom": 1,
+            "age": 1,
+            "numero_whatsapp": 1
+        }).limit(20))
+        
+        return {"patients": patients}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error searching patients: {str(e)}")
+
+# ==================== End Phone Messages API ====================
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
