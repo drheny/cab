@@ -802,15 +802,27 @@ const Dashboard = ({ user }) => {
                         {/* Action buttons for own messages */}
                         {message.sender_type === user.type && (
                           <div className="flex space-x-1 ml-2">
+                            {/* DEBUG: Log button rendering */}
+                            {console.log(`🔍 RENDERING DELETE BUTTON - Message ID: ${message.id}, sender_type: "${message.sender_type}", user.type: "${user.type}", Match: ${message.sender_type === user.type}`)}
                             <button
-                              onClick={() => handleEditMessage(message)}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                console.log(`🖱️ DELETE BUTTON CLICKED - Message ID: ${message.id}`);
+                                handleDeleteMessage(message.id);
+                              }}
                               className="p-1 rounded-full hover:bg-white hover:bg-opacity-20 transition-colors"
                               title="Modifier"
                             >
                               <span className="text-xs">✏️</span>
                             </button>
                             <button
-                              onClick={() => handleDeleteMessage(message.id)}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                console.log(`🗑️ DELETE BUTTON CLICKED - Message ID: ${message.id}`);
+                                handleDeleteMessage(message.id);
+                              }}
                               className="p-1 rounded-full hover:bg-red-500 hover:bg-opacity-20 transition-colors"
                               title="Supprimer"
                             >
