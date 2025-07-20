@@ -73,7 +73,117 @@ const Dashboard = ({ user }) => {
     fetchDashboardData();
     fetchBirthdays();
     fetchPhoneReminders();
+    fetchMessages();
+    initializeWebSocket();
+    
+    // Cleanup WebSocket on unmount
+    return () => {
+      if (ws) {
+        ws.close();
+      }
+    };
   }, []);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const initializeWebSocket = () => {
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${wsProtocol}//${window.location.host}/ws`;
+    
+    try {
+      const websocket = new WebSocket(wsUrl);
+      
+      websocket.onopen = () => {
+        console.log('WebSocket connected');
+        setWs(websocket);
+      };
+      
+      websocket.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          handleWebSocketMessage(data);
+        } catch (error) {
+          console.error('Error parsing WebSocket message:', error);
+        }
+      };
+      
+      websocket.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
+      
+      websocket.onclose = () => {
+        console.log('WebSocket disconnected');
+        // Attempt to reconnect after 3 seconds
+        setTimeout(() => {
+          if (ws && ws.readyState === WebSocket.CLOSED) {
+            initializeWebSocket();
+          }
+        }, 3000);
+      };
+    } catch (error) {
+      console.error('Failed to initialize WebSocket:', error);
+    }
+  };
+
+  const handleWebSocketMessage = (data) => {
+    switch (data.type) {
+      case 'new_message':
+        setMessages(prev => [...prev, data.data]);
+        // Play notification sound for received messages
+        if (data.data.sender_type !== user.type) {
+          playNotificationSound();
+        }
+        break;
+      case 'message_updated':
+        setMessages(prev => prev.map(msg => 
+          msg.id === data.data.id ? data.data : msg
+        ));
+        break;
+      case 'message_deleted':
+        setMessages(prev => prev.filter(msg => msg.id !== data.data.id));
+        break;
+      case 'message_read':
+        setMessages(prev => prev.map(msg => 
+          msg.id === data.data.id ? { ...msg, is_read: true } : msg
+        ));
+        break;
+      case 'messages_cleared':
+        setMessages([]);
+        toast.success('Messages automatiquement nettoyés');
+        break;
+      default:
+        break;
+    }
+  };
+
+  const playNotificationSound = () => {
+    try {
+      // Create a simple notification sound
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+      oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
+      
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.5);
+    } catch (error) {
+      console.log('Could not play notification sound:', error);
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {
