@@ -15724,5 +15724,539 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
         
         print("✅ Complete simplified payment workflow working correctly")
 
+    # ========== PHASE 1 BILLING IMPROVEMENTS TESTS ==========
+    
+    def test_payments_stats_enhanced_endpoint(self):
+        """Test enhanced /api/payments/stats endpoint with consultation statistics"""
+        # Test with default date range (current month)
+        response = requests.get(f"{self.base_url}/api/payments/stats")
+        self.assertEqual(response.status_code, 200)
+        stats = response.json()
+        
+        # Verify enhanced response structure includes consultation statistics
+        self.assertIn("periode", stats)
+        self.assertIn("total_montant", stats)
+        self.assertIn("nb_paiements", stats)
+        self.assertIn("ca_jour", stats)
+        self.assertIn("by_method", stats)
+        self.assertIn("assurance", stats)
+        
+        # NEW: Verify consultation statistics are included
+        self.assertIn("consultations", stats)
+        consultations = stats["consultations"]
+        self.assertIn("nb_visites", consultations)
+        self.assertIn("nb_controles", consultations)
+        self.assertIn("nb_total", consultations)
+        self.assertIn("nb_assures", consultations)
+        self.assertIn("nb_non_assures", consultations)
+        
+        # Verify data types
+        self.assertIsInstance(stats["total_montant"], (int, float))
+        self.assertIsInstance(stats["nb_paiements"], int)
+        self.assertIsInstance(stats["ca_jour"], (int, float))
+        self.assertIsInstance(consultations["nb_visites"], int)
+        self.assertIsInstance(consultations["nb_controles"], int)
+        self.assertIsInstance(consultations["nb_total"], int)
+        self.assertIsInstance(consultations["nb_assures"], int)
+        self.assertIsInstance(consultations["nb_non_assures"], int)
+        
+        # Verify data consistency
+        self.assertEqual(consultations["nb_total"], consultations["nb_visites"] + consultations["nb_controles"])
+        self.assertEqual(consultations["nb_total"], consultations["nb_assures"] + consultations["nb_non_assures"])
+        
+        print(f"✅ Enhanced /api/payments/stats - Consultations: {consultations['nb_visites']} visites, {consultations['nb_controles']} contrôles, {consultations['nb_assures']} assurés")
+    
+    def test_payments_stats_with_custom_date_range(self):
+        """Test /api/payments/stats with custom date range"""
+        today = datetime.now()
+        date_debut = (today - timedelta(days=7)).strftime("%Y-%m-%d")
+        date_fin = today.strftime("%Y-%m-%d")
+        
+        response = requests.get(f"{self.base_url}/api/payments/stats?date_debut={date_debut}&date_fin={date_fin}")
+        self.assertEqual(response.status_code, 200)
+        stats = response.json()
+        
+        # Verify date range is correctly applied
+        self.assertIn("periode", stats)
+        periode = stats["periode"]
+        self.assertEqual(periode["debut"], date_debut)
+        self.assertEqual(periode["fin"], date_fin)
+        
+        # Verify consultation statistics are present
+        self.assertIn("consultations", stats)
+        consultations = stats["consultations"]
+        
+        # All values should be non-negative
+        self.assertGreaterEqual(consultations["nb_visites"], 0)
+        self.assertGreaterEqual(consultations["nb_controles"], 0)
+        self.assertGreaterEqual(consultations["nb_total"], 0)
+        self.assertGreaterEqual(consultations["nb_assures"], 0)
+        self.assertGreaterEqual(consultations["nb_non_assures"], 0)
+        
+        print(f"✅ Custom date range stats - Period: {date_debut} to {date_fin}")
+    
+    def test_payments_advanced_stats_endpoint(self):
+        """Test new /api/payments/advanced-stats endpoint with period breakdown"""
+        # Test all supported periods
+        periods = ["day", "week", "month", "year"]
+        
+        for period in periods:
+            response = requests.get(f"{self.base_url}/api/payments/advanced-stats?period={period}")
+            self.assertEqual(response.status_code, 200)
+            stats = response.json()
+            
+            # Verify response structure
+            self.assertIn("period", stats)
+            self.assertIn("date_range", stats)
+            self.assertIn("totals", stats)
+            self.assertIn("breakdown", stats)
+            
+            # Verify period matches request
+            self.assertEqual(stats["period"], period)
+            
+            # Verify date_range structure
+            date_range = stats["date_range"]
+            self.assertIn("debut", date_range)
+            self.assertIn("fin", date_range)
+            
+            # Verify totals structure
+            totals = stats["totals"]
+            self.assertIn("ca_total", totals)
+            self.assertIn("nb_paiements", totals)
+            self.assertIn("nb_visites", totals)
+            self.assertIn("nb_controles", totals)
+            self.assertIn("nb_assures", totals)
+            
+            # Verify breakdown is a list
+            self.assertIsInstance(stats["breakdown"], list)
+            
+            # Verify data types in totals
+            self.assertIsInstance(totals["ca_total"], (int, float))
+            self.assertIsInstance(totals["nb_paiements"], int)
+            self.assertIsInstance(totals["nb_visites"], int)
+            self.assertIsInstance(totals["nb_controles"], int)
+            self.assertIsInstance(totals["nb_assures"], int)
+            
+            # Verify data consistency in totals
+            total_consultations = totals["nb_visites"] + totals["nb_controles"]
+            self.assertGreaterEqual(total_consultations, 0)
+            
+            print(f"✅ Advanced stats for period '{period}' - CA: {totals['ca_total']}, Visites: {totals['nb_visites']}, Contrôles: {totals['nb_controles']}")
+    
+    def test_payments_advanced_stats_day_breakdown(self):
+        """Test /api/payments/advanced-stats with day period for detailed breakdown"""
+        response = requests.get(f"{self.base_url}/api/payments/advanced-stats?period=day")
+        self.assertEqual(response.status_code, 200)
+        stats = response.json()
+        
+        # Verify breakdown structure for day period
+        breakdown = stats["breakdown"]
+        
+        for day_stat in breakdown:
+            # Verify day breakdown structure
+            self.assertIn("date", day_stat)
+            self.assertIn("ca", day_stat)
+            self.assertIn("nb_paiements", day_stat)
+            self.assertIn("nb_visites", day_stat)
+            self.assertIn("nb_controles", day_stat)
+            self.assertIn("nb_assures", day_stat)
+            
+            # Verify data types
+            self.assertIsInstance(day_stat["ca"], (int, float))
+            self.assertIsInstance(day_stat["nb_paiements"], int)
+            self.assertIsInstance(day_stat["nb_visites"], int)
+            self.assertIsInstance(day_stat["nb_controles"], int)
+            self.assertIsInstance(day_stat["nb_assures"], int)
+            
+            # Verify date format
+            try:
+                datetime.strptime(day_stat["date"], "%Y-%m-%d")
+            except ValueError:
+                self.fail(f"Invalid date format in day breakdown: {day_stat['date']}")
+            
+            # Verify data consistency
+            self.assertGreaterEqual(day_stat["ca"], 0)
+            self.assertGreaterEqual(day_stat["nb_paiements"], 0)
+            self.assertGreaterEqual(day_stat["nb_visites"], 0)
+            self.assertGreaterEqual(day_stat["nb_controles"], 0)
+            self.assertGreaterEqual(day_stat["nb_assures"], 0)
+        
+        print(f"✅ Day breakdown - {len(breakdown)} days analyzed")
+    
+    def test_payments_advanced_stats_week_breakdown(self):
+        """Test /api/payments/advanced-stats with week period"""
+        response = requests.get(f"{self.base_url}/api/payments/advanced-stats?period=week")
+        self.assertEqual(response.status_code, 200)
+        stats = response.json()
+        
+        # Verify breakdown structure for week period
+        breakdown = stats["breakdown"]
+        
+        for week_stat in breakdown:
+            # Verify week breakdown structure
+            self.assertIn("periode", week_stat)
+            self.assertIn("ca", week_stat)
+            self.assertIn("nb_paiements", week_stat)
+            self.assertIn("nb_visites", week_stat)
+            self.assertIn("nb_controles", week_stat)
+            self.assertIn("nb_assures", week_stat)
+            
+            # Verify periode format (should contain "Semaine du")
+            self.assertIn("Semaine du", week_stat["periode"])
+            
+            # Verify data types and values
+            self.assertIsInstance(week_stat["ca"], (int, float))
+            self.assertIsInstance(week_stat["nb_paiements"], int)
+            self.assertGreaterEqual(week_stat["ca"], 0)
+            self.assertGreaterEqual(week_stat["nb_paiements"], 0)
+        
+        print(f"✅ Week breakdown - {len(breakdown)} weeks analyzed")
+    
+    def test_payments_advanced_stats_month_breakdown(self):
+        """Test /api/payments/advanced-stats with month period"""
+        response = requests.get(f"{self.base_url}/api/payments/advanced-stats?period=month")
+        self.assertEqual(response.status_code, 200)
+        stats = response.json()
+        
+        # Verify breakdown structure for month period
+        breakdown = stats["breakdown"]
+        
+        for month_stat in breakdown:
+            # Verify month breakdown structure
+            self.assertIn("periode", month_stat)
+            self.assertIn("ca", month_stat)
+            self.assertIn("nb_paiements", month_stat)
+            self.assertIn("nb_visites", month_stat)
+            self.assertIn("nb_controles", month_stat)
+            self.assertIn("nb_assures", month_stat)
+            
+            # Verify periode format (should be month name and year)
+            periode = month_stat["periode"]
+            self.assertTrue(any(month in periode for month in ["January", "February", "March", "April", "May", "June", 
+                                                              "July", "August", "September", "October", "November", "December"]) or
+                           any(month in periode for month in ["janvier", "février", "mars", "avril", "mai", "juin",
+                                                              "juillet", "août", "septembre", "octobre", "novembre", "décembre"]))
+            
+            # Verify data consistency
+            self.assertGreaterEqual(month_stat["ca"], 0)
+            self.assertGreaterEqual(month_stat["nb_visites"] + month_stat["nb_controles"], 0)
+        
+        print(f"✅ Month breakdown - {len(breakdown)} months analyzed")
+    
+    def test_payments_advanced_stats_year_breakdown(self):
+        """Test /api/payments/advanced-stats with year period"""
+        response = requests.get(f"{self.base_url}/api/payments/advanced-stats?period=year")
+        self.assertEqual(response.status_code, 200)
+        stats = response.json()
+        
+        # Verify breakdown structure for year period
+        breakdown = stats["breakdown"]
+        
+        for year_stat in breakdown:
+            # Verify year breakdown structure
+            self.assertIn("periode", year_stat)
+            self.assertIn("ca", year_stat)
+            self.assertIn("nb_paiements", year_stat)
+            self.assertIn("nb_visites", year_stat)
+            self.assertIn("nb_controles", year_stat)
+            self.assertIn("nb_assures", year_stat)
+            
+            # Verify periode format (should contain "Année")
+            self.assertIn("Année", year_stat["periode"])
+            
+            # Verify data types
+            self.assertIsInstance(year_stat["ca"], (int, float))
+            self.assertIsInstance(year_stat["nb_paiements"], int)
+            self.assertIsInstance(year_stat["nb_visites"], int)
+            self.assertIsInstance(year_stat["nb_controles"], int)
+            self.assertIsInstance(year_stat["nb_assures"], int)
+        
+        print(f"✅ Year breakdown - {len(breakdown)} years analyzed")
+    
+    def test_payments_advanced_stats_custom_date_range(self):
+        """Test /api/payments/advanced-stats with custom date range"""
+        today = datetime.now()
+        date_debut = (today - timedelta(days=30)).strftime("%Y-%m-%d")
+        date_fin = today.strftime("%Y-%m-%d")
+        
+        response = requests.get(f"{self.base_url}/api/payments/advanced-stats?period=day&date_debut={date_debut}&date_fin={date_fin}")
+        self.assertEqual(response.status_code, 200)
+        stats = response.json()
+        
+        # Verify custom date range is applied
+        date_range = stats["date_range"]
+        self.assertEqual(date_range["debut"], date_debut)
+        self.assertEqual(date_range["fin"], date_fin)
+        
+        # Verify breakdown contains data within the specified range
+        breakdown = stats["breakdown"]
+        for day_stat in breakdown:
+            day_date = day_stat["date"]
+            self.assertGreaterEqual(day_date, date_debut)
+            self.assertLessEqual(day_date, date_fin)
+        
+        print(f"✅ Custom date range advanced stats - {len(breakdown)} days from {date_debut} to {date_fin}")
+    
+    def test_payments_stats_calculation_accuracy(self):
+        """Test calculation accuracy of payment statistics"""
+        # Get current stats
+        response = requests.get(f"{self.base_url}/api/payments/stats")
+        self.assertEqual(response.status_code, 200)
+        stats = response.json()
+        
+        # Get raw payment data for verification
+        response = requests.get(f"{self.base_url}/api/payments")
+        self.assertEqual(response.status_code, 200)
+        payments = response.json()
+        
+        # Get raw appointment data for verification
+        response = requests.get(f"{self.base_url}/api/appointments")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        
+        # Calculate expected values manually
+        today = datetime.now().strftime("%Y-%m-%d")
+        current_month_start = datetime.now().replace(day=1).strftime("%Y-%m-%d")
+        
+        # Filter payments for current month
+        current_month_payments = [p for p in payments if p.get("date", "") >= current_month_start and p.get("statut") == "paye"]
+        expected_total_montant = sum(p.get("montant", 0) for p in current_month_payments)
+        expected_nb_paiements = len(current_month_payments)
+        
+        # Filter today's payments
+        today_payments = [p for p in current_month_payments if p.get("date") == today]
+        expected_ca_jour = sum(p.get("montant", 0) for p in today_payments)
+        
+        # Filter appointments for current month
+        current_month_appointments = [a for a in appointments if a.get("date", "") >= current_month_start]
+        expected_nb_visites = len([a for a in current_month_appointments if a.get("type_rdv") == "visite"])
+        expected_nb_controles = len([a for a in current_month_appointments if a.get("type_rdv") == "controle"])
+        expected_nb_assures = len([a for a in current_month_appointments if a.get("assure", False)])
+        
+        # Verify calculations match
+        self.assertEqual(stats["total_montant"], expected_total_montant, f"Total montant mismatch: {stats['total_montant']} vs {expected_total_montant}")
+        self.assertEqual(stats["nb_paiements"], expected_nb_paiements, f"Nb paiements mismatch: {stats['nb_paiements']} vs {expected_nb_paiements}")
+        self.assertEqual(stats["ca_jour"], expected_ca_jour, f"CA jour mismatch: {stats['ca_jour']} vs {expected_ca_jour}")
+        
+        consultations = stats["consultations"]
+        self.assertEqual(consultations["nb_visites"], expected_nb_visites, f"Nb visites mismatch: {consultations['nb_visites']} vs {expected_nb_visites}")
+        self.assertEqual(consultations["nb_controles"], expected_nb_controles, f"Nb contrôles mismatch: {consultations['nb_controles']} vs {expected_nb_controles}")
+        self.assertEqual(consultations["nb_assures"], expected_nb_assures, f"Nb assurés mismatch: {consultations['nb_assures']} vs {expected_nb_assures}")
+        
+        print(f"✅ Calculation accuracy verified - Total: {expected_total_montant}, Payments: {expected_nb_paiements}, Visites: {expected_nb_visites}")
+    
+    def test_payments_stats_edge_cases(self):
+        """Test edge cases for payment statistics"""
+        # Test with future date range (should return empty results)
+        future_start = (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")
+        future_end = (datetime.now() + timedelta(days=60)).strftime("%Y-%m-%d")
+        
+        response = requests.get(f"{self.base_url}/api/payments/stats?date_debut={future_start}&date_fin={future_end}")
+        self.assertEqual(response.status_code, 200)
+        stats = response.json()
+        
+        # Should return zero values for future dates
+        self.assertEqual(stats["total_montant"], 0)
+        self.assertEqual(stats["nb_paiements"], 0)
+        self.assertEqual(stats["ca_jour"], 0)
+        
+        consultations = stats["consultations"]
+        self.assertEqual(consultations["nb_visites"], 0)
+        self.assertEqual(consultations["nb_controles"], 0)
+        self.assertEqual(consultations["nb_total"], 0)
+        self.assertEqual(consultations["nb_assures"], 0)
+        self.assertEqual(consultations["nb_non_assures"], 0)
+        
+        # Test with invalid date format (should handle gracefully)
+        response = requests.get(f"{self.base_url}/api/payments/stats?date_debut=invalid-date&date_fin=also-invalid")
+        # Should either return 400 or handle gracefully with default dates
+        self.assertIn(response.status_code, [200, 400])
+        
+        print("✅ Edge cases handled correctly")
+    
+    def test_payments_advanced_stats_edge_cases(self):
+        """Test edge cases for advanced payment statistics"""
+        # Test with invalid period
+        response = requests.get(f"{self.base_url}/api/payments/advanced-stats?period=invalid_period")
+        # Should either return 400 or default to a valid period
+        self.assertIn(response.status_code, [200, 400])
+        
+        # Test with empty date range
+        response = requests.get(f"{self.base_url}/api/payments/advanced-stats?period=day&date_debut=&date_fin=")
+        self.assertEqual(response.status_code, 200)
+        stats = response.json()
+        
+        # Should use default date range
+        self.assertIn("date_range", stats)
+        self.assertIn("breakdown", stats)
+        
+        # Test with reversed date range (end before start)
+        today = datetime.now()
+        date_debut = today.strftime("%Y-%m-%d")
+        date_fin = (today - timedelta(days=7)).strftime("%Y-%m-%d")
+        
+        response = requests.get(f"{self.base_url}/api/payments/advanced-stats?period=day&date_debut={date_debut}&date_fin={date_fin}")
+        # Should handle gracefully (either swap dates or return empty)
+        self.assertIn(response.status_code, [200, 400])
+        
+        print("✅ Advanced stats edge cases handled correctly")
+    
+    def test_payments_stats_performance(self):
+        """Test performance of payment statistics endpoints"""
+        import time
+        
+        # Test /api/payments/stats performance
+        start_time = time.time()
+        response = requests.get(f"{self.base_url}/api/payments/stats")
+        stats_time = time.time() - start_time
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertLess(stats_time, 5.0, f"Payment stats endpoint too slow: {stats_time:.2f}s")
+        
+        # Test /api/payments/advanced-stats performance
+        start_time = time.time()
+        response = requests.get(f"{self.base_url}/api/payments/advanced-stats?period=month")
+        advanced_stats_time = time.time() - start_time
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertLess(advanced_stats_time, 10.0, f"Advanced stats endpoint too slow: {advanced_stats_time:.2f}s")
+        
+        print(f"✅ Performance test - Stats: {stats_time:.2f}s, Advanced: {advanced_stats_time:.2f}s")
+    
+    def test_create_test_data_for_billing_stats(self):
+        """Create diverse test data to validate billing statistics"""
+        # Get existing patients
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        
+        if len(patients) < 2:
+            self.skipTest("Need at least 2 patients for comprehensive billing tests")
+        
+        today = datetime.now()
+        test_appointments = []
+        test_payments = []
+        
+        # Create diverse appointments and payments for testing
+        test_scenarios = [
+            {
+                "patient_id": patients[0]["id"],
+                "date": today.strftime("%Y-%m-%d"),
+                "heure": "09:00",
+                "type_rdv": "visite",
+                "statut": "termine",
+                "paye": True,
+                "assure": False,
+                "montant": 65.0,
+                "type_paiement": "espece"
+            },
+            {
+                "patient_id": patients[1]["id"] if len(patients) > 1 else patients[0]["id"],
+                "date": today.strftime("%Y-%m-%d"),
+                "heure": "10:00",
+                "type_rdv": "controle",
+                "statut": "termine",
+                "paye": True,
+                "assure": True,
+                "montant": 0.0,
+                "type_paiement": "gratuit"
+            },
+            {
+                "patient_id": patients[0]["id"],
+                "date": (today - timedelta(days=1)).strftime("%Y-%m-%d"),
+                "heure": "14:00",
+                "type_rdv": "visite",
+                "statut": "termine",
+                "paye": True,
+                "assure": True,
+                "montant": 80.0,
+                "type_paiement": "espece"
+            }
+        ]
+        
+        created_appointments = []
+        created_payments = []
+        
+        try:
+            # Create test appointments and payments
+            for scenario in test_scenarios:
+                # Create appointment
+                appointment_data = {
+                    "patient_id": scenario["patient_id"],
+                    "date": scenario["date"],
+                    "heure": scenario["heure"],
+                    "type_rdv": scenario["type_rdv"],
+                    "statut": scenario["statut"],
+                    "paye": scenario["paye"],
+                    "assure": scenario["assure"],
+                    "motif": f"Test {scenario['type_rdv']} for billing stats"
+                }
+                
+                response = requests.post(f"{self.base_url}/api/appointments", json=appointment_data)
+                self.assertEqual(response.status_code, 200)
+                appointment_id = response.json()["appointment_id"]
+                created_appointments.append(appointment_id)
+                
+                # Create corresponding payment if paid
+                if scenario["paye"] and scenario["montant"] > 0:
+                    payment_data = {
+                        "patient_id": scenario["patient_id"],
+                        "appointment_id": appointment_id,
+                        "montant": scenario["montant"],
+                        "type_paiement": scenario["type_paiement"],
+                        "statut": "paye",
+                        "assure": scenario["assure"],
+                        "date": scenario["date"]
+                    }
+                    
+                    # Use the payment creation endpoint
+                    response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/paiement", json={
+                        "paye": True,
+                        "montant": scenario["montant"],
+                        "type_paiement": scenario["type_paiement"],
+                        "assure": scenario["assure"]
+                    })
+                    self.assertEqual(response.status_code, 200)
+            
+            # Now test the statistics with this diverse data
+            response = requests.get(f"{self.base_url}/api/payments/stats")
+            self.assertEqual(response.status_code, 200)
+            stats = response.json()
+            
+            # Verify the stats include our test data
+            consultations = stats["consultations"]
+            self.assertGreater(consultations["nb_visites"], 0, "Should have visite consultations")
+            self.assertGreater(consultations["nb_controles"], 0, "Should have controle consultations")
+            self.assertGreater(consultations["nb_assures"], 0, "Should have assured patients")
+            self.assertGreater(consultations["nb_non_assures"], 0, "Should have non-assured patients")
+            
+            # Test advanced stats
+            response = requests.get(f"{self.base_url}/api/payments/advanced-stats?period=day")
+            self.assertEqual(response.status_code, 200)
+            advanced_stats = response.json()
+            
+            # Verify breakdown includes our test data
+            breakdown = advanced_stats["breakdown"]
+            self.assertGreater(len(breakdown), 0, "Should have daily breakdown data")
+            
+            # Find today's data in breakdown
+            today_str = today.strftime("%Y-%m-%d")
+            today_breakdown = None
+            for day_stat in breakdown:
+                if day_stat.get("date") == today_str:
+                    today_breakdown = day_stat
+                    break
+            
+            if today_breakdown:
+                self.assertGreater(today_breakdown["nb_visites"] + today_breakdown["nb_controles"], 0, "Should have consultations for today")
+            
+            print(f"✅ Test data created and validated - Visites: {consultations['nb_visites']}, Contrôles: {consultations['nb_controles']}")
+            
+        finally:
+            # Clean up created appointments
+            for appointment_id in created_appointments:
+                requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+
 if __name__ == "__main__":
     unittest.main()
