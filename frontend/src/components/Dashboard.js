@@ -403,9 +403,8 @@ const Dashboard = ({ user }) => {
   };
 
   const handleDeleteMessage = async (messageId) => {
-    console.log('🗑️ Attempting to delete message:', messageId);
+    console.log('🗑️ Delete button clicked for message:', messageId);
     
-    // Récupérer le message à supprimer avant la confirmation
     const messageToDelete = messages.find(msg => msg.id === messageId);
     if (!messageToDelete) {
       console.log('❌ Message not found in current messages');
@@ -413,13 +412,23 @@ const Dashboard = ({ user }) => {
       return;
     }
     
-    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce message ?')) {
-      console.log('❌ Delete cancelled by user');
-      return;
-    }
+    // Show custom confirmation dialog
+    setDeleteConfirmDialog({
+      show: true,
+      messageId: messageId,
+      messageContent: messageToDelete.content
+    });
+  };
 
+  const confirmDelete = async () => {
+    const { messageId } = deleteConfirmDialog;
     console.log('🔄 User confirmed deletion, proceeding...');
     
+    // Close dialog
+    setDeleteConfirmDialog({ show: false, messageId: null, messageContent: '' });
+    
+    const messageToDelete = messages.find(msg => msg.id === messageId);
+
     // Suppression optimiste : retirer immédiatement de l'UI
     console.log('🔄 Removing message optimistically:', messageId);
     setMessages(prevMessages => {
@@ -467,6 +476,11 @@ const Dashboard = ({ user }) => {
         toast.error('Erreur lors de la suppression du message');
       }
     }
+  };
+
+  const cancelDelete = () => {
+    console.log('❌ Delete cancelled by user');
+    setDeleteConfirmDialog({ show: false, messageId: null, messageContent: '' });
   };
 
   const markMessageAsRead = async (messageId) => {
