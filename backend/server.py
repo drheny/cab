@@ -586,8 +586,77 @@ def create_demo_data():
 
     # Demo consultations
     demo_consultations = [
+        # Consultations pour patient1 (Yassine Ben Ahmed)
         {
             "id": "cons1",
+            "patient_id": "patient1",
+            "appointment_id": "appt1",
+            "date": (today - timedelta(days=30)).strftime("%Y-%m-%d"),
+            "duree": 25,
+            "poids": 18.2,
+            "taille": 95.0,
+            "pc": 50.0,
+            "observations": "Consultation pour fièvre. Enfant en bonne forme générale. Température : 38.5°C. Gorge légèrement irritée.",
+            "traitement": "Paracétamol sirop 2.5ml 3 fois par jour pendant 3 jours. Repos et hydratation.",
+            "bilan": "Infection virale bénigne. Guérison attendue en 3-5 jours.",
+            "relance_date": (today + timedelta(days=7)).strftime("%Y-%m-%d"),
+            "created_at": datetime.now() - timedelta(days=30),
+            "type_rdv": "visite"
+        },
+        {
+            "id": "cons2",
+            "patient_id": "patient1", 
+            "appointment_id": "appt4",
+            "date": (today - timedelta(days=15)).strftime("%Y-%m-%d"),
+            "duree": 15,
+            "poids": 18.5,
+            "taille": 96.0,
+            "pc": 50.2,
+            "observations": "Consultation de suivi vaccination. Réaction vaccinale normale. Enfant en excellente santé.",
+            "traitement": "Aucun traitement spécifique",
+            "bilan": "Vaccination bien tolérée. Croissance normale.",
+            "relance_date": "",
+            "created_at": datetime.now() - timedelta(days=15),
+            "type_rdv": "controle"
+        },
+        
+        # Consultations pour patient2 (Lina Alami)
+        {
+            "id": "cons3",
+            "patient_id": "patient2",
+            "appointment_id": "appt2", 
+            "date": (today - timedelta(days=45)).strftime("%Y-%m-%d"),
+            "duree": 30,
+            "poids": 15.8,
+            "taille": 88.0,
+            "pc": 48.5,
+            "observations": "Première visite pour eczéma. Éruption cutanée sur les bras et le visage. Enfant par ailleurs en bonne santé.",
+            "traitement": "Crème hydratante 2 fois par jour. Éviter les savons parfumés. Cortisone légère si aggravation.",
+            "bilan": "Eczéma constitutionnel léger. Évolution favorable avec soins adaptés.",
+            "relance_date": (today + timedelta(days=14)).strftime("%Y-%m-%d"),
+            "created_at": datetime.now() - timedelta(days=45),
+            "type_rdv": "visite"
+        },
+        {
+            "id": "cons4",
+            "patient_id": "patient2",
+            "appointment_id": "appt5",
+            "date": (today - timedelta(days=20)).strftime("%Y-%m-%d"),
+            "duree": 20,
+            "poids": 16.1,
+            "taille": 89.0,
+            "pc": 48.8,
+            "observations": "Contrôle eczéma. Nette amélioration des lésions cutanées. Peau bien hydratée. Parents satisfaits du traitement.",
+            "traitement": "Continuer crème hydratante. Réduire fréquence à 1 fois par jour.",
+            "bilan": "Eczéma bien contrôlé. Poursuite des soins préventifs.",
+            "relance_date": "",
+            "created_at": datetime.now() - timedelta(days=20),
+            "type_rdv": "controle"
+        },
+        
+        # Consultation pour patient3 (Omar Tazi)
+        {
+            "id": "cons5",
             "patient_id": "patient3",
             "appointment_id": "appt3",
             "date": today.strftime("%Y-%m-%d"),
@@ -595,11 +664,28 @@ def create_demo_data():
             "poids": 12.5,
             "taille": 85.0,
             "pc": 47.0,
-            "observations": "Enfant en bonne santé, développement normal",
-            "traitement": "Aucun traitement nécessaire",
-            "bilan": "RAS",
+            "observations": "Consultation générale. Enfant en bonne santé, développement psychomoteur normal. Bon appétit, sommeil régulier.",
+            "traitement": "Aucun traitement nécessaire. Continuer alimentation équilibrée.",
+            "bilan": "Développement normal pour l'âge. Enfant en excellente santé.",
             "relance_date": "",
-            "created_at": datetime.now()
+            "created_at": datetime.now(),
+            "type_rdv": "visite"
+        },
+        {
+            "id": "cons6", 
+            "patient_id": "patient3",
+            "appointment_id": "appt6",
+            "date": (today - timedelta(days=60)).strftime("%Y-%m-%d"),
+            "duree": 25,
+            "poids": 11.8,
+            "taille": 82.0,
+            "pc": 46.5,
+            "observations": "Contrôle de croissance. Rattrapage pondéral satisfaisant après naissance prématurée. Développement adapté.",
+            "traitement": "Supplémentation vitaminique continue. Alimentation riche en protéines.",
+            "bilan": "Croissance rattrape la normale. Évolution très positive.",
+            "relance_date": (today + timedelta(days=30)).strftime("%Y-%m-%d"),
+            "created_at": datetime.now() - timedelta(days=60),
+            "type_rdv": "controle"
         }
     ]
 
