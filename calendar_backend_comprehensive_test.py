@@ -22,7 +22,7 @@ class CalendarBackendComprehensiveTest(unittest.TestCase):
     
     def setUp(self):
         """Setup test environment"""
-        backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://00888bcb-e3ee-45f7-a863-2ca3a94ac1d6.preview.emergentagent.com')
+        backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://21013378-6a50-4f8f-b666-859400c9b99f.preview.emergentagent.com')
         self.base_url = backend_url
         self.performance_results = {}
         self.error_log = []
