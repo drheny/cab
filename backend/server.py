@@ -633,7 +633,7 @@ def create_demo_data():
             "observations": "Première visite pour eczéma. Éruption cutanée sur les bras et le visage. Enfant par ailleurs en bonne santé.",
             "traitement": "Crème hydratante 2 fois par jour. Éviter les savons parfumés. Cortisone légère si aggravation.",
             "bilan": "Eczéma constitutionnel léger. Évolution favorable avec soins adaptés.",
-            "relance_date": (today + timedelta(days=14)).strftime("%Y-%m-%d"),
+            "relance_date": today.strftime("%Y-%m-%d"),  # Relance pour aujourd'hui
             "created_at": datetime.now() - timedelta(days=45),
             "type_rdv": "visite"
         },
