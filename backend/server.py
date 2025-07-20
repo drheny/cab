@@ -1300,6 +1300,20 @@ async def get_payments_stats(
         today_payments = [p for p in payments if p.get("date") == today_str]
         ca_jour = sum(p.get("montant", 0) for p in today_payments)
         
+        # Get appointments data for visit/control statistics
+        appointments = list(appointments_collection.find({
+            "date": {"$gte": date_debut, "$lte": date_fin}
+        }, {"_id": 0}))
+        
+        # Count visits and controls
+        nb_visites = len([a for a in appointments if a.get("type_rdv") == "visite"])
+        nb_controles = len([a for a in appointments if a.get("type_rdv") == "controle"])
+        nb_total_rdv = len(appointments)
+        
+        # Count assured appointments
+        nb_assures = len([a for a in appointments if a.get("assure", False)])
+        nb_non_assures = nb_total_rdv - nb_assures
+        
         return {
             "periode": {
                 "debut": date_debut,
@@ -1312,6 +1326,13 @@ async def get_payments_stats(
             "assurance": {
                 "assures": assures,
                 "non_assures": non_assures
+            },
+            "consultations": {
+                "nb_visites": nb_visites,
+                "nb_controles": nb_controles,
+                "nb_total": nb_total_rdv,
+                "nb_assures": nb_assures,
+                "nb_non_assures": nb_non_assures
             }
         }
         
