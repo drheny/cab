@@ -81,6 +81,32 @@ const Consultation = ({ user }) => {
     fetchPatients();
   }, []);
 
+  // Gérer les paramètres URL pour pré-sélectionner un patient
+  useEffect(() => {
+    if (patients.length === 0) return; // Attendre que les patients soient chargés
+    
+    const urlParams = new URLSearchParams(location.search);
+    const patientId = urlParams.get('patient');
+    const patientName = urlParams.get('patientName');
+    
+    if (patientId) {
+      const patient = patients.find(p => p.id === patientId);
+      if (patient) {
+        handlePatientSelect(patient);
+        console.log(`🔗 Patient pre-selected from URL: ${patient.prenom} ${patient.nom}`);
+      } else if (patientName) {
+        // Si on n'a pas trouvé par ID, essayer par nom
+        const patientByName = patients.find(p => 
+          `${p.prenom} ${p.nom}`.toLowerCase().includes(patientName.toLowerCase())
+        );
+        if (patientByName) {
+          handlePatientSelect(patientByName);
+          console.log(`🔗 Patient found by name from URL: ${patientByName.prenom} ${patientByName.nom}`);
+        }
+      }
+    }
+  }, [patients, location.search, handlePatientSelect]);
+
   // Gestion du chronomètre
   useEffect(() => {
     let interval;
