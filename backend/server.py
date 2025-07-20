@@ -694,15 +694,76 @@ def create_demo_data():
 
     # Demo payments
     demo_payments = [
+        # Paiements pour patient1 (Yassine Ben Ahmed)
         {
             "id": "pay1",
+            "patient_id": "patient1",
+            "appointment_id": "appt1",
+            "montant": 65.0,
+            "type_paiement": "espece",
+            "statut": "paye",
+            "date": (today - timedelta(days=30)).strftime("%Y-%m-%d"),
+            "assure": True,
+            "created_at": datetime.now() - timedelta(days=30)
+        },
+        {
+            "id": "pay2",
+            "patient_id": "patient1",
+            "appointment_id": "appt4",
+            "montant": 65.0,
+            "type_paiement": "espece",
+            "statut": "paye",
+            "date": (today - timedelta(days=15)).strftime("%Y-%m-%d"),
+            "assure": True,
+            "created_at": datetime.now() - timedelta(days=15)
+        },
+        
+        # Paiements pour patient2 (Lina Alami)
+        {
+            "id": "pay3",
+            "patient_id": "patient2",
+            "appointment_id": "appt2",
+            "montant": 65.0,
+            "type_paiement": "espece",
+            "statut": "paye",
+            "date": (today - timedelta(days=45)).strftime("%Y-%m-%d"),
+            "assure": False,
+            "created_at": datetime.now() - timedelta(days=45)
+        },
+        {
+            "id": "pay4",
+            "patient_id": "patient2",
+            "appointment_id": "appt5",
+            "montant": 65.0,
+            "type_paiement": "espece",
+            "statut": "paye",
+            "date": (today - timedelta(days=20)).strftime("%Y-%m-%d"),
+            "assure": False,
+            "created_at": datetime.now() - timedelta(days=20)
+        },
+        
+        # Paiements pour patient3 (Omar Tazi)
+        {
+            "id": "pay5",
             "patient_id": "patient3",
             "appointment_id": "appt3",
-            "montant": 300.0,
+            "montant": 65.0,
             "type_paiement": "espece",
             "statut": "paye",
             "date": today.strftime("%Y-%m-%d"),
+            "assure": False,
             "created_at": datetime.now()
+        },
+        {
+            "id": "pay6",
+            "patient_id": "patient3",
+            "appointment_id": "appt6",
+            "montant": 65.0,
+            "type_paiement": "espece",
+            "statut": "paye",
+            "date": (today - timedelta(days=60)).strftime("%Y-%m-%d"),
+            "assure": False,
+            "created_at": datetime.now() - timedelta(days=60)
         }
     ]
 
