@@ -891,22 +891,61 @@ Final payment amount display testing completed with critical data issue identifi
 **PAYMENT AMOUNT DISPLAY: FRONTEND READY BUT BACKEND DATA NEEDS CORRECTION**
 The payment amount display functionality is fully implemented and ready to work. The issue is that the consultation record needs to have the type_rdv field set to "visite" for the payment amount to be displayed. Once this data correction is made, the payment display will work immediately.
 
-### PHONE MESSAGES EDITING & CONSULTATION NAVIGATION TESTING ✅ COMPLETED
-**Status:** PHONE MESSAGES EDITING FULLY FUNCTIONAL - CONSULTATION NAVIGATION PARTIALLY WORKING
+### REACT TIMING FIX FOR CONSULTATION NAVIGATION TESTING ❌ FAILED
+**Status:** CRITICAL REACT TIMING ISSUE NOT RESOLVED - CONSULTATION NAVIGATION STILL BROKEN
 
-**Test Results Summary (2025-01-20 - Phone Messages Editing & Navigation Testing):**
-✅ **Message Editing Functionality** - Complete inline editing system working perfectly with all features
-✅ **Edit2 Icon Buttons** - Visible and functional for all messages in both secrétaire and médecin interfaces
-✅ **Inline Edit Mode** - Yellow background highlight working correctly with complete edit interface
-✅ **Edit Form Elements** - Textarea, priority radio buttons, save/cancel buttons all functional
-✅ **Form Validation** - Save button correctly disabled when message content is empty
-✅ **Save Functionality** - Message editing saves successfully with API integration and WebSocket notifications
-✅ **Cancel Functionality** - Cancel button properly reverts changes and exits edit mode
-✅ **Priority Editing** - Users can successfully change priority between normal and urgent
-✅ **Cross-User Support** - Both secrétaire and médecin users can edit messages
+**Test Results Summary (2025-01-20 - React Timing Fix Testing):**
+❌ **React Timing Error Persists** - "Cannot access 'fetchPatients' before initialization" error still occurring
+❌ **Page Crashes** - Consultation page shows red error screen with "Uncaught runtime errors"
+❌ **Patient Auto-Selection Failed** - React error prevents patient from being automatically selected
+❌ **Consultations Auto-Loading Failed** - React error prevents consultation history from loading
+❌ **Search Field Population Failed** - React error prevents search field from being populated
 ✅ **VOIR Button Navigation** - Eye icon buttons successfully navigate to consultation page with URL parameters
 ✅ **URL Parameter Passing** - Patient ID and name correctly passed via URL (?patient=ID&patientName=NAME)
-❌ **Patient Auto-Selection Issue** - React timing error prevents automatic patient selection in consultation page
+❌ **Direct URL Access Failed** - Direct navigation to /consultation?patient=ID&patientName=NAME crashes with React error
+❌ **Page Refresh Failed** - Refreshing consultation page with URL parameters crashes with React error
+
+**Detailed Test Results:**
+
+**CRITICAL REACT ERROR IDENTIFIED: ❌ FUNDAMENTAL TIMING ISSUE**
+- ❌ **Error Message**: "Cannot access 'fetchPatients' before initialization"
+- ❌ **Error Location**: Consultation component useEffect hooks
+- ❌ **Impact**: Complete page crash with red error screen
+- ❌ **Affected Functionality**: All consultation page features fail due to component crash
+- ❌ **Root Cause**: useCallback and useEffect dependency timing issues not resolved by current fixes
+
+**NAVIGATION TESTING RESULTS:**
+- ✅ **VOIR Button Visibility**: Found 2 VOIR buttons in Messages page
+- ✅ **VOIR Button Functionality**: Buttons successfully navigate to consultation page
+- ✅ **URL Generation**: Correctly generates /consultation?patient=patient2&patientName=Lina+Alami
+- ❌ **Page Loading**: Consultation page crashes immediately with React error
+- ❌ **Patient Selection**: Cannot test due to page crash
+- ❌ **Consultation Loading**: Cannot test due to page crash
+
+**ATTEMPTED FIXES TESTED:**
+1. ❌ **API_BASE_URL Movement**: Moving API_BASE_URL outside component did not resolve issue
+2. ❌ **useCallback Dependencies**: Removing dependencies from useCallback did not resolve issue  
+3. ❌ **Direct State Manipulation**: Bypassing handlePatientSelect function did not resolve issue
+4. ❌ **setTimeout Approach**: Adding delays to function calls did not resolve issue
+5. ❌ **Dependency Array Removal**: Removing function dependencies from useEffect did not resolve issue
+
+**CONSOLE ERROR DETAILS:**
+```
+PAGE ERROR: Cannot access 'fetchPatients' before initialization
+ReferenceError: Cannot access 'fetchPatients' before initialization
+    at Consultation (bundle.js:62717:7)
+    at renderWithHooks (bundle.js:35290:20)
+    at mountIndeterminateComponent (bundle.js:33987:17)
+```
+
+**CRITICAL FINDINGS:**
+- 🚨 **React Timing Fix Failed**: The applied fixes have not resolved the core initialization timing issue
+- 🚨 **Component Architecture Issue**: The useCallback/useEffect dependency structure is fundamentally flawed
+- 🚨 **Complete Feature Breakdown**: All consultation navigation features are non-functional due to React crash
+- 🚨 **User Experience Impact**: Users cannot access consultation page from Messages, breaking core workflow
+
+**CONSULTATION NAVIGATION STATUS: COMPLETELY BROKEN - REQUIRES MAJOR REFACTORING**
+The React timing fix has not resolved the issue. The consultation component requires a complete restructuring of its hook dependencies to eliminate the circular dependency problem between useCallback and useEffect hooks.
 
 **Detailed Test Results:**
 
