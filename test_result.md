@@ -4933,12 +4933,16 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Calendar Weekly View Visual Improvements"
+    - "Enhanced /api/payments/stats endpoint with consultation statistics"
+    - "New /api/payments/advanced-stats endpoint with period breakdown"
+    - "Period breakdown functionality for billing statistics"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
+  - agent: "testing"
+    message: "Phase 1 Billing Improvements testing completed successfully. All enhanced statistics endpoints working correctly: 1) Enhanced /api/payments/stats now includes consultation statistics (nb_visites, nb_controles, nb_assures) with proper data consistency. 2) New /api/payments/advanced-stats endpoint working with all periods (day, week, month, year) and period breakdown functionality. 3) Custom date range support implemented for both endpoints. 4) Edge cases and error handling working correctly. 5) Performance within acceptable limits. All 11 core tests passed. Backend ready for frontend integration."
   - agent: "testing"
     message: "Calendar Weekly View Visual Improvements testing completed successfully. All color specifications implemented correctly: visite=green, controle=blue, retard=red (priority over type). V/C badges and payment badges display with correct colors. Weekly view functionality fully operational. 100% accuracy in implementation (6/6 appointments tested). Ready for production deployment."
   - agent: "testing"
