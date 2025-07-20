@@ -11,7 +11,7 @@ import {
   MessageSquare 
 } from 'lucide-react';
 
-const Sidebar = ({ user, isOpen, onClose }) => {
+const Sidebar = ({ user, isOpen, onClose, phoneMessagesCount = 0 }) => {
   const location = useLocation();
 
   const menuItems = [
