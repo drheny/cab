@@ -185,6 +185,32 @@ class MessageCreate(BaseModel):
 class MessageUpdate(BaseModel):
     content: str
 
+# Modèles pour les messages téléphoniques
+class PhoneMessage(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    patient_id: str
+    patient_name: str  # Nom complet du patient pour faciliter la recherche
+    message_content: str  # Question/demande du patient
+    response_content: str = ""  # Réponse du médecin
+    status: str = "nouveau"  # "nouveau", "traité"
+    priority: str = "normal"  # "urgent", "normal"
+    call_date: str  # Date de l'appel YYYY-MM-DD
+    call_time: str  # Heure de l'appel HH:MM
+    created_by: str  # ID/nom de la secrétaire
+    responded_by: str = ""  # ID/nom du médecin qui répond
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
+
+class PhoneMessageCreate(BaseModel):
+    patient_id: str
+    message_content: str
+    priority: str = "normal"  # "urgent", "normal"
+    call_date: str
+    call_time: str
+
+class PhoneMessageResponse(BaseModel):
+    response_content: str
+
 # Helper functions
 def calculate_age(date_naissance: str) -> str:
     """Calculate age from birth date in format '2 ans, 3 mois, 15 jours'"""
