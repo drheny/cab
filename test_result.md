@@ -205,6 +205,74 @@ Successfully completed the specific task from the review request. The test data 
 **TEST DATA CREATION: TASK SUCCESSFULLY COMPLETED AND VERIFIED**
 The backend now provides the complete test scenario requested. Omar Tazi has both a contrôle consultation (existing, no payment display) and a visite consultation (new, 350 DH payment display). The frontend can now fully test the payment amount display functionality with real data linkage.
 
+### Phase 2 & 3 Billing Improvements Testing ✅ COMPLETED
+**Status:** ALL PHASE 2 & 3 BILLING IMPROVEMENTS TESTS PASSED - Advanced Payment Search and Unpaid Management Fully Functional
+
+**Test Results Summary (2025-01-19 - Phase 2 & 3 Billing Improvements Testing):**
+✅ **Advanced Payment Search API** - /api/payments/search endpoint working correctly with all search parameters
+✅ **Patient Name Search** - Search by patient_name parameter returns correctly filtered results with patient enrichment
+✅ **Date Range Filtering** - date_debut and date_fin parameters working correctly for payment date filtering
+✅ **Payment Method Filtering** - method parameter correctly filters by type_paiement (espece, carte, etc.)
+✅ **Insurance Status Filtering** - assure parameter correctly filters by insurance status (true/false)
+✅ **Pagination Support** - page and limit parameters working correctly with proper pagination metadata
+✅ **Combined Filters** - Multiple search parameters work together correctly for complex queries
+✅ **Results Ordering** - Payments returned in descending date order as specified
+✅ **Patient Enrichment** - All payment results include complete patient information (nom, prenom, etc.)
+✅ **Payment Deletion API** - DELETE /api/payments/{payment_id} endpoint working correctly
+✅ **Appointment Status Update** - Deleted payments correctly mark appointments as unpaid (paye=False)
+✅ **Error Handling** - Proper 404 responses for non-existent payments and invalid payment IDs
+✅ **Unpaid Consultations API** - /api/payments/unpaid endpoint working correctly
+✅ **Visite Filtering** - Only visite appointments (type_rdv="visite") included in unpaid list
+✅ **Status Filtering** - Only completed appointments (termine, absent, retard) with paye=False included
+✅ **Controle Exclusion** - Controle appointments correctly excluded from unpaid list
+✅ **Patient Information** - All unpaid appointments include complete patient information
+
+**Detailed Test Results:**
+
+**PHASE 2 - ADVANCED PAYMENT SEARCH: ✅ FULLY WORKING**
+- ✅ **GET /api/payments/search**: Advanced search endpoint working with all parameters
+- ✅ **Patient Name Search**: patient_name parameter searches across patient prenom and nom fields
+- ✅ **Date Range Filtering**: date_debut and date_fin parameters filter payment dates correctly
+- ✅ **Payment Method Filtering**: method parameter filters by type_paiement field
+- ✅ **Insurance Filtering**: assure parameter filters by insurance status boolean
+- ✅ **Pagination**: page and limit parameters with proper pagination metadata response
+- ✅ **Combined Filters**: Multiple parameters work together for complex search queries
+- ✅ **Results Ordering**: Payments returned in descending date order (newest first)
+- ✅ **Patient Enrichment**: All results include patient information (nom, prenom, telephone)
+- ✅ **Response Structure**: Proper JSON structure with payments array and pagination object
+
+**PHASE 2 - PAYMENT DELETION: ✅ FULLY WORKING**
+- ✅ **DELETE /api/payments/{payment_id}**: Payment deletion endpoint working correctly
+- ✅ **Payment Removal**: Payments successfully deleted from database
+- ✅ **Appointment Update**: Associated appointments marked as unpaid (paye=False) after deletion
+- ✅ **Error Handling**: Proper 404 responses for non-existent payment IDs
+- ✅ **Data Integrity**: No orphaned data after payment deletion
+- ✅ **Success Response**: Proper success message returned after deletion
+
+**PHASE 3 - UNPAID CONSULTATIONS MANAGEMENT: ✅ FULLY WORKING**
+- ✅ **GET /api/payments/unpaid**: Unpaid consultations endpoint working correctly
+- ✅ **Visite Filtering**: Only appointments with type_rdv="visite" included in results
+- ✅ **Payment Status Filtering**: Only appointments with paye=False included in results
+- ✅ **Completion Status**: Only completed appointments (termine, absent, retard) included
+- ✅ **Controle Exclusion**: Controle appointments correctly excluded from unpaid list
+- ✅ **Patient Information**: All results include complete patient data for billing purposes
+- ✅ **Data Structure**: Consistent appointment structure with all required fields
+- ✅ **Empty Results**: Graceful handling when no unpaid appointments exist
+
+**API ENDPOINT VALIDATION:**
+- ✅ **Search Endpoint**: /api/payments/search returns proper JSON with payments and pagination
+- ✅ **Delete Endpoint**: DELETE /api/payments/{id} returns success message and updates appointment
+- ✅ **Unpaid Endpoint**: /api/payments/unpaid returns array of unpaid visite appointments
+- ✅ **Error Responses**: All endpoints return proper HTTP status codes and error messages
+- ✅ **Data Consistency**: All endpoints maintain data integrity and proper relationships
+
+**INTEGRATION TESTING:**
+- ✅ **Search Integration**: Advanced search works with existing payment data and patient records
+- ✅ **Deletion Integration**: Payment deletion properly updates appointment payment status
+- ✅ **Unpaid Integration**: Unpaid list correctly reflects current appointment and payment states
+- ✅ **Cross-Endpoint Consistency**: All billing endpoints work together consistently
+- ✅ **Real Data Testing**: All tests performed with realistic patient and appointment data
+
 ### Drag and Drop / Patient Reordering Functionality Testing ✅ COMPLETED
 **Status:** ALL DRAG AND DROP / PATIENT REORDERING TESTS PASSED - Backend Priority Management Fully Functional
 
