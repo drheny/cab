@@ -42,39 +42,6 @@ const Dashboard = ({ user }) => {
   const [phoneReminders, setPhoneReminders] = useState([]);
   
   const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
-  
-  const [messages] = useState([
-    {
-      id: 1,
-      type: 'anniversaire',
-      titre: 'Anniversaire',
-      patient: 'Lina Alami',
-      patient_id: 'patient2',
-      message: 'Anniversaire aujourd\'hui - 6 ans',
-      time: '00:00',
-      urgent: false
-    },
-    {
-      id: 2,
-      type: 'relance',
-      titre: 'Relance téléphonique',
-      patient: 'Omar Tazi',
-      patient_id: 'patient3',
-      message: 'Relance programmée pour contrôle',
-      time: '10:00',
-      urgent: false
-    },
-    {
-      id: 3,
-      type: 'retard',
-      titre: 'Patient en retard',
-      patient: 'Yassine Ben Ahmed',
-      patient_id: 'patient1',
-      message: 'RDV 09:00 - Non arrivé (retard 30 min)',
-      time: '09:30',
-      urgent: true
-    }
-  ]);
 
   const handleAddPatient = () => {
     // Naviguer vers la page patients avec un paramètre pour ouvrir le modal
