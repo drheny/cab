@@ -815,7 +815,10 @@ const Dashboard = ({ user }) => {
                         
                         {/* Unread indicator for received messages */}
                         {message.sender_type !== user.type && !message.is_read && (
-                          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" title="Non lu"></div>
+                          <div className="flex items-center space-x-1 bg-red-100 bg-opacity-80 px-2 py-1 rounded-full animate-pulse" title="Non lu">
+                            <div className="text-xs font-semibold text-red-600">NOUVEAU</div>
+                            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                          </div>
                         )}
                       </div>
                     </div>
