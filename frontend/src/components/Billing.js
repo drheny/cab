@@ -816,6 +816,115 @@ const Billing = ({ user }) => {
           </div>
         </div>
       )}
+
+      {/* Payment Edit Modal */}
+      {showEditModal && editingPayment && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-gray-900">Modifier le paiement</h3>
+                <button
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditingPayment(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const updatedData = {
+                  paye: true, // Toujours payé si on édite
+                  montant: parseFloat(formData.get('montant')) || 0,
+                  assure: formData.get('assure') === 'on',
+                  notes: formData.get('notes') || ''
+                };
+                handleUpdatePayment(editingPayment.id, updatedData);
+              }}>
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="edit_montant" className="block text-sm font-medium text-gray-700 mb-2">
+                      Montant (TND)
+                    </label>
+                    <input
+                      type="number"
+                      id="edit_montant"
+                      name="montant"
+                      step="0.01"
+                      min="0"
+                      defaultValue={editingPayment.montant}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Méthode de paiement
+                    </label>
+                    <div className="px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700">
+                      💵 Espèces (TND)
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        id="edit_assure"
+                        name="assure"
+                        defaultChecked={editingPayment.assure}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <label htmlFor="edit_assure" className="text-sm font-medium text-gray-700">
+                        Patient assuré
+                      </label>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="edit_notes" className="block text-sm font-medium text-gray-700 mb-2">
+                      Notes (optionnel)
+                    </label>
+                    <textarea
+                      id="edit_notes"
+                      name="notes"
+                      rows="3"
+                      defaultValue={editingPayment.notes || ''}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Notes sur le paiement..."
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end space-x-3 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowEditModal(false);
+                      setEditingPayment(null);
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                  >
+                    Sauvegarder
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
