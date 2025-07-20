@@ -45,7 +45,25 @@ const Billing = ({ user }) => {
     fin: new Date().toISOString().split('T')[0] // Today
   });
   const [methodFilter, setMethodFilter] = useState('');
-  const [assureFilter, setAssureFilter] = useState('');
+  // States for advanced search
+  const [searchFilters, setSearchFilters] = useState({
+    patientName: '',
+    dateDebut: '',
+    dateFin: '',
+    method: '',
+    assure: ''
+  });
+  
+  // Pagination states
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalCount: 0,
+    limit: 20
+  });
+  
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
   
   // Advanced stats filters
   const [statsPeriod, setStatsPeriod] = useState('month'); // day, week, month, year
