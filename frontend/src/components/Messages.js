@@ -12,7 +12,9 @@ import {
   Eye,
   X,
   Filter,
-  FileText
+  FileText,
+  Edit2,
+  Save
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
