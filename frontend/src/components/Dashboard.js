@@ -775,7 +775,10 @@ const Dashboard = ({ user }) => {
             Messagerie Interne
           </div>
           <button
-            onClick={handleClearMessages}
+            onClick={() => {
+              console.log('🔴 Button click detected!');
+              handleClearMessages();
+            }}
             className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-full hover:bg-red-200 transition-colors"
             title="Supprimer tous les messages"
           >
