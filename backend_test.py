@@ -15248,5 +15248,481 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
         
         print("\n=== PAYMENT DATA CONSISTENCY TESTS COMPLETED ===")
 
+    # ========== SIMPLIFIED PAYMENT MODULE TESTS ==========
+    
+    def test_simplified_payment_update_model(self):
+        """Test PaymentUpdate model with simplified fields (65 TND default, espèces only, no taux_remboursement)"""
+        # Get an existing appointment to test payment update
+        today = datetime.now().strftime("%Y-%m-%d")
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        
+        if len(appointments) == 0:
+            self.skipTest("No appointments found for payment testing")
+        
+        # Find a visite appointment for testing
+        visite_appointment = None
+        for appt in appointments:
+            if appt.get("type_rdv") == "visite":
+                visite_appointment = appt
+                break
+        
+        if not visite_appointment:
+            self.skipTest("No visite appointments found for payment testing")
+        
+        rdv_id = visite_appointment["id"]
+        
+        # Test 1: Default payment update (should use 65 TND default)
+        payment_data = {
+            "paye": True,
+            "assure": False,
+            "notes": "Test paiement simplifié"
+        }
+        
+        response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/paiement", json=payment_data)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        # Verify default values
+        self.assertEqual(data["montant"], 65.0, "Default amount should be 65 TND")
+        self.assertEqual(data["type_paiement"], "espece", "Payment method should default to espèces")
+        self.assertEqual(data["paye"], True)
+        self.assertEqual(data["assure"], False)
+        
+        # Test 2: Custom amount with simplified fields
+        payment_data_custom = {
+            "paye": True,
+            "montant": 80.0,
+            "type_paiement": "espece",
+            "assure": True,
+            "notes": "Paiement avec assurance"
+        }
+        
+        response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/paiement", json=payment_data_custom)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        # Verify custom values
+        self.assertEqual(data["montant"], 80.0)
+        self.assertEqual(data["type_paiement"], "espece")
+        self.assertEqual(data["assure"], True)
+        
+        # Test 3: Verify no taux_remboursement field is required or returned
+        self.assertNotIn("taux_remboursement", data, "taux_remboursement should not be present in simplified model")
+        
+        print("✅ Simplified PaymentUpdate model working correctly")
+    
+    def test_payment_method_forced_to_especes(self):
+        """Test that payment method is forced to 'espece' regardless of input"""
+        # Get an appointment for testing
+        today = datetime.now().strftime("%Y-%m-%d")
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        
+        if len(appointments) == 0:
+            self.skipTest("No appointments found for payment testing")
+        
+        visite_appointment = None
+        for appt in appointments:
+            if appt.get("type_rdv") == "visite":
+                visite_appointment = appt
+                break
+        
+        if not visite_appointment:
+            self.skipTest("No visite appointments found for payment testing")
+        
+        rdv_id = visite_appointment["id"]
+        
+        # Test with different payment methods - should all be forced to "espece"
+        test_methods = ["carte", "cheque", "virement", "invalid_method"]
+        
+        for method in test_methods:
+            payment_data = {
+                "paye": True,
+                "montant": 65.0,
+                "type_paiement": method,
+                "assure": False,
+                "notes": f"Test avec {method}"
+            }
+            
+            response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/paiement", json=payment_data)
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            
+            # Should be forced to "espece"
+            self.assertEqual(data["type_paiement"], "espece", f"Payment method should be forced to espèces, not {method}")
+        
+        print("✅ Payment method correctly forced to espèces")
+    
+    def test_controle_appointments_remain_free(self):
+        """Test that contrôle appointments remain free (gratuit) regardless of payment data"""
+        # Get appointments and find a contrôle
+        today = datetime.now().strftime("%Y-%m-%d")
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        
+        controle_appointment = None
+        for appt in appointments:
+            if appt.get("type_rdv") == "controle":
+                controle_appointment = appt
+                break
+        
+        if not controle_appointment:
+            # Create a contrôle appointment for testing
+            response = requests.get(f"{self.base_url}/api/patients")
+            self.assertEqual(response.status_code, 200)
+            patients_data = response.json()
+            patients = patients_data["patients"]
+            
+            if len(patients) == 0:
+                self.skipTest("No patients found for creating contrôle appointment")
+            
+            patient_id = patients[0]["id"]
+            
+            controle_data = {
+                "patient_id": patient_id,
+                "date": today,
+                "heure": "15:30",
+                "type_rdv": "controle",
+                "motif": "Contrôle test",
+                "notes": "Test contrôle gratuit"
+            }
+            
+            response = requests.post(f"{self.base_url}/api/appointments", json=controle_data)
+            self.assertEqual(response.status_code, 200)
+            rdv_id = response.json()["appointment_id"]
+        else:
+            rdv_id = controle_appointment["id"]
+        
+        # Try to set payment for contrôle - should remain free
+        payment_data = {
+            "paye": True,
+            "montant": 100.0,  # Try to set amount
+            "type_paiement": "espece",
+            "assure": False,
+            "notes": "Tentative paiement contrôle"
+        }
+        
+        response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/paiement", json=payment_data)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        # Should be forced to free
+        self.assertEqual(data["montant"], 0, "Contrôle appointments should remain free (0 TND)")
+        self.assertEqual(data["type_paiement"], "gratuit", "Contrôle appointments should be marked as gratuit")
+        self.assertEqual(data["paye"], True, "Contrôle appointments should be marked as paid (free)")
+        
+        print("✅ Contrôle appointments correctly remain free")
+    
+    def test_simplified_insurance_field(self):
+        """Test simplified insurance field (boolean only, no taux_remboursement)"""
+        # Get a visite appointment for testing
+        today = datetime.now().strftime("%Y-%m-%d")
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        
+        visite_appointment = None
+        for appt in appointments:
+            if appt.get("type_rdv") == "visite":
+                visite_appointment = appt
+                break
+        
+        if not visite_appointment:
+            self.skipTest("No visite appointments found for insurance testing")
+        
+        rdv_id = visite_appointment["id"]
+        
+        # Test insurance = True
+        payment_data_assured = {
+            "paye": True,
+            "montant": 65.0,
+            "type_paiement": "espece",
+            "assure": True,
+            "notes": "Patient assuré"
+        }
+        
+        response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/paiement", json=payment_data_assured)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        self.assertEqual(data["assure"], True)
+        self.assertNotIn("taux_remboursement", data, "taux_remboursement should not be present")
+        
+        # Test insurance = False
+        payment_data_not_assured = {
+            "paye": True,
+            "montant": 65.0,
+            "type_paiement": "espece",
+            "assure": False,
+            "notes": "Patient non assuré"
+        }
+        
+        response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/paiement", json=payment_data_not_assured)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        self.assertEqual(data["assure"], False)
+        self.assertNotIn("taux_remboursement", data, "taux_remboursement should not be present")
+        
+        print("✅ Simplified insurance field working correctly")
+    
+    def test_payment_record_creation_with_simplified_model(self):
+        """Test that payment records are created correctly with simplified model"""
+        # Get a visite appointment
+        today = datetime.now().strftime("%Y-%m-%d")
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        
+        visite_appointment = None
+        for appt in appointments:
+            if appt.get("type_rdv") == "visite":
+                visite_appointment = appt
+                break
+        
+        if not visite_appointment:
+            self.skipTest("No visite appointments found for payment record testing")
+        
+        rdv_id = visite_appointment["id"]
+        
+        # Create payment with simplified model
+        payment_data = {
+            "paye": True,
+            "montant": 75.0,
+            "type_paiement": "espece",
+            "assure": True,
+            "notes": "Test création enregistrement paiement"
+        }
+        
+        response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/paiement", json=payment_data)
+        self.assertEqual(response.status_code, 200)
+        
+        # Verify payment record was created
+        response = requests.get(f"{self.base_url}/api/payments/appointment/{rdv_id}")
+        self.assertEqual(response.status_code, 200)
+        payment_record = response.json()
+        
+        # Verify payment record structure
+        self.assertEqual(payment_record["appointment_id"], rdv_id)
+        self.assertEqual(payment_record["montant"], 75.0)
+        self.assertEqual(payment_record["type_paiement"], "espece")
+        self.assertEqual(payment_record["statut"], "paye")
+        self.assertEqual(payment_record["assure"], True)
+        self.assertNotIn("taux_remboursement", payment_record, "taux_remboursement should not be in payment record")
+        
+        print("✅ Payment record creation with simplified model working correctly")
+    
+    def test_payment_update_endpoint(self):
+        """Test PUT /api/payments/{id} endpoint with simplified PaymentUpdate model"""
+        # First create a payment record
+        today = datetime.now().strftime("%Y-%m-%d")
+        response = requests.get(f"{self.base_url}/api/payments")
+        self.assertEqual(response.status_code, 200)
+        payments = response.json()
+        
+        if len(payments) == 0:
+            self.skipTest("No payments found for update testing")
+        
+        payment_id = payments[0]["id"]
+        
+        # Update payment with simplified model
+        update_data = {
+            "paye": True,
+            "montant": 90.0,
+            "type_paiement": "espece",  # Should remain espèces
+            "assure": False,
+            "notes": "Paiement mis à jour avec modèle simplifié"
+        }
+        
+        response = requests.put(f"{self.base_url}/api/payments/{payment_id}", json=update_data)
+        self.assertEqual(response.status_code, 200)
+        
+        # Verify the update
+        response = requests.get(f"{self.base_url}/api/payments")
+        self.assertEqual(response.status_code, 200)
+        updated_payments = response.json()
+        
+        updated_payment = None
+        for payment in updated_payments:
+            if payment["id"] == payment_id:
+                updated_payment = payment
+                break
+        
+        self.assertIsNotNone(updated_payment, "Updated payment not found")
+        self.assertEqual(updated_payment["montant"], 90.0)
+        self.assertEqual(updated_payment["type_paiement"], "espece")
+        self.assertEqual(updated_payment["assure"], False)
+        self.assertNotIn("taux_remboursement", updated_payment, "taux_remboursement should not be present")
+        
+        print("✅ Payment update endpoint working correctly with simplified model")
+    
+    def test_default_amount_65_tnd(self):
+        """Test that default amount is 65 TND when not specified"""
+        # Get a visite appointment
+        today = datetime.now().strftime("%Y-%m-%d")
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        
+        visite_appointment = None
+        for appt in appointments:
+            if appt.get("type_rdv") == "visite":
+                visite_appointment = appt
+                break
+        
+        if not visite_appointment:
+            self.skipTest("No visite appointments found for default amount testing")
+        
+        rdv_id = visite_appointment["id"]
+        
+        # Create payment without specifying amount
+        payment_data = {
+            "paye": True,
+            "assure": False,
+            "notes": "Test montant par défaut"
+            # No montant specified - should default to 65.0
+        }
+        
+        response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/paiement", json=payment_data)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        # Should default to 65 TND
+        self.assertEqual(data["montant"], 65.0, "Default amount should be 65 TND")
+        
+        print("✅ Default amount of 65 TND working correctly")
+    
+    def test_currency_consistency_tnd(self):
+        """Test that all payment amounts are handled as TND (no currency conversion)"""
+        # Get payment statistics to verify TND usage
+        response = requests.get(f"{self.base_url}/api/payments/stats")
+        self.assertEqual(response.status_code, 200)
+        stats = response.json()
+        
+        # Verify stats structure includes TND amounts
+        self.assertIn("total_montant", stats)
+        self.assertIn("ca_jour", stats)
+        self.assertIsInstance(stats["total_montant"], (int, float))
+        self.assertIsInstance(stats["ca_jour"], (int, float))
+        
+        # Create a payment and verify amount is stored as numeric (TND)
+        today = datetime.now().strftime("%Y-%m-%d")
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        
+        visite_appointment = None
+        for appt in appointments:
+            if appt.get("type_rdv") == "visite":
+                visite_appointment = appt
+                break
+        
+        if visite_appointment:
+            rdv_id = visite_appointment["id"]
+            
+            payment_data = {
+                "paye": True,
+                "montant": 65.0,  # TND amount
+                "type_paiement": "espece",
+                "assure": False,
+                "notes": "Test devise TND"
+            }
+            
+            response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/paiement", json=payment_data)
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            
+            # Amount should be stored as numeric (TND)
+            self.assertIsInstance(data["montant"], (int, float))
+            self.assertEqual(data["montant"], 65.0)
+        
+        print("✅ Currency consistency (TND) working correctly")
+    
+    def test_simplified_payment_workflow_end_to_end(self):
+        """Test complete simplified payment workflow from creation to retrieval"""
+        # Get a visite appointment
+        today = datetime.now().strftime("%Y-%m-%d")
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        
+        visite_appointment = None
+        for appt in appointments:
+            if appt.get("type_rdv") == "visite":
+                visite_appointment = appt
+                break
+        
+        if not visite_appointment:
+            self.skipTest("No visite appointments found for end-to-end testing")
+        
+        rdv_id = visite_appointment["id"]
+        
+        # Step 1: Create payment with simplified model
+        payment_data = {
+            "paye": True,
+            "montant": 65.0,
+            "type_paiement": "espece",
+            "assure": True,
+            "notes": "Test workflow complet simplifié"
+        }
+        
+        response = requests.put(f"{self.base_url}/api/rdv/{rdv_id}/paiement", json=payment_data)
+        self.assertEqual(response.status_code, 200)
+        create_response = response.json()
+        
+        # Step 2: Verify appointment payment status updated
+        response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        self.assertEqual(response.status_code, 200)
+        updated_appointments = response.json()
+        
+        updated_appointment = None
+        for appt in updated_appointments:
+            if appt["id"] == rdv_id:
+                updated_appointment = appt
+                break
+        
+        self.assertIsNotNone(updated_appointment)
+        self.assertEqual(updated_appointment["paye"], True)
+        self.assertEqual(updated_appointment["assure"], True)
+        
+        # Step 3: Verify payment record created
+        response = requests.get(f"{self.base_url}/api/payments/appointment/{rdv_id}")
+        self.assertEqual(response.status_code, 200)
+        payment_record = response.json()
+        
+        self.assertEqual(payment_record["montant"], 65.0)
+        self.assertEqual(payment_record["type_paiement"], "espece")
+        self.assertEqual(payment_record["statut"], "paye")
+        self.assertEqual(payment_record["assure"], True)
+        
+        # Step 4: Verify payment appears in general payments list
+        response = requests.get(f"{self.base_url}/api/payments")
+        self.assertEqual(response.status_code, 200)
+        all_payments = response.json()
+        
+        found_payment = None
+        for payment in all_payments:
+            if payment["appointment_id"] == rdv_id:
+                found_payment = payment
+                break
+        
+        self.assertIsNotNone(found_payment, "Payment not found in general payments list")
+        self.assertEqual(found_payment["montant"], 65.0)
+        self.assertEqual(found_payment["type_paiement"], "espece")
+        
+        # Step 5: Verify payment statistics updated
+        response = requests.get(f"{self.base_url}/api/payments/stats")
+        self.assertEqual(response.status_code, 200)
+        stats = response.json()
+        
+        self.assertGreater(stats["total_montant"], 0, "Payment should contribute to total amount")
+        self.assertGreater(stats["nb_paiements"], 0, "Payment count should be greater than 0")
+        
+        print("✅ Complete simplified payment workflow working correctly")
+
 if __name__ == "__main__":
     unittest.main()
