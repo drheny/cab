@@ -17206,5 +17206,667 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
         finally:
             requests.delete(f"{self.base_url}/api/patients/{patient_id}")
 
+    # ========== INSTANT MESSAGING SYSTEM BACKEND API TESTS ==========
+    
+    def test_get_messages_endpoint(self):
+        """Test GET /api/messages - Retrieve all messages"""
+        # First clean up any existing messages
+        cleanup_response = requests.post(f"{self.base_url}/api/messages/cleanup")
+        self.assertEqual(cleanup_response.status_code, 200)
+        
+        # Test getting messages when empty
+        response = requests.get(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        # Verify response structure
+        self.assertIn("messages", data)
+        self.assertIsInstance(data["messages"], list)
+        self.assertEqual(len(data["messages"]), 0)  # Should be empty after cleanup
+        
+        print("✅ GET /api/messages - Empty state working correctly")
+    
+    def test_create_message_medecin_sender(self):
+        """Test POST /api/messages - Create message as medecin sender"""
+        # Clean up first
+        requests.post(f"{self.base_url}/api/messages/cleanup")
+        
+        # Create message as medecin
+        message_data = {
+            "content": "Message de test du médecin"
+        }
+        
+        response = requests.post(
+            f"{self.base_url}/api/messages",
+            json=message_data,
+            params={"sender_type": "medecin", "sender_name": "Dr. Martin"}
+        )
+        self.assertEqual(response.status_code, 200)
+        create_data = response.json()
+        
+        # Verify response structure
+        self.assertIn("message", create_data)
+        self.assertIn("id", create_data)
+        self.assertEqual(create_data["message"], "Message created successfully")
+        
+        message_id = create_data["id"]
+        
+        # Verify message was created by retrieving all messages
+        response = requests.get(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        self.assertEqual(len(data["messages"]), 1)
+        message = data["messages"][0]
+        
+        # Verify message structure and content
+        self.assertEqual(message["id"], message_id)
+        self.assertEqual(message["sender_type"], "medecin")
+        self.assertEqual(message["sender_name"], "Dr. Martin")
+        self.assertEqual(message["content"], "Message de test du médecin")
+        self.assertFalse(message["is_read"])
+        self.assertFalse(message["is_edited"])
+        self.assertEqual(message["original_content"], "")
+        self.assertIsNone(message["reply_to"])
+        self.assertEqual(message["reply_content"], "")
+        
+        print("✅ POST /api/messages - Medecin sender working correctly")
+        return message_id
+    
+    def test_create_message_secretaire_sender(self):
+        """Test POST /api/messages - Create message as secretaire sender"""
+        # Create message as secretaire
+        message_data = {
+            "content": "Message de test de la secrétaire"
+        }
+        
+        response = requests.post(
+            f"{self.base_url}/api/messages",
+            json=message_data,
+            params={"sender_type": "secretaire", "sender_name": "Marie Dupont"}
+        )
+        self.assertEqual(response.status_code, 200)
+        create_data = response.json()
+        
+        self.assertIn("message", create_data)
+        self.assertIn("id", create_data)
+        message_id = create_data["id"]
+        
+        # Verify message was created
+        response = requests.get(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        # Find our message
+        secretaire_message = None
+        for msg in data["messages"]:
+            if msg["id"] == message_id:
+                secretaire_message = msg
+                break
+        
+        self.assertIsNotNone(secretaire_message)
+        self.assertEqual(secretaire_message["sender_type"], "secretaire")
+        self.assertEqual(secretaire_message["sender_name"], "Marie Dupont")
+        self.assertEqual(secretaire_message["content"], "Message de test de la secrétaire")
+        
+        print("✅ POST /api/messages - Secretaire sender working correctly")
+        return message_id
+    
+    def test_create_reply_message(self):
+        """Test POST /api/messages - Create reply message using reply_to field"""
+        # First create an original message
+        original_message_data = {
+            "content": "Message original pour test de réponse"
+        }
+        
+        response = requests.post(
+            f"{self.base_url}/api/messages",
+            json=original_message_data,
+            params={"sender_type": "medecin", "sender_name": "Dr. Martin"}
+        )
+        self.assertEqual(response.status_code, 200)
+        original_message_id = response.json()["id"]
+        
+        # Create a reply message
+        reply_message_data = {
+            "content": "Réponse au message original",
+            "reply_to": original_message_id
+        }
+        
+        response = requests.post(
+            f"{self.base_url}/api/messages",
+            json=reply_message_data,
+            params={"sender_type": "secretaire", "sender_name": "Marie Dupont"}
+        )
+        self.assertEqual(response.status_code, 200)
+        reply_message_id = response.json()["id"]
+        
+        # Verify reply message was created correctly
+        response = requests.get(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        # Find the reply message
+        reply_message = None
+        for msg in data["messages"]:
+            if msg["id"] == reply_message_id:
+                reply_message = msg
+                break
+        
+        self.assertIsNotNone(reply_message)
+        self.assertEqual(reply_message["content"], "Réponse au message original")
+        self.assertEqual(reply_message["reply_to"], original_message_id)
+        self.assertEqual(reply_message["reply_content"], "Message original pour test de réponse")
+        self.assertEqual(reply_message["sender_type"], "secretaire")
+        
+        print("✅ POST /api/messages - Reply functionality working correctly")
+        return original_message_id, reply_message_id
+    
+    def test_edit_message_by_sender(self):
+        """Test PUT /api/messages/{message_id} - Edit message by its sender"""
+        # Create a message first
+        message_data = {
+            "content": "Message original à modifier"
+        }
+        
+        response = requests.post(
+            f"{self.base_url}/api/messages",
+            json=message_data,
+            params={"sender_type": "medecin", "sender_name": "Dr. Martin"}
+        )
+        self.assertEqual(response.status_code, 200)
+        message_id = response.json()["id"]
+        
+        # Edit the message by the same sender
+        edit_data = {
+            "content": "Message modifié par le médecin"
+        }
+        
+        response = requests.put(
+            f"{self.base_url}/api/messages/{message_id}",
+            json=edit_data,
+            params={"user_type": "medecin"}
+        )
+        self.assertEqual(response.status_code, 200)
+        edit_response = response.json()
+        self.assertEqual(edit_response["message"], "Message updated successfully")
+        
+        # Verify the message was edited
+        response = requests.get(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        edited_message = None
+        for msg in data["messages"]:
+            if msg["id"] == message_id:
+                edited_message = msg
+                break
+        
+        self.assertIsNotNone(edited_message)
+        self.assertEqual(edited_message["content"], "Message modifié par le médecin")
+        self.assertTrue(edited_message["is_edited"])
+        self.assertEqual(edited_message["original_content"], "Message original à modifier")
+        
+        print("✅ PUT /api/messages/{id} - Edit by sender working correctly")
+        return message_id
+    
+    def test_edit_message_by_different_user_should_fail(self):
+        """Test PUT /api/messages/{message_id} - Attempt to edit message by different user (should fail)"""
+        # Create a message as medecin
+        message_data = {
+            "content": "Message du médecin"
+        }
+        
+        response = requests.post(
+            f"{self.base_url}/api/messages",
+            json=message_data,
+            params={"sender_type": "medecin", "sender_name": "Dr. Martin"}
+        )
+        self.assertEqual(response.status_code, 200)
+        message_id = response.json()["id"]
+        
+        # Try to edit the message as secretaire (should fail)
+        edit_data = {
+            "content": "Tentative de modification par la secrétaire"
+        }
+        
+        response = requests.put(
+            f"{self.base_url}/api/messages/{message_id}",
+            json=edit_data,
+            params={"user_type": "secretaire"}
+        )
+        self.assertEqual(response.status_code, 403)  # Forbidden
+        error_data = response.json()
+        self.assertIn("Not authorized to edit this message", error_data["detail"])
+        
+        # Verify the message was NOT edited
+        response = requests.get(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        original_message = None
+        for msg in data["messages"]:
+            if msg["id"] == message_id:
+                original_message = msg
+                break
+        
+        self.assertIsNotNone(original_message)
+        self.assertEqual(original_message["content"], "Message du médecin")  # Unchanged
+        self.assertFalse(original_message["is_edited"])  # Not edited
+        
+        print("✅ PUT /api/messages/{id} - Authorization working correctly (edit denied)")
+        return message_id
+    
+    def test_delete_message_by_sender(self):
+        """Test DELETE /api/messages/{message_id} - Delete message by its sender"""
+        # Create a message first
+        message_data = {
+            "content": "Message à supprimer"
+        }
+        
+        response = requests.post(
+            f"{self.base_url}/api/messages",
+            json=message_data,
+            params={"sender_type": "secretaire", "sender_name": "Marie Dupont"}
+        )
+        self.assertEqual(response.status_code, 200)
+        message_id = response.json()["id"]
+        
+        # Verify message exists
+        response = requests.get(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        message_exists = any(msg["id"] == message_id for msg in data["messages"])
+        self.assertTrue(message_exists, "Message should exist before deletion")
+        
+        # Delete the message by the same sender
+        response = requests.delete(
+            f"{self.base_url}/api/messages/{message_id}",
+            params={"user_type": "secretaire"}
+        )
+        self.assertEqual(response.status_code, 200)
+        delete_response = response.json()
+        self.assertEqual(delete_response["message"], "Message deleted successfully")
+        
+        # Verify the message was deleted
+        response = requests.get(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        message_exists = any(msg["id"] == message_id for msg in data["messages"])
+        self.assertFalse(message_exists, "Message should be deleted")
+        
+        print("✅ DELETE /api/messages/{id} - Delete by sender working correctly")
+    
+    def test_delete_message_by_different_user_should_fail(self):
+        """Test DELETE /api/messages/{message_id} - Attempt to delete message by different user (should fail)"""
+        # Create a message as secretaire
+        message_data = {
+            "content": "Message de la secrétaire"
+        }
+        
+        response = requests.post(
+            f"{self.base_url}/api/messages",
+            json=message_data,
+            params={"sender_type": "secretaire", "sender_name": "Marie Dupont"}
+        )
+        self.assertEqual(response.status_code, 200)
+        message_id = response.json()["id"]
+        
+        # Try to delete the message as medecin (should fail)
+        response = requests.delete(
+            f"{self.base_url}/api/messages/{message_id}",
+            params={"user_type": "medecin"}
+        )
+        self.assertEqual(response.status_code, 403)  # Forbidden
+        error_data = response.json()
+        self.assertIn("Not authorized to delete this message", error_data["detail"])
+        
+        # Verify the message was NOT deleted
+        response = requests.get(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        message_exists = any(msg["id"] == message_id for msg in data["messages"])
+        self.assertTrue(message_exists, "Message should still exist after failed deletion")
+        
+        print("✅ DELETE /api/messages/{id} - Authorization working correctly (delete denied)")
+        return message_id
+    
+    def test_mark_message_as_read(self):
+        """Test PUT /api/messages/{message_id}/read - Mark messages as read"""
+        # Create a message first
+        message_data = {
+            "content": "Message à marquer comme lu"
+        }
+        
+        response = requests.post(
+            f"{self.base_url}/api/messages",
+            json=message_data,
+            params={"sender_type": "medecin", "sender_name": "Dr. Martin"}
+        )
+        self.assertEqual(response.status_code, 200)
+        message_id = response.json()["id"]
+        
+        # Verify message is initially unread
+        response = requests.get(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        unread_message = None
+        for msg in data["messages"]:
+            if msg["id"] == message_id:
+                unread_message = msg
+                break
+        
+        self.assertIsNotNone(unread_message)
+        self.assertFalse(unread_message["is_read"], "Message should be unread initially")
+        
+        # Mark message as read
+        response = requests.put(f"{self.base_url}/api/messages/{message_id}/read")
+        self.assertEqual(response.status_code, 200)
+        read_response = response.json()
+        self.assertEqual(read_response["message"], "Message marked as read")
+        
+        # Verify the message is now marked as read
+        response = requests.get(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        read_message = None
+        for msg in data["messages"]:
+            if msg["id"] == message_id:
+                read_message = msg
+                break
+        
+        self.assertIsNotNone(read_message)
+        self.assertTrue(read_message["is_read"], "Message should be marked as read")
+        
+        print("✅ PUT /api/messages/{id}/read - Mark as read working correctly")
+        return message_id
+    
+    def test_mark_nonexistent_message_as_read_should_fail(self):
+        """Test PUT /api/messages/{message_id}/read - Mark non-existent message as read (should fail)"""
+        # Try to mark a non-existent message as read
+        response = requests.put(f"{self.base_url}/api/messages/non_existent_id/read")
+        self.assertEqual(response.status_code, 404)
+        error_data = response.json()
+        self.assertIn("Message not found", error_data["detail"])
+        
+        print("✅ PUT /api/messages/{id}/read - Non-existent message handling working correctly")
+    
+    def test_manual_cleanup_messages(self):
+        """Test POST /api/messages/cleanup - Manual cleanup of messages"""
+        # Create several messages first
+        messages_to_create = [
+            {"content": "Message 1", "sender_type": "medecin", "sender_name": "Dr. Martin"},
+            {"content": "Message 2", "sender_type": "secretaire", "sender_name": "Marie Dupont"},
+            {"content": "Message 3", "sender_type": "medecin", "sender_name": "Dr. Martin"}
+        ]
+        
+        created_message_ids = []
+        for msg_data in messages_to_create:
+            response = requests.post(
+                f"{self.base_url}/api/messages",
+                json={"content": msg_data["content"]},
+                params={"sender_type": msg_data["sender_type"], "sender_name": msg_data["sender_name"]}
+            )
+            self.assertEqual(response.status_code, 200)
+            created_message_ids.append(response.json()["id"])
+        
+        # Verify messages were created
+        response = requests.get(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertGreaterEqual(len(data["messages"]), 3, "Should have at least 3 messages")
+        
+        # Perform manual cleanup
+        response = requests.post(f"{self.base_url}/api/messages/cleanup")
+        self.assertEqual(response.status_code, 200)
+        cleanup_data = response.json()
+        
+        # Verify cleanup response
+        self.assertIn("message", cleanup_data)
+        self.assertIn("count", cleanup_data)
+        self.assertIn("Messages cleared successfully", cleanup_data["message"])
+        self.assertGreaterEqual(cleanup_data["count"], 3, "Should have deleted at least 3 messages")
+        
+        # Verify all messages were deleted
+        response = requests.get(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data["messages"]), 0, "All messages should be deleted after cleanup")
+        
+        print("✅ POST /api/messages/cleanup - Manual cleanup working correctly")
+    
+    def test_message_content_with_various_lengths(self):
+        """Test message content with various text lengths"""
+        # Test cases with different content lengths
+        test_cases = [
+            {"content": "Short", "description": "Very short message"},
+            {"content": "This is a medium length message for testing purposes.", "description": "Medium length message"},
+            {"content": "This is a very long message that contains a lot of text to test how the system handles longer content. It includes multiple sentences and should test the system's ability to handle substantial amounts of text content in messages. This message is intentionally verbose to ensure proper handling of longer text inputs.", "description": "Long message"},
+            {"content": "", "description": "Empty message"},
+            {"content": "Message with special characters: àáâãäåæçèéêëìíîïñòóôõöøùúûüý !@#$%^&*()_+-=[]{}|;':\",./<>?", "description": "Special characters"},
+            {"content": "Message with\nnewlines\nand\ttabs", "description": "Newlines and tabs"},
+            {"content": "Message with émojis 😀 🎉 ✅ ❌ 🔍 💰", "description": "Emojis"}
+        ]
+        
+        # Clean up first
+        requests.post(f"{self.base_url}/api/messages/cleanup")
+        
+        created_message_ids = []
+        
+        for i, test_case in enumerate(test_cases):
+            # Create message with specific content
+            response = requests.post(
+                f"{self.base_url}/api/messages",
+                json={"content": test_case["content"]},
+                params={"sender_type": "medecin", "sender_name": f"Dr. Test{i}"}
+            )
+            
+            if test_case["content"] == "":
+                # Empty content might be rejected
+                if response.status_code != 200:
+                    print(f"⚠️ Empty message rejected (expected): {test_case['description']}")
+                    continue
+            
+            self.assertEqual(response.status_code, 200, f"Failed for {test_case['description']}")
+            message_id = response.json()["id"]
+            created_message_ids.append(message_id)
+        
+        # Verify all messages were created correctly
+        response = requests.get(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        # Verify content integrity
+        for i, test_case in enumerate(test_cases):
+            if test_case["content"] == "":
+                continue  # Skip empty message if it was rejected
+            
+            # Find message by sender name
+            found_message = None
+            for msg in data["messages"]:
+                if msg["sender_name"] == f"Dr. Test{i}":
+                    found_message = msg
+                    break
+            
+            self.assertIsNotNone(found_message, f"Message not found for {test_case['description']}")
+            self.assertEqual(found_message["content"], test_case["content"], f"Content mismatch for {test_case['description']}")
+        
+        print("✅ Message content with various lengths working correctly")
+    
+    def test_comprehensive_messaging_workflow(self):
+        """Test comprehensive messaging workflow with all features"""
+        # Clean up first
+        requests.post(f"{self.base_url}/api/messages/cleanup")
+        
+        # Step 1: Create initial message from medecin
+        medecin_message = {
+            "content": "Bonjour, pouvez-vous vérifier le planning de demain ?"
+        }
+        
+        response = requests.post(
+            f"{self.base_url}/api/messages",
+            json=medecin_message,
+            params={"sender_type": "medecin", "sender_name": "Dr. Martin"}
+        )
+        self.assertEqual(response.status_code, 200)
+        medecin_message_id = response.json()["id"]
+        
+        # Step 2: Create reply from secretaire
+        secretaire_reply = {
+            "content": "Oui docteur, je vérifie immédiatement.",
+            "reply_to": medecin_message_id
+        }
+        
+        response = requests.post(
+            f"{self.base_url}/api/messages",
+            json=secretaire_reply,
+            params={"sender_type": "secretaire", "sender_name": "Marie Dupont"}
+        )
+        self.assertEqual(response.status_code, 200)
+        secretaire_message_id = response.json()["id"]
+        
+        # Step 3: Mark medecin's message as read
+        response = requests.put(f"{self.base_url}/api/messages/{medecin_message_id}/read")
+        self.assertEqual(response.status_code, 200)
+        
+        # Step 4: Edit secretaire's message
+        edit_data = {
+            "content": "Oui docteur, je vérifie le planning immédiatement et vous envoie un résumé."
+        }
+        
+        response = requests.put(
+            f"{self.base_url}/api/messages/{secretaire_message_id}",
+            json=edit_data,
+            params={"user_type": "secretaire"}
+        )
+        self.assertEqual(response.status_code, 200)
+        
+        # Step 5: Create follow-up message from medecin
+        followup_message = {
+            "content": "Parfait, merci beaucoup !"
+        }
+        
+        response = requests.post(
+            f"{self.base_url}/api/messages",
+            json=followup_message,
+            params={"sender_type": "medecin", "sender_name": "Dr. Martin"}
+        )
+        self.assertEqual(response.status_code, 200)
+        followup_message_id = response.json()["id"]
+        
+        # Step 6: Verify complete conversation
+        response = requests.get(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        # Should have 3 messages
+        self.assertEqual(len(data["messages"]), 3)
+        
+        # Verify messages are ordered by timestamp
+        messages = data["messages"]
+        for i in range(1, len(messages)):
+            prev_timestamp = messages[i-1]["timestamp"]
+            curr_timestamp = messages[i]["timestamp"]
+            self.assertLessEqual(prev_timestamp, curr_timestamp, "Messages should be ordered by timestamp")
+        
+        # Verify first message (medecin)
+        first_message = messages[0]
+        self.assertEqual(first_message["id"], medecin_message_id)
+        self.assertEqual(first_message["sender_type"], "medecin")
+        self.assertTrue(first_message["is_read"])
+        self.assertFalse(first_message["is_edited"])
+        
+        # Verify reply message (secretaire)
+        reply_message = messages[1]
+        self.assertEqual(reply_message["id"], secretaire_message_id)
+        self.assertEqual(reply_message["sender_type"], "secretaire")
+        self.assertEqual(reply_message["reply_to"], medecin_message_id)
+        self.assertEqual(reply_message["reply_content"], "Bonjour, pouvez-vous vérifier le planning de demain ?")
+        self.assertTrue(reply_message["is_edited"])
+        self.assertEqual(reply_message["original_content"], "Oui docteur, je vérifie immédiatement.")
+        
+        # Verify follow-up message (medecin)
+        followup = messages[2]
+        self.assertEqual(followup["id"], followup_message_id)
+        self.assertEqual(followup["content"], "Parfait, merci beaucoup !")
+        self.assertFalse(followup["is_read"])
+        self.assertFalse(followup["is_edited"])
+        
+        # Step 7: Test authorization - try to delete medecin's message as secretaire (should fail)
+        response = requests.delete(
+            f"{self.base_url}/api/messages/{medecin_message_id}",
+            params={"user_type": "secretaire"}
+        )
+        self.assertEqual(response.status_code, 403)
+        
+        # Step 8: Delete follow-up message by correct sender
+        response = requests.delete(
+            f"{self.base_url}/api/messages/{followup_message_id}",
+            params={"user_type": "medecin"}
+        )
+        self.assertEqual(response.status_code, 200)
+        
+        # Verify deletion
+        response = requests.get(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data["messages"]), 2)  # Should have 2 messages left
+        
+        print("✅ Comprehensive messaging workflow working correctly")
+    
+    def test_error_handling_edge_cases(self):
+        """Test error handling for various edge cases"""
+        # Test 1: Edit non-existent message
+        response = requests.put(
+            f"{self.base_url}/api/messages/non_existent_id",
+            json={"content": "Test edit"},
+            params={"user_type": "medecin"}
+        )
+        self.assertEqual(response.status_code, 404)
+        
+        # Test 2: Delete non-existent message
+        response = requests.delete(
+            f"{self.base_url}/api/messages/non_existent_id",
+            params={"user_type": "medecin"}
+        )
+        self.assertEqual(response.status_code, 404)
+        
+        # Test 3: Reply to non-existent message
+        reply_data = {
+            "content": "Reply to non-existent message",
+            "reply_to": "non_existent_id"
+        }
+        
+        response = requests.post(
+            f"{self.base_url}/api/messages",
+            json=reply_data,
+            params={"sender_type": "medecin", "sender_name": "Dr. Martin"}
+        )
+        # Should still create the message but with empty reply_content
+        self.assertEqual(response.status_code, 200)
+        message_id = response.json()["id"]
+        
+        # Verify the message was created with empty reply_content
+        response = requests.get(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        created_message = None
+        for msg in data["messages"]:
+            if msg["id"] == message_id:
+                created_message = msg
+                break
+        
+        self.assertIsNotNone(created_message)
+        self.assertEqual(created_message["reply_to"], "non_existent_id")
+        self.assertEqual(created_message["reply_content"], "")  # Should be empty
+        
+        print("✅ Error handling edge cases working correctly")
+
 if __name__ == "__main__":
     unittest.main()
