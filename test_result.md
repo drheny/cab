@@ -8040,6 +8040,18 @@ backend:
         agent: "testing"
         comment: "Performance testing completed successfully. /api/payments/stats responds within 5 seconds (typically <1s), /api/payments/advanced-stats responds within 10 seconds (typically <1s). Database queries optimized with efficient aggregation. Response times consistent across different date ranges."
 
+  - task: "Consultation history retrieval after adding demo consultation data"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "CONSULTATION HISTORY RETRIEVAL TESTING COMPLETED SUCCESSFULLY ✅ All verification tasks passed: 1) All 3 demo patients (patient1, patient2, patient3) now have 2+ consultation records with proper historical data spanning 15-60 days. 2) All consultations have complete data structure with required fields (id, patient_id, appointment_id, date, type_rdv, observations, traitement, bilan, etc.) and realistic medical content (90-111 char observations, 27-94 char treatments, 45-69 char bilan). 3) Both 'visite' and 'controle' consultation types present across all patients. 4) Patient-consultation navigation workflow working correctly with proper data linkage via patient_id and appointment_id. 5) Phone messages → consultation navigation fully functional with URL parameter support (?patient=patient1&patientName=Yassine+Ben+Ahmed) and timestamp cache-busting. 6) All API endpoints (GET /api/consultations, GET /api/consultations/patient/{patient_id}, GET /api/consultations/{consultation_id}) returning proper arrays and handling error cases correctly. ROOT CAUSE RESOLVED: Missing consultation records for demo patients patient1 and patient2 have been added via enhanced create_demo_data() function. The consultation history loading issue is COMPLETELY RESOLVED - phone messages navigation now successfully loads historical consultation records for all demo patients."
+
 frontend:
   - task: "Calendar Weekly View Visual Improvements"
     implemented: true
