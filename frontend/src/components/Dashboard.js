@@ -31,9 +31,17 @@ const Dashboard = ({ user }) => {
   });
   const [loading, setLoading] = useState(true);
   
-  // Patient modal states
+  // Modal states
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [showPatientModal, setShowPatientModal] = useState(false);
+  const [selectedConsultation, setSelectedConsultation] = useState(null);
+  const [showConsultationModal, setShowConsultationModal] = useState(false);
+  
+  // Data states
+  const [birthdays, setBirthdays] = useState([]);
+  const [phoneReminders, setPhoneReminders] = useState([]);
+  
+  const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
   
   const [messages] = useState([
     {
