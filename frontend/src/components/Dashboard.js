@@ -41,6 +41,15 @@ const Dashboard = ({ user }) => {
   const [birthdays, setBirthdays] = useState([]);
   const [phoneReminders, setPhoneReminders] = useState([]);
   
+  // Messaging states
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [editingMessage, setEditingMessage] = useState(null);
+  const [editingContent, setEditingContent] = useState('');
+  const [ws, setWs] = useState(null);
+  const messagesEndRef = useRef(null);
+  
   const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
   const handleAddPatient = () => {
