@@ -815,50 +815,157 @@ const Billing = ({ user }) => {
       {/* Payments Tab */}
       {activeTab === 'payments' && (
         <div className="space-y-6">
-          {/* Search and Filters */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* Advanced Search Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Recherche avancée</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nom du patient</label>
                 <input
                   type="text"
-                  placeholder="Rechercher un patient..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 input-field"
+                  placeholder="Nom ou prénom..."
+                  value={searchFilters.patientName}
+                  onChange={(e) => setSearchFilters(prev => ({
+                    ...prev,
+                    patientName: e.target.value
+                  }))}
+                  className="input-field"
                 />
               </div>
               
-              <select
-                value={methodFilter}
-                onChange={(e) => setMethodFilter(e.target.value)}
-                className="input-field"
-              >
-                <option value="">Toutes les méthodes</option>
-                <option value="espece">Espèces</option>
-                <option value="carte">Carte bancaire</option>
-                <option value="cheque">Chèque</option>
-                <option value="virement">Virement</option>
-                <option value="gratuit">Gratuit</option>
-              </select>
-
-              <select
-                value={assureFilter}
-                onChange={(e) => setAssureFilter(e.target.value)}
-                className="input-field"
-              >
-                <option value="">Tous les patients</option>
-                <option value="true">Assurés</option>
-                <option value="false">Non assurés</option>
-              </select>
-
-              <div className="text-sm text-gray-500 flex items-center">
-                {filteredPayments.length} paiement(s) trouvé(s)
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date début</label>
+                <input
+                  type="date"
+                  value={searchFilters.dateDebut}
+                  onChange={(e) => setSearchFilters(prev => ({
+                    ...prev,
+                    dateDebut: e.target.value
+                  }))}
+                  className="input-field"
+                />
               </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date fin</label>
+                <input
+                  type="date"
+                  value={searchFilters.dateFin}
+                  onChange={(e) => setSearchFilters(prev => ({
+                    ...prev,
+                    dateFin: e.target.value
+                  }))}
+                  className="input-field"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Méthode</label>
+                <select
+                  value={searchFilters.method}
+                  onChange={(e) => setSearchFilters(prev => ({
+                    ...prev,
+                    method: e.target.value
+                  }))}
+                  className="input-field"
+                >
+                  <option value="">Toutes</option>
+                  <option value="espece">Espèces</option>
+                  <option value="carte">Carte bancaire</option>
+                  <option value="cheque">Chèque</option>
+                  <option value="virement">Virement</option>
+                  <option value="gratuit">Gratuit</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Assurance</label>
+                <select
+                  value={searchFilters.assure}
+                  onChange={(e) => setSearchFilters(prev => ({
+                    ...prev,
+                    assure: e.target.value
+                  }))}
+                  className="input-field"
+                >
+                  <option value="">Tous</option>
+                  <option value="true">Assurés</option>
+                  <option value="false">Non assurés</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => handleAdvancedSearch(1)}
+                disabled={isSearching}
+                className="btn-primary flex items-center space-x-2"
+              >
+                <Search className="w-4 h-4" />
+                <span>{isSearching ? 'Recherche...' : 'Rechercher'}</span>
+              </button>
+              <button
+                onClick={clearAdvancedSearch}
+                className="btn-outline flex items-center space-x-2"
+              >
+                <X className="w-4 h-4" />
+                <span>Effacer</span>
+              </button>
+              {searchResults.length > 0 && (
+                <span className="text-sm text-gray-600">
+                  {pagination.totalCount} résultat(s) trouvé(s)
+                </span>
+              )}
             </div>
           </div>
 
-          {/* Payments Table */}
+          {/* Basic Search and Filters (for non-advanced search) */}
+          {searchResults.length === 0 && (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <input
+                    type="text"
+                    placeholder="Rechercher un patient..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 input-field"
+                  />
+                </div>
+                
+                <select
+                  value={methodFilter}
+                  onChange={(e) => setMethodFilter(e.target.value)}
+                  className="input-field"
+                >
+                  <option value="">Toutes les méthodes</option>
+                  <option value="espece">Espèces</option>
+                  <option value="carte">Carte bancaire</option>
+                  <option value="cheque">Chèque</option>
+                  <option value="virement">Virement</option>
+                  <option value="gratuit">Gratuit</option>
+                </select>
+
+                <select
+                  value={assureFilter}
+                  onChange={(e) => setAssureFilter(e.target.value)}
+                  className="input-field"
+                >
+                  <option value="">Tous les patients</option>
+                  <option value="true">Assurés</option>
+                  <option value="false">Non assurés</option>
+                </select>
+
+                <div className="text-sm text-gray-500 flex items-center">
+                  {filteredPayments.length} paiement(s) trouvé(s)
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Results Table */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
@@ -885,7 +992,7 @@ const Billing = ({ user }) => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredPayments.map((payment) => (
+                  {(searchResults.length > 0 ? searchResults : filteredPayments).map((payment) => (
                     <tr key={payment.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {new Date(payment.date).toLocaleDateString('fr-FR')}
@@ -932,14 +1039,23 @@ const Billing = ({ user }) => {
                               setShowPaymentModal(true);
                             }}
                             className="text-indigo-600 hover:text-indigo-900"
+                            title="Voir les détails"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
                           <button 
                             onClick={() => handleEditPayment(payment)}
                             className="text-blue-600 hover:text-blue-900"
+                            title="Modifier le paiement"
                           >
                             <Edit className="w-4 h-4" />
+                          </button>
+                          <button 
+                            onClick={() => handleDeletePayment(payment)}
+                            className="text-red-600 hover:text-red-900"
+                            title="Supprimer le paiement"
+                          >
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </td>
@@ -950,10 +1066,69 @@ const Billing = ({ user }) => {
             </div>
           </div>
 
-          {filteredPayments.length === 0 && (
+          {/* Pagination */}
+          {searchResults.length > 0 && pagination.totalPages > 1 && (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-500">
+                  Page {pagination.currentPage} sur {pagination.totalPages} 
+                  ({pagination.totalCount} résultats au total)
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => handleAdvancedSearch(pagination.currentPage - 1)}
+                    disabled={!pagination.currentPage > 1 || isSearching}
+                    className="px-3 py-1 text-sm border border-gray-300 rounded-lg disabled:opacity-50 hover:bg-gray-50"
+                  >
+                    Précédent
+                  </button>
+                  
+                  {/* Page numbers */}
+                  {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                    const pageNum = Math.max(1, pagination.currentPage - 2) + i;
+                    if (pageNum <= pagination.totalPages) {
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => handleAdvancedSearch(pageNum)}
+                          disabled={isSearching}
+                          className={`px-3 py-1 text-sm rounded-lg ${
+                            pageNum === pagination.currentPage
+                              ? 'bg-primary-500 text-white'
+                              : 'border border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    }
+                    return null;
+                  })}
+                  
+                  <button
+                    onClick={() => handleAdvancedSearch(pagination.currentPage + 1)}
+                    disabled={pagination.currentPage >= pagination.totalPages || isSearching}
+                    className="px-3 py-1 text-sm border border-gray-300 rounded-lg disabled:opacity-50 hover:bg-gray-50"
+                  >
+                    Suivant
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Empty States */}
+          {searchResults.length === 0 && filteredPayments.length === 0 && !isSearching && (
             <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-200">
               <CreditCard className="w-12 h-12 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500">Aucun paiement trouvé pour les critères sélectionnés</p>
+            </div>
+          )}
+          
+          {isSearching && (
+            <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-200">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
+              <p className="text-gray-500">Recherche en cours...</p>
             </div>
           )}
         </div>
