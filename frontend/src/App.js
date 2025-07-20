@@ -48,6 +48,27 @@ function App() {
     initDemoData();
   }, []);
 
+  useEffect(() => {
+    // Load phone messages count for sidebar badge
+    const loadPhoneMessagesCount = async () => {
+      if (!user) return;
+      
+      try {
+        const response = await axios.get('/api/phone-messages/stats');
+        setPhoneMessagesCount(response.data.nouveau || 0);
+      } catch (error) {
+        console.error('Error loading phone messages count:', error);
+      }
+    };
+
+    loadPhoneMessagesCount();
+    
+    // Update count every 30 seconds
+    const interval = setInterval(loadPhoneMessagesCount, 30000);
+    
+    return () => clearInterval(interval);
+  }, [user]);
+
   const handleLogin = (userType) => {
     const userData = {
       type: userType,
