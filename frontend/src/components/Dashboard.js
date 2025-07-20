@@ -295,6 +295,31 @@ const Dashboard = ({ user }) => {
         reply_to: replyingTo?.id || null
       };
 
+      // Clear input and reply state immediately for better UX
+      const messageContent = newMessage.trim();
+      const replyToMessage = replyingTo;
+      setNewMessage('');
+      setReplyingTo(null);
+
+      // Add message optimistically (immediately) to UI
+      const optimisticMessage = {
+        id: `temp_${Date.now()}`, // Temporary ID
+        sender_type: user.type,
+        sender_name: user.name,
+        content: messageContent,
+        timestamp: new Date().toISOString(),
+        is_read: false,
+        is_edited: false,
+        original_content: "",
+        reply_to: replyToMessage?.id || null,
+        reply_content: replyToMessage?.content || "",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      setMessages(prev => [...prev, optimisticMessage]);
+
+      // Send to server
       const response = await axios.post(`${API_BASE_URL}/api/messages`, messageData, {
         params: {
           sender_type: user.type,
@@ -302,20 +327,23 @@ const Dashboard = ({ user }) => {
         }
       });
 
-      // Clear input and reply state immediately
-      setNewMessage('');
-      setReplyingTo(null);
-      
-      // If WebSocket is not connected, fetch messages manually
-      if (!ws || ws.readyState !== WebSocket.OPEN) {
-        console.log('WebSocket not connected, fetching messages manually');
-        await fetchMessages();
-      }
+      // Replace the optimistic message with the real one from server
+      const realMessage = response.data;
+      setMessages(prev => prev.map(msg => 
+        msg.id === optimisticMessage.id ? { ...optimisticMessage, id: realMessage.id } : msg
+      ));
       
       console.log('✅ Message sent successfully:', response.data);
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error('Erreur lors de l\'envoi du message');
+      
+      // Remove the failed optimistic message
+      setMessages(prev => prev.filter(msg => !msg.id.startsWith('temp_')));
+      
+      // Restore the message input if sending failed
+      setNewMessage(messageData.content);
+      setReplyingTo(messageData.reply_to ? replyingTo : null);
     }
   };
 
