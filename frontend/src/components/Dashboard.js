@@ -257,6 +257,95 @@ const Dashboard = ({ user }) => {
     }
   };
 
+  // ==================== MESSAGING FUNCTIONS ====================
+
+  const fetchMessages = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/messages`);
+      setMessages(response.data.messages || []);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!newMessage.trim()) return;
+
+    try {
+      const messageData = {
+        content: newMessage.trim(),
+        reply_to: replyingTo?.id || null
+      };
+
+      await axios.post(`${API_BASE_URL}/api/messages`, messageData, {
+        params: {
+          sender_type: user.type,
+          sender_name: user.name
+        }
+      });
+
+      setNewMessage('');
+      setReplyingTo(null);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast.error('Erreur lors de l\'envoi du message');
+    }
+  };
+
+  const handleReplyToMessage = (message) => {
+    setReplyingTo(message);
+    // Mark message as read when replying
+    markMessageAsRead(message.id);
+  };
+
+  const handleEditMessage = (message) => {
+    setEditingMessage(message);
+    setEditingContent(message.content);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingContent.trim()) return;
+
+    try {
+      await axios.put(
+        `${API_BASE_URL}/api/messages/${editingMessage.id}`,
+        { content: editingContent.trim() },
+        {
+          params: { user_type: user.type }
+        }
+      );
+
+      setEditingMessage(null);
+      setEditingContent('');
+    } catch (error) {
+      console.error('Error editing message:', error);
+      toast.error('Erreur lors de la modification du message');
+    }
+  };
+
+  const handleDeleteMessage = async (messageId) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce message ?')) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${API_BASE_URL}/api/messages/${messageId}`, {
+        params: { user_type: user.type }
+      });
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      toast.error('Erreur lors de la suppression du message');
+    }
+  };
+
+  const markMessageAsRead = async (messageId) => {
+    try {
+      await axios.put(`${API_BASE_URL}/api/messages/${messageId}/read`);
+    } catch (error) {
+      console.error('Error marking message as read:', error);
+    }
+  };
+
   const StatCard = ({ icon: Icon, title, value, color, subtitle }) => (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between">
