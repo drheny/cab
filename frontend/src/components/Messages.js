@@ -743,7 +743,7 @@ const Messages = ({ user }) => {
 
               <div className="flex justify-between mt-6">
                 <button
-                  onClick={() => viewPatientConsultations(selectedPatientDetails.id)}
+                  onClick={() => viewPatientConsultations(selectedPatientDetails.id, `${selectedPatientDetails.prenom} ${selectedPatientDetails.nom}`)}
                   className="btn-primary"
                 >
                   Voir Consultations
