@@ -891,6 +891,103 @@ Final payment amount display testing completed with critical data issue identifi
 **PAYMENT AMOUNT DISPLAY: FRONTEND READY BUT BACKEND DATA NEEDS CORRECTION**
 The payment amount display functionality is fully implemented and ready to work. The issue is that the consultation record needs to have the type_rdv field set to "visite" for the payment amount to be displayed. Once this data correction is made, the payment display will work immediately.
 
+### PHONE MESSAGES EDITING & CONSULTATION NAVIGATION TESTING ✅ COMPLETED
+**Status:** PHONE MESSAGES EDITING FULLY FUNCTIONAL - CONSULTATION NAVIGATION PARTIALLY WORKING
+
+**Test Results Summary (2025-01-20 - Phone Messages Editing & Navigation Testing):**
+✅ **Message Editing Functionality** - Complete inline editing system working perfectly with all features
+✅ **Edit2 Icon Buttons** - Visible and functional for all messages in both secrétaire and médecin interfaces
+✅ **Inline Edit Mode** - Yellow background highlight working correctly with complete edit interface
+✅ **Edit Form Elements** - Textarea, priority radio buttons, save/cancel buttons all functional
+✅ **Form Validation** - Save button correctly disabled when message content is empty
+✅ **Save Functionality** - Message editing saves successfully with API integration and WebSocket notifications
+✅ **Cancel Functionality** - Cancel button properly reverts changes and exits edit mode
+✅ **Priority Editing** - Users can successfully change priority between normal and urgent
+✅ **Cross-User Support** - Both secrétaire and médecin users can edit messages
+✅ **VOIR Button Navigation** - Eye icon buttons successfully navigate to consultation page with URL parameters
+✅ **URL Parameter Passing** - Patient ID and name correctly passed via URL (?patient=ID&patientName=NAME)
+❌ **Patient Auto-Selection Issue** - React timing error prevents automatic patient selection in consultation page
+
+**Detailed Test Results:**
+
+**MESSAGE EDITING FUNCTIONALITY: ✅ FULLY WORKING**
+- ✅ **Edit2 Icon Buttons**: Found and functional on all messages for both user types
+- ✅ **Edit Mode Activation**: Yellow background (bg-yellow-50) correctly applied when editing
+- ✅ **Edit Interface**: Complete form with textarea, priority radio buttons, save/cancel buttons
+- ✅ **Content Editing**: Successfully tested content modification and persistence
+- ✅ **Priority Editing**: Successfully tested priority change from normal to urgent
+- ✅ **Form Validation**: Save button correctly disabled when textarea is empty
+- ✅ **Save Functionality**: API call to PUT /api/phone-messages/{id} working correctly
+- ✅ **Success Feedback**: Toast notification "Message modifié avec succès" displayed
+- ✅ **WebSocket Integration**: Real-time notifications working (phone_message_edited events)
+- ✅ **Cancel Functionality**: Cancel button properly exits edit mode without saving changes
+- ✅ **Data Persistence**: Edited messages persist correctly and display updated content
+
+**CONSULTATION NAVIGATION: ✅ PARTIALLY WORKING**
+- ✅ **VOIR Button Visibility**: Eye icon buttons visible and functional on all messages
+- ✅ **Navigation Functionality**: Successfully navigates to /consultation page
+- ✅ **URL Parameter Generation**: Correctly generates ?patient=patient2&patientName=Lina+Alami
+- ✅ **Parameter Extraction**: Patient ID and name correctly extracted from URL
+- ❌ **Patient Auto-Selection**: React error "Cannot access 'handlePatientSelect' before initialization"
+- ❌ **Consultation Loading**: Patient not automatically selected due to timing issue
+
+**CROSS-USER FUNCTIONALITY: ✅ COMPREHENSIVE**
+- ✅ **Secrétaire Interface**: All editing and navigation features working correctly
+- ✅ **Médecin Interface**: All editing and navigation features accessible
+- ✅ **Permission Consistency**: Both user types have same access to edit and VOIR functions
+- ✅ **UI Consistency**: Interface elements display consistently across user types
+
+**TECHNICAL VALIDATION:**
+- ✅ **API Integration**: PUT /api/phone-messages/{id} endpoint working correctly
+- ✅ **WebSocket Events**: phone_message_edited notifications broadcasting successfully
+- ✅ **State Management**: React state updates correctly during edit operations
+- ✅ **URL Routing**: Navigation and parameter passing working correctly
+- ❌ **useEffect Timing**: Consultation component has initialization timing issue
+
+**CRITICAL FINDINGS:**
+- 🔍 **Message Editing Complete**: All editing functionality working perfectly as specified
+- 🔍 **Navigation Working**: VOIR button navigation and URL parameters working correctly
+- 🔍 **React Timing Issue**: Consultation component useEffect hook has dependency timing problem
+- 🔍 **User Experience**: Editing interface provides excellent UX with yellow highlight and validation
+- 🔍 **Real-time Updates**: WebSocket integration ensures immediate updates across sessions
+
+**PHONE MESSAGES ENHANCEMENTS STATUS: EDITING FULLY FUNCTIONAL - NAVIGATION NEEDS MINOR FIX**
+All message editing requirements from the review request have been successfully implemented and tested:
+1. ✅ Edit2 icon button in message action bar for all messages
+2. ✅ Inline edit mode with yellow background highlight
+3. ✅ Complete edit form with textarea and priority radio buttons
+4. ✅ Save button with validation (disabled when content empty)
+5. ✅ Cancel button functionality
+6. ✅ Data persistence and API integration
+7. ✅ VOIR button navigation with URL parameters
+8. ❌ Patient auto-selection needs React timing fix
+
+**Testing Agent → Main Agent (2025-01-20 - Phone Messages Editing & Navigation Testing):**
+Comprehensive testing of the Phone Messages editing and consultation navigation enhancements completed successfully. The message editing functionality is working perfectly with all specified features implemented and functional.
+
+✅ **MESSAGE EDITING FULLY TESTED AND WORKING:**
+- Edit2 icon buttons visible and functional for all messages
+- Inline edit mode with yellow background working correctly
+- Complete edit interface with textarea, priority selection, save/cancel buttons
+- Form validation working (save disabled when empty)
+- Save functionality working with API integration and WebSocket notifications
+- Cancel functionality working correctly
+- Cross-user support confirmed for both secrétaire and médecin
+
+✅ **CONSULTATION NAVIGATION PARTIALLY WORKING:**
+- VOIR (Eye icon) buttons visible and functional
+- Navigation to consultation page working correctly
+- URL parameters correctly passed (?patient=ID&patientName=NAME)
+- Patient ID and name extraction working
+
+❌ **MINOR ISSUE IDENTIFIED:**
+- React timing error in Consultation component: "Cannot access 'handlePatientSelect' before initialization"
+- This prevents automatic patient selection from URL parameters
+- Issue is in useEffect dependency array - handlePatientSelect function not properly memoized
+
+**PHONE MESSAGES ENHANCEMENTS: EDITING COMPLETE - NAVIGATION NEEDS MINOR REACT FIX**
+The message editing functionality is fully implemented and working perfectly. The consultation navigation works for URL generation and page navigation, but needs a minor React hook timing fix for automatic patient selection to work properly.
+
 ### Dashboard Anniversaires et Relances Testing ✅ COMPLETED
 **Status:** ALL DASHBOARD ANNIVERSAIRES ET RELANCES TESTS PASSED - New Dashboard Features Fully Functional
 
