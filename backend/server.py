@@ -311,6 +311,18 @@ def update_patient_computed_fields(patient_dict: dict) -> dict:
     
     return patient_dict
 
+# Helper function pour nettoyage automatique quotidien des messages
+async def cleanup_messages_daily():
+    """Nettoyer les messages tous les jours à 8h"""
+    try:
+        # Supprimer tous les messages
+        result = messages_collection.delete_many({})
+        print(f"Messages supprimés: {result.deleted_count}")
+        return result.deleted_count
+    except Exception as e:
+        print(f"Erreur lors du nettoyage des messages: {str(e)}")
+        return 0
+
 def create_demo_data():
     """Create demo data for testing"""
     
