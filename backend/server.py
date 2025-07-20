@@ -36,6 +36,7 @@ appointments_collection = db.appointments
 consultations_collection = db.consultations
 payments_collection = db.payments
 users_collection = db.users
+messages_collection = db.messages
 
 # Security
 security = HTTPBearer()
