@@ -529,6 +529,91 @@ async def init_demo():
     create_demo_data()
     return {"message": "Demo data created successfully"}
 
+@app.get("/api/dashboard/birthdays")
+async def get_birthdays_today():
+    """Get patients with birthdays today"""
+    try:
+        today = datetime.now()
+        today_str = today.strftime("%m-%d")  # Format MM-DD for comparison
+        
+        # Find patients with birthdays today
+        patients = list(patients_collection.find({}, {"_id": 0}))
+        
+        birthdays_today = []
+        for patient in patients:
+            if patient.get("date_naissance"):
+                try:
+                    # Extract month-day from patient's birth date
+                    birth_date = datetime.strptime(patient["date_naissance"], "%Y-%m-%d")
+                    birth_md = birth_date.strftime("%m-%d")
+                    
+                    if birth_md == today_str:
+                        # Calculate age
+                        age = today.year - birth_date.year
+                        if today.month < birth_date.month or (today.month == birth_date.month and today.day < birth_date.day):
+                            age -= 1
+                        
+                        birthdays_today.append({
+                            "id": patient["id"],
+                            "nom": patient.get("nom", ""),
+                            "prenom": patient.get("prenom", ""),
+                            "age": age,
+                            "numero_whatsapp": patient.get("numero_whatsapp", ""),
+                            "date_naissance": patient["date_naissance"]
+                        })
+                except ValueError:
+                    # Skip patients with invalid date format
+                    continue
+        
+        return {"birthdays": birthdays_today}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching birthdays: {str(e)}")
+
+@app.get("/api/dashboard/phone-reminders")
+async def get_phone_reminders_today():
+    """Get scheduled phone reminders for today"""
+    try:
+        today_str = datetime.now().strftime("%Y-%m-%d")
+        
+        # For now, we'll return appointments that need follow-up calls
+        # This could be enhanced with a dedicated reminders system
+        appointments = list(appointments_collection.find({
+            "date": {"$lte": today_str},
+            "statut": "termine",
+            "type_rdv": "visite",
+            "suivi_requis": {"$exists": True, "$ne": False}  # Custom field for follow-up
+        }, {"_id": 0}))
+        
+        reminders = []
+        for appointment in appointments:
+            # Get patient info
+            patient = patients_collection.find_one({"id": appointment["patient_id"]}, {"_id": 0})
+            if patient:
+                # Get the original consultation
+                consultation = consultations_collection.find_one({
+                    "appointment_id": appointment["id"]
+                }, {"_id": 0})
+                
+                reminders.append({
+                    "id": appointment["id"],
+                    "patient_id": appointment["patient_id"],
+                    "patient_nom": patient.get("nom", ""),
+                    "patient_prenom": patient.get("prenom", ""),
+                    "numero_whatsapp": patient.get("numero_whatsapp", ""),
+                    "date_rdv": appointment["date"],
+                    "heure_rdv": appointment["heure"],
+                    "motif": appointment.get("motif", "Consultation"),
+                    "consultation_id": consultation.get("id") if consultation else None,
+                    "raison_relance": appointment.get("suivi_requis", "Contrôle de suivi"),
+                    "time": "10:00"  # Default reminder time
+                })
+        
+        return {"reminders": reminders}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching phone reminders: {str(e)}")
+
 @app.get("/api/dashboard")
 async def get_dashboard():
     """Get dashboard statistics"""
