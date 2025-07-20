@@ -350,6 +350,18 @@ async def cleanup_messages_daily():
         print(f"Erreur lors du nettoyage des messages: {str(e)}")
         return 0
 
+# Helper function pour nettoyage automatique quotidien des messages téléphoniques
+async def cleanup_phone_messages_daily():
+    """Nettoyer les messages téléphoniques tous les jours à 8h"""
+    try:
+        # Supprimer tous les messages téléphoniques
+        result = phone_messages_collection.delete_many({})
+        print(f"Messages téléphoniques supprimés: {result.deleted_count}")
+        return result.deleted_count
+    except Exception as e:
+        print(f"Erreur lors du nettoyage des messages téléphoniques: {str(e)}")
+        return 0
+
 def create_demo_data():
     """Create demo data for testing"""
     
