@@ -442,6 +442,8 @@ const Billing = ({ user }) => {
       toast.error('Erreur lors de la suppression du paiement');
     }
   };
+
+  const handleUpdatePayment = async (paymentId, updatedData) => {
     try {
       const paymentData = {
         paye: updatedData.paye,
