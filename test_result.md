@@ -903,17 +903,26 @@ Comprehensive frontend testing of the Dashboard Anniversaires et Relances functi
 **DASHBOARD ANNIVERSAIRES ET RELANCES: IMPLEMENTATION COMPLETE AND FULLY TESTED**
 The frontend now fully supports the Dashboard Anniversaires et Relances functionality as specified. All tests pass and the system is ready for production use with the new dashboard features. The implementation handles both data-present and empty-state scenarios gracefully.
 
-### Message Deletion Functionality Testing ✅ COMPLETED
-**Status:** ALL MESSAGE DELETION TESTS PASSED - Backend Message Deletion Fully Functional with Proper Authorization
+### Message Deletion Functionality Testing ❌ CRITICAL ISSUE IDENTIFIED
+**Status:** FRONTEND MESSAGE DELETION OPTIMISTIC BEHAVIOR NOT WORKING - Critical User Experience Issue Found
 
-**Test Results Summary (2025-01-20 - Message Deletion Functionality Testing):**
-✅ **Message Creation** - Successfully created 3 test messages using POST /api/messages with different sender types
-✅ **DELETE Endpoint Success** - DELETE /api/messages/{message_id} working correctly with proper user_type authorization
-✅ **Authorization Validation** - Correctly rejects deletion attempts with wrong user_type (403 Forbidden)
-✅ **Non-existent Message Handling** - Properly returns 404 for non-existent message IDs
-✅ **Database Deletion Verified** - Deleted messages no longer appear in GET /api/messages responses
-✅ **Multiple User Types** - Both medecin and secretaire user types working correctly for their own messages
-✅ **WebSocket Broadcasting Ready** - Deletion endpoint triggers proper broadcast format for real-time updates
+**Test Results Summary (2025-01-20 - Message Deletion Frontend Testing with Optimistic Deletion):**
+✅ **Login and Navigation** - Successfully logged in as médecin and navigated to Dashboard
+✅ **Messagerie Interne Section** - Successfully located and accessed messaging interface
+✅ **Message Sending** - Successfully sent multiple test messages for deletion testing
+✅ **Delete Button Availability** - Found 22 delete buttons for user's own messages
+✅ **Confirmation Dialog** - Confirmation dialog "Êtes-vous sûr de vouloir supprimer ce message ?" appears correctly
+❌ **CRITICAL ISSUE: Optimistic Deletion Not Working** - Messages do NOT disappear immediately from UI
+❌ **User Experience Problem** - Users must wait for server response before seeing message removal
+❌ **Success Toast Missing** - "Message supprimé avec succès" toast not appearing consistently
+
+**CRITICAL FINDINGS:**
+- 🔍 **Console Logs Show Deletion Attempt**: "🗑️ Attempting to delete message: [ID]" appears correctly
+- 🔍 **Dialog Confirmation Working**: Confirmation dialog appears and can be accepted
+- ❌ **Missing Optimistic Removal**: No "🔄 Removing message optimistically" log found
+- ❌ **Missing Message Count Logs**: No "📊 Messages before: X after: Y" logs found
+- ❌ **UI Not Updating Immediately**: Message count remains unchanged after delete button click
+- ❌ **Backend API Call Delay**: Deletion appears to wait for server response instead of optimistic removal
 
 **Detailed Test Results:**
 
