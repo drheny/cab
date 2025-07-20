@@ -21,7 +21,9 @@ import {
   XCircle,
   Phone,
   Euro,
-  X
+  X,
+  Settings,
+  Activity
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
