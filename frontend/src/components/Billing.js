@@ -84,8 +84,9 @@ const Billing = ({ user }) => {
   useEffect(() => {
     if (dateFilter.debut && dateFilter.fin) {
       fetchStats();
+      fetchAdvancedStats();
     }
-  }, [dateFilter]);
+  }, [dateFilter, statsPeriod]);
 
   const fetchInitialData = async () => {
     setLoading(true);
@@ -94,7 +95,8 @@ const Billing = ({ user }) => {
         fetchPayments(),
         fetchUnpaidAppointments(),
         fetchPatients(),
-        fetchStats()
+        fetchStats(),
+        fetchAdvancedStats()
       ]);
     } catch (error) {
       console.error('Error fetching initial data:', error);
