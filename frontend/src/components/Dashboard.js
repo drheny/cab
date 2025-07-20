@@ -774,16 +774,29 @@ const Dashboard = ({ user }) => {
             <MessageCircle className="w-5 h-5 mr-2 text-primary-500" />
             Messagerie Interne
           </div>
-          <button
-            onClick={() => {
-              console.log('🔴 Button click detected!');
-              handleClearMessages();
-            }}
-            className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-full hover:bg-red-200 transition-colors"
-            title="Supprimer tous les messages"
-          >
-            🗑️ Vider
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => {
+                console.log('🔴 Button click detected!');
+                handleClearMessages();
+              }}
+              className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-full hover:bg-red-200 transition-colors"
+              title="Supprimer tous les messages"
+            >
+              🗑️ Vider
+            </button>
+            
+            <button
+              onClick={() => {
+                console.log('🟢 Test button clicked!');
+                alert('Test button works!');
+              }}
+              className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full hover:bg-green-200 transition-colors"
+              title="Test button"
+            >
+              🔧 Test
+            </button>
+          </div>
         </h3>
         
         {/* Messages Container */}
