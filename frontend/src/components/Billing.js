@@ -792,10 +792,7 @@ const Billing = ({ user }) => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Assurance</label>
                   <p className="text-sm text-gray-900">
-                    {selectedPayment.assure ? 
-                      `Assuré (${selectedPayment.taux_remboursement}%)` : 
-                      'Non assuré'
-                    }
+                    {selectedPayment.assure ? 'Assuré' : 'Non assuré'}
                   </p>
                 </div>
                 
