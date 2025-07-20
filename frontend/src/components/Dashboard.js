@@ -343,6 +343,12 @@ const Dashboard = ({ user }) => {
 
       setEditingMessage(null);
       setEditingContent('');
+      
+      // If WebSocket is not connected, fetch messages manually
+      if (!ws || ws.readyState !== WebSocket.OPEN) {
+        console.log('WebSocket not connected, fetching messages manually after edit');
+        await fetchMessages();
+      }
     } catch (error) {
       console.error('Error editing message:', error);
       toast.error('Erreur lors de la modification du message');
@@ -358,6 +364,12 @@ const Dashboard = ({ user }) => {
       await axios.delete(`${API_BASE_URL}/api/messages/${messageId}`, {
         params: { user_type: user.type }
       });
+      
+      // If WebSocket is not connected, fetch messages manually
+      if (!ws || ws.readyState !== WebSocket.OPEN) {
+        console.log('WebSocket not connected, fetching messages manually after delete');
+        await fetchMessages();
+      }
     } catch (error) {
       console.error('Error deleting message:', error);
       toast.error('Erreur lors de la suppression du message');
