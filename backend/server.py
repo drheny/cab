@@ -1277,6 +1277,45 @@ async def delete_appointment(appointment_id: str):
         raise HTTPException(status_code=404, detail="Appointment not found")
     return {"message": "Appointment deleted successfully"}
 
+@app.get("/api/consultations/{consultation_id}")
+async def get_consultation_details(consultation_id: str):
+    """Get detailed consultation information"""
+    try:
+        # Get consultation
+        consultation = consultations_collection.find_one({"id": consultation_id}, {"_id": 0})
+        if not consultation:
+            raise HTTPException(status_code=404, detail="Consultation not found")
+        
+        # Get patient information
+        patient = patients_collection.find_one({"id": consultation["patient_id"]}, {"_id": 0})
+        
+        # Get appointment information
+        appointment = appointments_collection.find_one({"id": consultation.get("appointment_id")}, {"_id": 0})
+        
+        # Enrich consultation with related data
+        consultation_details = {
+            **consultation,
+            "patient": {
+                "nom": patient.get("nom", "") if patient else "",
+                "prenom": patient.get("prenom", "") if patient else "",
+                "age": patient.get("age", "") if patient else "",
+                "date_naissance": patient.get("date_naissance", "") if patient else ""
+            },
+            "appointment": {
+                "date": appointment.get("date", "") if appointment else "",
+                "heure": appointment.get("heure", "") if appointment else "",
+                "motif": appointment.get("motif", "") if appointment else "",
+                "type_rdv": appointment.get("type_rdv", "") if appointment else ""
+            }
+        }
+        
+        return consultation_details
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching consultation: {str(e)}")
+
 @app.get("/api/consultations")
 async def get_consultations():
     """Get all consultations"""
