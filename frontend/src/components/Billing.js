@@ -235,6 +235,40 @@ const Billing = ({ user }) => {
     }
   };
 
+  const handleEditPayment = async (payment) => {
+    setEditingPayment(payment);
+    setShowEditModal(true);
+  };
+
+  const handleUpdatePayment = async (paymentId, updatedData) => {
+    try {
+      const paymentData = {
+        paye: updatedData.paye,
+        montant: updatedData.montant,
+        type_paiement: 'espece', // Toujours espèces
+        assure: updatedData.assure,
+        notes: updatedData.notes || ''
+      };
+
+      await axios.put(`${API_BASE_URL}/api/payments/${paymentId}`, paymentData);
+      
+      toast.success('Paiement mis à jour avec succès');
+      
+      // Refresh data
+      await Promise.all([
+        fetchPayments(),
+        fetchStats()
+      ]);
+      
+      setShowEditModal(false);
+      setEditingPayment(null);
+      
+    } catch (error) {
+      console.error('Error updating payment:', error);
+      toast.error('Erreur lors de la mise à jour du paiement');
+    }
+  };
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-TN', {
       style: 'currency',
