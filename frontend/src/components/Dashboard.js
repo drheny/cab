@@ -910,7 +910,7 @@ const Dashboard = ({ user }) => {
                   className="flex-1 px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm shadow-sm placeholder-gray-400"
                   placeholder={
                     replyingTo
-                      ? `Répondre à ${replyingTo.sender_name}...`
+                      ? `Répondre à ${getShortSenderName(replyingTo.sender_name, replyingTo.sender_type)}...`
                       : "Tapez votre message..."
                   }
                   onKeyPress={(e) => {
