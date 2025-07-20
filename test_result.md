@@ -11195,3 +11195,29 @@ Comprehensive Payment Retrieval Functionality testing completed successfully. Al
 
 **PAYMENT RETRIEVAL FUNCTIONALITY: BACKEND IMPLEMENTATION COMPLETE AND FULLY FUNCTIONAL**
 The payment retrieval functionality fully supports consultation view modal requirements. Payment amounts are available and properly formatted for display through the GET /api/payments endpoint with appointment_id filtering. All scenarios from the review request have been successfully validated and are working correctly.
+
+## Agent Communication Log
+
+### Testing Agent → Main Agent (2025-01-20 - Message Deletion Functionality Testing)
+**Priority:** HIGH - Critical Backend Functionality Testing Completed
+
+**Message:** Comprehensive message deletion functionality testing completed successfully as requested in the review. All backend API endpoints are working correctly with proper authorization and error handling.
+
+**Key Findings:**
+- ✅ **DELETE /api/messages/{message_id}** endpoint fully functional with user_type authorization
+- ✅ **Authorization system working** - medecin and secretaire users can only delete their own messages
+- ✅ **Error handling comprehensive** - proper 403 Forbidden and 404 Not Found responses
+- ✅ **Database deletion verified** - messages properly removed and no longer appear in GET requests
+- ✅ **WebSocket broadcasting ready** - deletion triggers proper broadcast format for real-time updates
+
+**Test Results Summary:**
+- Created 3 test messages successfully using POST /api/messages
+- Verified DELETE endpoint works with correct user_type parameter (medecin)
+- Confirmed authorization blocks wrong user_type attempts (403 Forbidden)
+- Validated 404 responses for non-existent message IDs
+- Verified database deletion - deleted messages no longer in GET /api/messages
+- Confirmed WebSocket broadcast format: {"type": "message_deleted", "data": {"id": message_id}}
+
+**Status:** All message deletion functionality tests PASSED. Backend is fully functional and ready for production use.
+
+**Recommendation:** The message deletion backend implementation is working correctly. If users are still experiencing issues with message deletion, the problem is likely in the frontend implementation or WebSocket client handling, not in the backend API.
