@@ -828,36 +828,35 @@ async def get_phone_reminders_today():
     try:
         today_str = datetime.now().strftime("%Y-%m-%d")
         
-        # For now, we'll return appointments that need follow-up calls
-        # This could be enhanced with a dedicated reminders system
-        appointments = list(appointments_collection.find({
-            "date": {"$lte": today_str},
-            "statut": "termine",
-            "type_rdv": "visite",
-            "suivi_requis": {"$exists": True, "$ne": False}  # Custom field for follow-up
+        # Find consultations with relance_date for today
+        consultations_with_relance = list(consultations_collection.find({
+            "relance_date": today_str
         }, {"_id": 0}))
         
         reminders = []
-        for appointment in appointments:
+        for consultation in consultations_with_relance:
             # Get patient info
-            patient = patients_collection.find_one({"id": appointment["patient_id"]}, {"_id": 0})
+            patient = patients_collection.find_one({"id": consultation["patient_id"]}, {"_id": 0})
             if patient:
-                # Get the original consultation
-                consultation = consultations_collection.find_one({
-                    "appointment_id": appointment["id"]
+                # Get the original appointment info
+                appointment = appointments_collection.find_one({
+                    "id": consultation["appointment_id"]
                 }, {"_id": 0})
                 
                 reminders.append({
-                    "id": appointment["id"],
-                    "patient_id": appointment["patient_id"],
+                    "id": consultation["id"],
+                    "patient_id": consultation["patient_id"],
                     "patient_nom": patient.get("nom", ""),
                     "patient_prenom": patient.get("prenom", ""),
                     "numero_whatsapp": patient.get("numero_whatsapp", ""),
-                    "date_rdv": appointment["date"],
-                    "heure_rdv": appointment["heure"],
-                    "motif": appointment.get("motif", "Consultation"),
-                    "consultation_id": consultation.get("id") if consultation else None,
-                    "raison_relance": appointment.get("suivi_requis", "Contrôle de suivi"),
+                    "date_rdv": consultation["date"],  # Date de la consultation originale
+                    "heure_rdv": appointment.get("heure", "10:00") if appointment else "10:00",
+                    "motif": appointment.get("motif", "Consultation") if appointment else "Consultation",
+                    "consultation_id": consultation["id"],
+                    "raison_relance": "Relance téléphonique programmée",
+                    "relance_date": consultation["relance_date"],
+                    "observations": consultation.get("observations", ""),
+                    "traitement": consultation.get("traitement", ""),
                     "time": "10:00"  # Default reminder time
                 })
         
