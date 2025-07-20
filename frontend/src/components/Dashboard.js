@@ -181,15 +181,20 @@ const Dashboard = ({ user }) => {
 
   // Clear all messages
   const handleClearMessages = async () => {
+    console.log('🗑️ CLEAR button clicked!');
     if (window.confirm('Êtes-vous sûr de vouloir supprimer tous les messages ? Cette action est irréversible.')) {
       try {
+        console.log('🗑️ User confirmed, calling API...');
         await axios.delete(`${API_BASE_URL}/api/messages`);
         toast.success('Tous les messages ont été supprimés');
         setMessages([]);
+        console.log('🗑️ Messages cleared successfully!');
       } catch (error) {
         console.error('Error clearing messages:', error);
         toast.error('Erreur lors de la suppression des messages');
       }
+    } else {
+      console.log('🗑️ User cancelled clear operation');
     }
   };
 
