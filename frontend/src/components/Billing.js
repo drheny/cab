@@ -44,8 +44,8 @@ const Billing = ({ user }) => {
   const [assureFilter, setAssureFilter] = useState('');
   
   // Modal states
-  const [selectedPayment, setSelectedPayment] = useState(null);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [editingPayment, setEditingPayment] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
