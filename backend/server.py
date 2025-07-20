@@ -2393,6 +2393,46 @@ async def respond_phone_message(message_id: str, response_data: PhoneMessageResp
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error responding to phone message: {str(e)}")
 
+@app.put("/api/phone-messages/{message_id}")
+async def edit_phone_message(message_id: str, edit_data: PhoneMessageEdit):
+    """Edit phone message content and priority"""
+    try:
+        # Find message
+        message = phone_messages_collection.find_one({"id": message_id})
+        if not message:
+            raise HTTPException(status_code=404, detail="Phone message not found")
+        
+        # Update message
+        update_data = {
+            "message_content": edit_data.message_content,
+            "priority": edit_data.priority,
+            "updated_at": datetime.now()
+        }
+        
+        result = phone_messages_collection.update_one(
+            {"id": message_id},
+            {"$set": update_data}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Failed to update message")
+        
+        # Send WebSocket notification about edit
+        notification_data = {
+            "type": "phone_message_edited",
+            "message_id": message_id,
+            "patient_name": message.get("patient_name", ""),
+            "timestamp": datetime.now().isoformat()
+        }
+        await manager.broadcast(notification_data)
+        
+        return {"message": "Phone message updated successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error editing phone message: {str(e)}")
+
 @app.get("/api/phone-messages/stats")
 async def get_phone_messages_stats():
     """Get phone messages statistics"""
