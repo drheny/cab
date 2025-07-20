@@ -100,12 +100,12 @@ const Dashboard = ({ user }) => {
         // API_BASE_URL is absolute URL
         const backendUrl = new URL(API_BASE_URL);
         const wsProtocol = backendUrl.protocol === 'https:' ? 'wss:' : 'ws:';
-        wsUrl = `${wsProtocol}//${backendUrl.host}/ws`;
+        wsUrl = `${wsProtocol}//${backendUrl.host}/api/ws`;
       } else {
-        // API_BASE_URL is relative or empty, use current host
+        // API_BASE_URL is relative or empty, use current host with /api/ws
         const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const host = window.location.host;
-        wsUrl = `${wsProtocol}//${host}/ws`;
+        wsUrl = `${wsProtocol}//${host}/api/ws`;
       }
       
       console.log('Attempting WebSocket connection to:', wsUrl);
