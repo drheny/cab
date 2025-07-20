@@ -404,21 +404,33 @@ const Dashboard = ({ user }) => {
   const handleDeleteMessage = async (messageId) => {
     console.log('🗑️ Attempting to delete message:', messageId);
     
+    // Récupérer le message à supprimer avant la confirmation
+    const messageToDelete = messages.find(msg => msg.id === messageId);
+    if (!messageToDelete) {
+      console.log('❌ Message not found in current messages');
+      toast.error('Message introuvable');
+      return;
+    }
+    
     if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce message ?')) {
       console.log('❌ Delete cancelled by user');
       return;
     }
 
+    console.log('🔄 User confirmed deletion, proceeding...');
+    
+    // Suppression optimiste : retirer immédiatement de l'UI
+    console.log('🔄 Removing message optimistically:', messageId);
+    setMessages(prevMessages => {
+      const beforeCount = prevMessages.length;
+      const updatedMessages = prevMessages.filter(msg => msg.id !== messageId);
+      const afterCount = updatedMessages.length;
+      console.log('📊 Messages before:', beforeCount, 'after:', afterCount);
+      return updatedMessages;
+    });
+
     try {
-      console.log('🔄 Sending delete request for message:', messageId);
-      
-      // Suppression optimiste : retirer immédiatement de l'UI
-      setMessages(prev => {
-        console.log('🔄 Removing message optimistically:', messageId);
-        const updatedMessages = prev.filter(msg => msg.id !== messageId);
-        console.log('📊 Messages before:', prev.length, 'after:', updatedMessages.length);
-        return updatedMessages;
-      });
+      console.log('🔄 Sending DELETE request to server...');
       
       const response = await axios.delete(`${API_BASE_URL}/api/messages/${messageId}`, {
         params: { user_type: user.type }
@@ -430,11 +442,17 @@ const Dashboard = ({ user }) => {
       toast.success('Message supprimé avec succès');
       
     } catch (error) {
-      console.error('❌ Error deleting message:', error);
+      console.error('❌ Error deleting message from server:', error);
       
-      // En cas d'erreur, restaurer les messages
-      console.log('🔄 Restoring messages due to error');
-      await fetchMessages();
+      // En cas d'erreur, restaurer le message dans l'UI
+      console.log('🔄 Restoring message due to server error');
+      setMessages(prevMessages => {
+        const restored = [...prevMessages, messageToDelete].sort((a, b) => 
+          new Date(a.timestamp) - new Date(b.timestamp)
+        );
+        console.log('📊 Messages restored, count:', restored.length);
+        return restored;
+      });
       
       if (error.response) {
         if (error.response.status === 403) {
