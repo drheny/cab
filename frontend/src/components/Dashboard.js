@@ -292,6 +292,15 @@ const Dashboard = ({ user }) => {
       const response = await axios.get(`${API_BASE_URL}/api/messages`);
       const fetchedMessages = response.data.messages || [];
       
+      // DEBUG: Log messages and user data
+      console.log(`🔍 DEBUG - User type: "${user?.type}", User name: "${user?.name}"`);
+      console.log(`📝 DEBUG - Fetched ${fetchedMessages.length} messages:`, fetchedMessages.map(msg => ({
+        id: msg.id.substring(0, 8),
+        sender_type: msg.sender_type,
+        sender_name: msg.sender_name,
+        content: msg.content.substring(0, 30)
+      })));
+      
       // Remove any duplicates and sort by timestamp
       const uniqueMessages = fetchedMessages.filter((message, index, self) =>
         index === self.findIndex(m => m.id === message.id)
