@@ -2010,6 +2010,22 @@ async def delete_message(message_id: str, user_type: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error deleting message: {str(e)}")
 
+@app.delete("/api/messages")
+async def clear_all_messages():
+    """Clear all messages from the chat"""
+    try:
+        result = messages_collection.delete_many({})
+        
+        # Broadcast clear event via WebSocket
+        await manager.broadcast({
+            "type": "messages_cleared",
+            "deleted_count": result.deleted_count
+        })
+        
+        return {"message": f"All messages cleared successfully", "deleted_count": result.deleted_count}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error clearing messages: {str(e)}")
+
 @app.put("/api/messages/{message_id}/read")
 async def mark_message_as_read(message_id: str):
     """Marquer un message comme lu"""
