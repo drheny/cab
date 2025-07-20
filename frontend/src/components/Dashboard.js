@@ -131,13 +131,43 @@ const Dashboard = ({ user }) => {
 
   const viewPatientDetails = async (patientId) => {
     try {
-      const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
       const response = await axios.get(`${API_BASE_URL}/api/patients/${patientId}`);
       setSelectedPatient(response.data);
       setShowPatientModal(true);
     } catch (error) {
       console.error('Error fetching patient details:', error);
       toast.error('Erreur lors du chargement des détails du patient');
+    }
+  };
+
+  const viewConsultationDetails = async (consultationId) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/consultations/${consultationId}`);
+      setSelectedConsultation(response.data);
+      setShowConsultationModal(true);
+    } catch (error) {
+      console.error('Error fetching consultation details:', error);
+      toast.error('Erreur lors du chargement des détails de la consultation');
+    }
+  };
+
+  const sendWhatsAppBirthday = (patient) => {
+    if (patient.numero_whatsapp) {
+      const message = `Joyeux anniversaire ${patient.prenom} ! 🎉 Nous vous souhaitons une merveilleuse journée pour vos ${patient.age} ans. L'équipe du cabinet vous adresse ses meilleurs vœux ! 🎂`;
+      const whatsappUrl = `https://wa.me/${patient.numero_whatsapp}?text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, '_blank');
+    } else {
+      toast.error('Numéro WhatsApp non disponible pour ce patient');
+    }
+  };
+
+  const sendWhatsAppReminder = (reminder) => {
+    if (reminder.numero_whatsapp) {
+      const message = `Bonjour ${reminder.patient_prenom}, nous vous contactons pour le suivi de votre consultation du ${new Date(reminder.date_rdv).toLocaleDateString('fr-FR')}. Merci de nous rappeler pour planifier votre prochain rendez-vous si nécessaire.`;
+      const whatsappUrl = `https://wa.me/${reminder.numero_whatsapp}?text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, '_blank');
+    } else {
+      toast.error('Numéro WhatsApp non disponible pour ce patient');
     }
   };
 
