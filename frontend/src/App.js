@@ -23,6 +23,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [phoneMessagesCount, setPhoneMessagesCount] = useState(0);
 
   useEffect(() => {
     // Check if user is logged in (stored in localStorage)
