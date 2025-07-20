@@ -498,9 +498,78 @@ const Messages = ({ user }) => {
 
                           {/* Message Content */}
                           <div className="mb-2">
-                            <p className="text-gray-900 text-sm leading-relaxed">
-                              {message.message_content}
-                            </p>
+                            {editingMessage && editingMessage.id === message.id ? (
+                              /* Edit Mode */
+                              <div className="space-y-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                <div className="flex items-center mb-2">
+                                  <Edit2 className="w-4 h-4 text-yellow-600 mr-2" />
+                                  <span className="font-medium text-yellow-800">Modification du message:</span>
+                                </div>
+                                
+                                <textarea
+                                  value={editContent}
+                                  onChange={(e) => setEditContent(e.target.value)}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
+                                  rows={3}
+                                  placeholder="Contenu du message..."
+                                />
+                                
+                                <div className="flex items-center space-x-4">
+                                  <div className="flex items-center space-x-2">
+                                    <span className="text-sm font-medium text-gray-700">Priorité:</span>
+                                    <label className="flex items-center">
+                                      <input
+                                        type="radio"
+                                        value="normal"
+                                        checked={editPriority === 'normal'}
+                                        onChange={(e) => setEditPriority(e.target.value)}
+                                        className="mr-1"
+                                      />
+                                      <span className="text-sm">Normal</span>
+                                    </label>
+                                    <label className="flex items-center">
+                                      <input
+                                        type="radio"
+                                        value="urgent"
+                                        checked={editPriority === 'urgent'}
+                                        onChange={(e) => setEditPriority(e.target.value)}
+                                        className="mr-1"
+                                      />
+                                      <span className="text-sm text-red-700 flex items-center">
+                                        <AlertTriangle className="w-3 h-3 mr-1" />
+                                        Urgent
+                                      </span>
+                                    </label>
+                                  </div>
+                                </div>
+                                
+                                <div className="flex items-center space-x-2">
+                                  <button
+                                    onClick={handleSaveEdit}
+                                    disabled={!editContent.trim()}
+                                    className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors flex items-center ${
+                                      editContent.trim()
+                                        ? 'bg-green-500 text-white hover:bg-green-600'
+                                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                    }`}
+                                  >
+                                    <Save className="w-3 h-3 mr-1" />
+                                    Sauvegarder
+                                  </button>
+                                  <button
+                                    onClick={handleCancelEdit}
+                                    className="px-3 py-1 bg-gray-500 text-white rounded-lg hover:bg-gray-600 text-sm font-medium"
+                                  >
+                                    Annuler
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              /* View Mode */
+                              <p className="text-gray-900 text-sm leading-relaxed">
+                                {message.message_content}
+                              </p>
+                            )}
                           </div>
 
                           {/* Response Content */}
