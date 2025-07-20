@@ -2399,38 +2399,7 @@ async def delete_phone_message(message_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error deleting phone message: {str(e)}")
 
-@app.get("/api/patients/search")
-async def search_patients(
-    q: str = Query("", description="Search query for patient name")
-):
-    """Search patients for phone message creation"""
-    try:
-        if not q:
-            return {"patients": []}
-        
-        # Search by name (case insensitive)
-        search_regex = {"$regex": q, "$options": "i"}
-        query = {
-            "$or": [
-                {"nom": search_regex},
-                {"prenom": search_regex}
-            ]
-        }
-        
-        # Get matching patients (limit to 20 results)
-        patients = list(patients_collection.find(query, {
-            "_id": 0,
-            "id": 1,
-            "nom": 1,
-            "prenom": 1,
-            "age": 1,
-            "numero_whatsapp": 1
-        }).limit(20))
-        
-        return {"patients": patients}
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error searching patients: {str(e)}")
+
 
 # ==================== End Phone Messages API ====================
 
