@@ -153,54 +153,7 @@ const Dashboard = ({ user }) => {
     </div>
   );
 
-  const MessageCard = ({ message }) => {
-    const getIcon = () => {
-      switch (message.type) {
-        case 'anniversaire':
-          return <Gift className="w-4 h-4 text-pink-500" />;
-        case 'relance':
-          return <PhoneCall className="w-4 h-4 text-blue-500" />;
-        case 'retard':
-          return <AlertCircle className="w-4 h-4 text-red-500" />;
-        default:
-          return <MessageCircle className="w-4 h-4 text-blue-500" />;
-      }
-    };
 
-    const getBackgroundColor = () => {
-      switch (message.type) {
-        case 'anniversaire':
-          return 'bg-pink-50 border-pink-400';
-        case 'relance':
-          return 'bg-blue-50 border-blue-400';
-        case 'retard':
-          return 'bg-red-50 border-red-400';
-        default:
-          return 'bg-blue-50 border-blue-400';
-      }
-    };
-
-    return (
-      <div className={`p-4 rounded-lg border-l-4 ${getBackgroundColor()}`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            {getIcon()}
-            <span className="font-medium text-gray-900">{message.titre}</span>
-          </div>
-          <span className="text-xs text-gray-500">{message.time}</span>
-        </div>
-        <p className="mt-1 text-sm text-gray-700">
-          <button 
-            onClick={() => viewPatientDetails(message.patient_id)}
-            className="font-medium text-primary-600 hover:text-primary-800 underline cursor-pointer"
-          >
-            {message.patient}
-          </button>
-          {" - " + message.message.replace(message.patient + " - ", "")}
-        </p>
-      </div>
-    );
-  };
 
   if (loading) {
     return (
