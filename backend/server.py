@@ -2203,3 +2203,5 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8001)
