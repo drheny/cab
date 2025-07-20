@@ -372,19 +372,178 @@ const Dashboard = ({ user }) => {
 
       {/* Recent Activity - Responsive */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 responsive-padding">
-        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Activité Récente</h3>
-        <div className="space-y-2 sm:space-y-3">
-          <div className="flex items-center space-x-2 sm:space-x-3 p-2 sm:p-3 bg-gray-50 rounded-lg">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span className="text-xs sm:text-sm text-gray-700">Consultation terminée - Omar Tazi (14:30)</span>
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Messagerie Interne</h3>
+        
+        {/* Messages Container */}
+        <div className="flex flex-col h-96">
+          {/* Messages List */}
+          <div className="flex-1 overflow-y-auto mb-4 space-y-3 bg-gray-50 rounded-lg p-3">
+            {messages.length > 0 ? (
+              messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex ${
+                    message.sender_type === user.type ? 'justify-end' : 'justify-start'
+                  }`}
+                >
+                  <div
+                    className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                      message.sender_type === user.type
+                        ? 'bg-primary-500 text-white'
+                        : message.sender_type === 'medecin'
+                        ? 'bg-green-100 text-green-900 border-l-4 border-green-500'
+                        : 'bg-blue-100 text-blue-900 border-l-4 border-blue-500'
+                    }`}
+                  >
+                    {/* Reply indicator */}
+                    {message.reply_to && (
+                      <div className="text-xs opacity-75 mb-1 italic">
+                        En réponse à: "{message.reply_content.substring(0, 30)}..."
+                      </div>
+                    )}
+                    
+                    {/* Message content */}
+                    <div className="text-sm">{message.content}</div>
+                    
+                    {/* Message footer */}
+                    <div className="flex justify-between items-center mt-2 text-xs opacity-75">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-medium">
+                          {message.sender_type === 'medecin' ? '👨‍⚕️' : '👩‍💼'} {message.sender_name}
+                        </span>
+                        {message.is_edited && (
+                          <span className="text-xs italic">(modifié)</span>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center space-x-1">
+                        <span>
+                          {new Date(message.timestamp).toLocaleTimeString('fr-FR', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                        {message.sender_type === user.type && (
+                          <div className="flex space-x-1 ml-2">
+                            <button
+                              onClick={() => handleEditMessage(message)}
+                              className="text-xs hover:opacity-100 opacity-60"
+                              title="Modifier"
+                            >
+                              ✏️
+                            </button>
+                            <button
+                              onClick={() => handleDeleteMessage(message.id)}
+                              className="text-xs hover:opacity-100 opacity-60"
+                              title="Supprimer"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        )}
+                        {message.sender_type !== user.type && (
+                          <button
+                            onClick={() => handleReplyToMessage(message)}
+                            className="text-xs hover:opacity-100 opacity-60 ml-2"
+                            title="Répondre"
+                          >
+                            ↩️
+                          </button>
+                        )}
+                        {!message.is_read && message.sender_type !== user.type && (
+                          <span className="w-2 h-2 bg-red-500 rounded-full ml-1" title="Non lu"></span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center text-gray-500 py-8">
+                <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">Aucun message aujourd'hui</p>
+                <p className="text-xs text-gray-400 mt-1">Commencez une conversation</p>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
           </div>
-          <div className="flex items-center space-x-2 sm:space-x-3 p-2 sm:p-3 bg-gray-50 rounded-lg">
-            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-            <span className="text-xs sm:text-sm text-gray-700">Paiement encaissé - 300 TND (14:35)</span>
-          </div>
-          <div className="flex items-center space-x-2 sm:space-x-3 p-2 sm:p-3 bg-gray-50 rounded-lg">
-            <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-            <span className="text-xs sm:text-sm text-gray-700">Patient en attente - Yassine Ben Ahmed (Salle 1)</span>
+
+          {/* Reply indicator */}
+          {replyingTo && (
+            <div className="mb-2 p-2 bg-gray-100 rounded-lg text-sm">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">
+                  Réponse à {replyingTo.sender_name}: "{replyingTo.content.substring(0, 50)}..."
+                </span>
+                <button
+                  onClick={() => setReplyingTo(null)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Message Input */}
+          <div className="flex space-x-2">
+            {editingMessage ? (
+              <>
+                <input
+                  type="text"
+                  value={editingContent}
+                  onChange={(e) => setEditingContent(e.target.value)}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
+                  placeholder="Modifier le message..."
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      handleSaveEdit();
+                    }
+                  }}
+                />
+                <button
+                  onClick={handleSaveEdit}
+                  className="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 text-sm"
+                >
+                  ✓
+                </button>
+                <button
+                  onClick={() => {
+                    setEditingMessage(null);
+                    setEditingContent('');
+                  }}
+                  className="px-3 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 text-sm"
+                >
+                  ✕
+                </button>
+              </>
+            ) : (
+              <>
+                <input
+                  type="text"
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
+                  placeholder={
+                    replyingTo
+                      ? `Répondre à ${replyingTo.sender_name}...`
+                      : "Tapez votre message..."
+                  }
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      handleSendMessage();
+                    }
+                  }}
+                />
+                <button
+                  onClick={handleSendMessage}
+                  disabled={!newMessage.trim()}
+                  className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
