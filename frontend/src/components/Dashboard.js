@@ -471,6 +471,131 @@ const Dashboard = ({ user }) => {
         </div>
       </div>
 
+      {/* Consultation Details Modal */}
+      {showConsultationModal && selectedConsultation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-900">
+                  Consultation - {selectedConsultation.patient?.prenom} {selectedConsultation.patient?.nom}
+                </h2>
+                <button
+                  onClick={() => setShowConsultationModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Informations générales */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Informations générales</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-sm font-medium text-gray-700">Date:</span>
+                      <p className="text-gray-900">
+                        {selectedConsultation.appointment?.date ? 
+                          new Date(selectedConsultation.appointment.date).toLocaleDateString('fr-FR') : 
+                          new Date(selectedConsultation.date).toLocaleDateString('fr-FR')
+                        }
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-700">Heure:</span>
+                      <p className="text-gray-900">{selectedConsultation.appointment?.heure || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-700">Type:</span>
+                      <p className="text-gray-900">{selectedConsultation.appointment?.type_rdv || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-700">Motif:</span>
+                      <p className="text-gray-900">{selectedConsultation.appointment?.motif || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-700">Durée:</span>
+                      <p className="text-gray-900">{selectedConsultation.duree || 0} minutes</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Informations patient */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Patient</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-sm font-medium text-gray-700">Nom:</span>
+                      <p className="text-gray-900">
+                        {selectedConsultation.patient?.prenom} {selectedConsultation.patient?.nom}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-700">Âge:</span>
+                      <p className="text-gray-900">{selectedConsultation.patient?.age || 'N/A'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mesures */}
+                {(selectedConsultation.poids || selectedConsultation.taille) && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Mesures</h3>
+                    <div className="space-y-3">
+                      {selectedConsultation.poids && (
+                        <div>
+                          <span className="text-sm font-medium text-gray-700">Poids:</span>
+                          <p className="text-gray-900">{selectedConsultation.poids} kg</p>
+                        </div>
+                      )}
+                      {selectedConsultation.taille && (
+                        <div>
+                          <span className="text-sm font-medium text-gray-700">Taille:</span>
+                          <p className="text-gray-900">{selectedConsultation.taille} cm</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Observations et bilan */}
+                <div className="lg:col-span-2">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Consultation</h3>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-sm font-medium text-gray-700">Observations:</span>
+                      <div className="mt-1 p-3 bg-gray-50 rounded-lg">
+                        <p className="text-gray-900 whitespace-pre-wrap">
+                          {selectedConsultation.observations || 'Aucune observation'}
+                        </p>
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-700">Bilan/Traitement:</span>
+                      <div className="mt-1 p-3 bg-gray-50 rounded-lg">
+                        <p className="text-gray-900 whitespace-pre-wrap">
+                          {selectedConsultation.bilan || selectedConsultation.traitement || 'Aucun bilan'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={() => setShowConsultationModal(false)}
+                  className="btn-outline"
+                >
+                  Fermer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Patient Details Modal */}
       {showPatientModal && selectedPatient && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
