@@ -93,7 +93,11 @@ const Consultation = ({ user }) => {
     if (patientId) {
       const patient = patients.find(p => p.id === patientId);
       if (patient) {
-        handlePatientSelect(patient);
+        // Directly set patient selection without calling handlePatientSelect to avoid timing issues
+        setSelectedPatient(patient);
+        setSearchTerm(`${patient.prenom} ${patient.nom}`);
+        setFilteredPatients([]);
+        fetchPatientConsultations(patient.id);
         console.log(`🔗 Patient pre-selected from URL: ${patient.prenom} ${patient.nom}`);
       } else if (patientName) {
         // Si on n'a pas trouvé par ID, essayer par nom
@@ -101,12 +105,16 @@ const Consultation = ({ user }) => {
           `${p.prenom} ${p.nom}`.toLowerCase().includes(patientName.toLowerCase())
         );
         if (patientByName) {
-          handlePatientSelect(patientByName);
+          // Directly set patient selection without calling handlePatientSelect to avoid timing issues
+          setSelectedPatient(patientByName);
+          setSearchTerm(`${patientByName.prenom} ${patientByName.nom}`);
+          setFilteredPatients([]);
+          fetchPatientConsultations(patientByName.id);
           console.log(`🔗 Patient found by name from URL: ${patientByName.prenom} ${patientByName.nom}`);
         }
       }
     }
-  }, [patients, location.search, handlePatientSelect]);
+  }, [patients, location.search, fetchPatientConsultations]);
 
   // Gestion du chronomètre
   useEffect(() => {
