@@ -811,14 +811,12 @@ const Dashboard = ({ user }) => {
                         {/* Action buttons for own messages */}
                         {message.sender_type === user.type && (
                           <div className="flex space-x-1 ml-2">
-                            {/* DEBUG: Log button rendering */}
-                            {console.log(`🔍 RENDERING DELETE BUTTON - Message ID: ${message.id}, sender_type: "${message.sender_type}", user.type: "${user.type}", Match: ${message.sender_type === user.type}`)}
                             <button
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                console.log(`🖱️ DELETE BUTTON CLICKED - Message ID: ${message.id}`);
-                                handleDeleteMessage(message.id);
+                                console.log(`🖱️ EDIT BUTTON CLICKED - Message ID: ${message.id}`);
+                                handleEditMessage(message);
                               }}
                               className="p-1 rounded-full hover:bg-white hover:bg-opacity-20 transition-colors"
                               title="Modifier"
@@ -834,6 +832,7 @@ const Dashboard = ({ user }) => {
                               }}
                               className="p-1 rounded-full hover:bg-red-500 hover:bg-opacity-20 transition-colors"
                               title="Supprimer"
+                              style={{ pointerEvents: 'auto', zIndex: 10 }}
                             >
                               <span className="text-xs">🗑️</span>
                             </button>
