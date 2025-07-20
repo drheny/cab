@@ -752,7 +752,7 @@ const Dashboard = ({ user }) => {
                             {message.sender_type === 'medecin' ? '👨‍⚕️' : '👩‍💼'}
                           </span>
                           <span className="font-medium text-xs">
-                            {message.sender_name}
+                            {getShortSenderName(message.sender_name, message.sender_type)}
                           </span>
                         </div>
                         {message.is_edited && (
