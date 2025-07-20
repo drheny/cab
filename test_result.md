@@ -298,6 +298,62 @@ The backend now provides the complete test scenario requested. Omar Tazi has bot
 The payment amount display functionality is working correctly at the code level. The debug logs confirm that:
 1. Payment API is being called successfully for "Visite" consultations
 2. Payment search logic is executing properly
+
+### Phase 1 Billing Improvements Testing ✅ COMPLETED
+**Status:** ALL PHASE 1 BILLING IMPROVEMENTS TESTS PASSED - Enhanced Statistics Endpoints Fully Functional
+
+**Test Results Summary (2025-01-19 - Phase 1 Billing Improvements Testing):**
+✅ **Enhanced /api/payments/stats Endpoint** - Successfully includes consultation statistics (nb_visites, nb_controles, nb_assures)
+✅ **New /api/payments/advanced-stats Endpoint** - Working with all periods (day, week, month, year) and period breakdown
+✅ **Custom Date Range Support** - Both endpoints handle custom date ranges correctly
+✅ **Data Structure Validation** - All response structures match expected format with proper data types
+✅ **Period Breakdown Functionality** - Daily, weekly, monthly, and yearly breakdowns working correctly
+✅ **Edge Cases Handling** - Future dates, invalid dates, and invalid periods handled gracefully
+✅ **Performance Testing** - Both endpoints perform within acceptable time limits
+✅ **Data Consistency** - Consultation statistics properly calculated and consistent
+
+**Detailed Test Results:**
+
+**ENHANCED /api/payments/stats ENDPOINT: ✅ FULLY WORKING**
+- ✅ **Consultation Statistics**: New "consultations" field includes nb_visites, nb_controles, nb_total, nb_assures, nb_non_assures
+- ✅ **Data Types**: All consultation statistics return proper integer types
+- ✅ **Data Consistency**: nb_total equals nb_visites + nb_controles and nb_assures + nb_non_assures
+- ✅ **Backward Compatibility**: All existing fields (periode, total_montant, nb_paiements, ca_jour, by_method, assurance) maintained
+- ✅ **Custom Date Ranges**: Works correctly with date_debut and date_fin parameters
+
+**NEW /api/payments/advanced-stats ENDPOINT: ✅ COMPREHENSIVE**
+- ✅ **Period Support**: All periods (day, week, month, year) working correctly
+- ✅ **Response Structure**: Consistent structure with period, date_range, totals, and breakdown fields
+- ✅ **Totals Calculation**: ca_total, nb_paiements, nb_visites, nb_controles, nb_assures calculated correctly
+- ✅ **Breakdown Format**: Period-specific breakdown format (date for day, periode for week/month/year)
+- ✅ **Custom Date Ranges**: Works with custom date_debut and date_fin parameters
+
+**PERIOD BREAKDOWN FUNCTIONALITY: ✅ DETAILED**
+- ✅ **Day Breakdown**: Returns daily statistics with date field in YYYY-MM-DD format
+- ✅ **Week Breakdown**: Returns weekly statistics with "Semaine du" format in periode field
+- ✅ **Month Breakdown**: Returns monthly statistics with month names (French/English) in periode field
+- ✅ **Year Breakdown**: Returns yearly statistics with "Année" format in periode field
+- ✅ **Data Fields**: All breakdowns include ca, nb_paiements, nb_visites, nb_controles, nb_assures
+
+**EDGE CASES AND ERROR HANDLING: ✅ ROBUST**
+- ✅ **Future Date Ranges**: Returns zero values for future dates as expected
+- ✅ **Invalid Date Formats**: Handles gracefully with 200/400 status codes
+- ✅ **Invalid Periods**: Handles gracefully with 200/400 status codes
+- ✅ **Empty Date Ranges**: Uses default date range when parameters are empty
+- ✅ **Reversed Date Ranges**: Handles gracefully when end date is before start date
+
+**PERFORMANCE VALIDATION: ✅ OPTIMIZED**
+- ✅ **/api/payments/stats Performance**: Responds within 5 seconds (typically < 1 second)
+- ✅ **/api/payments/advanced-stats Performance**: Responds within 10 seconds (typically < 1 second)
+- ✅ **Database Queries**: Efficient aggregation queries for statistics calculation
+- ✅ **Response Times**: Consistent performance across different date ranges and periods
+
+**DATA CONSISTENCY AND ACCURACY: ✅ VERIFIED**
+- ✅ **Consultation Counting**: Accurate counting of visite vs controle appointments
+- ✅ **Insurance Status**: Correct calculation of assured vs non-assured patients
+- ✅ **Payment Totals**: Accurate calculation of payment amounts and counts
+- ✅ **Date Filtering**: Proper filtering by date ranges for all statistics
+- ✅ **Cross-Endpoint Consistency**: Statistics consistent between basic and advanced endpoints
 3. UI display logic would show payment amounts if data existed
 4. The issue is that no payment records exist with matching appointment_id values
 
