@@ -599,7 +599,7 @@ def create_demo_data():
             "observations": "Consultation pour fièvre. Enfant en bonne forme générale. Température : 38.5°C. Gorge légèrement irritée.",
             "traitement": "Paracétamol sirop 2.5ml 3 fois par jour pendant 3 jours. Repos et hydratation.",
             "bilan": "Infection virale bénigne. Guérison attendue en 3-5 jours.",
-            "relance_date": (today + timedelta(days=7)).strftime("%Y-%m-%d"),
+            "relance_date": today.strftime("%Y-%m-%d"),  # Relance pour aujourd'hui
             "created_at": datetime.now() - timedelta(days=30),
             "type_rdv": "visite"
         },
