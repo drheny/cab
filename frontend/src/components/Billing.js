@@ -168,6 +168,21 @@ const Billing = ({ user }) => {
     }
   };
 
+  const fetchAdvancedStats = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/payments/advanced-stats`, {
+        params: {
+          period: statsPeriod,
+          date_debut: dateFilter.debut,
+          date_fin: dateFilter.fin
+        }
+      });
+      setAdvancedStats(response.data || {});
+    } catch (error) {
+      console.error('Error fetching advanced stats:', error);
+    }
+  };
+
   // Filtered payments based on search and filters
   const filteredPayments = useMemo(() => {
     let filtered = [...payments];
