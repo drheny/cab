@@ -219,33 +219,96 @@ const Billing = ({ user }) => {
   }, [payments, searchTerm, dateFilter, methodFilter, assureFilter]);
 
   const exportToExcel = () => {
-    // Create CSV data
-    const headers = ['Date', 'Patient', 'Montant', 'Méthode', 'Assuré', 'Taux Remb.', 'Notes'];
-    const csvData = filteredPayments.map(payment => [
-      payment.date,
-      `${payment.patient?.prenom} ${payment.patient?.nom}`,
-      `${payment.montant} TND`,
-      payment.type_paiement,
-      payment.assure ? 'Oui' : 'Non',
-      `${payment.taux_remboursement || 0}%`,
-      payment.notes || ''
-    ]);
+    setShowExportModal(true);
+  };
 
-    const csvContent = [headers, ...csvData]
-      .map(row => row.map(field => `"${field}"`).join(','))
-      .join('\n');
+  const handleCustomExport = () => {
+    try {
+      // Prepare headers based on selected options
+      const headers = [];
+      if (exportOptions.date) headers.push('Date');
+      if (exportOptions.patient) headers.push('Patient');
+      if (exportOptions.montant) headers.push('Montant (TND)');
+      if (exportOptions.methode) headers.push('Méthode');
+      if (exportOptions.assurance) headers.push('Assuré');
+      if (exportOptions.notes) headers.push('Notes');
+      
+      // Prepare data rows
+      const csvData = filteredPayments.map(payment => {
+        const row = [];
+        if (exportOptions.date) row.push(new Date(payment.date).toLocaleDateString('fr-FR'));
+        if (exportOptions.patient) row.push(`${payment.patient?.prenom} ${payment.patient?.nom}`);
+        if (exportOptions.montant) row.push(`${payment.montant}`);
+        if (exportOptions.methode) row.push(payment.type_paiement);
+        if (exportOptions.assurance) row.push(payment.assure ? 'Oui' : 'Non');
+        if (exportOptions.notes) row.push(payment.notes || '');
+        return row;
+      });
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `paiements_${dateFilter.debut}_${dateFilter.fin}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    toast.success('Export CSV téléchargé avec succès');
+      // Add statistics section if requested
+      if (Object.values(exportOptions.indicateurs).some(v => v)) {
+        csvData.push([]); // Empty row
+        csvData.push(['=== STATISTIQUES ===']);
+        csvData.push([]);
+        
+        if (exportOptions.indicateurs.ca) {
+          csvData.push(['Chiffre d\'affaires total:', `${formatCurrency(stats.total_montant || 0)}`]);
+        }
+        if (exportOptions.indicateurs.paiements) {
+          csvData.push(['Nombre de paiements:', stats.nb_paiements || 0]);
+        }
+        if (exportOptions.indicateurs.visites) {
+          csvData.push(['Nombre de visites:', stats.consultations?.nb_visites || 0]);
+        }
+        if (exportOptions.indicateurs.controles) {
+          csvData.push(['Nombre de contrôles:', stats.consultations?.nb_controles || 0]);
+        }
+        if (exportOptions.indicateurs.assures) {
+          csvData.push(['Patients assurés:', stats.consultations?.nb_assures || 0]);
+        }
+        
+        // Add period breakdown if advanced stats are available
+        if (advancedStats.breakdown && advancedStats.breakdown.length > 0) {
+          csvData.push([]);
+          csvData.push([`=== RÉPARTITION PAR ${statsPeriod.toUpperCase()} ===`]);
+          csvData.push(['Période', 'CA', 'Paiements', 'Visites', 'Contrôles', 'Assurés']);
+          
+          advancedStats.breakdown.forEach(period => {
+            csvData.push([
+              period.periode || period.date,
+              period.ca,
+              period.nb_paiements,
+              period.nb_visites,
+              period.nb_controles,
+              period.nb_assures
+            ]);
+          });
+        }
+      }
+
+      // Create CSV content
+      const csvContent = [headers, ...csvData]
+        .map(row => row.map(field => `"${field}"`).join(','))
+        .join('\n');
+
+      // Download file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `facturation_${dateFilter.debut}_${dateFilter.fin}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success('Export CSV téléchargé avec succès');
+      setShowExportModal(false);
+      
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('Erreur lors de l\'export');
+    }
   };
 
   const handleMarkAsPaid = async (appointment) => {
