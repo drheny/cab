@@ -151,9 +151,10 @@ const Dashboard = ({ user }) => {
   const handleWebSocketMessage = (data) => {
     switch (data.type) {
       case 'new_message':
-        setMessages(prev => [...prev, data.data]);
-        // Play notification sound for received messages
-        if (data.data.sender_type !== user.type) {
+        // Ne pas ajouter ses propres messages (déjà ajoutés optimistiquement)
+        if (data.data.sender_type !== user.type || data.data.sender_name !== user.name) {
+          setMessages(prev => [...prev, data.data]);
+          // Play notification sound for received messages from others
           playNotificationSound();
         }
         break;
