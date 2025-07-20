@@ -490,14 +490,42 @@ const Billing = ({ user }) => {
       {/* Dashboard Tab */}
       {activeTab === 'dashboard' && (
         <div className="space-y-6">
-          {/* KPI Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Period Selector */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Analyse par période</h3>
+                <p className="text-sm text-gray-600">Sélectionnez la période d'analyse pour les statistiques détaillées</p>
+              </div>
+              <div className="flex items-center space-x-3">
+                {['day', 'week', 'month', 'year'].map(period => (
+                  <button
+                    key={period}
+                    onClick={() => setStatsPeriod(period)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                      statsPeriod === period
+                        ? 'bg-primary-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {period === 'day' && 'Jour'}
+                    {period === 'week' && 'Semaine'}
+                    {period === 'month' && 'Mois'}
+                    {period === 'year' && 'Année'}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Advanced KPI Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">CA Période</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {formatCurrency(stats.total_montant)}
+                  <p className="text-sm font-medium text-gray-600">CA Total</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {formatCurrency(advancedStats.totals?.ca_total || stats.total_montant || 0)}
                   </p>
                 </div>
                 <div className="p-2 bg-green-100 rounded-lg">
@@ -509,13 +537,13 @@ const Billing = ({ user }) => {
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">CA Aujourd'hui</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {formatCurrency(stats.ca_jour)}
+                  <p className="text-sm font-medium text-gray-600">Visites</p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {advancedStats.totals?.nb_visites || stats.consultations?.nb_visites || 0}
                   </p>
                 </div>
                 <div className="p-2 bg-blue-100 rounded-lg">
-                  <DollarSign className="w-6 h-6 text-blue-600" />
+                  <Activity className="w-6 h-6 text-blue-600" />
                 </div>
               </div>
             </div>
@@ -523,13 +551,13 @@ const Billing = ({ user }) => {
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Nb Paiements</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {stats.nb_paiements || 0}
+                  <p className="text-sm font-medium text-gray-600">Contrôles</p>
+                  <p className="text-2xl font-bold text-purple-600">
+                    {advancedStats.totals?.nb_controles || stats.consultations?.nb_controles || 0}
                   </p>
                 </div>
                 <div className="p-2 bg-purple-100 rounded-lg">
-                  <CreditCard className="w-6 h-6 text-purple-600" />
+                  <CheckCircle className="w-6 h-6 text-purple-600" />
                 </div>
               </div>
             </div>
@@ -537,19 +565,104 @@ const Billing = ({ user }) => {
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Impayés</p>
-                  <p className="text-2xl font-bold text-red-600">
-                    {unpaidAppointments.length}
+                  <p className="text-sm font-medium text-gray-600">Patients assurés</p>
+                  <p className="text-2xl font-bold text-indigo-600">
+                    {advancedStats.totals?.nb_assures || stats.consultations?.nb_assures || 0}
                   </p>
                 </div>
-                <div className="p-2 bg-red-100 rounded-lg">
-                  <AlertTriangle className="w-6 h-6 text-red-600" />
+                <div className="p-2 bg-indigo-100 rounded-lg">
+                  <Users className="w-6 h-6 text-indigo-600" />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Paiements</p>
+                  <p className="text-2xl font-bold text-orange-600">
+                    {advancedStats.totals?.nb_paiements || stats.nb_paiements || 0}
+                  </p>
+                </div>
+                <div className="p-2 bg-orange-100 rounded-lg">
+                  <CreditCard className="w-6 h-6 text-orange-600" />
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Payment Methods Chart */}
+          {/* Period Breakdown Table */}
+          {advancedStats.breakdown && advancedStats.breakdown.length > 0 && (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="p-6 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Répartition par {statsPeriod === 'day' ? 'jour' : statsPeriod === 'week' ? 'semaine' : statsPeriod === 'month' ? 'mois' : 'année'}
+                </h3>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Période
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        CA
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Visites
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Contrôles
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Assurés
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Paiements
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {advancedStats.breakdown.map((period, index) => (
+                      <tr key={index} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {period.periode || period.date}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <span className="font-semibold text-green-600">
+                            {formatCurrency(period.ca || 0)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {period.nb_visites || 0}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                            {period.nb_controles || 0}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                            {period.nb_assures || 0}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                            {period.nb_paiements || 0}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Original Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Méthodes de paiement</h3>
@@ -584,7 +697,7 @@ const Billing = ({ user }) => {
                     <span className="text-sm font-medium text-gray-700">Assurés</span>
                   </div>
                   <span className="text-lg font-bold text-green-600">
-                    {stats.assurance?.assures || 0}
+                    {stats.consultations?.nb_assures || 0}
                   </span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -593,7 +706,7 @@ const Billing = ({ user }) => {
                     <span className="text-sm font-medium text-gray-700">Non assurés</span>
                   </div>
                   <span className="text-lg font-bold text-gray-600">
-                    {stats.assurance?.non_assures || 0}
+                    {stats.consultations?.nb_non_assures || 0}
                   </span>
                 </div>
               </div>
