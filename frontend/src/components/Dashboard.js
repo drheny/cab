@@ -280,7 +280,14 @@ const Dashboard = ({ user }) => {
   const fetchMessages = async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/api/messages`);
-      setMessages(response.data.messages || []);
+      const fetchedMessages = response.data.messages || [];
+      
+      // Remove any duplicates and sort by timestamp
+      const uniqueMessages = fetchedMessages.filter((message, index, self) =>
+        index === self.findIndex(m => m.id === message.id)
+      ).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+      
+      setMessages(uniqueMessages);
     } catch (error) {
       console.error('Error fetching messages:', error);
     }
