@@ -1257,6 +1257,228 @@ async def get_payments():
     payments = list(payments_collection.find({}, {"_id": 0}))
     return payments
 
+@app.get("/api/payments/advanced-stats")
+async def get_advanced_stats(
+    period: str = Query("month", description="Period type: day, week, month, year"),
+    date_debut: Optional[str] = Query(None),
+    date_fin: Optional[str] = Query(None)
+):
+    """Get advanced statistics with period breakdown (day, week, month, year)"""
+    try:
+        # Set default date range based on period
+        today = datetime.now()
+        
+        if not date_debut or not date_fin:
+            if period == "day":
+                date_debut = date_fin = today.strftime("%Y-%m-%d")
+            elif period == "week":
+                # Current week (Monday to Sunday)
+                start_of_week = today - timedelta(days=today.weekday())
+                end_of_week = start_of_week + timedelta(days=6)
+                date_debut = start_of_week.strftime("%Y-%m-%d")
+                date_fin = end_of_week.strftime("%Y-%m-%d")
+            elif period == "month":
+                # Current month
+                date_debut = today.replace(day=1).strftime("%Y-%m-%d")
+                date_fin = today.strftime("%Y-%m-%d")
+            elif period == "year":
+                # Current year
+                date_debut = today.replace(month=1, day=1).strftime("%Y-%m-%d")
+                date_fin = today.strftime("%Y-%m-%d")
+        
+        # Get payments and appointments for the period
+        payment_query = {
+            "date": {"$gte": date_debut, "$lte": date_fin},
+            "statut": "paye"
+        }
+        appointment_query = {
+            "date": {"$gte": date_debut, "$lte": date_fin}
+        }
+        
+        payments = list(payments_collection.find(payment_query, {"_id": 0}))
+        appointments = list(appointments_collection.find(appointment_query, {"_id": 0}))
+        
+        # Group data by period
+        period_stats = {}
+        
+        if period == "day":
+            # Group by day
+            for payment in payments:
+                day_key = payment["date"]
+                if day_key not in period_stats:
+                    period_stats[day_key] = {
+                        "date": day_key,
+                        "ca": 0,
+                        "nb_paiements": 0,
+                        "nb_visites": 0,
+                        "nb_controles": 0,
+                        "nb_assures": 0
+                    }
+                period_stats[day_key]["ca"] += payment.get("montant", 0)
+                period_stats[day_key]["nb_paiements"] += 1
+            
+            for appointment in appointments:
+                day_key = appointment["date"]
+                if day_key not in period_stats:
+                    period_stats[day_key] = {
+                        "date": day_key,
+                        "ca": 0,
+                        "nb_paiements": 0,
+                        "nb_visites": 0,
+                        "nb_controles": 0,
+                        "nb_assures": 0
+                    }
+                if appointment.get("type_rdv") == "visite":
+                    period_stats[day_key]["nb_visites"] += 1
+                elif appointment.get("type_rdv") == "controle":
+                    period_stats[day_key]["nb_controles"] += 1
+                if appointment.get("assure", False):
+                    period_stats[day_key]["nb_assures"] += 1
+        
+        elif period == "week":
+            # Group by week
+            for payment in payments:
+                payment_date = datetime.strptime(payment["date"], "%Y-%m-%d")
+                week_start = payment_date - timedelta(days=payment_date.weekday())
+                week_key = f"Semaine du {week_start.strftime('%d/%m/%Y')}"
+                
+                if week_key not in period_stats:
+                    period_stats[week_key] = {
+                        "periode": week_key,
+                        "ca": 0,
+                        "nb_paiements": 0,
+                        "nb_visites": 0,
+                        "nb_controles": 0,
+                        "nb_assures": 0
+                    }
+                period_stats[week_key]["ca"] += payment.get("montant", 0)
+                period_stats[week_key]["nb_paiements"] += 1
+            
+            for appointment in appointments:
+                appointment_date = datetime.strptime(appointment["date"], "%Y-%m-%d")
+                week_start = appointment_date - timedelta(days=appointment_date.weekday())
+                week_key = f"Semaine du {week_start.strftime('%d/%m/%Y')}"
+                
+                if week_key not in period_stats:
+                    period_stats[week_key] = {
+                        "periode": week_key,
+                        "ca": 0,
+                        "nb_paiements": 0,
+                        "nb_visites": 0,
+                        "nb_controles": 0,
+                        "nb_assures": 0
+                    }
+                if appointment.get("type_rdv") == "visite":
+                    period_stats[week_key]["nb_visites"] += 1
+                elif appointment.get("type_rdv") == "controle":
+                    period_stats[week_key]["nb_controles"] += 1
+                if appointment.get("assure", False):
+                    period_stats[week_key]["nb_assures"] += 1
+        
+        elif period == "month":
+            # Group by month
+            for payment in payments:
+                payment_date = datetime.strptime(payment["date"], "%Y-%m-%d")
+                month_key = payment_date.strftime("%Y-%m")
+                month_name = payment_date.strftime("%B %Y")
+                
+                if month_key not in period_stats:
+                    period_stats[month_key] = {
+                        "periode": month_name,
+                        "ca": 0,
+                        "nb_paiements": 0,
+                        "nb_visites": 0,
+                        "nb_controles": 0,
+                        "nb_assures": 0
+                    }
+                period_stats[month_key]["ca"] += payment.get("montant", 0)
+                period_stats[month_key]["nb_paiements"] += 1
+            
+            for appointment in appointments:
+                appointment_date = datetime.strptime(appointment["date"], "%Y-%m-%d")
+                month_key = appointment_date.strftime("%Y-%m")
+                month_name = appointment_date.strftime("%B %Y")
+                
+                if month_key not in period_stats:
+                    period_stats[month_key] = {
+                        "periode": month_name,
+                        "ca": 0,
+                        "nb_paiements": 0,
+                        "nb_visites": 0,
+                        "nb_controles": 0,
+                        "nb_assures": 0
+                    }
+                if appointment.get("type_rdv") == "visite":
+                    period_stats[month_key]["nb_visites"] += 1
+                elif appointment.get("type_rdv") == "controle":
+                    period_stats[month_key]["nb_controles"] += 1
+                if appointment.get("assure", False):
+                    period_stats[month_key]["nb_assures"] += 1
+        
+        elif period == "year":
+            # Group by year
+            for payment in payments:
+                payment_date = datetime.strptime(payment["date"], "%Y-%m-%d")
+                year_key = payment_date.strftime("%Y")
+                
+                if year_key not in period_stats:
+                    period_stats[year_key] = {
+                        "periode": f"Année {year_key}",
+                        "ca": 0,
+                        "nb_paiements": 0,
+                        "nb_visites": 0,
+                        "nb_controles": 0,
+                        "nb_assures": 0
+                    }
+                period_stats[year_key]["ca"] += payment.get("montant", 0)
+                period_stats[year_key]["nb_paiements"] += 1
+            
+            for appointment in appointments:
+                appointment_date = datetime.strptime(appointment["date"], "%Y-%m-%d")
+                year_key = appointment_date.strftime("%Y")
+                
+                if year_key not in period_stats:
+                    period_stats[year_key] = {
+                        "periode": f"Année {year_key}",
+                        "ca": 0,
+                        "nb_paiements": 0,
+                        "nb_visites": 0,
+                        "nb_controles": 0,
+                        "nb_assures": 0
+                    }
+                if appointment.get("type_rdv") == "visite":
+                    period_stats[year_key]["nb_visites"] += 1
+                elif appointment.get("type_rdv") == "controle":
+                    period_stats[year_key]["nb_controles"] += 1
+                if appointment.get("assure", False):
+                    period_stats[year_key]["nb_assures"] += 1
+        
+        # Calculate totals
+        total_ca = sum(p.get("montant", 0) for p in payments)
+        total_payments = len(payments)
+        total_visites = len([a for a in appointments if a.get("type_rdv") == "visite"])
+        total_controles = len([a for a in appointments if a.get("type_rdv") == "controle"])
+        total_assures = len([a for a in appointments if a.get("assure", False)])
+        
+        return {
+            "period": period,
+            "date_range": {
+                "debut": date_debut,
+                "fin": date_fin
+            },
+            "totals": {
+                "ca_total": total_ca,
+                "nb_paiements": total_payments,
+                "nb_visites": total_visites,
+                "nb_controles": total_controles,
+                "nb_assures": total_assures
+            },
+            "breakdown": list(period_stats.values())
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error calculating advanced stats: {str(e)}")
+
 @app.get("/api/payments/stats")
 async def get_payments_stats(
     date_debut: Optional[str] = Query(None),
