@@ -16745,5 +16745,466 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
             for appointment_id in created_appointments:
                 requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
 
+    # ========== DASHBOARD ANNIVERSAIRES ET RELANCES TESTS ==========
+    
+    def test_dashboard_birthdays_endpoint(self):
+        """Test /api/dashboard/birthdays - Get patients with birthdays today"""
+        # First, create test patients with birthdays today
+        today = datetime.now()
+        today_birth_date = today.strftime("%Y-%m-%d")
+        
+        # Create patients with birthdays today
+        test_patients = [
+            {
+                "nom": "Anniversaire",
+                "prenom": "Patient1",
+                "date_naissance": f"2020-{today.strftime('%m-%d')}",  # Same month-day, different year
+                "numero_whatsapp": "21650111111"
+            },
+            {
+                "nom": "Birthday",
+                "prenom": "Patient2", 
+                "date_naissance": f"2019-{today.strftime('%m-%d')}",  # Same month-day, different year
+                "numero_whatsapp": "21650222222"
+            }
+        ]
+        
+        created_patient_ids = []
+        
+        try:
+            # Create test patients
+            for patient_data in test_patients:
+                response = requests.post(f"{self.base_url}/api/patients", json=patient_data)
+                self.assertEqual(response.status_code, 200)
+                patient_id = response.json()["patient_id"]
+                created_patient_ids.append(patient_id)
+            
+            # Test the birthdays endpoint
+            response = requests.get(f"{self.base_url}/api/dashboard/birthdays")
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            
+            # Verify response structure
+            self.assertIn("birthdays", data)
+            birthdays = data["birthdays"]
+            self.assertIsInstance(birthdays, list)
+            
+            # Verify we have at least our test patients
+            self.assertGreaterEqual(len(birthdays), 2, "Should have at least 2 birthday patients")
+            
+            # Verify birthday data structure
+            for birthday in birthdays:
+                self.assertIn("id", birthday)
+                self.assertIn("nom", birthday)
+                self.assertIn("prenom", birthday)
+                self.assertIn("age", birthday)
+                self.assertIn("numero_whatsapp", birthday)
+                self.assertIn("date_naissance", birthday)
+                
+                # Verify age calculation
+                self.assertIsInstance(birthday["age"], int)
+                self.assertGreaterEqual(birthday["age"], 0)
+                
+                # Verify date format
+                birth_date = datetime.strptime(birthday["date_naissance"], "%Y-%m-%d")
+                self.assertEqual(birth_date.strftime("%m-%d"), today.strftime("%m-%d"))
+            
+            # Find our test patients in the results
+            found_patients = []
+            for birthday in birthdays:
+                if birthday["nom"] in ["Anniversaire", "Birthday"]:
+                    found_patients.append(birthday)
+            
+            self.assertEqual(len(found_patients), 2, "Should find both test patients in birthday results")
+            
+            # Verify age calculations for our test patients
+            for patient in found_patients:
+                if patient["nom"] == "Anniversaire":
+                    expected_age = today.year - 2020
+                    self.assertEqual(patient["age"], expected_age)
+                elif patient["nom"] == "Birthday":
+                    expected_age = today.year - 2019
+                    self.assertEqual(patient["age"], expected_age)
+        
+        finally:
+            # Clean up test patients
+            for patient_id in created_patient_ids:
+                requests.delete(f"{self.base_url}/api/patients/{patient_id}")
+    
+    def test_dashboard_phone_reminders_endpoint(self):
+        """Test /api/dashboard/phone-reminders - Get scheduled phone reminders"""
+        # Create test data for phone reminders
+        # First create a patient
+        test_patient = {
+            "nom": "Relance",
+            "prenom": "Patient",
+            "numero_whatsapp": "21650333333"
+        }
+        
+        response = requests.post(f"{self.base_url}/api/patients", json=test_patient)
+        self.assertEqual(response.status_code, 200)
+        patient_id = response.json()["patient_id"]
+        
+        try:
+            # Create an appointment that needs follow-up
+            today = datetime.now().strftime("%Y-%m-%d")
+            yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+            
+            test_appointment = {
+                "patient_id": patient_id,
+                "date": yesterday,
+                "heure": "10:00",
+                "type_rdv": "visite",
+                "statut": "termine",
+                "motif": "Consultation avec suivi requis",
+                "suivi_requis": "Contrôle dans 1 semaine"
+            }
+            
+            response = requests.post(f"{self.base_url}/api/appointments", json=test_appointment)
+            self.assertEqual(response.status_code, 200)
+            appointment_id = response.json()["appointment_id"]
+            
+            # Create a consultation for this appointment
+            test_consultation = {
+                "patient_id": patient_id,
+                "appointment_id": appointment_id,
+                "date": yesterday,
+                "type_rdv": "visite",
+                "observations": "Patient nécessite un suivi téléphonique",
+                "relance_date": today
+            }
+            
+            response = requests.post(f"{self.base_url}/api/consultations", json=test_consultation)
+            self.assertEqual(response.status_code, 200)
+            consultation_id = response.json()["consultation_id"]
+            
+            # Test the phone reminders endpoint
+            response = requests.get(f"{self.base_url}/api/dashboard/phone-reminders")
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            
+            # Verify response structure
+            self.assertIn("reminders", data)
+            reminders = data["reminders"]
+            self.assertIsInstance(reminders, list)
+            
+            # Verify reminder data structure
+            for reminder in reminders:
+                self.assertIn("id", reminder)
+                self.assertIn("patient_id", reminder)
+                self.assertIn("patient_nom", reminder)
+                self.assertIn("patient_prenom", reminder)
+                self.assertIn("numero_whatsapp", reminder)
+                self.assertIn("date_rdv", reminder)
+                self.assertIn("heure_rdv", reminder)
+                self.assertIn("motif", reminder)
+                self.assertIn("consultation_id", reminder)
+                self.assertIn("raison_relance", reminder)
+                self.assertIn("time", reminder)
+                
+                # Verify data types
+                self.assertIsInstance(reminder["patient_nom"], str)
+                self.assertIsInstance(reminder["patient_prenom"], str)
+                self.assertIsInstance(reminder["numero_whatsapp"], str)
+            
+            # Clean up consultation
+            requests.delete(f"{self.base_url}/api/consultations/{consultation_id}")
+            # Clean up appointment
+            requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+            
+        finally:
+            # Clean up patient
+            requests.delete(f"{self.base_url}/api/patients/{patient_id}")
+    
+    def test_consultation_details_endpoint(self):
+        """Test /api/consultations/{consultation_id} - Get consultation details with enriched data"""
+        # Create test data
+        test_patient = {
+            "nom": "Consultation",
+            "prenom": "Detail",
+            "date_naissance": "2020-01-15",
+            "numero_whatsapp": "21650444444"
+        }
+        
+        response = requests.post(f"{self.base_url}/api/patients", json=test_patient)
+        self.assertEqual(response.status_code, 200)
+        patient_id = response.json()["patient_id"]
+        
+        try:
+            # Create appointment
+            today = datetime.now().strftime("%Y-%m-%d")
+            test_appointment = {
+                "patient_id": patient_id,
+                "date": today,
+                "heure": "11:00",
+                "type_rdv": "visite",
+                "statut": "termine",
+                "motif": "Consultation de contrôle"
+            }
+            
+            response = requests.post(f"{self.base_url}/api/appointments", json=test_appointment)
+            self.assertEqual(response.status_code, 200)
+            appointment_id = response.json()["appointment_id"]
+            
+            # Create consultation
+            test_consultation = {
+                "patient_id": patient_id,
+                "appointment_id": appointment_id,
+                "date": today,
+                "type_rdv": "visite",
+                "duree": 30,
+                "poids": 15.5,
+                "taille": 90.0,
+                "pc": 48.5,
+                "observations": "Enfant en bonne santé",
+                "traitement": "Vitamines D",
+                "bilan": "Développement normal"
+            }
+            
+            response = requests.post(f"{self.base_url}/api/consultations", json=test_consultation)
+            self.assertEqual(response.status_code, 200)
+            consultation_id = response.json()["consultation_id"]
+            
+            # Test the consultation details endpoint
+            response = requests.get(f"{self.base_url}/api/consultations/{consultation_id}")
+            self.assertEqual(response.status_code, 200)
+            consultation_details = response.json()
+            
+            # Verify basic consultation fields
+            self.assertEqual(consultation_details["id"], consultation_id)
+            self.assertEqual(consultation_details["patient_id"], patient_id)
+            self.assertEqual(consultation_details["appointment_id"], appointment_id)
+            self.assertEqual(consultation_details["date"], today)
+            self.assertEqual(consultation_details["type_rdv"], "visite")
+            self.assertEqual(consultation_details["duree"], 30)
+            self.assertEqual(consultation_details["poids"], 15.5)
+            self.assertEqual(consultation_details["taille"], 90.0)
+            self.assertEqual(consultation_details["pc"], 48.5)
+            self.assertEqual(consultation_details["observations"], "Enfant en bonne santé")
+            self.assertEqual(consultation_details["traitement"], "Vitamines D")
+            self.assertEqual(consultation_details["bilan"], "Développement normal")
+            
+            # Verify enriched patient data
+            self.assertIn("patient", consultation_details)
+            patient_info = consultation_details["patient"]
+            self.assertEqual(patient_info["nom"], "Consultation")
+            self.assertEqual(patient_info["prenom"], "Detail")
+            self.assertEqual(patient_info["date_naissance"], "2020-01-15")
+            self.assertIn("age", patient_info)
+            
+            # Verify enriched appointment data
+            self.assertIn("appointment", consultation_details)
+            appointment_info = consultation_details["appointment"]
+            self.assertEqual(appointment_info["date"], today)
+            self.assertEqual(appointment_info["heure"], "11:00")
+            self.assertEqual(appointment_info["motif"], "Consultation de contrôle")
+            self.assertEqual(appointment_info["type_rdv"], "visite")
+            
+            # Test with non-existent consultation ID
+            response = requests.get(f"{self.base_url}/api/consultations/non_existent_id")
+            self.assertEqual(response.status_code, 404)
+            
+            # Clean up
+            requests.delete(f"{self.base_url}/api/consultations/{consultation_id}")
+            requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+            
+        finally:
+            # Clean up patient
+            requests.delete(f"{self.base_url}/api/patients/{patient_id}")
+    
+    def test_dashboard_birthdays_edge_cases(self):
+        """Test edge cases for birthdays endpoint"""
+        # Test with no birthdays today
+        response = requests.get(f"{self.base_url}/api/dashboard/birthdays")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("birthdays", data)
+        self.assertIsInstance(data["birthdays"], list)
+        
+        # Test with invalid date formats in patient data
+        test_patient = {
+            "nom": "Invalid",
+            "prenom": "Date",
+            "date_naissance": "invalid-date-format"
+        }
+        
+        response = requests.post(f"{self.base_url}/api/patients", json=test_patient)
+        self.assertEqual(response.status_code, 200)
+        patient_id = response.json()["patient_id"]
+        
+        try:
+            # Endpoint should still work and skip invalid dates
+            response = requests.get(f"{self.base_url}/api/dashboard/birthdays")
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            self.assertIn("birthdays", data)
+            
+        finally:
+            requests.delete(f"{self.base_url}/api/patients/{patient_id}")
+    
+    def test_dashboard_phone_reminders_edge_cases(self):
+        """Test edge cases for phone reminders endpoint"""
+        # Test with no reminders
+        response = requests.get(f"{self.base_url}/api/dashboard/phone-reminders")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("reminders", data)
+        self.assertIsInstance(data["reminders"], list)
+        
+        # Test filtering logic - only termine appointments with suivi_requis should appear
+        test_patient = {
+            "nom": "Filter",
+            "prenom": "Test",
+            "numero_whatsapp": "21650555555"
+        }
+        
+        response = requests.post(f"{self.base_url}/api/patients", json=test_patient)
+        self.assertEqual(response.status_code, 200)
+        patient_id = response.json()["patient_id"]
+        
+        try:
+            today = datetime.now().strftime("%Y-%m-%d")
+            
+            # Create appointment without suivi_requis (should not appear in reminders)
+            test_appointment_no_suivi = {
+                "patient_id": patient_id,
+                "date": today,
+                "heure": "12:00",
+                "type_rdv": "visite",
+                "statut": "termine",
+                "motif": "Sans suivi"
+            }
+            
+            response = requests.post(f"{self.base_url}/api/appointments", json=test_appointment_no_suivi)
+            self.assertEqual(response.status_code, 200)
+            appointment_id_no_suivi = response.json()["appointment_id"]
+            
+            # Create appointment with suivi_requis but not termine (should not appear)
+            test_appointment_not_termine = {
+                "patient_id": patient_id,
+                "date": today,
+                "heure": "13:00",
+                "type_rdv": "visite",
+                "statut": "programme",
+                "motif": "Pas terminé",
+                "suivi_requis": "Contrôle requis"
+            }
+            
+            response = requests.post(f"{self.base_url}/api/appointments", json=test_appointment_not_termine)
+            self.assertEqual(response.status_code, 200)
+            appointment_id_not_termine = response.json()["appointment_id"]
+            
+            # Test reminders endpoint - should not include these appointments
+            response = requests.get(f"{self.base_url}/api/dashboard/phone-reminders")
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            
+            # Verify our test appointments are not in reminders
+            reminder_appointment_ids = [r["id"] for r in data["reminders"]]
+            self.assertNotIn(appointment_id_no_suivi, reminder_appointment_ids)
+            self.assertNotIn(appointment_id_not_termine, reminder_appointment_ids)
+            
+            # Clean up
+            requests.delete(f"{self.base_url}/api/appointments/{appointment_id_no_suivi}")
+            requests.delete(f"{self.base_url}/api/appointments/{appointment_id_not_termine}")
+            
+        finally:
+            requests.delete(f"{self.base_url}/api/patients/{patient_id}")
+    
+    def test_dashboard_data_consistency(self):
+        """Test data consistency across dashboard endpoints"""
+        # Create comprehensive test data
+        test_patient = {
+            "nom": "Consistency",
+            "prenom": "Test",
+            "date_naissance": f"2021-{datetime.now().strftime('%m-%d')}",  # Birthday today
+            "numero_whatsapp": "21650666666"
+        }
+        
+        response = requests.post(f"{self.base_url}/api/patients", json=test_patient)
+        self.assertEqual(response.status_code, 200)
+        patient_id = response.json()["patient_id"]
+        
+        try:
+            # Create appointment with suivi_requis
+            yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+            test_appointment = {
+                "patient_id": patient_id,
+                "date": yesterday,
+                "heure": "14:00",
+                "type_rdv": "visite",
+                "statut": "termine",
+                "motif": "Consultation complète",
+                "suivi_requis": "Appel de suivi"
+            }
+            
+            response = requests.post(f"{self.base_url}/api/appointments", json=test_appointment)
+            self.assertEqual(response.status_code, 200)
+            appointment_id = response.json()["appointment_id"]
+            
+            # Create consultation
+            test_consultation = {
+                "patient_id": patient_id,
+                "appointment_id": appointment_id,
+                "date": yesterday,
+                "type_rdv": "visite",
+                "observations": "Test consistency"
+            }
+            
+            response = requests.post(f"{self.base_url}/api/consultations", json=test_consultation)
+            self.assertEqual(response.status_code, 200)
+            consultation_id = response.json()["consultation_id"]
+            
+            # Test all dashboard endpoints
+            # 1. Birthdays
+            response = requests.get(f"{self.base_url}/api/dashboard/birthdays")
+            self.assertEqual(response.status_code, 200)
+            birthdays_data = response.json()
+            
+            # 2. Phone reminders
+            response = requests.get(f"{self.base_url}/api/dashboard/phone-reminders")
+            self.assertEqual(response.status_code, 200)
+            reminders_data = response.json()
+            
+            # 3. Consultation details
+            response = requests.get(f"{self.base_url}/api/consultations/{consultation_id}")
+            self.assertEqual(response.status_code, 200)
+            consultation_data = response.json()
+            
+            # Verify data consistency across endpoints
+            # Find our test patient in birthdays
+            birthday_patient = None
+            for birthday in birthdays_data["birthdays"]:
+                if birthday["id"] == patient_id:
+                    birthday_patient = birthday
+                    break
+            
+            self.assertIsNotNone(birthday_patient, "Test patient should appear in birthdays")
+            
+            # Find our test appointment in reminders
+            reminder_appointment = None
+            for reminder in reminders_data["reminders"]:
+                if reminder["patient_id"] == patient_id:
+                    reminder_appointment = reminder
+                    break
+            
+            # Verify patient data consistency
+            if birthday_patient and reminder_appointment:
+                self.assertEqual(birthday_patient["nom"], reminder_appointment["patient_nom"])
+                self.assertEqual(birthday_patient["prenom"], reminder_appointment["patient_prenom"])
+                self.assertEqual(birthday_patient["numero_whatsapp"], reminder_appointment["numero_whatsapp"])
+            
+            # Verify consultation data consistency
+            self.assertEqual(consultation_data["patient"]["nom"], "Consistency")
+            self.assertEqual(consultation_data["patient"]["prenom"], "Test")
+            self.assertEqual(consultation_data["appointment"]["motif"], "Consultation complète")
+            
+            # Clean up
+            requests.delete(f"{self.base_url}/api/consultations/{consultation_id}")
+            requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+            
+        finally:
+            requests.delete(f"{self.base_url}/api/patients/{patient_id}")
+
 if __name__ == "__main__":
     unittest.main()
