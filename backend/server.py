@@ -211,6 +211,10 @@ class PhoneMessageCreate(BaseModel):
 class PhoneMessageResponse(BaseModel):
     response_content: str
 
+class PhoneMessageEdit(BaseModel):
+    message_content: str
+    priority: str = "normal"
+
 # Helper functions
 def calculate_age(date_naissance: str) -> str:
     """Calculate age from birth date in format '2 ans, 3 mois, 15 jours'"""
