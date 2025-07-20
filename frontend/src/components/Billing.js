@@ -44,6 +44,8 @@ const Billing = ({ user }) => {
   const [assureFilter, setAssureFilter] = useState('');
   
   // Modal states
+  const [selectedPayment, setSelectedPayment] = useState(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [editingPayment, setEditingPayment] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
 
