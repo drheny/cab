@@ -1804,7 +1804,7 @@ async def delete_payment(payment_id: str):
 
 # ==================== MESSAGERIE INSTANTANÉE ====================
 
-@app.websocket("/ws")
+@app.websocket("/api/ws")
 async def websocket_endpoint(websocket: WebSocket):
     """WebSocket endpoint pour messagerie temps réel"""
     await manager.connect(websocket)
