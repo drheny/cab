@@ -294,15 +294,24 @@ const Dashboard = ({ user }) => {
         reply_to: replyingTo?.id || null
       };
 
-      await axios.post(`${API_BASE_URL}/api/messages`, messageData, {
+      const response = await axios.post(`${API_BASE_URL}/api/messages`, messageData, {
         params: {
           sender_type: user.type,
           sender_name: user.name
         }
       });
 
+      // Clear input and reply state immediately
       setNewMessage('');
       setReplyingTo(null);
+      
+      // If WebSocket is not connected, fetch messages manually
+      if (!ws || ws.readyState !== WebSocket.OPEN) {
+        console.log('WebSocket not connected, fetching messages manually');
+        await fetchMessages();
+      }
+      
+      console.log('✅ Message sent successfully:', response.data);
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error('Erreur lors de l\'envoi du message');
