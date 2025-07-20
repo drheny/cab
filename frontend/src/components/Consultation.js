@@ -248,7 +248,7 @@ const Consultation = ({ user }) => {
         return null;
       }
     }
-  }, [API_BASE_URL]);
+  }, []);
 
   // Voir une consultation avec montant
   const handleViewConsultation = async (consultation) => {
