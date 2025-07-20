@@ -271,10 +271,10 @@ const Billing = ({ user }) => {
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-TN', {
-      style: 'currency',
-      currency: 'TND',
-      minimumFractionDigits: 2
-    }).format(amount || 0);
+      style: 'decimal',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(amount || 0) + ' TND';
   };
 
   const getPaymentMethodIcon = (method) => {
