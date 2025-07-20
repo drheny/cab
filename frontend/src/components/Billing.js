@@ -619,7 +619,10 @@ const Billing = ({ user }) => {
                           >
                             <Eye className="w-4 h-4" />
                           </button>
-                          <button className="text-blue-600 hover:text-blue-900">
+                          <button 
+                            onClick={() => handleEditPayment(payment)}
+                            className="text-blue-600 hover:text-blue-900"
+                          >
                             <Edit className="w-4 h-4" />
                           </button>
                         </div>
