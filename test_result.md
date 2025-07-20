@@ -903,6 +903,100 @@ Comprehensive frontend testing of the Dashboard Anniversaires et Relances functi
 **DASHBOARD ANNIVERSAIRES ET RELANCES: IMPLEMENTATION COMPLETE AND FULLY TESTED**
 The frontend now fully supports the Dashboard Anniversaires et Relances functionality as specified. All tests pass and the system is ready for production use with the new dashboard features. The implementation handles both data-present and empty-state scenarios gracefully.
 
+### Real-time Messaging System Testing ✅ COMPLETED
+**Status:** ALL REAL-TIME MESSAGING TESTS PASSED - WebSocket URL Fix Successful, Messages Appear Immediately
+
+**Test Results Summary (2025-01-20 - Real-time Messaging System Testing):**
+✅ **Login and Navigation** - Successfully logged in as médecin and navigated to Dashboard
+✅ **Messagerie Interne Section** - "Messagerie Interne" section properly visible and functional
+✅ **WebSocket Connection** - WebSocket connection established successfully with /api/ws URL
+✅ **Real-time Message Display** - CRITICAL SUCCESS: Messages appear immediately without page refresh
+✅ **Message Count Verification** - Message count increased immediately from 2 to 4 after sending 2 test messages
+✅ **WebSocket Message Reception** - Console logs confirm WebSocket messages received: "📨 WebSocket message received: {type: new_message, data: Object}"
+✅ **Message Sending Success** - Console logs confirm successful message sending: "✅ Message sent successfully"
+✅ **Input Field Clearing** - Message input field clears immediately after sending
+✅ **Enter Key Functionality** - Enter key sending works perfectly for message submission
+✅ **Message Styling** - Proper visual distinction between médecin (blue, right-aligned) and secrétaire (blue left-aligned) messages
+✅ **No Page Errors** - No error messages found on the page during testing
+✅ **Consistent Real-time Updates** - Both first and second test messages appeared immediately
+
+**Detailed Test Results:**
+
+**CRITICAL REAL-TIME FUNCTIONALITY: ✅ FULLY WORKING**
+- ✅ **Immediate Message Display**: Messages appear instantly after sending without any page refresh required
+- ✅ **WebSocket URL Fix**: The /api/ws URL fix is working correctly with Kubernetes ingress rules
+- ✅ **Message Count Tracking**: Message count increased from 2 to 4 immediately after sending 2 messages
+- ✅ **Real-time Updates**: Both test messages appeared in real-time without any delay
+- ✅ **No Refresh Required**: User reported issue of requiring page refresh is now RESOLVED
+
+**WEBSOCKET CONNECTION: ✅ FULLY FUNCTIONAL**
+- ✅ **Connection Establishment**: WebSocket connection established successfully
+- ✅ **Message Reception**: Console logs show "📨 WebSocket message received" for each sent message
+- ✅ **Message Sending**: Console logs show "✅ Message sent successfully" with unique message IDs
+- ✅ **URL Configuration**: /api/ws URL working correctly with Kubernetes ingress
+- ✅ **No Connection Errors**: No WebSocket errors found in console logs
+
+**MESSAGE INTERFACE FUNCTIONALITY: ✅ COMPREHENSIVE**
+- ✅ **Message Input**: Message input field working correctly with placeholder text
+- ✅ **Enter Key Sending**: Enter key functionality working for message submission
+- ✅ **Input Clearing**: Message input clears immediately after successful sending
+- ✅ **Message Display**: Messages display with correct timestamps and sender information
+- ✅ **Visual Distinction**: Proper styling for médecin (blue, right-aligned) vs secrétaire messages
+
+**USER EXPERIENCE VALIDATION: ✅ EXCELLENT**
+- ✅ **Instant Feedback**: Messages appear immediately providing instant user feedback
+- ✅ **No Loading States**: No waiting or loading required for message display
+- ✅ **Smooth Interaction**: Seamless message sending and receiving experience
+- ✅ **Consistent Behavior**: Both first and second messages behaved identically
+- ✅ **Error-Free Experience**: No errors or issues encountered during testing
+
+**TECHNICAL IMPLEMENTATION VERIFICATION: ✅ ROBUST**
+- ✅ **WebSocket URL**: Correctly configured as /api/ws for Kubernetes ingress compatibility
+- ✅ **Message Handling**: Proper handling of WebSocket message events
+- ✅ **State Management**: Correct state updates for message list and input field
+- ✅ **Event Listeners**: Proper WebSocket event listeners for message reception
+- ✅ **Error Handling**: No errors in console or on page during testing
+
+**CRITICAL FINDINGS:**
+- 🔍 **Issue Resolved**: The user-reported issue of messages only appearing after page refresh is now FIXED
+- 🔍 **WebSocket URL Fix Successful**: The change from /ws to /api/ws is working correctly
+- 🔍 **Real-time Performance**: Messages appear instantly with no perceptible delay
+- 🔍 **Production Ready**: The messaging system is fully functional and ready for production use
+- 🔍 **User Experience Improved**: Seamless real-time messaging experience achieved
+
+**REAL-TIME MESSAGING STATUS: FULLY FUNCTIONAL AND ISSUE RESOLVED**
+The critical issue reported by the user has been successfully resolved. The WebSocket URL fix from /ws to /api/ws is working correctly, and messages now appear immediately without requiring page refresh. The real-time messaging functionality is working flawlessly.
+
+**Testing Agent → Main Agent (2025-01-20 - Real-time Messaging System Testing):**
+Comprehensive real-time messaging testing completed successfully. The critical issue reported in the review request has been RESOLVED:
+
+✅ **CRITICAL ISSUE RESOLVED:**
+- User reported: "messages don't appear immediately after sending - only after page refresh"
+- Test Result: Messages now appear IMMEDIATELY without any page refresh required
+- WebSocket URL fix from /ws to /api/ws is working correctly with Kubernetes ingress rules
+
+✅ **REAL-TIME FUNCTIONALITY CONFIRMED:**
+- Messages appear instantly after clicking send or pressing Enter
+- WebSocket connection established successfully with "✅ WebSocket connected successfully" message
+- Console logs confirm WebSocket message reception: "📨 WebSocket message received"
+- Message count increased immediately from 2 to 4 after sending 2 test messages
+
+✅ **USER EXPERIENCE VALIDATED:**
+- Login and navigation working perfectly
+- Messagerie Interne section visible and functional
+- Message input and sending working flawlessly
+- Input field clears immediately after sending
+- Proper message styling and visual distinction maintained
+
+✅ **TECHNICAL VERIFICATION COMPLETED:**
+- WebSocket URL /api/ws working correctly
+- No WebSocket connection errors found
+- No page errors during testing
+- Consistent real-time behavior across multiple message sends
+
+**REAL-TIME MESSAGING: ISSUE RESOLVED AND FULLY FUNCTIONAL**
+The messaging system is now working exactly as expected. Users can send messages and see them appear immediately without any page refresh. The WebSocket URL fix has successfully resolved the Kubernetes ingress routing issue.
+
 ### Instant Messaging System Frontend Testing ✅ COMPLETED
 **Status:** ALL INSTANT MESSAGING SYSTEM FRONTEND TESTS PASSED - Complete Messaging Interface Working Flawlessly
 
