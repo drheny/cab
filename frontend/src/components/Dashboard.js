@@ -412,6 +412,14 @@ const Dashboard = ({ user }) => {
     try {
       console.log('🔄 Sending delete request for message:', messageId);
       
+      // Suppression optimiste : retirer immédiatement de l'UI
+      setMessages(prev => {
+        console.log('🔄 Removing message optimistically:', messageId);
+        const updatedMessages = prev.filter(msg => msg.id !== messageId);
+        console.log('📊 Messages before:', prev.length, 'after:', updatedMessages.length);
+        return updatedMessages;
+      });
+      
       const response = await axios.delete(`${API_BASE_URL}/api/messages/${messageId}`, {
         params: { user_type: user.type }
       });
@@ -421,15 +429,12 @@ const Dashboard = ({ user }) => {
       // Show success feedback
       toast.success('Message supprimé avec succès');
       
-      // If WebSocket is not connected, fetch messages manually
-      if (!ws || ws.readyState !== WebSocket.OPEN) {
-        console.log('WebSocket not connected, fetching messages manually after delete');
-        await fetchMessages();
-      } else {
-        console.log('WebSocket connected, deletion will be handled via broadcast');
-      }
     } catch (error) {
       console.error('❌ Error deleting message:', error);
+      
+      // En cas d'erreur, restaurer les messages
+      console.log('🔄 Restoring messages due to error');
+      await fetchMessages();
       
       if (error.response) {
         if (error.response.status === 403) {
