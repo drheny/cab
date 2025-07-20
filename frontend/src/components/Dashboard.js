@@ -654,12 +654,15 @@ const Dashboard = ({ user }) => {
 
       {/* Recent Activity - Responsive */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 responsive-padding">
-        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Messagerie Interne</h3>
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center">
+          <MessageCircle className="w-5 h-5 mr-2 text-primary-500" />
+          Messagerie Interne
+        </h3>
         
         {/* Messages Container */}
         <div className="flex flex-col h-96">
           {/* Messages List */}
-          <div className="flex-1 overflow-y-auto mb-4 space-y-3 bg-gray-50 rounded-lg p-3">
+          <div className="flex-1 overflow-y-auto mb-4 space-y-3 bg-gradient-to-b from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-100">
             {messages.length > 0 ? (
               messages.map((message) => (
                 <div
@@ -669,71 +672,113 @@ const Dashboard = ({ user }) => {
                   }`}
                 >
                   <div
-                    className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                    className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl shadow-sm relative ${
                       message.sender_type === user.type
-                        ? 'bg-primary-500 text-white'
+                        ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-primary-200'
                         : message.sender_type === 'medecin'
-                        ? 'bg-green-100 text-green-900 border-l-4 border-green-500'
-                        : 'bg-blue-100 text-blue-900 border-l-4 border-blue-500'
+                        ? 'bg-gradient-to-r from-green-100 to-green-50 text-green-900 border border-green-200 shadow-green-100'
+                        : 'bg-gradient-to-r from-blue-100 to-blue-50 text-blue-900 border border-blue-200 shadow-blue-100'
                     }`}
                   >
                     {/* Reply indicator */}
                     {message.reply_to && (
-                      <div className="text-xs opacity-75 mb-1 italic">
-                        En réponse à: "{message.reply_content.substring(0, 30)}..."
+                      <div className={`text-xs mb-2 p-2 rounded-lg border-l-3 ${
+                        message.sender_type === user.type 
+                          ? 'bg-white bg-opacity-20 border-white border-opacity-50 text-white text-opacity-90'
+                          : 'bg-white bg-opacity-70 border-gray-400 text-gray-600'
+                      }`}>
+                        <div className="font-medium text-xs opacity-75">↳ Réponse à</div>
+                        <div className="text-xs italic">{message.reply_content.substring(0, 40)}...</div>
                       </div>
                     )}
                     
                     {/* Message content */}
-                    <div className="text-sm">{message.content}</div>
+                    <div className="text-sm font-medium leading-relaxed">{message.content}</div>
                     
                     {/* Message footer */}
-                    <div className="flex justify-between items-center mt-2 text-xs opacity-75">
+                    <div className="flex justify-between items-end mt-3 text-xs">
                       <div className="flex items-center space-x-2">
-                        <span className="font-medium">
-                          {message.sender_type === 'medecin' ? '👨‍⚕️' : '👩‍💼'} {message.sender_name}
-                        </span>
+                        <div className={`flex items-center space-x-1 ${
+                          message.sender_type === user.type ? 'text-white text-opacity-80' : 'text-gray-600'
+                        }`}>
+                          <span className="text-sm">
+                            {message.sender_type === 'medecin' ? '👨‍⚕️' : '👩‍💼'}
+                          </span>
+                          <span className="font-medium text-xs">
+                            {message.sender_name}
+                          </span>
+                        </div>
                         {message.is_edited && (
-                          <span className="text-xs italic">(modifié)</span>
+                          <span className={`text-xs italic px-1.5 py-0.5 rounded-full ${
+                            message.sender_type === user.type 
+                              ? 'bg-white bg-opacity-20 text-white text-opacity-80'
+                              : 'bg-gray-200 text-gray-600'
+                          }`}>
+                            modifié
+                          </span>
                         )}
                       </div>
                       
-                      <div className="flex items-center space-x-1">
-                        <span>
+                      <div className="flex items-center space-x-2">
+                        <span className={`text-xs ${
+                          message.sender_type === user.type ? 'text-white text-opacity-70' : 'text-gray-500'
+                        }`}>
                           {new Date(message.timestamp).toLocaleTimeString('fr-FR', {
                             hour: '2-digit',
                             minute: '2-digit'
                           })}
                         </span>
+                        
+                        {/* Action buttons for own messages */}
                         {message.sender_type === user.type && (
                           <div className="flex space-x-1 ml-2">
                             <button
                               onClick={() => handleEditMessage(message)}
-                              className="text-xs hover:opacity-100 opacity-60"
+                              className="p-1 rounded-full hover:bg-white hover:bg-opacity-20 transition-colors"
                               title="Modifier"
                             >
-                              ✏️
+                              <span className="text-xs">✏️</span>
                             </button>
                             <button
                               onClick={() => handleDeleteMessage(message.id)}
-                              className="text-xs hover:opacity-100 opacity-60"
+                              className="p-1 rounded-full hover:bg-red-500 hover:bg-opacity-20 transition-colors"
                               title="Supprimer"
                             >
-                              🗑️
+                              <span className="text-xs">🗑️</span>
                             </button>
                           </div>
                         )}
+                        
+                        {/* Reply button for others' messages */}
                         {message.sender_type !== user.type && (
                           <button
                             onClick={() => handleReplyToMessage(message)}
-                            className="text-xs hover:opacity-100 opacity-60 ml-2"
+                            className="p-1 rounded-full hover:bg-gray-200 transition-colors"
                             title="Répondre"
                           >
-                            ↩️
+                            <span className="text-xs">↩️</span>
                           </button>
                         )}
-                        {!message.is_read && message.sender_type !== user.type && (
-                          <span className="w-2 h-2 bg-red-500 rounded-full ml-1" title="Non lu"></span>
+                        
+                        {/* Read receipt indicator */}
+                        {message.sender_type === user.type && (
+                          <div className="flex items-center space-x-1">
+                            {message.is_read ? (
+                              <div className="flex items-center space-x-1" title="Message lu">
+                                <div className="text-xs text-white text-opacity-80">VU</div>
+                                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                              </div>
+                            ) : (
+                              <div className="flex items-center space-x-1" title="Message envoyé">
+                                <div className="w-2 h-2 bg-white bg-opacity-60 rounded-full"></div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        
+                        {/* Unread indicator for received messages */}
+                        {message.sender_type !== user.type && !message.is_read && (
+                          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" title="Non lu"></div>
                         )}
                       </div>
                     </div>
@@ -741,9 +786,9 @@ const Dashboard = ({ user }) => {
                 </div>
               ))
             ) : (
-              <div className="text-center text-gray-500 py-8">
-                <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">Aucun message aujourd'hui</p>
+              <div className="text-center text-gray-500 py-12">
+                <MessageCircle className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                <p className="text-sm font-medium">Aucun message aujourd'hui</p>
                 <p className="text-xs text-gray-400 mt-1">Commencez une conversation</p>
               </div>
             )}
@@ -752,30 +797,35 @@ const Dashboard = ({ user }) => {
 
           {/* Reply indicator */}
           {replyingTo && (
-            <div className="mb-2 p-2 bg-gray-100 rounded-lg text-sm">
+            <div className="mb-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-400 rounded-lg">
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">
-                  Réponse à {replyingTo.sender_name}: "{replyingTo.content.substring(0, 50)}..."
-                </span>
+                <div>
+                  <div className="text-xs font-medium text-blue-700 mb-1">
+                    Réponse à {replyingTo.sender_name}
+                  </div>
+                  <span className="text-sm text-blue-600 italic">
+                    "{replyingTo.content.substring(0, 60)}..."
+                  </span>
+                </div>
                 <button
                   onClick={() => setReplyingTo(null)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-blue-400 hover:text-blue-600 p-1 rounded-full hover:bg-blue-100 transition-colors"
                 >
-                  ✕
+                  <X className="w-4 h-4" />
                 </button>
               </div>
             </div>
           )}
 
           {/* Message Input */}
-          <div className="flex space-x-2">
+          <div className="border-t border-gray-200 pt-3">
             {editingMessage ? (
-              <>
+              <div className="flex space-x-2">
                 <input
                   type="text"
                   value={editingContent}
                   onChange={(e) => setEditingContent(e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm shadow-sm"
                   placeholder="Modifier le message..."
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
@@ -785,27 +835,29 @@ const Dashboard = ({ user }) => {
                 />
                 <button
                   onClick={handleSaveEdit}
-                  className="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 text-sm"
+                  className="px-4 py-3 bg-green-500 text-white rounded-full hover:bg-green-600 shadow-sm transition-colors"
+                  title="Sauvegarder"
                 >
-                  ✓
+                  <span className="text-sm">✓</span>
                 </button>
                 <button
                   onClick={() => {
                     setEditingMessage(null);
                     setEditingContent('');
                   }}
-                  className="px-3 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 text-sm"
+                  className="px-4 py-3 bg-gray-500 text-white rounded-full hover:bg-gray-600 shadow-sm transition-colors"
+                  title="Annuler"
                 >
-                  ✕
+                  <span className="text-sm">✕</span>
                 </button>
-              </>
+              </div>
             ) : (
-              <>
+              <div className="flex space-x-3">
                 <input
                   type="text"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm shadow-sm placeholder-gray-400"
                   placeholder={
                     replyingTo
                       ? `Répondre à ${replyingTo.sender_name}...`
@@ -820,11 +872,16 @@ const Dashboard = ({ user }) => {
                 <button
                   onClick={handleSendMessage}
                   disabled={!newMessage.trim()}
-                  className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  className={`px-5 py-3 rounded-full shadow-sm transition-all duration-200 ${
+                    newMessage.trim()
+                      ? 'bg-primary-500 text-white hover:bg-primary-600 transform hover:scale-105'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                  title="Envoyer message"
                 >
                   <MessageSquare className="w-4 h-4" />
                 </button>
-              </>
+              </div>
             )}
           </div>
         </div>
