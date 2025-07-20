@@ -16749,6 +16749,764 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
             for appointment_id in created_appointments:
                 requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
 
+    # ========== PHONE MESSAGES SYSTEM TESTS ==========
+    
+    def test_phone_messages_get_endpoint(self):
+        """Test GET /api/phone-messages with filtering parameters"""
+        # Test basic GET without filters
+        response = requests.get(f"{self.base_url}/api/phone-messages")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        # Verify response structure
+        self.assertIn("phone_messages", data)
+        self.assertIn("total", data)
+        self.assertIsInstance(data["phone_messages"], list)
+        self.assertIsInstance(data["total"], int)
+        
+        # Test with status filter
+        response = requests.get(f"{self.base_url}/api/phone-messages?status=nouveau")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("phone_messages", data)
+        
+        # Test with priority filter
+        response = requests.get(f"{self.base_url}/api/phone-messages?priority=urgent")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("phone_messages", data)
+        
+        # Test with date filters
+        today = datetime.now().strftime("%Y-%m-%d")
+        response = requests.get(f"{self.base_url}/api/phone-messages?date_from={today}&date_to={today}")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("phone_messages", data)
+        
+        # Test with combined filters
+        response = requests.get(f"{self.base_url}/api/phone-messages?status=nouveau&priority=urgent&date_from={today}")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("phone_messages", data)
+    
+    def test_phone_messages_create_endpoint(self):
+        """Test POST /api/phone-messages - Create new phone message"""
+        # Get a patient for testing
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for testing phone messages")
+        
+        patient_id = patients[0]["id"]
+        today = datetime.now().strftime("%Y-%m-%d")
+        current_time = datetime.now().strftime("%H:%M")
+        
+        # Create phone message
+        message_data = {
+            "patient_id": patient_id,
+            "message_content": "Patient demande des informations sur les résultats d'analyse",
+            "priority": "normal",
+            "call_date": today,
+            "call_time": current_time
+        }
+        
+        response = requests.post(f"{self.base_url}/api/phone-messages", json=message_data)
+        self.assertEqual(response.status_code, 200)
+        create_data = response.json()
+        self.assertIn("message", create_data)
+        self.assertIn("message_id", create_data)
+        message_id = create_data["message_id"]
+        
+        # Verify the message was created
+        response = requests.get(f"{self.base_url}/api/phone-messages")
+        self.assertEqual(response.status_code, 200)
+        messages_data = response.json()
+        messages = messages_data["phone_messages"]
+        
+        # Find our created message
+        created_message = None
+        for msg in messages:
+            if msg["id"] == message_id:
+                created_message = msg
+                break
+        
+        self.assertIsNotNone(created_message, "Created phone message not found")
+        self.assertEqual(created_message["patient_id"], patient_id)
+        self.assertEqual(created_message["message_content"], "Patient demande des informations sur les résultats d'analyse")
+        self.assertEqual(created_message["priority"], "normal")
+        self.assertEqual(created_message["status"], "nouveau")
+        self.assertEqual(created_message["call_date"], today)
+        self.assertEqual(created_message["call_time"], current_time)
+        self.assertIn("patient_name", created_message)
+        self.assertEqual(created_message["created_by"], "Secrétaire")
+        
+        # Clean up
+        requests.delete(f"{self.base_url}/api/phone-messages/{message_id}")
+        
+        return message_id
+    
+    def test_phone_messages_create_urgent_priority(self):
+        """Test creating urgent priority phone messages"""
+        # Get a patient for testing
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for testing")
+        
+        patient_id = patients[0]["id"]
+        today = datetime.now().strftime("%Y-%m-%d")
+        current_time = datetime.now().strftime("%H:%M")
+        
+        # Create urgent phone message
+        urgent_message_data = {
+            "patient_id": patient_id,
+            "message_content": "URGENT: Patient a de la fièvre élevée et demande conseil médical immédiat",
+            "priority": "urgent",
+            "call_date": today,
+            "call_time": current_time
+        }
+        
+        response = requests.post(f"{self.base_url}/api/phone-messages", json=urgent_message_data)
+        self.assertEqual(response.status_code, 200)
+        create_data = response.json()
+        message_id = create_data["message_id"]
+        
+        # Verify urgent message was created correctly
+        response = requests.get(f"{self.base_url}/api/phone-messages?priority=urgent")
+        self.assertEqual(response.status_code, 200)
+        urgent_messages = response.json()["phone_messages"]
+        
+        urgent_message = None
+        for msg in urgent_messages:
+            if msg["id"] == message_id:
+                urgent_message = msg
+                break
+        
+        self.assertIsNotNone(urgent_message, "Urgent phone message not found")
+        self.assertEqual(urgent_message["priority"], "urgent")
+        self.assertEqual(urgent_message["status"], "nouveau")
+        
+        # Clean up
+        requests.delete(f"{self.base_url}/api/phone-messages/{message_id}")
+    
+    def test_phone_messages_create_invalid_patient(self):
+        """Test creating phone message with invalid patient_id"""
+        today = datetime.now().strftime("%Y-%m-%d")
+        current_time = datetime.now().strftime("%H:%M")
+        
+        # Try to create message with non-existent patient
+        invalid_message_data = {
+            "patient_id": "non_existent_patient_id",
+            "message_content": "Test message with invalid patient",
+            "priority": "normal",
+            "call_date": today,
+            "call_time": current_time
+        }
+        
+        response = requests.post(f"{self.base_url}/api/phone-messages", json=invalid_message_data)
+        self.assertEqual(response.status_code, 404)
+        error_data = response.json()
+        self.assertIn("detail", error_data)
+        self.assertEqual(error_data["detail"], "Patient not found")
+    
+    def test_phone_messages_response_endpoint(self):
+        """Test PUT /api/phone-messages/{message_id}/response - Add response to message"""
+        # First create a phone message
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for testing")
+        
+        patient_id = patients[0]["id"]
+        today = datetime.now().strftime("%Y-%m-%d")
+        current_time = datetime.now().strftime("%H:%M")
+        
+        # Create phone message
+        message_data = {
+            "patient_id": patient_id,
+            "message_content": "Patient demande conseil pour traitement",
+            "priority": "normal",
+            "call_date": today,
+            "call_time": current_time
+        }
+        
+        response = requests.post(f"{self.base_url}/api/phone-messages", json=message_data)
+        self.assertEqual(response.status_code, 200)
+        message_id = response.json()["message_id"]
+        
+        try:
+            # Add response to the message
+            response_data = {
+                "response_content": "Continuer le traitement actuel et revenir dans une semaine si les symptômes persistent."
+            }
+            
+            response = requests.put(f"{self.base_url}/api/phone-messages/{message_id}/response", json=response_data)
+            self.assertEqual(response.status_code, 200)
+            response_result = response.json()
+            self.assertIn("message", response_result)
+            self.assertEqual(response_result["message"], "Response added successfully")
+            
+            # Verify the message was updated
+            response = requests.get(f"{self.base_url}/api/phone-messages")
+            self.assertEqual(response.status_code, 200)
+            messages = response.json()["phone_messages"]
+            
+            updated_message = None
+            for msg in messages:
+                if msg["id"] == message_id:
+                    updated_message = msg
+                    break
+            
+            self.assertIsNotNone(updated_message, "Updated message not found")
+            self.assertEqual(updated_message["status"], "traité")
+            self.assertEqual(updated_message["response_content"], "Continuer le traitement actuel et revenir dans une semaine si les symptômes persistent.")
+            self.assertEqual(updated_message["responded_by"], "Dr Heni Dridi")
+            self.assertIn("updated_at", updated_message)
+            
+        finally:
+            # Clean up
+            requests.delete(f"{self.base_url}/api/phone-messages/{message_id}")
+    
+    def test_phone_messages_response_invalid_message(self):
+        """Test responding to non-existent phone message"""
+        response_data = {
+            "response_content": "Test response to non-existent message"
+        }
+        
+        response = requests.put(f"{self.base_url}/api/phone-messages/non_existent_id/response", json=response_data)
+        self.assertEqual(response.status_code, 404)
+        error_data = response.json()
+        self.assertIn("detail", error_data)
+        self.assertEqual(error_data["detail"], "Phone message not found")
+    
+    def test_phone_messages_stats_endpoint(self):
+        """Test GET /api/phone-messages/stats - Get statistics for badge counts"""
+        # Create test messages with different statuses and priorities
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for testing")
+        
+        patient_id = patients[0]["id"]
+        today = datetime.now().strftime("%Y-%m-%d")
+        current_time = datetime.now().strftime("%H:%M")
+        
+        created_message_ids = []
+        
+        try:
+            # Create nouveau normal message
+            message1_data = {
+                "patient_id": patient_id,
+                "message_content": "Message normal nouveau",
+                "priority": "normal",
+                "call_date": today,
+                "call_time": current_time
+            }
+            response = requests.post(f"{self.base_url}/api/phone-messages", json=message1_data)
+            self.assertEqual(response.status_code, 200)
+            message1_id = response.json()["message_id"]
+            created_message_ids.append(message1_id)
+            
+            # Create nouveau urgent message
+            message2_data = {
+                "patient_id": patient_id,
+                "message_content": "Message urgent nouveau",
+                "priority": "urgent",
+                "call_date": today,
+                "call_time": current_time
+            }
+            response = requests.post(f"{self.base_url}/api/phone-messages", json=message2_data)
+            self.assertEqual(response.status_code, 200)
+            message2_id = response.json()["message_id"]
+            created_message_ids.append(message2_id)
+            
+            # Respond to one message to make it "traité"
+            response_data = {"response_content": "Message traité"}
+            response = requests.put(f"{self.base_url}/api/phone-messages/{message1_id}/response", json=response_data)
+            self.assertEqual(response.status_code, 200)
+            
+            # Get statistics
+            response = requests.get(f"{self.base_url}/api/phone-messages/stats")
+            self.assertEqual(response.status_code, 200)
+            stats = response.json()
+            
+            # Verify stats structure
+            self.assertIn("nouveau", stats)
+            self.assertIn("traité", stats)
+            self.assertIn("urgent", stats)
+            self.assertIn("normal", stats)
+            self.assertIn("today", stats)
+            self.assertIn("total", stats)
+            
+            # Verify data types
+            self.assertIsInstance(stats["nouveau"], int)
+            self.assertIsInstance(stats["traité"], int)
+            self.assertIsInstance(stats["urgent"], int)
+            self.assertIsInstance(stats["normal"], int)
+            self.assertIsInstance(stats["today"], int)
+            self.assertIsInstance(stats["total"], int)
+            
+            # Verify counts are reasonable (at least our test messages)
+            self.assertGreaterEqual(stats["nouveau"], 1)  # At least message2
+            self.assertGreaterEqual(stats["traité"], 1)   # At least message1
+            self.assertGreaterEqual(stats["urgent"], 1)   # At least message2
+            self.assertGreaterEqual(stats["normal"], 1)   # At least message1
+            self.assertGreaterEqual(stats["today"], 2)    # At least our 2 messages
+            self.assertGreaterEqual(stats["total"], 2)    # At least our 2 messages
+            
+            # Verify total calculation
+            self.assertEqual(stats["total"], stats["nouveau"] + stats["traité"])
+            
+        finally:
+            # Clean up all created messages
+            for message_id in created_message_ids:
+                requests.delete(f"{self.base_url}/api/phone-messages/{message_id}")
+    
+    def test_phone_messages_delete_endpoint(self):
+        """Test DELETE /api/phone-messages/{message_id} - Delete phone message"""
+        # Create a phone message to delete
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for testing")
+        
+        patient_id = patients[0]["id"]
+        today = datetime.now().strftime("%Y-%m-%d")
+        current_time = datetime.now().strftime("%H:%M")
+        
+        # Create phone message
+        message_data = {
+            "patient_id": patient_id,
+            "message_content": "Message à supprimer",
+            "priority": "normal",
+            "call_date": today,
+            "call_time": current_time
+        }
+        
+        response = requests.post(f"{self.base_url}/api/phone-messages", json=message_data)
+        self.assertEqual(response.status_code, 200)
+        message_id = response.json()["message_id"]
+        
+        # Verify message exists
+        response = requests.get(f"{self.base_url}/api/phone-messages")
+        self.assertEqual(response.status_code, 200)
+        messages = response.json()["phone_messages"]
+        message_exists = any(msg["id"] == message_id for msg in messages)
+        self.assertTrue(message_exists, "Created message not found before deletion")
+        
+        # Delete the message
+        response = requests.delete(f"{self.base_url}/api/phone-messages/{message_id}")
+        self.assertEqual(response.status_code, 200)
+        delete_result = response.json()
+        self.assertIn("message", delete_result)
+        self.assertEqual(delete_result["message"], "Phone message deleted successfully")
+        
+        # Verify message was deleted
+        response = requests.get(f"{self.base_url}/api/phone-messages")
+        self.assertEqual(response.status_code, 200)
+        messages = response.json()["phone_messages"]
+        message_exists = any(msg["id"] == message_id for msg in messages)
+        self.assertFalse(message_exists, "Message still exists after deletion")
+    
+    def test_phone_messages_delete_invalid_message(self):
+        """Test deleting non-existent phone message"""
+        response = requests.delete(f"{self.base_url}/api/phone-messages/non_existent_id")
+        self.assertEqual(response.status_code, 404)
+        error_data = response.json()
+        self.assertIn("detail", error_data)
+        self.assertEqual(error_data["detail"], "Phone message not found")
+    
+    def test_patients_search_endpoint(self):
+        """Test GET /api/patients/search - Search patients by name for message creation"""
+        # Test empty search query
+        response = requests.get(f"{self.base_url}/api/patients/search")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("patients", data)
+        self.assertEqual(len(data["patients"]), 0)  # Empty query should return empty results
+        
+        # Test search by nom
+        response = requests.get(f"{self.base_url}/api/patients/search?q=Ben Ahmed")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("patients", data)
+        self.assertIsInstance(data["patients"], list)
+        
+        # Verify search results structure
+        for patient in data["patients"]:
+            self.assertIn("id", patient)
+            self.assertIn("nom", patient)
+            self.assertIn("prenom", patient)
+            self.assertIn("age", patient)
+            self.assertIn("numero_whatsapp", patient)
+            
+            # Verify search term is found in nom or prenom
+            search_term_found = ("Ben Ahmed" in patient.get("nom", "") or 
+                               "Ben Ahmed" in patient.get("prenom", ""))
+            self.assertTrue(search_term_found, f"Search term not found in patient: {patient}")
+        
+        # Test search by prenom
+        response = requests.get(f"{self.base_url}/api/patients/search?q=Yassine")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("patients", data)
+        
+        # Test case insensitive search
+        response = requests.get(f"{self.base_url}/api/patients/search?q=yassine")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("patients", data)
+        
+        # Test partial name search
+        response = requests.get(f"{self.base_url}/api/patients/search?q=Ben")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("patients", data)
+        
+        # Test search with no results
+        response = requests.get(f"{self.base_url}/api/patients/search?q=NonExistentPatientName")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("patients", data)
+        self.assertEqual(len(data["patients"]), 0)
+    
+    def test_phone_messages_workflow_complete(self):
+        """Test complete phone messages workflow: create → view → respond → statistics → delete"""
+        # Get a patient for testing
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for testing")
+        
+        patient_id = patients[0]["id"]
+        patient_name = f"{patients[0].get('prenom', '')} {patients[0].get('nom', '')}".strip()
+        today = datetime.now().strftime("%Y-%m-%d")
+        current_time = datetime.now().strftime("%H:%M")
+        
+        message_id = None
+        
+        try:
+            # Step 1: Create phone message (secrétaire)
+            message_data = {
+                "patient_id": patient_id,
+                "message_content": "Patient demande des informations sur le prochain rendez-vous et les résultats d'analyse",
+                "priority": "urgent",
+                "call_date": today,
+                "call_time": current_time
+            }
+            
+            response = requests.post(f"{self.base_url}/api/phone-messages", json=message_data)
+            self.assertEqual(response.status_code, 200)
+            create_result = response.json()
+            message_id = create_result["message_id"]
+            
+            # Step 2: View messages (filtering by status=nouveau)
+            response = requests.get(f"{self.base_url}/api/phone-messages?status=nouveau")
+            self.assertEqual(response.status_code, 200)
+            messages_data = response.json()
+            messages = messages_data["phone_messages"]
+            
+            # Find our message
+            our_message = None
+            for msg in messages:
+                if msg["id"] == message_id:
+                    our_message = msg
+                    break
+            
+            self.assertIsNotNone(our_message, "Created message not found in nouveau messages")
+            self.assertEqual(our_message["status"], "nouveau")
+            self.assertEqual(our_message["priority"], "urgent")
+            self.assertEqual(our_message["patient_name"], patient_name)
+            
+            # Step 3: Médecin responds to message
+            response_data = {
+                "response_content": "Les résultats d'analyse sont normaux. Prochain rendez-vous confirmé pour la semaine prochaine. Aucune inquiétude à avoir."
+            }
+            
+            response = requests.put(f"{self.base_url}/api/phone-messages/{message_id}/response", json=response_data)
+            self.assertEqual(response.status_code, 200)
+            
+            # Step 4: Verify status changed to "traité"
+            response = requests.get(f"{self.base_url}/api/phone-messages?status=traité")
+            self.assertEqual(response.status_code, 200)
+            treated_messages = response.json()["phone_messages"]
+            
+            treated_message = None
+            for msg in treated_messages:
+                if msg["id"] == message_id:
+                    treated_message = msg
+                    break
+            
+            self.assertIsNotNone(treated_message, "Message not found in traité messages")
+            self.assertEqual(treated_message["status"], "traité")
+            self.assertEqual(treated_message["response_content"], "Les résultats d'analyse sont normaux. Prochain rendez-vous confirmé pour la semaine prochaine. Aucune inquiétude à avoir.")
+            self.assertEqual(treated_message["responded_by"], "Dr Heni Dridi")
+            
+            # Step 5: Check statistics
+            response = requests.get(f"{self.base_url}/api/phone-messages/stats")
+            self.assertEqual(response.status_code, 200)
+            stats = response.json()
+            
+            # Verify our message is counted in statistics
+            self.assertGreaterEqual(stats["traité"], 1)
+            self.assertGreaterEqual(stats["urgent"], 1)
+            self.assertGreaterEqual(stats["today"], 1)
+            self.assertGreaterEqual(stats["total"], 1)
+            
+            # Step 6: Delete message
+            response = requests.delete(f"{self.base_url}/api/phone-messages/{message_id}")
+            self.assertEqual(response.status_code, 200)
+            
+            # Step 7: Verify message is deleted
+            response = requests.get(f"{self.base_url}/api/phone-messages")
+            self.assertEqual(response.status_code, 200)
+            all_messages = response.json()["phone_messages"]
+            message_exists = any(msg["id"] == message_id for msg in all_messages)
+            self.assertFalse(message_exists, "Message still exists after deletion")
+            
+            message_id = None  # Mark as cleaned up
+            
+        finally:
+            # Clean up if message still exists
+            if message_id:
+                requests.delete(f"{self.base_url}/api/phone-messages/{message_id}")
+    
+    def test_phone_messages_filtering_functionality(self):
+        """Test advanced filtering functionality for phone messages"""
+        # Get a patient for testing
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for testing")
+        
+        patient_id = patients[0]["id"]
+        today = datetime.now().strftime("%Y-%m-%d")
+        yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+        current_time = datetime.now().strftime("%H:%M")
+        
+        created_message_ids = []
+        
+        try:
+            # Create messages with different attributes for filtering tests
+            test_messages = [
+                {
+                    "patient_id": patient_id,
+                    "message_content": "Message urgent d'aujourd'hui",
+                    "priority": "urgent",
+                    "call_date": today,
+                    "call_time": "09:00"
+                },
+                {
+                    "patient_id": patient_id,
+                    "message_content": "Message normal d'aujourd'hui",
+                    "priority": "normal",
+                    "call_date": today,
+                    "call_time": "10:00"
+                },
+                {
+                    "patient_id": patient_id,
+                    "message_content": "Message d'hier",
+                    "priority": "normal",
+                    "call_date": yesterday,
+                    "call_time": "14:00"
+                }
+            ]
+            
+            # Create all test messages
+            for msg_data in test_messages:
+                response = requests.post(f"{self.base_url}/api/phone-messages", json=msg_data)
+                self.assertEqual(response.status_code, 200)
+                message_id = response.json()["message_id"]
+                created_message_ids.append(message_id)
+            
+            # Respond to one message to create "traité" status
+            response_data = {"response_content": "Message traité pour test de filtrage"}
+            response = requests.put(f"{self.base_url}/api/phone-messages/{created_message_ids[0]}/response", json=response_data)
+            self.assertEqual(response.status_code, 200)
+            
+            # Test filtering by status=nouveau
+            response = requests.get(f"{self.base_url}/api/phone-messages?status=nouveau")
+            self.assertEqual(response.status_code, 200)
+            nouveau_messages = response.json()["phone_messages"]
+            
+            # Should have at least 2 nouveau messages (messages 2 and 3)
+            nouveau_count = len([msg for msg in nouveau_messages if msg["id"] in created_message_ids])
+            self.assertGreaterEqual(nouveau_count, 2)
+            
+            # Test filtering by status=traité
+            response = requests.get(f"{self.base_url}/api/phone-messages?status=traité")
+            self.assertEqual(response.status_code, 200)
+            traite_messages = response.json()["phone_messages"]
+            
+            # Should have at least 1 traité message (message 1)
+            traite_count = len([msg for msg in traite_messages if msg["id"] in created_message_ids])
+            self.assertGreaterEqual(traite_count, 1)
+            
+            # Test filtering by priority=urgent
+            response = requests.get(f"{self.base_url}/api/phone-messages?priority=urgent")
+            self.assertEqual(response.status_code, 200)
+            urgent_messages = response.json()["phone_messages"]
+            
+            # Should have at least 1 urgent message
+            urgent_count = len([msg for msg in urgent_messages if msg["id"] in created_message_ids])
+            self.assertGreaterEqual(urgent_count, 1)
+            
+            # Test filtering by priority=normal
+            response = requests.get(f"{self.base_url}/api/phone-messages?priority=normal")
+            self.assertEqual(response.status_code, 200)
+            normal_messages = response.json()["phone_messages"]
+            
+            # Should have at least 2 normal messages
+            normal_count = len([msg for msg in normal_messages if msg["id"] in created_message_ids])
+            self.assertGreaterEqual(normal_count, 2)
+            
+            # Test filtering by date_from (today)
+            response = requests.get(f"{self.base_url}/api/phone-messages?date_from={today}")
+            self.assertEqual(response.status_code, 200)
+            today_messages = response.json()["phone_messages"]
+            
+            # Should have at least 2 messages from today
+            today_count = len([msg for msg in today_messages if msg["id"] in created_message_ids])
+            self.assertGreaterEqual(today_count, 2)
+            
+            # Test filtering by date_to (yesterday)
+            response = requests.get(f"{self.base_url}/api/phone-messages?date_to={yesterday}")
+            self.assertEqual(response.status_code, 200)
+            yesterday_messages = response.json()["phone_messages"]
+            
+            # Should have at least 1 message from yesterday or before
+            yesterday_count = len([msg for msg in yesterday_messages if msg["id"] in created_message_ids])
+            self.assertGreaterEqual(yesterday_count, 1)
+            
+            # Test combined filtering (status + priority)
+            response = requests.get(f"{self.base_url}/api/phone-messages?status=nouveau&priority=normal")
+            self.assertEqual(response.status_code, 200)
+            combined_messages = response.json()["phone_messages"]
+            
+            # Should have at least 1 message that is both nouveau and normal
+            combined_count = len([msg for msg in combined_messages if msg["id"] in created_message_ids])
+            self.assertGreaterEqual(combined_count, 1)
+            
+            # Test date range filtering
+            response = requests.get(f"{self.base_url}/api/phone-messages?date_from={yesterday}&date_to={today}")
+            self.assertEqual(response.status_code, 200)
+            range_messages = response.json()["phone_messages"]
+            
+            # Should have all 3 messages in the date range
+            range_count = len([msg for msg in range_messages if msg["id"] in created_message_ids])
+            self.assertGreaterEqual(range_count, 3)
+            
+        finally:
+            # Clean up all created messages
+            for message_id in created_message_ids:
+                requests.delete(f"{self.base_url}/api/phone-messages/{message_id}")
+    
+    def test_phone_messages_data_structure_validation(self):
+        """Test phone messages data structure and field validation"""
+        # Get a patient for testing
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for testing")
+        
+        patient_id = patients[0]["id"]
+        today = datetime.now().strftime("%Y-%m-%d")
+        current_time = datetime.now().strftime("%H:%M")
+        
+        # Create phone message
+        message_data = {
+            "patient_id": patient_id,
+            "message_content": "Test message pour validation de structure",
+            "priority": "normal",
+            "call_date": today,
+            "call_time": current_time
+        }
+        
+        response = requests.post(f"{self.base_url}/api/phone-messages", json=message_data)
+        self.assertEqual(response.status_code, 200)
+        message_id = response.json()["message_id"]
+        
+        try:
+            # Get the created message and validate structure
+            response = requests.get(f"{self.base_url}/api/phone-messages")
+            self.assertEqual(response.status_code, 200)
+            messages = response.json()["phone_messages"]
+            
+            created_message = None
+            for msg in messages:
+                if msg["id"] == message_id:
+                    created_message = msg
+                    break
+            
+            self.assertIsNotNone(created_message, "Created message not found")
+            
+            # Validate all required fields are present
+            required_fields = [
+                "id", "patient_id", "patient_name", "message_content", 
+                "response_content", "status", "priority", "call_date", 
+                "call_time", "created_by", "responded_by", "created_at", "updated_at"
+            ]
+            
+            for field in required_fields:
+                self.assertIn(field, created_message, f"Missing required field: {field}")
+            
+            # Validate field types and values
+            self.assertIsInstance(created_message["id"], str)
+            self.assertIsInstance(created_message["patient_id"], str)
+            self.assertIsInstance(created_message["patient_name"], str)
+            self.assertIsInstance(created_message["message_content"], str)
+            self.assertIsInstance(created_message["response_content"], str)
+            self.assertIsInstance(created_message["status"], str)
+            self.assertIsInstance(created_message["priority"], str)
+            self.assertIsInstance(created_message["call_date"], str)
+            self.assertIsInstance(created_message["call_time"], str)
+            self.assertIsInstance(created_message["created_by"], str)
+            self.assertIsInstance(created_message["responded_by"], str)
+            
+            # Validate specific field values
+            self.assertEqual(created_message["patient_id"], patient_id)
+            self.assertEqual(created_message["message_content"], "Test message pour validation de structure")
+            self.assertEqual(created_message["status"], "nouveau")
+            self.assertEqual(created_message["priority"], "normal")
+            self.assertEqual(created_message["call_date"], today)
+            self.assertEqual(created_message["call_time"], current_time)
+            self.assertEqual(created_message["created_by"], "Secrétaire")
+            self.assertEqual(created_message["responded_by"], "")
+            self.assertEqual(created_message["response_content"], "")
+            
+            # Validate patient_name is properly formatted
+            expected_patient_name = f"{patients[0].get('prenom', '')} {patients[0].get('nom', '')}".strip()
+            self.assertEqual(created_message["patient_name"], expected_patient_name)
+            
+            # Validate date formats
+            try:
+                datetime.strptime(created_message["call_date"], "%Y-%m-%d")
+            except ValueError:
+                self.fail(f"Invalid call_date format: {created_message['call_date']}")
+            
+            try:
+                datetime.strptime(created_message["call_time"], "%H:%M")
+            except ValueError:
+                self.fail(f"Invalid call_time format: {created_message['call_time']}")
+            
+            # Validate priority values
+            self.assertIn(created_message["priority"], ["urgent", "normal"])
+            
+            # Validate status values
+            self.assertIn(created_message["status"], ["nouveau", "traité"])
+            
+        finally:
+            # Clean up
+            requests.delete(f"{self.base_url}/api/phone-messages/{message_id}")
+
     # ========== DASHBOARD ANNIVERSAIRES ET RELANCES TESTS ==========
     
     def test_dashboard_birthdays_endpoint(self):
