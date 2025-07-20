@@ -77,8 +77,6 @@ const Consultation = ({ user }) => {
     duree: 0
   });
 
-  const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
-
   // Chargement initial des patients
   useEffect(() => {
     fetchPatients();
