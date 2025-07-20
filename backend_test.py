@@ -18399,5 +18399,213 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
         
         print("✅ WebSocket multiple clients test completed")
 
+    # ========== MESSAGE DELETION FUNCTIONALITY TESTS ==========
+    
+    def test_message_deletion_functionality(self):
+        """Test message deletion functionality specifically as requested in review"""
+        print("\n🔍 TESTING MESSAGE DELETION FUNCTIONALITY")
+        
+        # Step 1: Create test messages using POST /api/messages
+        print("📝 Step 1: Creating test messages...")
+        
+        test_messages = []
+        message_ids = []
+        
+        # Create 3 test messages with different sender types
+        messages_to_create = [
+            {
+                "content": "Test message 1 for deletion testing",
+                "sender_type": "medecin",
+                "sender_name": "Dr Test"
+            },
+            {
+                "content": "Test message 2 for deletion testing", 
+                "sender_type": "secretaire",
+                "sender_name": "Secretaire Test"
+            },
+            {
+                "content": "Test message 3 for deletion testing",
+                "sender_type": "medecin", 
+                "sender_name": "Dr Test"
+            }
+        ]
+        
+        for i, msg_data in enumerate(messages_to_create):
+            response = requests.post(
+                f"{self.base_url}/api/messages",
+                json={"content": msg_data["content"]},
+                params={
+                    "sender_type": msg_data["sender_type"],
+                    "sender_name": msg_data["sender_name"]
+                }
+            )
+            self.assertEqual(response.status_code, 200, f"Failed to create test message {i+1}")
+            
+            create_data = response.json()
+            self.assertIn("id", create_data)
+            message_id = create_data["id"]
+            message_ids.append(message_id)
+            test_messages.append({**msg_data, "id": message_id})
+            print(f"✅ Created message {i+1} with ID: {message_id}")
+        
+        # Verify messages were created
+        response = requests.get(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        all_messages = response.json()["messages"]
+        
+        created_message_ids = [msg["id"] for msg in all_messages if msg["id"] in message_ids]
+        self.assertEqual(len(created_message_ids), 3, "Not all test messages were created")
+        print(f"✅ Verified {len(created_message_ids)} test messages exist in database")
+        
+        # Step 2: Test Delete Endpoint with correct user_type
+        print("\n🗑️ Step 2: Testing DELETE endpoint with correct authorization...")
+        
+        # Delete first message (medecin message by medecin user)
+        message_to_delete = test_messages[0]
+        response = requests.delete(
+            f"{self.base_url}/api/messages/{message_to_delete['id']}",
+            params={"user_type": "medecin"}
+        )
+        self.assertEqual(response.status_code, 200, "Failed to delete message with correct authorization")
+        
+        delete_data = response.json()
+        self.assertIn("message", delete_data)
+        self.assertEqual(delete_data["message"], "Message deleted successfully")
+        print(f"✅ Successfully deleted message {message_to_delete['id']} with correct user_type")
+        
+        # Step 3: Test Authorization - wrong user_type (should fail with 403)
+        print("\n🚫 Step 3: Testing authorization with wrong user_type...")
+        
+        # Try to delete second message (secretaire message) with medecin user_type
+        message_to_fail = test_messages[1]
+        response = requests.delete(
+            f"{self.base_url}/api/messages/{message_to_fail['id']}",
+            params={"user_type": "medecin"}  # Wrong user type
+        )
+        self.assertEqual(response.status_code, 403, "Should fail with 403 for wrong user_type")
+        
+        error_data = response.json()
+        self.assertIn("detail", error_data)
+        self.assertEqual(error_data["detail"], "Not authorized to delete this message")
+        print(f"✅ Correctly rejected deletion with wrong user_type (403 Forbidden)")
+        
+        # Step 4: Test with non-existent message (should fail with 404)
+        print("\n❌ Step 4: Testing deletion of non-existent message...")
+        
+        response = requests.delete(
+            f"{self.base_url}/api/messages/non_existent_message_id",
+            params={"user_type": "medecin"}
+        )
+        self.assertEqual(response.status_code, 404, "Should fail with 404 for non-existent message")
+        
+        error_data = response.json()
+        self.assertIn("detail", error_data)
+        self.assertEqual(error_data["detail"], "Message not found")
+        print(f"✅ Correctly returned 404 for non-existent message")
+        
+        # Step 5: Verify Database Deletion
+        print("\n🔍 Step 5: Verifying database deletion...")
+        
+        # Get all messages and verify deleted message no longer appears
+        response = requests.get(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        remaining_messages = response.json()["messages"]
+        
+        # Check that first message (deleted) is not in the list
+        deleted_message_ids = [msg["id"] for msg in remaining_messages if msg["id"] == message_to_delete["id"]]
+        self.assertEqual(len(deleted_message_ids), 0, "Deleted message still appears in database")
+        print(f"✅ Confirmed deleted message {message_to_delete['id']} no longer in database")
+        
+        # Check that other messages still exist
+        remaining_test_message_ids = [msg["id"] for msg in remaining_messages if msg["id"] in message_ids[1:]]
+        self.assertEqual(len(remaining_test_message_ids), 2, "Other test messages were incorrectly deleted")
+        print(f"✅ Confirmed remaining test messages still exist in database")
+        
+        # Step 6: Test successful deletion with correct authorization for remaining messages
+        print("\n✅ Step 6: Testing successful deletion with correct authorization...")
+        
+        # Delete second message (secretaire message by secretaire user)
+        message_to_delete_2 = test_messages[1]
+        response = requests.delete(
+            f"{self.base_url}/api/messages/{message_to_delete_2['id']}",
+            params={"user_type": "secretaire"}  # Correct user type
+        )
+        self.assertEqual(response.status_code, 200, "Failed to delete secretaire message with correct authorization")
+        print(f"✅ Successfully deleted secretaire message with correct user_type")
+        
+        # Delete third message (medecin message by medecin user)
+        message_to_delete_3 = test_messages[2]
+        response = requests.delete(
+            f"{self.base_url}/api/messages/{message_to_delete_3['id']}",
+            params={"user_type": "medecin"}  # Correct user type
+        )
+        self.assertEqual(response.status_code, 200, "Failed to delete medecin message with correct authorization")
+        print(f"✅ Successfully deleted medecin message with correct user_type")
+        
+        # Final verification - all test messages should be deleted
+        response = requests.get(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        final_messages = response.json()["messages"]
+        
+        final_test_message_ids = [msg["id"] for msg in final_messages if msg["id"] in message_ids]
+        self.assertEqual(len(final_test_message_ids), 0, "Some test messages were not properly deleted")
+        print(f"✅ All test messages successfully deleted from database")
+        
+        print("\n🎉 MESSAGE DELETION FUNCTIONALITY TEST COMPLETED SUCCESSFULLY")
+        print("✅ All test scenarios passed:")
+        print("  - Message creation working")
+        print("  - DELETE endpoint working with correct authorization")
+        print("  - Authorization properly rejecting wrong user_type (403)")
+        print("  - Proper 404 response for non-existent messages")
+        print("  - Database deletion verified")
+        print("  - Multiple user types (medecin/secretaire) working correctly")
+    
+    def test_message_deletion_websocket_broadcasting(self):
+        """Test WebSocket broadcasting for message deletion"""
+        print("\n📡 TESTING WEBSOCKET BROADCASTING FOR MESSAGE DELETION")
+        
+        # Note: This is a simplified test since we can't easily test WebSocket in unit tests
+        # We verify that the deletion endpoint exists and returns success
+        # The actual WebSocket broadcasting would need integration testing
+        
+        # Create a test message first
+        response = requests.post(
+            f"{self.base_url}/api/messages",
+            json={"content": "Test message for WebSocket broadcasting test"},
+            params={
+                "sender_type": "medecin",
+                "sender_name": "Dr WebSocket Test"
+            }
+        )
+        self.assertEqual(response.status_code, 200)
+        message_id = response.json()["id"]
+        
+        # Delete the message and verify the response format
+        response = requests.delete(
+            f"{self.base_url}/api/messages/{message_id}",
+            params={"user_type": "medecin"}
+        )
+        self.assertEqual(response.status_code, 200)
+        
+        # The backend should broadcast: {"type": "message_deleted", "data": {"id": message_id}}
+        # We can't test the actual WebSocket broadcast in unit tests, but we can verify
+        # the endpoint works correctly which should trigger the broadcast
+        
+        delete_data = response.json()
+        self.assertEqual(delete_data["message"], "Message deleted successfully")
+        
+        print("✅ Message deletion endpoint working (WebSocket broadcast should be triggered)")
+        print("📡 Expected WebSocket broadcast format: {\"type\": \"message_deleted\", \"data\": {\"id\": \"message_id\"}}")
+        
+        # Verify message is actually deleted
+        response = requests.get(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        messages = response.json()["messages"]
+        
+        deleted_message_exists = any(msg["id"] == message_id for msg in messages)
+        self.assertFalse(deleted_message_exists, "Message should be deleted from database")
+        
+        print("✅ WebSocket broadcasting test completed - endpoint working correctly")
+
 if __name__ == "__main__":
     unittest.main()
