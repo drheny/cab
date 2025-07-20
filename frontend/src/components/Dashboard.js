@@ -443,6 +443,20 @@ const Dashboard = ({ user }) => {
     }
   };
 
+  // Marquer automatiquement les messages des autres comme lus quand ils sont affichés
+  useEffect(() => {
+    const unreadMessages = messages.filter(
+      msg => !msg.is_read && msg.sender_type !== user.type
+    );
+    
+    unreadMessages.forEach(message => {
+      // Marquer comme lu après un délai pour simuler la lecture
+      setTimeout(() => {
+        markMessageAsRead(message.id);
+      }, 2000);
+    });
+  }, [messages, user.type]);
+
   const StatCard = ({ icon: Icon, title, value, color, subtitle }) => (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between">
