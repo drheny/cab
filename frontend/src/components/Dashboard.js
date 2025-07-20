@@ -851,7 +851,7 @@ const Dashboard = ({ user }) => {
               <div className="flex justify-between items-center">
                 <div>
                   <div className="text-xs font-medium text-blue-700 mb-1">
-                    Réponse à {replyingTo.sender_name}
+                    Réponse à {getShortSenderName(replyingTo.sender_name, replyingTo.sender_type)}
                   </div>
                   <span className="text-sm text-blue-600 italic">
                     "{replyingTo.content.substring(0, 60)}..."
