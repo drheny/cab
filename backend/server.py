@@ -136,6 +136,28 @@ class PaymentUpdate(BaseModel):
     assure: bool = False
     notes: str = ""
 
+# Modèles pour la messagerie instantanée
+class Message(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    sender_type: str  # "medecin" ou "secretaire"
+    sender_name: str
+    content: str
+    timestamp: datetime = Field(default_factory=datetime.now)
+    is_read: bool = False
+    is_edited: bool = False
+    original_content: str = ""
+    reply_to: Optional[str] = None  # ID du message auquel on répond
+    reply_content: str = ""  # Contenu du message cité
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
+
+class MessageCreate(BaseModel):
+    content: str
+    reply_to: Optional[str] = None
+
+class MessageUpdate(BaseModel):
+    content: str
+
 # Helper functions
 def calculate_age(date_naissance: str) -> str:
     """Calculate age from birth date in format '2 ans, 3 mois, 15 jours'"""
