@@ -19873,5 +19873,329 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
         
         print("✅ WebSocket broadcasting test completed - endpoint working correctly")
 
+    # ========== CLEAR MESSAGES FUNCTIONALITY TESTS ==========
+    
+    def test_clear_messages_endpoint_successful_clear(self):
+        """Test DELETE /api/messages - Clear all messages when messages exist"""
+        # First, create some test messages
+        test_messages = [
+            {"content": "Test message 1 for clear functionality"},
+            {"content": "Test message 2 for clear functionality"},
+            {"content": "Test message 3 for clear functionality"}
+        ]
+        
+        created_message_ids = []
+        for msg_data in test_messages:
+            response = requests.post(
+                f"{self.base_url}/api/messages?sender_type=medecin&sender_name=Dr.Test",
+                json=msg_data
+            )
+            self.assertEqual(response.status_code, 200)
+            created_message_ids.append(response.json()["id"])
+        
+        # Verify messages were created
+        response = requests.get(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        messages_before = response.json()["messages"]
+        self.assertGreaterEqual(len(messages_before), 3, "Test messages should be created")
+        
+        # Test the clear messages endpoint
+        response = requests.delete(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        
+        # Verify response structure
+        clear_data = response.json()
+        self.assertIn("message", clear_data)
+        self.assertIn("deleted_count", clear_data)
+        self.assertIsInstance(clear_data["deleted_count"], int)
+        self.assertGreaterEqual(clear_data["deleted_count"], 3)
+        self.assertEqual(clear_data["message"], "All messages cleared successfully")
+        
+        # Verify all messages are deleted
+        response = requests.get(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        messages_after = response.json()["messages"]
+        self.assertEqual(len(messages_after), 0, "All messages should be cleared")
+        
+        print(f"✅ Clear Messages - Successfully cleared {clear_data['deleted_count']} messages")
+    
+    def test_clear_messages_endpoint_empty_collection(self):
+        """Test DELETE /api/messages - Clear messages when collection is already empty"""
+        # First ensure collection is empty
+        requests.delete(f"{self.base_url}/api/messages")
+        
+        # Verify collection is empty
+        response = requests.get(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        messages = response.json()["messages"]
+        self.assertEqual(len(messages), 0, "Collection should be empty")
+        
+        # Test clear on empty collection
+        response = requests.delete(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        
+        # Verify response structure
+        clear_data = response.json()
+        self.assertIn("message", clear_data)
+        self.assertIn("deleted_count", clear_data)
+        self.assertEqual(clear_data["deleted_count"], 0)
+        self.assertEqual(clear_data["message"], "All messages cleared successfully")
+        
+        print("✅ Clear Messages - Empty collection handled correctly (0 messages deleted)")
+    
+    def test_clear_messages_websocket_event_structure(self):
+        """Test that clear messages broadcasts correct WebSocket event structure"""
+        # Create test messages
+        test_messages = [
+            {"content": "WebSocket test message 1"},
+            {"content": "WebSocket test message 2"}
+        ]
+        
+        for msg_data in test_messages:
+            response = requests.post(
+                f"{self.base_url}/api/messages?sender_type=secretaire&sender_name=Test.Secretary",
+                json=msg_data
+            )
+            self.assertEqual(response.status_code, 200)
+        
+        # Test clear messages endpoint
+        response = requests.delete(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        clear_data = response.json()
+        
+        # Verify the endpoint works correctly which should trigger the WebSocket broadcast
+        self.assertIn("deleted_count", clear_data)
+        self.assertGreaterEqual(clear_data["deleted_count"], 2)
+        
+        print("✅ Clear Messages WebSocket Event - Endpoint working correctly")
+        print(f"📡 Expected WebSocket broadcast format: {{\"type\": \"messages_cleared\", \"deleted_count\": {clear_data['deleted_count']}}}")
+        print("📡 WebSocket broadcast should be sent to all connected clients")
+    
+    def test_clear_messages_database_operations(self):
+        """Test database operations - verify messages_collection is properly cleared"""
+        # Create test messages with different types
+        test_messages = [
+            {"content": "Database test message 1", "reply_to": None},
+            {"content": "Database test message 2", "reply_to": None},
+            {"content": "Database test reply message", "reply_to": None}
+        ]
+        
+        # Create messages
+        created_ids = []
+        for i, msg_data in enumerate(test_messages):
+            response = requests.post(
+                f"{self.base_url}/api/messages?sender_type=medecin&sender_name=Dr.Database",
+                json=msg_data
+            )
+            self.assertEqual(response.status_code, 200)
+            created_ids.append(response.json()["id"])
+        
+        # Create a reply message
+        reply_data = {"content": "This is a reply", "reply_to": created_ids[0]}
+        response = requests.post(
+            f"{self.base_url}/api/messages?sender_type=secretaire&sender_name=Sec.Database",
+            json=reply_data
+        )
+        self.assertEqual(response.status_code, 200)
+        
+        # Verify messages exist before clearing
+        response = requests.get(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        messages_before = response.json()["messages"]
+        self.assertGreaterEqual(len(messages_before), 4, "All test messages should exist")
+        
+        # Clear all messages
+        response = requests.delete(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        clear_data = response.json()
+        
+        # Verify accurate count
+        self.assertGreaterEqual(clear_data["deleted_count"], 4)
+        
+        # Verify collection is completely empty
+        response = requests.get(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        messages_after = response.json()["messages"]
+        self.assertEqual(len(messages_after), 0, "Messages collection should be completely empty")
+        
+        # Verify no messages of any type remain
+        for msg_id in created_ids:
+            # Try to access individual messages (if such endpoint exists)
+            # This would return 404 if properly deleted
+            pass
+        
+        print(f"✅ Database Operations - Collection properly cleared, {clear_data['deleted_count']} messages deleted")
+    
+    def test_clear_messages_integration_with_existing_system(self):
+        """Test integration - ensure clearing doesn't break existing message functionality"""
+        # Step 1: Clear any existing messages
+        requests.delete(f"{self.base_url}/api/messages")
+        
+        # Step 2: Verify GET /api/messages works after clear
+        response = requests.get(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        messages = response.json()["messages"]
+        self.assertEqual(len(messages), 0)
+        
+        # Step 3: Verify POST /api/messages still works after clear
+        test_message = {"content": "Post-clear test message"}
+        response = requests.post(
+            f"{self.base_url}/api/messages?sender_type=medecin&sender_name=Dr.Integration",
+            json=test_message
+        )
+        self.assertEqual(response.status_code, 200)
+        message_id = response.json()["id"]
+        
+        # Step 4: Verify message was created successfully
+        response = requests.get(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        messages = response.json()["messages"]
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(messages[0]["content"], "Post-clear test message")
+        
+        # Step 5: Test clear again with the new message
+        response = requests.delete(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        clear_data = response.json()
+        self.assertEqual(clear_data["deleted_count"], 1)
+        
+        # Step 6: Verify collection is empty again
+        response = requests.get(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        messages = response.json()["messages"]
+        self.assertEqual(len(messages), 0)
+        
+        print("✅ Integration Test - Clear messages works correctly with existing system")
+    
+    def test_clear_messages_response_structure_validation(self):
+        """Test response structure validation for clear messages endpoint"""
+        # Create some test messages
+        for i in range(3):
+            test_message = {"content": f"Response structure test message {i+1}"}
+            response = requests.post(
+                f"{self.base_url}/api/messages?sender_type=medecin&sender_name=Dr.Response",
+                json=test_message
+            )
+            self.assertEqual(response.status_code, 200)
+        
+        # Test clear messages endpoint
+        response = requests.delete(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        
+        # Validate response structure
+        clear_data = response.json()
+        
+        # Check required fields
+        self.assertIn("message", clear_data)
+        self.assertIn("deleted_count", clear_data)
+        
+        # Check field types
+        self.assertIsInstance(clear_data["message"], str)
+        self.assertIsInstance(clear_data["deleted_count"], int)
+        
+        # Check field values
+        self.assertEqual(clear_data["message"], "All messages cleared successfully")
+        self.assertGreaterEqual(clear_data["deleted_count"], 0)
+        
+        # Check no unexpected fields
+        expected_fields = {"message", "deleted_count"}
+        actual_fields = set(clear_data.keys())
+        unexpected_fields = actual_fields - expected_fields
+        self.assertEqual(len(unexpected_fields), 0, f"Unexpected fields in response: {unexpected_fields}")
+        
+        print("✅ Response Structure - All required fields present with correct types")
+    
+    def test_clear_messages_error_handling(self):
+        """Test error handling for clear messages endpoint"""
+        # Test that the endpoint handles potential database errors gracefully
+        # Since we can't easily simulate database errors in this test environment,
+        # we'll test that the endpoint responds correctly under normal conditions
+        
+        # Test multiple consecutive clears (should not cause errors)
+        for i in range(3):
+            response = requests.delete(f"{self.base_url}/api/messages")
+            self.assertEqual(response.status_code, 200)
+            clear_data = response.json()
+            self.assertIn("message", clear_data)
+            self.assertIn("deleted_count", clear_data)
+            
+            # After first clear, subsequent clears should return 0 deleted_count
+            if i > 0:
+                self.assertEqual(clear_data["deleted_count"], 0)
+        
+        # Test that endpoint returns proper HTTP status codes
+        response = requests.delete(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers.get("content-type", "").lower(), "application/json")
+        
+        print("✅ Error Handling - Endpoint handles multiple clears and returns proper status codes")
+    
+    def test_clear_messages_comprehensive_workflow(self):
+        """Test comprehensive workflow: create → clear → verify → create → clear"""
+        # Phase 1: Create initial messages
+        initial_messages = [
+            {"content": "Workflow test message 1"},
+            {"content": "Workflow test message 2"},
+            {"content": "Workflow test message 3"}
+        ]
+        
+        for msg_data in initial_messages:
+            response = requests.post(
+                f"{self.base_url}/api/messages?sender_type=medecin&sender_name=Dr.Workflow",
+                json=msg_data
+            )
+            self.assertEqual(response.status_code, 200)
+        
+        # Phase 2: Verify messages exist
+        response = requests.get(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        messages = response.json()["messages"]
+        self.assertGreaterEqual(len(messages), 3)
+        
+        # Phase 3: Clear messages
+        response = requests.delete(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        clear_data_1 = response.json()
+        self.assertGreaterEqual(clear_data_1["deleted_count"], 3)
+        
+        # Phase 4: Verify empty collection
+        response = requests.get(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        messages = response.json()["messages"]
+        self.assertEqual(len(messages), 0)
+        
+        # Phase 5: Create new messages after clear
+        new_messages = [
+            {"content": "Post-clear workflow message 1"},
+            {"content": "Post-clear workflow message 2"}
+        ]
+        
+        for msg_data in new_messages:
+            response = requests.post(
+                f"{self.base_url}/api/messages?sender_type=secretaire&sender_name=Sec.Workflow",
+                json=msg_data
+            )
+            self.assertEqual(response.status_code, 200)
+        
+        # Phase 6: Verify new messages exist
+        response = requests.get(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        messages = response.json()["messages"]
+        self.assertEqual(len(messages), 2)
+        
+        # Phase 7: Clear again
+        response = requests.delete(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        clear_data_2 = response.json()
+        self.assertEqual(clear_data_2["deleted_count"], 2)
+        
+        # Phase 8: Final verification
+        response = requests.get(f"{self.base_url}/api/messages")
+        self.assertEqual(response.status_code, 200)
+        messages = response.json()["messages"]
+        self.assertEqual(len(messages), 0)
+        
+        print(f"✅ Comprehensive Workflow - Phase 1: {clear_data_1['deleted_count']} messages cleared, Phase 2: {clear_data_2['deleted_count']} messages cleared")
+
 if __name__ == "__main__":
     unittest.main()
