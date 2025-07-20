@@ -4555,6 +4555,493 @@ class CabinetMedicalAPITest(unittest.TestCase):
         
         print("✅ Realistic Workflow Scenarios: ALL TESTS PASSED")
 
+    # ========== PHASE 2 & 3 BILLING IMPROVEMENTS TESTS ==========
+    
+    def test_payments_search_advanced_api(self):
+        """Test Phase 2: /api/payments/search endpoint with advanced search capabilities"""
+        print("\n=== Testing Phase 2: Advanced Payment Search API ===")
+        
+        # First, create test data with different patients, dates, and payment methods
+        self.create_test_payment_data()
+        
+        # Test 1: Search by patient name
+        print("Testing search by patient name...")
+        response = requests.get(f"{self.base_url}/api/payments/search?patient_name=Ben Ahmed")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        # Verify response structure
+        self.assertIn("payments", data)
+        self.assertIn("pagination", data)
+        self.assertIsInstance(data["payments"], list)
+        
+        # Verify pagination structure
+        pagination = data["pagination"]
+        self.assertIn("current_page", pagination)
+        self.assertIn("total_pages", pagination)
+        self.assertIn("total_count", pagination)
+        self.assertIn("limit", pagination)
+        self.assertIn("has_next", pagination)
+        self.assertIn("has_prev", pagination)
+        
+        # Verify patient name search results
+        for payment in data["payments"]:
+            self.assertIn("patient", payment)
+            patient = payment["patient"]
+            full_name = f"{patient.get('prenom', '')} {patient.get('nom', '')}".lower()
+            self.assertIn("ben ahmed", full_name)
+        
+        print(f"✅ Patient name search returned {len(data['payments'])} results")
+        
+        # Test 2: Date range filter
+        print("Testing date range filter...")
+        today = datetime.now().strftime("%Y-%m-%d")
+        yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+        
+        response = requests.get(f"{self.base_url}/api/payments/search?date_debut={yesterday}&date_fin={today}")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        # Verify date filtering
+        for payment in data["payments"]:
+            payment_date = payment.get("date", "")
+            self.assertGreaterEqual(payment_date, yesterday)
+            self.assertLessEqual(payment_date, today)
+        
+        print(f"✅ Date range filter returned {len(data['payments'])} results")
+        
+        # Test 3: Payment method filter
+        print("Testing payment method filter...")
+        response = requests.get(f"{self.base_url}/api/payments/search?method=espece")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        # Verify payment method filtering
+        for payment in data["payments"]:
+            self.assertEqual(payment.get("type_paiement"), "espece")
+        
+        print(f"✅ Payment method filter returned {len(data['payments'])} results")
+        
+        # Test 4: Insurance status filter
+        print("Testing insurance status filter...")
+        response = requests.get(f"{self.base_url}/api/payments/search?assure=false")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        # Verify insurance filtering
+        for payment in data["payments"]:
+            self.assertEqual(payment.get("assure"), False)
+        
+        print(f"✅ Insurance filter returned {len(data['payments'])} results")
+        
+        # Test 5: Pagination
+        print("Testing pagination...")
+        response = requests.get(f"{self.base_url}/api/payments/search?page=1&limit=2")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        # Verify pagination limits
+        self.assertLessEqual(len(data["payments"]), 2)
+        self.assertEqual(data["pagination"]["current_page"], 1)
+        self.assertEqual(data["pagination"]["limit"], 2)
+        
+        print(f"✅ Pagination working correctly")
+        
+        # Test 6: Combined filters
+        print("Testing combined filters...")
+        response = requests.get(f"{self.base_url}/api/payments/search?patient_name=Tazi&method=espece&assure=false")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        # Verify combined filtering
+        for payment in data["payments"]:
+            self.assertEqual(payment.get("type_paiement"), "espece")
+            self.assertEqual(payment.get("assure"), False)
+            patient = payment.get("patient", {})
+            full_name = f"{patient.get('prenom', '')} {patient.get('nom', '')}".lower()
+            self.assertIn("tazi", full_name)
+        
+        print(f"✅ Combined filters returned {len(data['payments'])} results")
+        
+        # Test 7: Results ordering (by date descending)
+        print("Testing results ordering...")
+        response = requests.get(f"{self.base_url}/api/payments/search")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        # Verify descending date order
+        payments = data["payments"]
+        if len(payments) > 1:
+            for i in range(1, len(payments)):
+                prev_date = payments[i-1].get("date", "")
+                curr_date = payments[i].get("date", "")
+                self.assertGreaterEqual(prev_date, curr_date, "Payments should be ordered by date descending")
+        
+        print("✅ Results properly ordered by date descending")
+        
+        # Test 8: Patient enrichment
+        print("Testing patient enrichment...")
+        response = requests.get(f"{self.base_url}/api/payments/search")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        # Verify all payments have patient information
+        for payment in data["payments"]:
+            self.assertIn("patient", payment)
+            patient = payment["patient"]
+            self.assertIn("nom", patient)
+            self.assertIn("prenom", patient)
+            # Patient should not be "Inconnu" for valid payments
+            if payment.get("patient_id"):
+                self.assertNotEqual(patient.get("nom"), "Inconnu")
+        
+        print("✅ All payments properly enriched with patient information")
+        print("✅ Phase 2: Advanced Payment Search API - ALL TESTS PASSED")
+    
+    def test_payments_delete_api(self):
+        """Test Phase 2: DELETE /api/payments/{payment_id} endpoint"""
+        print("\n=== Testing Phase 2: Payment Deletion API ===")
+        
+        # Create test payment data
+        test_payment_id = self.create_test_payment_for_deletion()
+        
+        if not test_payment_id:
+            self.skipTest("Could not create test payment for deletion test")
+        
+        # Get the payment before deletion to verify appointment_id
+        response = requests.get(f"{self.base_url}/api/payments")
+        self.assertEqual(response.status_code, 200)
+        payments = response.json()
+        
+        test_payment = None
+        for payment in payments:
+            if payment.get("id") == test_payment_id:
+                test_payment = payment
+                break
+        
+        self.assertIsNotNone(test_payment, "Test payment not found")
+        appointment_id = test_payment.get("appointment_id")
+        self.assertIsNotNone(appointment_id, "Test payment missing appointment_id")
+        
+        print(f"Testing deletion of payment {test_payment_id} for appointment {appointment_id}")
+        
+        # Verify appointment is initially marked as paid
+        response = requests.get(f"{self.base_url}/api/appointments")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        
+        test_appointment = None
+        for appt in appointments:
+            if appt.get("id") == appointment_id:
+                test_appointment = appt
+                break
+        
+        if test_appointment:
+            self.assertTrue(test_appointment.get("paye", False), "Appointment should be marked as paid initially")
+            print("✅ Appointment initially marked as paid")
+        
+        # Test 1: Delete existing payment
+        print("Testing payment deletion...")
+        response = requests.delete(f"{self.base_url}/api/payments/{test_payment_id}")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("message", data)
+        self.assertIn("deleted successfully", data["message"].lower())
+        
+        print("✅ Payment deleted successfully")
+        
+        # Test 2: Verify payment is deleted
+        print("Verifying payment deletion...")
+        response = requests.get(f"{self.base_url}/api/payments")
+        self.assertEqual(response.status_code, 200)
+        payments_after = response.json()
+        
+        # Payment should no longer exist
+        deleted_payment = None
+        for payment in payments_after:
+            if payment.get("id") == test_payment_id:
+                deleted_payment = payment
+                break
+        
+        self.assertIsNone(deleted_payment, "Payment should be deleted")
+        print("✅ Payment no longer exists in database")
+        
+        # Test 3: Verify appointment is marked as unpaid
+        print("Verifying appointment marked as unpaid...")
+        response = requests.get(f"{self.base_url}/api/appointments")
+        self.assertEqual(response.status_code, 200)
+        appointments_after = response.json()
+        
+        updated_appointment = None
+        for appt in appointments_after:
+            if appt.get("id") == appointment_id:
+                updated_appointment = appt
+                break
+        
+        if updated_appointment:
+            self.assertFalse(updated_appointment.get("paye", True), "Appointment should be marked as unpaid after payment deletion")
+            print("✅ Appointment marked as unpaid after payment deletion")
+        
+        # Test 4: Delete non-existent payment (404)
+        print("Testing deletion of non-existent payment...")
+        response = requests.delete(f"{self.base_url}/api/payments/non_existent_payment_id")
+        self.assertEqual(response.status_code, 404)
+        data = response.json()
+        self.assertIn("detail", data)
+        self.assertIn("not found", data["detail"].lower())
+        
+        print("✅ Non-existent payment deletion returns 404")
+        
+        # Test 5: Error handling - invalid payment ID format
+        print("Testing error handling...")
+        response = requests.delete(f"{self.base_url}/api/payments/")
+        self.assertIn(response.status_code, [404, 405])  # Either not found or method not allowed
+        
+        print("✅ Invalid payment ID handled correctly")
+        print("✅ Phase 2: Payment Deletion API - ALL TESTS PASSED")
+    
+    def test_payments_unpaid_api(self):
+        """Test Phase 3: /api/payments/unpaid endpoint for managing unpaid consultations"""
+        print("\n=== Testing Phase 3: Unpaid Payments Management API ===")
+        
+        # Create test data with unpaid visite appointments
+        self.create_test_unpaid_data()
+        
+        # Test 1: Get unpaid appointments
+        print("Testing unpaid appointments retrieval...")
+        response = requests.get(f"{self.base_url}/api/payments/unpaid")
+        self.assertEqual(response.status_code, 200)
+        unpaid_appointments = response.json()
+        self.assertIsInstance(unpaid_appointments, list)
+        
+        print(f"✅ Found {len(unpaid_appointments)} unpaid appointments")
+        
+        # Test 2: Verify filtering by type_rdv="visite" and paye=False
+        print("Testing filtering criteria...")
+        for appointment in unpaid_appointments:
+            self.assertEqual(appointment.get("type_rdv"), "visite", "Only visite appointments should be in unpaid list")
+            self.assertFalse(appointment.get("paye", True), "Only unpaid appointments should be in unpaid list")
+            
+            # Verify appointment is completed (termine, absent, or retard)
+            status = appointment.get("statut", "")
+            self.assertIn(status, ["termine", "absent", "retard"], "Only completed appointments should be in unpaid list")
+        
+        print("✅ All unpaid appointments are visite type and unpaid")
+        
+        # Test 3: Verify patient information is included
+        print("Testing patient information inclusion...")
+        for appointment in unpaid_appointments:
+            self.assertIn("patient", appointment)
+            patient = appointment["patient"]
+            self.assertIn("nom", patient)
+            self.assertIn("prenom", patient)
+            self.assertIn("telephone", patient)
+            
+            # Verify patient info is not empty
+            self.assertNotEqual(patient.get("nom", ""), "")
+            self.assertNotEqual(patient.get("prenom", ""), "")
+        
+        print("✅ All unpaid appointments include complete patient information")
+        
+        # Test 4: Verify controle appointments are excluded
+        print("Testing controle appointments exclusion...")
+        # Get all appointments to verify controle appointments are not in unpaid list
+        response = requests.get(f"{self.base_url}/api/appointments")
+        self.assertEqual(response.status_code, 200)
+        all_appointments = response.json()
+        
+        controle_appointments = [appt for appt in all_appointments if appt.get("type_rdv") == "controle"]
+        unpaid_appointment_ids = [appt.get("id") for appt in unpaid_appointments]
+        
+        for controle_appt in controle_appointments:
+            self.assertNotIn(controle_appt.get("id"), unpaid_appointment_ids, 
+                           "Controle appointments should not appear in unpaid list")
+        
+        print(f"✅ {len(controle_appointments)} controle appointments correctly excluded from unpaid list")
+        
+        # Test 5: Verify data structure consistency
+        print("Testing data structure consistency...")
+        for appointment in unpaid_appointments:
+            # Verify required fields
+            required_fields = ["id", "patient_id", "date", "heure", "type_rdv", "statut", "paye"]
+            for field in required_fields:
+                self.assertIn(field, appointment, f"Missing required field: {field}")
+            
+            # Verify data types
+            self.assertIsInstance(appointment.get("paye"), bool)
+            self.assertIsInstance(appointment.get("patient"), dict)
+        
+        print("✅ All unpaid appointments have consistent data structure")
+        
+        # Test 6: Error handling
+        print("Testing error handling...")
+        # The endpoint should handle empty results gracefully
+        # If no unpaid appointments exist, should return empty list
+        if len(unpaid_appointments) == 0:
+            print("✅ No unpaid appointments found - this is acceptable")
+        else:
+            print(f"✅ Found {len(unpaid_appointments)} unpaid appointments")
+        
+        print("✅ Phase 3: Unpaid Payments Management API - ALL TESTS PASSED")
+    
+    def create_test_payment_data(self):
+        """Helper method to create test payment data for search testing"""
+        try:
+            # Get existing patients and appointments
+            patients_response = requests.get(f"{self.base_url}/api/patients")
+            if patients_response.status_code != 200:
+                return
+            
+            patients_data = patients_response.json()
+            patients = patients_data.get("patients", [])
+            
+            appointments_response = requests.get(f"{self.base_url}/api/appointments")
+            if appointments_response.status_code != 200:
+                return
+            
+            appointments = appointments_response.json()
+            
+            # Create additional test payments with varied data
+            today = datetime.now().strftime("%Y-%m-%d")
+            yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+            
+            test_payments = []
+            
+            # Create payments for different scenarios
+            for i, patient in enumerate(patients[:3]):  # Use first 3 patients
+                for j, appointment in enumerate([appt for appt in appointments if appt.get("patient_id") == patient.get("id")][:2]):
+                    payment_data = {
+                        "paye": True,
+                        "montant": 100.0 + (i * 50),  # Varied amounts
+                        "type_paiement": "espece",
+                        "assure": i % 2 == 0,  # Alternate insurance status
+                        "notes": f"Test payment {i}-{j}"
+                    }
+                    
+                    # Create payment via appointment payment endpoint
+                    response = requests.put(f"{self.base_url}/api/rdv/{appointment.get('id')}/paiement", json=payment_data)
+                    if response.status_code == 200:
+                        print(f"✅ Created test payment for patient {patient.get('nom')}")
+            
+        except Exception as e:
+            print(f"Warning: Could not create test payment data: {e}")
+    
+    def create_test_payment_for_deletion(self):
+        """Helper method to create a test payment for deletion testing"""
+        try:
+            # Get existing patients and appointments
+            patients_response = requests.get(f"{self.base_url}/api/patients")
+            if patients_response.status_code != 200:
+                return None
+            
+            patients_data = patients_response.json()
+            patients = patients_data.get("patients", [])
+            
+            if not patients:
+                return None
+            
+            # Create a test appointment first
+            patient_id = patients[0].get("id")
+            today = datetime.now().strftime("%Y-%m-%d")
+            
+            test_appointment = {
+                "patient_id": patient_id,
+                "date": today,
+                "heure": "15:00",
+                "type_rdv": "visite",
+                "statut": "termine",
+                "motif": "Test for payment deletion",
+                "paye": False
+            }
+            
+            appt_response = requests.post(f"{self.base_url}/api/appointments", json=test_appointment)
+            if appt_response.status_code != 200:
+                return None
+            
+            appointment_id = appt_response.json().get("appointment_id")
+            
+            # Create payment for this appointment using the payment update endpoint
+            payment_update = {
+                "paye": True,
+                "montant": 200.0,
+                "type_paiement": "espece",
+                "assure": False,
+                "notes": "Test payment for deletion"
+            }
+            
+            payment_response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/paiement", json=payment_update)
+            if payment_response.status_code != 200:
+                # Clean up appointment
+                requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+                return None
+            
+            # Get the created payment ID
+            payments_response = requests.get(f"{self.base_url}/api/payments")
+            if payments_response.status_code != 200:
+                return None
+            
+            payments = payments_response.json()
+            for payment in payments:
+                if payment.get("appointment_id") == appointment_id:
+                    return payment.get("id")
+            
+            return None
+            
+        except Exception as e:
+            print(f"Warning: Could not create test payment for deletion: {e}")
+            return None
+    
+    def create_test_unpaid_data(self):
+        """Helper method to create test unpaid appointment data"""
+        try:
+            # Get existing patients
+            patients_response = requests.get(f"{self.base_url}/api/patients")
+            if patients_response.status_code != 200:
+                return
+            
+            patients_data = patients_response.json()
+            patients = patients_data.get("patients", [])
+            
+            if not patients:
+                return
+            
+            # Create unpaid visite appointments
+            today = datetime.now().strftime("%Y-%m-%d")
+            
+            for i, patient in enumerate(patients[:2]):  # Create 2 unpaid appointments
+                unpaid_appointment = {
+                    "patient_id": patient.get("id"),
+                    "date": today,
+                    "heure": f"{16 + i}:00",
+                    "type_rdv": "visite",
+                    "statut": "termine",  # Completed but unpaid
+                    "motif": f"Test unpaid visite {i}",
+                    "paye": False  # Explicitly unpaid
+                }
+                
+                response = requests.post(f"{self.base_url}/api/appointments", json=unpaid_appointment)
+                if response.status_code == 200:
+                    print(f"✅ Created unpaid appointment for patient {patient.get('nom')}")
+            
+            # Create paid controle appointments to verify they're excluded
+            for i, patient in enumerate(patients[:2]):
+                controle_appointment = {
+                    "patient_id": patient.get("id"),
+                    "date": today,
+                    "heure": f"{18 + i}:00",
+                    "type_rdv": "controle",
+                    "statut": "termine",
+                    "motif": f"Test controle {i}",
+                    "paye": True  # Controle should be paid (free)
+                }
+                
+                response = requests.post(f"{self.base_url}/api/appointments", json=controle_appointment)
+                if response.status_code == 200:
+                    print(f"✅ Created controle appointment for patient {patient.get('nom')}")
+                
+        except Exception as e:
+            print(f"Warning: Could not create test unpaid data: {e}")
+
     # ========== CALENDAR WORKFLOW FUNCTIONALITY FIXES TESTS ==========
     
     def test_type_toggle_fixes(self):
