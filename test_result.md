@@ -176,6 +176,34 @@ Comprehensive testing of the Phone Messages system backend APIs completed succes
 **PHONE MESSAGES SYSTEM: BACKEND IMPLEMENTATION COMPLETE AND FULLY TESTED**
 The backend now supports the complete phone messages system as specified. All tests pass and the system is ready for frontend integration and production use.
 
+### PHONE MESSAGES ENHANCEMENTS - EDITING & NAVIGATION ⚠️ NEW FEATURES ADDED
+**Status:** Message Editing and Consultation Navigation Features Implemented
+
+**Latest Enhancements (2025-01-19 - Phone Messages Editing & Navigation):**
+✅ **Message Editing API** - Added PUT /api/phone-messages/{message_id} endpoint for editing message content and priority
+✅ **Frontend Edit Interface** - Complete inline editing UI with yellow highlight, priority selection, save/cancel buttons
+✅ **Consultation Navigation Fix** - Updated viewPatientConsultations to pass patient ID and name via URL parameters
+✅ **URL Parameter Handling** - Enhanced Consultation.js to auto-select patient from URL parameters (?patient=ID&patientName=NAME)
+✅ **Edit Button Integration** - Added Edit2 icon button in message action bar for all users
+✅ **Service Updates** - Backend and frontend services restarted to apply all changes
+
+**New API Endpoint:**
+- **PUT /api/phone-messages/{message_id}**: Edit message content and priority
+- **PhoneMessageEdit Model**: New Pydantic model with message_content and priority fields
+- **WebSocket Notification**: Added phone_message_edited event for real-time updates
+
+**Frontend Enhancements:**
+- **Inline Edit Mode**: Messages can be edited directly in the list view with yellow background highlight
+- **Priority Edit**: Users can change priority (normal/urgent) during editing
+- **Edit Controls**: Save button (with validation) and Cancel button for edit operations
+- **Navigation Fix**: "VOIR" consultation button now correctly pre-loads patient data
+- **URL Parameters**: Consultation page reads patient ID and name from URL parameters
+
+**Next Steps Required:**
+1. **Backend Testing**: Test new PUT /api/phone-messages/{message_id} endpoint
+2. **Frontend Testing**: Test inline editing functionality and consultation navigation
+3. **Integration Testing**: Verify edit notifications and real-time updates work correctly
+
 **Next Steps Required:**
 1. **Frontend Testing**: Test complete UI workflow after backend validation complete
 2. **Integration Testing**: Test secrétaire → médecin → secrétaire workflow end-to-end
