@@ -172,7 +172,7 @@ const Dashboard = ({ user }) => {
         break;
       case 'messages_cleared':
         setMessages([]);
-        toast.info(`${data.deleted_count} message(s) supprimé(s)`);
+        toast.success(`${data.deleted_count} message(s) supprimé(s)`);
         break;
       default:
         break;
