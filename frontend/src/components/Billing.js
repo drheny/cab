@@ -1144,6 +1144,200 @@ const Billing = ({ user }) => {
           </div>
         </div>
       )}
+
+      {/* Custom Export Modal */}
+      {showExportModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-gray-900">Export personnalisé</h3>
+                <button
+                  onClick={() => setShowExportModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="space-y-6">
+                {/* Champs à inclure */}
+                <div>
+                  <h4 className="text-md font-semibold text-gray-900 mb-3">Champs à inclure</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={exportOptions.date}
+                        onChange={(e) => setExportOptions(prev => ({
+                          ...prev,
+                          date: e.target.checked
+                        }))}
+                        className="mr-2"
+                      />
+                      <span className="text-sm">Date</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={exportOptions.patient}
+                        onChange={(e) => setExportOptions(prev => ({
+                          ...prev,
+                          patient: e.target.checked
+                        }))}
+                        className="mr-2"
+                      />
+                      <span className="text-sm">Patient</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={exportOptions.montant}
+                        onChange={(e) => setExportOptions(prev => ({
+                          ...prev,
+                          montant: e.target.checked
+                        }))}
+                        className="mr-2"
+                      />
+                      <span className="text-sm">Montant</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={exportOptions.methode}
+                        onChange={(e) => setExportOptions(prev => ({
+                          ...prev,
+                          methode: e.target.checked
+                        }))}
+                        className="mr-2"
+                      />
+                      <span className="text-sm">Méthode de paiement</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={exportOptions.assurance}
+                        onChange={(e) => setExportOptions(prev => ({
+                          ...prev,
+                          assurance: e.target.checked
+                        }))}
+                        className="mr-2"
+                      />
+                      <span className="text-sm">Assurance</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={exportOptions.notes}
+                        onChange={(e) => setExportOptions(prev => ({
+                          ...prev,
+                          notes: e.target.checked
+                        }))}
+                        className="mr-2"
+                      />
+                      <span className="text-sm">Notes</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Indicateurs statistiques */}
+                <div>
+                  <h4 className="text-md font-semibold text-gray-900 mb-3">Indicateurs statistiques</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={exportOptions.indicateurs.ca}
+                        onChange={(e) => setExportOptions(prev => ({
+                          ...prev,
+                          indicateurs: { ...prev.indicateurs, ca: e.target.checked }
+                        }))}
+                        className="mr-2"
+                      />
+                      <span className="text-sm">Chiffre d'affaires</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={exportOptions.indicateurs.visites}
+                        onChange={(e) => setExportOptions(prev => ({
+                          ...prev,
+                          indicateurs: { ...prev.indicateurs, visites: e.target.checked }
+                        }))}
+                        className="mr-2"
+                      />
+                      <span className="text-sm">Nombre de visites</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={exportOptions.indicateurs.controles}
+                        onChange={(e) => setExportOptions(prev => ({
+                          ...prev,
+                          indicateurs: { ...prev.indicateurs, controles: e.target.checked }
+                        }))}
+                        className="mr-2"
+                      />
+                      <span className="text-sm">Nombre de contrôles</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={exportOptions.indicateurs.assures}
+                        onChange={(e) => setExportOptions(prev => ({
+                          ...prev,
+                          indicateurs: { ...prev.indicateurs, assures: e.target.checked }
+                        }))}
+                        className="mr-2"
+                      />
+                      <span className="text-sm">Nombre d'assurés</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={exportOptions.indicateurs.paiements}
+                        onChange={(e) => setExportOptions(prev => ({
+                          ...prev,
+                          indicateurs: { ...prev.indicateurs, paiements: e.target.checked }
+                        }))}
+                        className="mr-2"
+                      />
+                      <span className="text-sm">Nombre de paiements</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Période */}
+                <div>
+                  <h4 className="text-md font-semibold text-gray-900 mb-3">Période d'export</h4>
+                  <div className="text-sm text-gray-600 mb-2">
+                    Du {new Date(dateFilter.debut).toLocaleDateString('fr-FR')} au {new Date(dateFilter.fin).toLocaleDateString('fr-FR')}
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    Analyse par {statsPeriod === 'day' ? 'jour' : statsPeriod === 'week' ? 'semaine' : statsPeriod === 'month' ? 'mois' : 'année'}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  onClick={() => setShowExportModal(false)}
+                  className="btn-outline"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleCustomExport}
+                  className="btn-primary flex items-center space-x-2"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Exporter CSV</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
