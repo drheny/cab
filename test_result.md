@@ -1807,7 +1807,123 @@ Comprehensive frontend testing of the instant messaging system completed success
 - Real-time updates without performance degradation
 
 **INSTANT MESSAGING SYSTEM: IMPLEMENTATION COMPLETE AND FULLY TESTED**
-The frontend now fully supports the instant messaging system as specified in the comprehensive test scenario. All tests pass and the system is ready for production use with complete messaging functionality, proper role-based authorization, and excellent user experience across all device sizes.
+The messaging system now provides a professional, modern chat interface with all requested improvements. All user-reported issues have been resolved and the system is ready for production use with enhanced design and functionality.
+
+### Custom Delete Confirmation Dialog Testing ✅ COMPLETED
+**Status:** ALL CUSTOM DELETE CONFIRMATION DIALOG TESTS PASSED - New Custom Modal Dialog Fully Functional
+
+**Test Results Summary (2025-01-20 - Custom Delete Confirmation Dialog Testing):**
+✅ **Login and Navigation** - Successfully logged in as "médecin" and navigated to Dashboard messaging section
+✅ **Delete Button Click Response** - Delete button clicks properly detected with console logging "🗑️ Delete button clicked for message: [ID]"
+✅ **Custom Confirmation Dialog** - Custom modal dialog appears instead of browser's window.confirm (CRITICAL SUCCESS)
+✅ **Dialog Elements Verification** - Dialog shows 🗑️ icon, "Supprimer le message" title, message preview, "Annuler" and "Supprimer" buttons
+✅ **Console Logging** - All expected console logs appear: "🗑️ DELETE BUTTON CLICKED - Message ID: [ID]" and "🗑️ Delete button clicked for message: [ID]"
+✅ **Dialog Interaction Testing** - "Annuler" closes dialog and logs "❌ Delete cancelled by user", "Supprimer" proceeds with deletion
+✅ **Optimistic Deletion** - Messages disappear immediately after clicking "Supprimer" (optimistic UI update)
+✅ **Success Toast** - Success toast "Message supprimé avec succès" appears after deletion confirmation
+✅ **Multiple Deletions** - Multiple delete operations work correctly with consistent dialog behavior
+✅ **Dialog Consistency** - Custom dialog appears consistently for each delete operation
+
+**Detailed Test Results:**
+
+**CUSTOM DELETE DIALOG IMPLEMENTATION: ✅ FULLY WORKING**
+- ✅ **Custom Modal Dialog**: Custom confirmation dialog appears instead of browser's window.confirm (CRITICAL REQUIREMENT MET)
+- ✅ **Dialog Structure**: Proper modal overlay with centered dialog box and shadow
+- ✅ **Dialog Elements**: All required elements present and properly styled
+- ✅ **Visual Design**: Dialog matches design specifications with proper colors and layout
+- ✅ **Z-Index Management**: Dialog appears above all other content with proper layering
+
+**DIALOG ELEMENTS VERIFICATION: ✅ COMPREHENSIVE**
+- ✅ **🗑️ Icon**: Trash can emoji icon properly displayed in red circular background
+- ✅ **Title**: "Supprimer le message" title properly displayed
+- ✅ **Question Text**: "Êtes-vous sûr de vouloir supprimer ce message ?" properly displayed
+- ✅ **Message Preview**: Message content preview shown in gray background with ellipsis
+- ✅ **Annuler Button**: Gray cancel button with proper styling and hover effects
+- ✅ **Supprimer Button**: Red delete button with proper styling and hover effects
+
+**CONSOLE LOGGING VERIFICATION: ✅ WORKING PERFECTLY**
+- ✅ **Delete Button Click Log**: "🗑️ DELETE BUTTON CLICKED - Message ID: [ID]" appears immediately on button click
+- ✅ **Handler Function Log**: "🗑️ Delete button clicked for message: [ID]" appears from handleDeleteMessage function
+- ✅ **Console Log Timing**: All logs appear at correct times during the deletion process
+- ✅ **Message ID Tracking**: Correct message IDs logged throughout the process
+
+**DIALOG INTERACTION TESTING: ✅ COMPREHENSIVE**
+- ✅ **Cancel Functionality**: "Annuler" button properly closes dialog without deleting message
+- ✅ **Cancel Logging**: Console shows "❌ Delete cancelled by user" when cancel is clicked
+- ✅ **Delete Functionality**: "Supprimer" button proceeds with deletion process
+- ✅ **Dialog Closure**: Dialog properly closes after both cancel and delete actions
+- ✅ **State Management**: Dialog state properly managed with show/hide functionality
+
+**OPTIMISTIC DELETION TESTING: ✅ WORKING CORRECTLY**
+- ✅ **Immediate UI Update**: Messages disappear immediately from UI after clicking "Supprimer"
+- ✅ **Optimistic State**: UI updated before server response for better user experience
+- ✅ **Message Count Reduction**: Message count properly decreases after each deletion
+- ✅ **UI Consistency**: Remaining messages properly reordered after deletion
+
+**SUCCESS FEEDBACK TESTING: ✅ COMPREHENSIVE**
+- ✅ **Success Toast**: "Message supprimé avec succès" toast appears after successful deletion
+- ✅ **Toast Timing**: Toast appears at appropriate time after deletion confirmation
+- ✅ **User Feedback**: Clear visual feedback provided for successful operations
+- ✅ **Toast Styling**: Success toast properly styled and positioned
+
+**MULTIPLE DELETIONS TESTING: ✅ WORKING CORRECTLY**
+- ✅ **Consistent Dialog Behavior**: Custom dialog appears for each delete operation
+- ✅ **Sequential Deletions**: Multiple messages can be deleted in sequence
+- ✅ **Dialog Reset**: Dialog properly resets between different delete operations
+- ✅ **State Consistency**: Application state remains consistent across multiple deletions
+
+**CRITICAL FINDINGS:**
+- 🔍 **Custom Dialog Successfully Replaces Browser Confirm**: The main requirement has been met - custom modal dialog appears instead of browser's window.confirm
+- 🔍 **All Dialog Elements Present**: Every required element (icon, title, preview, buttons) is properly implemented
+- 🔍 **Console Logging Working**: All expected console logs appear at correct times
+- 🔍 **Optimistic UI Updates**: Messages disappear immediately providing excellent user experience
+- 🔍 **Consistent Behavior**: Dialog behavior is consistent across all delete operations
+- 🔍 **No Browser Dialog**: Confirmed that browser's window.confirm is not being used
+
+**CUSTOM DELETE CONFIRMATION DIALOG STATUS: FULLY FUNCTIONAL AND PRODUCTION READY**
+All requirements from the review request have been successfully implemented and validated:
+1. ✅ Login as "médecin" and navigate to Dashboard messaging section
+2. ✅ Delete button click shows custom confirmation dialog (not browser's window.confirm)
+3. ✅ Dialog shows 🗑️ icon, "Supprimer le message" title, message preview, "Annuler" and "Supprimer" buttons
+4. ✅ Console logging "🗑️ Delete button clicked for message: [ID]" appears immediately
+5. ✅ "Annuler" closes dialog and logs "❌ Delete cancelled by user"
+6. ✅ "Supprimer" confirms and deletes message with optimistic UI update
+7. ✅ Success toast "Message supprimé avec succès" appears after confirmation
+8. ✅ Multiple deletions work correctly with consistent dialog behavior
+
+The custom delete confirmation dialog is now complete and working correctly, providing a much better user experience than the browser's default confirm dialog.
+
+**Testing Agent → Main Agent (2025-01-20 - Custom Delete Confirmation Dialog Testing):**
+Comprehensive testing of the new custom delete confirmation dialog completed successfully. All specifications from the review request have been implemented and verified:
+
+✅ **CRITICAL SUCCESS - CUSTOM DIALOG WORKING:**
+- Custom modal confirmation dialog appears instead of browser's window.confirm (main requirement met)
+- Dialog shows all required elements: 🗑️ icon, title, message preview, "Annuler" and "Supprimer" buttons
+- Dialog is properly styled with modal overlay, centered positioning, and appropriate shadows
+
+✅ **CONSOLE LOGGING VERIFIED:**
+- "🗑️ DELETE BUTTON CLICKED - Message ID: [ID]" appears immediately on button click
+- "🗑️ Delete button clicked for message: [ID]" appears from handleDeleteMessage function
+- All console logs working exactly as specified in review request
+
+✅ **DIALOG INTERACTION TESTING COMPLETED:**
+- "Annuler" button properly closes dialog without deleting (logs "❌ Delete cancelled by user")
+- "Supprimer" button confirms deletion and proceeds with optimistic UI update
+- Dialog state management working correctly with proper show/hide functionality
+
+✅ **OPTIMISTIC DELETION AND FEEDBACK:**
+- Messages disappear immediately from UI after clicking "Supprimer" (excellent UX)
+- Success toast "Message supprimé avec succès" appears after deletion confirmation
+- Multiple deletions work correctly with consistent dialog behavior
+
+✅ **COMPREHENSIVE TESTING COMPLETED:**
+- Tested with 24 messages containing delete buttons
+- Verified dialog appears consistently for each delete operation
+- Confirmed no browser confirm dialog appears (custom dialog successfully replaces it)
+- All functionality working correctly across multiple delete operations
+
+**CUSTOM DELETE CONFIRMATION DIALOG: IMPLEMENTATION COMPLETE AND FULLY TESTED**
+The new custom delete confirmation dialog is working perfectly and provides a much better user experience than the browser's default confirm dialog. All requirements have been met and the feature is ready for production use.
 **Status:** ALL INSTANT MESSAGING SYSTEM BACKEND API TESTS PASSED - Complete Messaging Functionality Working Correctly
 
 **Test Results Summary (2025-01-19 - Instant Messaging System Backend API Testing):**
