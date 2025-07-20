@@ -600,9 +600,20 @@ const Messages = ({ user }) => {
 
                         {/* Action Buttons */}
                         <div className="flex items-center space-x-2 ml-4">
+                          {/* Edit Button (for original message creators) */}
+                          {!editingMessage && (
+                            <button
+                              onClick={() => handleEditMessage(message)}
+                              className="text-blue-600 hover:text-blue-700 p-1"
+                              title="Modifier le message"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                          )}
+
                           {/* View Patient Consultations */}
                           <button
-                            onClick={() => viewPatientConsultations(message.patient_id)}
+                            onClick={() => viewPatientConsultations(message.patient_id, message.patient_name)}
                             className="text-indigo-600 hover:text-indigo-700 p-1"
                             title="Voir les consultations du patient"
                           >
@@ -610,7 +621,7 @@ const Messages = ({ user }) => {
                           </button>
 
                           {/* Respond Button (médecin only) */}
-                          {user.type === 'medecin' && message.status === 'nouveau' && (
+                          {user.type === 'medecin' && message.status === 'nouveau' && !editingMessage && (
                             <button
                               onClick={() => {
                                 setRespondingTo(message);
