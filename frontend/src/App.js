@@ -110,7 +110,7 @@ function App() {
               <Route path="/dashboard" element={<Dashboard user={user} />} />
               <Route path="/patients" element={<PatientsList user={user} />} />
               <Route path="/calendar" element={<Calendar user={user} />} />
-
+              <Route path="/messages" element={<Messages user={user} />} />
               <Route path="/consultation" element={<Consultation user={user} />} />
               <Route path="/billing" element={<Billing user={user} />} />
               <Route path="/administration" element={<Administration user={user} />} />
