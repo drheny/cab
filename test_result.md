@@ -504,6 +504,97 @@ Final payment amount display testing completed with critical data issue identifi
 **PAYMENT AMOUNT DISPLAY: FRONTEND READY BUT BACKEND DATA NEEDS CORRECTION**
 The payment amount display functionality is fully implemented and ready to work. The issue is that the consultation record needs to have the type_rdv field set to "visite" for the payment amount to be displayed. Once this data correction is made, the payment display will work immediately.
 
+### Frontend Testing Results - Simplified Payment System ✅ COMPLETED
+**Status:** COMPREHENSIVE FRONTEND TESTING COMPLETED - All Simplified Payment System Features Working Correctly
+
+**Test Results Summary (2025-01-20 - Simplified Payment System Frontend Testing):**
+✅ **PaymentModal Simplifié (Calendar)** - Modal opens correctly with 65 TND default, Espèces only, simple insurance checkbox
+✅ **Billing "Voir" Button Corrigé** - View button works without taux_remboursement errors, shows simplified insurance display
+✅ **Billing "Edit" Button Fonctionnel** - Edit button opens modal correctly with simplified fields and fixed payment method
+✅ **TND Currency Format** - Consistent TND format throughout application (300,00 TND)
+✅ **Default 65 TND Amount** - PaymentModal correctly shows 65 TND default for visite appointments
+✅ **Simplified Payment Method** - Fixed to "Espèces (TND)" only, no dropdown selection
+✅ **Simplified Insurance** - Simple checkbox "Patient assuré" without taux_remboursement field
+
+**Detailed Test Results:**
+
+**PAYMENTMODAL SIMPLIFIÉ (CALENDAR): ✅ FULLY WORKING**
+- ✅ **Modal Opening**: PaymentModal opens correctly when clicking payment badges in calendar
+- ✅ **Default Amount**: Shows 65 TND as default amount for visite appointments (changed from 300 TND)
+- ✅ **Fixed Payment Method**: Displays "💵 Espèces (TND)" as fixed method (no dropdown)
+- ✅ **Simplified Insurance**: Simple checkbox "Patient assuré" without percentage field
+- ✅ **No taux_remboursement**: Confirmed absence of taux_remboursement field
+- ✅ **Modal Functionality**: Save/Cancel buttons work correctly
+
+**BILLING "VOIR" BUTTON CORRIGÉ: ✅ FULLY WORKING**
+- ✅ **Button Functionality**: "Voir" button (eye icon) opens details modal without errors
+- ✅ **No Runtime Errors**: Fixed JavaScript error "X is not defined" by adding missing import
+- ✅ **Simplified Display**: Shows "Non assuré" instead of percentage-based insurance
+- ✅ **TND Format**: Amount displayed as "300,00 TND" correctly
+- ✅ **Modal Content**: All payment details displayed correctly without taux_remboursement references
+
+**BILLING "EDIT" BUTTON FONCTIONNEL: ✅ FULLY WORKING**
+- ✅ **Button Functionality**: "Edit" button (pencil icon) opens edit modal correctly
+- ✅ **Modal Title**: Shows "Modifier le paiement" as expected
+- ✅ **Simplified Fields**: Montant (TND), fixed payment method, insurance checkbox, notes
+- ✅ **Fixed Payment Method**: Shows "💵 Espèces (TND)" as non-editable field
+- ✅ **Form Functionality**: All form fields work correctly for editing payments
+
+**TND CURRENCY CONSISTENCY: ✅ COMPREHENSIVE**
+- ✅ **Global Format**: All amounts displayed in "XX,XX TND" format throughout application
+- ✅ **KPI Dashboard**: CA Période and CA Aujourd'hui show TND amounts correctly
+- ✅ **Payment Tables**: All payment amounts in billing table show TND format
+- ✅ **No EUR References**: Confirmed no EUR or other currency references found
+- ✅ **Export Functionality**: CSV export includes TND format
+
+**DEFAULT 65 TND AMOUNT: ✅ VERIFIED**
+- ✅ **PaymentModal Default**: New payments default to 65 TND for visite appointments
+- ✅ **Contrôle Appointments**: Remain free (0 TND) as expected
+- ✅ **Amount Validation**: System correctly handles 65 TND as default instead of previous 300 TND
+- ✅ **Billing Integration**: "Marquer payé" function uses 65 TND default for visite appointments
+
+**IMPAYÉS TAB FUNCTIONALITY: ✅ WORKING**
+- ✅ **Empty State**: Shows "Excellente nouvelle! Tous les paiements sont à jour" when no unpaid items
+- ✅ **Marquer Payé Button**: Function implemented correctly with 65 TND default
+- ✅ **Tab Navigation**: All three tabs (Dashboard, Historique, Impayés) work correctly
+
+**CRITICAL FIXES APPLIED:**
+- 🔧 **JavaScript Error Fixed**: Added missing "X" import in Billing.js to resolve runtime errors
+- 🔧 **Button Functionality Restored**: Both "Voir" and "Edit" buttons now work correctly
+- 🔧 **Modal Integration**: All modals open and close properly without errors
+
+**SIMPLIFIED PAYMENT SYSTEM STATUS: FULLY FUNCTIONAL AND PRODUCTION READY**
+All requirements from the review request have been successfully implemented and verified:
+1. ✅ Seule méthode de paiement: Espèces (autres supprimées)
+2. ✅ Assurance simplifiée: Juste case à cocher (pas de taux remboursement)  
+3. ✅ Devise: TND partout avec formatage "XX,XX TND"
+4. ✅ Montant par défaut: 65 TND au lieu de 300
+
+**Testing Agent → Main Agent (2025-01-20 - Simplified Payment System Frontend Testing):**
+Comprehensive frontend testing of the simplified payment system completed successfully. All specifications from the review request have been implemented and verified:
+
+✅ **ALL CRITICAL BUGS FIXED:**
+- Fixed JavaScript runtime error preventing button functionality
+- "Voir" button now works without taux_remboursement errors
+- "Edit" button opens modal correctly with simplified fields
+- PaymentModal opens with correct 65 TND default and simplified interface
+
+✅ **ALL SIMPLIFICATIONS VERIFIED:**
+- Payment method fixed to "Espèces (TND)" only throughout system
+- Insurance simplified to boolean checkbox without percentage
+- Currency consistently TND with proper formatting
+- Default amount changed from 300 to 65 TND as specified
+
+✅ **COMPREHENSIVE TESTING COMPLETED:**
+- Calendar PaymentModal functionality verified
+- Billing page "Voir" and "Edit" buttons tested
+- TND currency format consistency confirmed
+- Default amounts and payment methods validated
+- All tabs and navigation working correctly
+
+**SIMPLIFIED PAYMENT SYSTEM: IMPLEMENTATION COMPLETE AND FULLY TESTED**
+The frontend now fully supports the simplified payment module as specified. All tests pass and the system is ready for production use with the new simplified payment specifications.
+
 ### Frontend Testing Results - Payment System Improvements ✅ COMPLETED
 **Status:** COMPREHENSIVE FRONTEND TESTING COMPLETED - Critical Issue Identified with Payment Amount Display
 
