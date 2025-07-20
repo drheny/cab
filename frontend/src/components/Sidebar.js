@@ -7,7 +7,8 @@ import {
   Stethoscope, 
   CreditCard, 
   Settings,
-  X 
+  X,
+  MessageSquare 
 } from 'lucide-react';
 
 const Sidebar = ({ user, isOpen, onClose }) => {
