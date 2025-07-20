@@ -739,6 +739,115 @@ The payment amount display code is working correctly. The issue is data consiste
 **PAYMENT AMOUNT DISPLAY: CODE IMPLEMENTATION WORKING CORRECTLY - DATA LINKAGE ISSUE IDENTIFIED**
 The frontend payment display functionality is implemented correctly and all debug features are working. The issue is that payment records do not exist with matching appointment_id values to link with consultations. This is a data consistency issue rather than a code implementation problem.
 
+### CLEAR Button Functionality Testing ✅ COMPLETED
+**Status:** ALL CLEAR BUTTON TESTS PASSED - Critical Bug Fix Successfully Verified
+
+**Test Results Summary (2025-01-20 - CLEAR Button Functionality Testing):**
+✅ **Button Visibility and Styling** - "🗑️ Vider" button appears correctly in messaging header with red styling (bg-red-100 text-red-700)
+✅ **Button Functionality** - Button is visible, enabled, and clickable without any issues
+✅ **Confirmation Dialog** - Clicking button triggers correct French confirmation dialog: "Êtes-vous sûr de vouloir supprimer tous les messages ? Cette action est irréversible."
+✅ **Dialog Handling** - Both Cancel and OK functionality working correctly
+✅ **API Call Success** - DELETE request to correct API endpoint (${API_BASE_URL}/api/messages) working properly
+✅ **Messages Cleared** - All messages successfully removed from interface after confirmation
+✅ **Empty State Display** - Interface correctly shows empty state after clearing messages
+✅ **Bug Fix Verified** - The critical API URL bug has been successfully fixed
+
+**Detailed Test Results:**
+
+**CRITICAL BUG FIX VERIFICATION: ✅ SUCCESSFUL**
+- ✅ **API URL Fix Confirmed**: handleClearMessages now correctly uses `${API_BASE_URL}/api/messages` instead of relative path `/api/messages`
+- ✅ **Button Responsiveness**: Button responds to clicks immediately (no longer non-functional)
+- ✅ **Network Request**: DELETE request sent to correct full URL endpoint
+- ✅ **End-to-End Functionality**: Complete clear workflow working from button click to message removal
+
+**BUTTON APPEARANCE AND STYLING: ✅ PERFECT**
+- ✅ **Button Text**: Displays "🗑️ Vider" as expected
+- ✅ **Button Position**: Located in messaging header next to "Messagerie Interne" title
+- ✅ **Red Styling**: Correct red styling with classes "bg-red-100 text-red-700 rounded-full hover:bg-red-200"
+- ✅ **Button State**: Visible, enabled, and properly styled
+- ✅ **Hover Effects**: Hover transition effects working correctly
+
+**CONFIRMATION DIALOG FUNCTIONALITY: ✅ COMPREHENSIVE**
+- ✅ **Dialog Trigger**: Button click correctly triggers confirmation dialog
+- ✅ **French Text**: Dialog displays correct French message: "Êtes-vous sûr de vouloir supprimer tous les messages ? Cette action est irréversible."
+- ✅ **Cancel Functionality**: Clicking "Cancel" aborts operation and preserves messages
+- ✅ **Confirm Functionality**: Clicking "OK" proceeds with message deletion
+- ✅ **Dialog Behavior**: Native browser confirmation dialog working as expected
+
+**MESSAGE CLEARING FUNCTIONALITY: ✅ WORKING**
+- ✅ **Message Removal**: All messages successfully removed from interface after confirmation
+- ✅ **Immediate Update**: Interface updates immediately after successful API call
+- ✅ **Empty State**: Correct empty state message "Aucun message aujourd'hui" displayed
+- ✅ **Message Count**: Message count correctly goes to 0 after clearing
+- ✅ **Visual Feedback**: Interface provides clear visual feedback of successful operation
+
+**API INTEGRATION TESTING: ✅ VERIFIED**
+- ✅ **Correct Endpoint**: DELETE request sent to `${API_BASE_URL}/api/messages` (full URL)
+- ✅ **Request Success**: API call completes successfully without errors
+- ✅ **Response Handling**: Success response properly handled by frontend
+- ✅ **Error Prevention**: No more API URL path errors (bug fixed)
+- ✅ **Network Monitoring**: Network requests show correct full URL being used
+
+**SUCCESS CRITERIA VERIFICATION: ✅ ALL MET**
+- ✅ **Button Appears**: "🗑️ Vider" button visible and clickable (not disabled)
+- ✅ **Confirmation Dialog**: Dialog appears in French with correct text
+- ✅ **Cancel Works**: Cancel functionality prevents deletion
+- ✅ **Confirm Works**: Confirm functionality clears messages successfully
+- ✅ **Success Feedback**: Operation provides appropriate user feedback
+- ✅ **Interface Updates**: Messages disappear immediately from interface
+- ✅ **Correct API Call**: Network request sent to correct full URL endpoint
+- ✅ **No Console Errors**: No JavaScript errors during operation
+
+**CRITICAL FINDINGS:**
+- 🔍 **Bug Fix Successful**: The API URL issue has been completely resolved
+- 🔍 **Button Fully Functional**: Button now responds to clicks and performs clearing operation
+- 🔍 **API Integration Working**: DELETE /api/messages endpoint called with correct full URL
+- 🔍 **User Experience Excellent**: Smooth workflow from button click to message clearing
+- 🔍 **Error Handling Robust**: Proper confirmation dialog prevents accidental deletions
+- 🔍 **Visual Feedback Clear**: Users receive immediate visual confirmation of successful operation
+
+**CLEAR BUTTON FUNCTIONALITY STATUS: FULLY FUNCTIONAL AND BUG-FREE**
+All requirements from the review request have been successfully verified:
+1. ✅ Button appears with correct "🗑️ Vider" text and red styling
+2. ✅ Button click triggers French confirmation dialog with correct text
+3. ✅ Cancel functionality works (no messages deleted)
+4. ✅ Confirm functionality works (messages cleared successfully)
+5. ✅ Success feedback provided to user
+6. ✅ Interface immediately updates (messages disappear)
+7. ✅ Network request sent to correct API endpoint with full URL
+8. ✅ No console errors during operation
+9. ✅ Critical API URL bug completely fixed
+
+**Testing Agent → Main Agent (2025-01-20 - CLEAR Button Functionality Testing):**
+Comprehensive testing of the CLEAR button functionality completed successfully. The critical bug fix has been verified and all functionality is working perfectly:
+
+✅ **CRITICAL BUG FIX VERIFIED:**
+- The API URL issue has been completely resolved
+- handleClearMessages now correctly uses `${API_BASE_URL}/api/messages` instead of relative path
+- Button is now fully functional and responsive to user clicks
+- DELETE request sent to correct full URL endpoint
+
+✅ **ALL FUNCTIONALITY TESTED AND WORKING:**
+- Button visibility and red styling correct
+- French confirmation dialog appears with proper text
+- Both Cancel and Confirm functionality working
+- Messages successfully cleared after confirmation
+- Empty state properly displayed after clearing
+- No console errors or JavaScript issues
+
+✅ **SUCCESS CRITERIA COMPLETELY MET:**
+- Button appears and is clickable (not disabled) ✓
+- Confirmation dialog appears in French ✓
+- Cancel functionality works (no deletion) ✓
+- Confirm functionality works (messages cleared) ✓
+- Success feedback provided ✓
+- Interface immediately updates ✓
+- Network request sent to correct API endpoint ✓
+- No console errors during operation ✓
+
+**CLEAR BUTTON FUNCTIONALITY: BUG FIX SUCCESSFUL - ALL TESTS PASSED**
+The critical API URL bug has been successfully fixed and the CLEAR button functionality is now working perfectly. The button responds to clicks, shows proper confirmation dialog, and successfully clears all messages when confirmed. The system is ready for production use.
+
 ### FINAL CRITICAL TEST - Payment Amount Display Verification ❌ FAILED
 **Status:** PAYMENT AMOUNT DISPLAY TEST FAILED - Critical Data Configuration Issue Identified
 
