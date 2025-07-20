@@ -1801,6 +1801,178 @@ async def delete_payment(payment_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error deleting payment: {str(e)}")
 
+
+# ==================== MESSAGERIE INSTANTANÉE ====================
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    """WebSocket endpoint pour messagerie temps réel"""
+    await manager.connect(websocket)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            # Echo back for now - can be enhanced for specific functionality
+            await manager.send_personal_message(f"Message received: {data}", websocket)
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+
+@app.get("/api/messages")
+async def get_messages():
+    """Récupérer tous les messages de la journée"""
+    try:
+        messages = list(messages_collection.find({}, {"_id": 0}).sort("timestamp", 1))
+        return {"messages": messages}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching messages: {str(e)}")
+
+@app.post("/api/messages")
+async def create_message(message_data: MessageCreate, sender_type: str, sender_name: str):
+    """Créer un nouveau message"""
+    try:
+        # Si c'est une réponse, récupérer le contenu du message original
+        reply_content = ""
+        if message_data.reply_to:
+            original_message = messages_collection.find_one(
+                {"id": message_data.reply_to}, 
+                {"_id": 0}
+            )
+            if original_message:
+                reply_content = original_message.get("content", "")
+
+        message = Message(
+            sender_type=sender_type,
+            sender_name=sender_name,
+            content=message_data.content,
+            reply_to=message_data.reply_to,
+            reply_content=reply_content
+        )
+        
+        message_dict = message.dict()
+        messages_collection.insert_one(message_dict)
+        
+        # Diffuser le message à tous les clients connectés
+        await manager.broadcast({
+            "type": "new_message",
+            "data": message_dict
+        })
+        
+        return {"message": "Message created successfully", "id": message.id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating message: {str(e)}")
+
+@app.put("/api/messages/{message_id}")
+async def update_message(message_id: str, message_data: MessageUpdate, user_type: str):
+    """Modifier un message (seulement par son émetteur)"""
+    try:
+        # Vérifier que le message existe et appartient à l'utilisateur
+        message = messages_collection.find_one({"id": message_id}, {"_id": 0})
+        if not message:
+            raise HTTPException(status_code=404, detail="Message not found")
+        
+        if message.get("sender_type") != user_type:
+            raise HTTPException(status_code=403, detail="Not authorized to edit this message")
+        
+        # Sauvegarder le contenu original si ce n'est pas déjà fait
+        update_data = {
+            "content": message_data.content,
+            "is_edited": True,
+            "updated_at": datetime.now()
+        }
+        
+        if not message.get("original_content"):
+            update_data["original_content"] = message.get("content", "")
+        
+        result = messages_collection.update_one(
+            {"id": message_id},
+            {"$set": update_data}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Message not found")
+        
+        # Récupérer le message mis à jour
+        updated_message = messages_collection.find_one({"id": message_id}, {"_id": 0})
+        
+        # Diffuser la mise à jour
+        await manager.broadcast({
+            "type": "message_updated",
+            "data": updated_message
+        })
+        
+        return {"message": "Message updated successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating message: {str(e)}")
+
+@app.delete("/api/messages/{message_id}")
+async def delete_message(message_id: str, user_type: str):
+    """Supprimer un message (seulement par son émetteur)"""
+    try:
+        # Vérifier que le message existe et appartient à l'utilisateur
+        message = messages_collection.find_one({"id": message_id}, {"_id": 0})
+        if not message:
+            raise HTTPException(status_code=404, detail="Message not found")
+        
+        if message.get("sender_type") != user_type:
+            raise HTTPException(status_code=403, detail="Not authorized to delete this message")
+        
+        result = messages_collection.delete_one({"id": message_id})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Message not found")
+        
+        # Diffuser la suppression
+        await manager.broadcast({
+            "type": "message_deleted",
+            "data": {"id": message_id}
+        })
+        
+        return {"message": "Message deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting message: {str(e)}")
+
+@app.put("/api/messages/{message_id}/read")
+async def mark_message_as_read(message_id: str):
+    """Marquer un message comme lu"""
+    try:
+        result = messages_collection.update_one(
+            {"id": message_id},
+            {"$set": {"is_read": True}}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Message not found")
+        
+        # Diffuser le changement de statut
+        await manager.broadcast({
+            "type": "message_read",
+            "data": {"id": message_id}
+        })
+        
+        return {"message": "Message marked as read"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error marking message as read: {str(e)}")
+
+@app.post("/api/messages/cleanup")
+async def manual_cleanup_messages():
+    """Nettoyage manuel des messages (pour test)"""
+    try:
+        deleted_count = await cleanup_messages_daily()
+        
+        # Diffuser le nettoyage
+        await manager.broadcast({
+            "type": "messages_cleared",
+            "data": {"count": deleted_count}
+        })
+        
+        return {"message": f"Messages cleared successfully", "count": deleted_count}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error cleaning up messages: {str(e)}")
+
+
 @app.get("/api/payments/search")
 async def search_payments(
     patient_name: Optional[str] = Query(None, description="Search by patient name"),
