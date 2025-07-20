@@ -48,6 +48,7 @@ const Dashboard = ({ user }) => {
   const [editingMessage, setEditingMessage] = useState(null);
   const [editingContent, setEditingContent] = useState('');
   const [ws, setWs] = useState(null);
+  const [deleteConfirmDialog, setDeleteConfirmDialog] = useState({ show: false, messageId: null, messageContent: '' });
   const messagesEndRef = useRef(null);
   
   const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
