@@ -93,22 +93,34 @@ const Dashboard = ({ user }) => {
   };
 
   const initializeWebSocket = () => {
-    // Use the backend URL for WebSocket connection
-    const backendUrl = new URL(API_BASE_URL);
-    const wsProtocol = backendUrl.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${wsProtocol}//${backendUrl.host}/ws`;
-    
     try {
+      // Construct WebSocket URL properly handling both relative and absolute API_BASE_URL
+      let wsUrl;
+      if (API_BASE_URL.startsWith('http://') || API_BASE_URL.startsWith('https://')) {
+        // API_BASE_URL is absolute URL
+        const backendUrl = new URL(API_BASE_URL);
+        const wsProtocol = backendUrl.protocol === 'https:' ? 'wss:' : 'ws:';
+        wsUrl = `${wsProtocol}//${backendUrl.host}/ws`;
+      } else {
+        // API_BASE_URL is relative or empty, use current host
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const host = window.location.host;
+        wsUrl = `${wsProtocol}//${host}/ws`;
+      }
+      
+      console.log('Attempting WebSocket connection to:', wsUrl);
       const websocket = new WebSocket(wsUrl);
       
       websocket.onopen = () => {
-        console.log('WebSocket connected');
+        console.log('✅ WebSocket connected successfully');
         setWs(websocket);
+        toast.success('Messagerie temps réel activée');
       };
       
       websocket.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
+          console.log('📨 WebSocket message received:', data);
           handleWebSocketMessage(data);
         } catch (error) {
           console.error('Error parsing WebSocket message:', error);
@@ -116,20 +128,23 @@ const Dashboard = ({ user }) => {
       };
       
       websocket.onerror = (error) => {
-        console.error('WebSocket error:', error);
+        console.error('❌ WebSocket error:', error);
+        toast.error('Erreur de connexion messagerie temps réel');
       };
       
-      websocket.onclose = () => {
-        console.log('WebSocket disconnected');
+      websocket.onclose = (event) => {
+        console.log('WebSocket disconnected. Code:', event.code, 'Reason:', event.reason);
+        setWs(null);
+        
         // Attempt to reconnect after 3 seconds
         setTimeout(() => {
-          if (ws && ws.readyState === WebSocket.CLOSED) {
-            initializeWebSocket();
-          }
+          console.log('🔄 Attempting WebSocket reconnection...');
+          initializeWebSocket();
         }, 3000);
       };
     } catch (error) {
       console.error('Failed to initialize WebSocket:', error);
+      toast.error('Impossible d\'initialiser la messagerie temps réel');
     }
   };
 
