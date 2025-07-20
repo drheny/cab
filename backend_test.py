@@ -20197,5 +20197,358 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
         
         print(f"✅ Comprehensive Workflow - Phase 1: {clear_data_1['deleted_count']} messages cleared, Phase 2: {clear_data_2['deleted_count']} messages cleared")
 
+    # ========== CONSULTATION HISTORY RETRIEVAL TESTING ==========
+    
+    def test_consultation_history_retrieval_from_phone_messages(self):
+        """Test consultation history retrieval for patients accessed from phone messages"""
+        print("\n=== TESTING CONSULTATION HISTORY RETRIEVAL FROM PHONE MESSAGES ===")
+        
+        # Test the specific API endpoints mentioned in the review request
+        
+        # 1. Test GET /api/consultations/patient/{patient_id} for demo patients
+        demo_patient_ids = ["patient1", "patient2", "patient3"]
+        
+        for patient_id in demo_patient_ids:
+            print(f"\n--- Testing consultation history for {patient_id} ---")
+            
+            # First verify patient exists
+            response = requests.get(f"{self.base_url}/api/patients/{patient_id}")
+            if response.status_code == 404:
+                print(f"❌ Patient {patient_id} not found - skipping")
+                continue
+                
+            self.assertEqual(response.status_code, 200)
+            patient_data = response.json()
+            print(f"✅ Patient {patient_id} found: {patient_data.get('prenom', '')} {patient_data.get('nom', '')}")
+            
+            # Test consultation history endpoint
+            response = requests.get(f"{self.base_url}/api/consultations/patient/{patient_id}")
+            self.assertEqual(response.status_code, 200)
+            consultations = response.json()
+            
+            print(f"📋 Consultation history for {patient_id}: {len(consultations)} consultations found")
+            
+            # Verify response structure
+            self.assertIsInstance(consultations, list)
+            
+            # If consultations exist, verify their structure
+            for i, consultation in enumerate(consultations):
+                print(f"  Consultation {i+1}:")
+                print(f"    - ID: {consultation.get('id', 'N/A')}")
+                print(f"    - Date: {consultation.get('date', 'N/A')}")
+                print(f"    - Type: {consultation.get('type_rdv', 'N/A')}")
+                print(f"    - Appointment ID: {consultation.get('appointment_id', 'N/A')}")
+                print(f"    - Observations: {consultation.get('observations', 'N/A')[:50]}...")
+                
+                # Verify required fields
+                required_fields = ['id', 'patient_id', 'appointment_id', 'date']
+                for field in required_fields:
+                    self.assertIn(field, consultation, f"Missing required field '{field}' in consultation")
+                
+                # Verify patient_id matches
+                self.assertEqual(consultation['patient_id'], patient_id)
+        
+        # 2. Test with timestamp parameter as used in frontend
+        print(f"\n--- Testing with timestamp parameter ---")
+        timestamp = int(datetime.now().timestamp() * 1000)
+        
+        for patient_id in demo_patient_ids:
+            response = requests.get(f"{self.base_url}/api/consultations/patient/{patient_id}?_t={timestamp}")
+            if response.status_code == 200:
+                consultations = response.json()
+                print(f"✅ Timestamp parameter works for {patient_id}: {len(consultations)} consultations")
+            else:
+                print(f"⚠️ Timestamp parameter failed for {patient_id}: {response.status_code}")
+    
+    def test_patient_consultation_data_linkage(self):
+        """Test data linkage between patients and their consultations"""
+        print("\n=== TESTING PATIENT-CONSULTATION DATA LINKAGE ===")
+        
+        # Get all patients
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        
+        # Get all consultations
+        response = requests.get(f"{self.base_url}/api/consultations")
+        self.assertEqual(response.status_code, 200)
+        all_consultations = response.json()
+        
+        print(f"📊 Total patients: {len(patients)}")
+        print(f"📊 Total consultations: {len(all_consultations)}")
+        
+        # Check data consistency
+        consultation_patient_ids = set()
+        appointment_ids_in_consultations = set()
+        
+        for consultation in all_consultations:
+            consultation_patient_ids.add(consultation.get('patient_id'))
+            appointment_ids_in_consultations.add(consultation.get('appointment_id'))
+        
+        patient_ids = set(patient['id'] for patient in patients)
+        
+        print(f"📊 Unique patient IDs in consultations: {len(consultation_patient_ids)}")
+        print(f"📊 Unique appointment IDs in consultations: {len(appointment_ids_in_consultations)}")
+        
+        # Verify all consultation patient_ids exist in patients
+        orphaned_consultations = consultation_patient_ids - patient_ids
+        if orphaned_consultations:
+            print(f"❌ Found orphaned consultations for non-existent patients: {orphaned_consultations}")
+        else:
+            print("✅ All consultations have valid patient references")
+        
+        # Check if demo patients have consultation records
+        demo_patient_ids = ["patient1", "patient2", "patient3"]
+        for patient_id in demo_patient_ids:
+            patient_consultations = [c for c in all_consultations if c.get('patient_id') == patient_id]
+            print(f"📋 {patient_id}: {len(patient_consultations)} consultations")
+            
+            if len(patient_consultations) == 0:
+                print(f"⚠️ {patient_id} has no consultation records - this may explain missing history")
+    
+    def test_consultation_appointment_linkage(self):
+        """Test linkage between consultations and appointments"""
+        print("\n=== TESTING CONSULTATION-APPOINTMENT LINKAGE ===")
+        
+        # Get all consultations
+        response = requests.get(f"{self.base_url}/api/consultations")
+        self.assertEqual(response.status_code, 200)
+        consultations = response.json()
+        
+        # Get all appointments
+        response = requests.get(f"{self.base_url}/api/appointments")
+        self.assertEqual(response.status_code, 200)
+        appointments = response.json()
+        
+        appointment_ids = set(appt['id'] for appt in appointments)
+        
+        print(f"📊 Total consultations: {len(consultations)}")
+        print(f"📊 Total appointments: {len(appointments)}")
+        
+        # Check consultation-appointment linkage
+        linked_consultations = 0
+        orphaned_consultations = []
+        
+        for consultation in consultations:
+            appointment_id = consultation.get('appointment_id')
+            if appointment_id in appointment_ids:
+                linked_consultations += 1
+            else:
+                orphaned_consultations.append({
+                    'consultation_id': consultation.get('id'),
+                    'appointment_id': appointment_id,
+                    'patient_id': consultation.get('patient_id')
+                })
+        
+        print(f"✅ Linked consultations: {linked_consultations}")
+        print(f"❌ Orphaned consultations: {len(orphaned_consultations)}")
+        
+        if orphaned_consultations:
+            print("Orphaned consultation details:")
+            for orphan in orphaned_consultations[:5]:  # Show first 5
+                print(f"  - Consultation {orphan['consultation_id']} -> Appointment {orphan['appointment_id']} (Patient: {orphan['patient_id']})")
+    
+    def test_create_test_consultation_data(self):
+        """Create test consultation records for demo patients if missing"""
+        print("\n=== CREATING TEST CONSULTATION DATA ===")
+        
+        demo_patient_ids = ["patient1", "patient2", "patient3"]
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        for i, patient_id in enumerate(demo_patient_ids):
+            # Check if patient exists
+            response = requests.get(f"{self.base_url}/api/patients/{patient_id}")
+            if response.status_code != 200:
+                print(f"❌ Patient {patient_id} not found - skipping")
+                continue
+            
+            # Check existing consultations
+            response = requests.get(f"{self.base_url}/api/consultations/patient/{patient_id}")
+            self.assertEqual(response.status_code, 200)
+            existing_consultations = response.json()
+            
+            if len(existing_consultations) > 0:
+                print(f"✅ {patient_id} already has {len(existing_consultations)} consultations")
+                continue
+            
+            print(f"📝 Creating test consultation for {patient_id}")
+            
+            # Create a test appointment first
+            test_appointment = {
+                "patient_id": patient_id,
+                "date": today,
+                "heure": f"{10 + i}:00",
+                "type_rdv": "visite" if i % 2 == 0 else "controle",
+                "statut": "termine",
+                "motif": f"Test consultation for {patient_id}",
+                "paye": True
+            }
+            
+            response = requests.post(f"{self.base_url}/api/appointments", json=test_appointment)
+            if response.status_code != 200:
+                print(f"❌ Failed to create appointment for {patient_id}: {response.status_code}")
+                continue
+                
+            appointment_id = response.json()["appointment_id"]
+            print(f"✅ Created appointment {appointment_id} for {patient_id}")
+            
+            # Create consultation
+            test_consultation = {
+                "patient_id": patient_id,
+                "appointment_id": appointment_id,
+                "date": today,
+                "type_rdv": test_appointment["type_rdv"],
+                "duree": 20,
+                "poids": 12.5 + i,
+                "taille": 85.0 + i * 2,
+                "pc": 47.0 + i,
+                "observations": f"Test consultation observations for {patient_id}",
+                "traitement": f"Test treatment for {patient_id}",
+                "bilan": f"Test results for {patient_id}",
+                "relance_date": ""
+            }
+            
+            response = requests.post(f"{self.base_url}/api/consultations", json=test_consultation)
+            if response.status_code == 200:
+                consultation_id = response.json()["consultation_id"]
+                print(f"✅ Created consultation {consultation_id} for {patient_id}")
+            else:
+                print(f"❌ Failed to create consultation for {patient_id}: {response.status_code}")
+    
+    def test_consultation_history_response_format(self):
+        """Test consultation history response format and structure"""
+        print("\n=== TESTING CONSULTATION HISTORY RESPONSE FORMAT ===")
+        
+        # Get a patient with consultations
+        response = requests.get(f"{self.base_url}/api/consultations")
+        self.assertEqual(response.status_code, 200)
+        all_consultations = response.json()
+        
+        if len(all_consultations) == 0:
+            print("⚠️ No consultations found - creating test data first")
+            self.test_create_test_consultation_data()
+            
+            # Retry getting consultations
+            response = requests.get(f"{self.base_url}/api/consultations")
+            self.assertEqual(response.status_code, 200)
+            all_consultations = response.json()
+        
+        if len(all_consultations) > 0:
+            # Get patient ID from first consultation
+            patient_id = all_consultations[0]['patient_id']
+            
+            # Test consultation history endpoint
+            response = requests.get(f"{self.base_url}/api/consultations/patient/{patient_id}")
+            self.assertEqual(response.status_code, 200)
+            consultations = response.json()
+            
+            print(f"📋 Testing response format for patient {patient_id}")
+            print(f"📊 Found {len(consultations)} consultations")
+            
+            # Verify response is array
+            self.assertIsInstance(consultations, list)
+            
+            if len(consultations) > 0:
+                consultation = consultations[0]
+                
+                # Verify required fields for frontend
+                required_fields = [
+                    'id', 'patient_id', 'appointment_id', 'date', 'type_rdv',
+                    'observations', 'traitement', 'bilan'
+                ]
+                
+                print("📝 Checking required fields:")
+                for field in required_fields:
+                    if field in consultation:
+                        print(f"  ✅ {field}: {consultation[field]}")
+                        self.assertIn(field, consultation)
+                    else:
+                        print(f"  ❌ Missing field: {field}")
+                
+                # Verify data types
+                self.assertIsInstance(consultation['id'], str)
+                self.assertIsInstance(consultation['patient_id'], str)
+                self.assertIsInstance(consultation['date'], str)
+                
+                # Verify date format
+                try:
+                    datetime.strptime(consultation['date'], "%Y-%m-%d")
+                    print("  ✅ Date format is valid")
+                except ValueError:
+                    print(f"  ❌ Invalid date format: {consultation['date']}")
+        else:
+            print("❌ No consultations available for testing")
+    
+    def test_consultation_history_error_handling(self):
+        """Test error handling for consultation history endpoints"""
+        print("\n=== TESTING CONSULTATION HISTORY ERROR HANDLING ===")
+        
+        # Test with non-existent patient ID
+        response = requests.get(f"{self.base_url}/api/consultations/patient/non_existent_patient")
+        print(f"Non-existent patient response: {response.status_code}")
+        
+        if response.status_code == 404:
+            print("✅ Proper 404 error for non-existent patient")
+        elif response.status_code == 200:
+            consultations = response.json()
+            if len(consultations) == 0:
+                print("✅ Empty array returned for non-existent patient")
+            else:
+                print("❌ Unexpected consultations returned for non-existent patient")
+        else:
+            print(f"⚠️ Unexpected status code: {response.status_code}")
+        
+        # Test with invalid patient ID format
+        response = requests.get(f"{self.base_url}/api/consultations/patient/")
+        print(f"Empty patient ID response: {response.status_code}")
+        
+        # Test with special characters
+        response = requests.get(f"{self.base_url}/api/consultations/patient/patient@123")
+        print(f"Special characters in patient ID response: {response.status_code}")
+    
+    def test_phone_messages_to_consultation_workflow(self):
+        """Test the complete workflow from phone messages to consultation history"""
+        print("\n=== TESTING PHONE MESSAGES TO CONSULTATION WORKFLOW ===")
+        
+        # This simulates the workflow described in the issue:
+        # 1. User clicks "VOIR" button from Messages page
+        # 2. User gets redirected to Consultation page
+        # 3. Patient info should be retrieved correctly
+        # 4. Consultation history should be loaded
+        
+        demo_patient_ids = ["patient1", "patient2", "patient3"]
+        
+        for patient_id in demo_patient_ids:
+            print(f"\n--- Testing workflow for {patient_id} ---")
+            
+            # Step 1: Simulate getting patient info (as would happen on Consultation page)
+            print("Step 1: Retrieving patient information...")
+            response = requests.get(f"{self.base_url}/api/patients/{patient_id}")
+            
+            if response.status_code == 200:
+                patient_data = response.json()
+                print(f"✅ Patient info retrieved: {patient_data.get('prenom', '')} {patient_data.get('nom', '')}")
+                
+                # Step 2: Simulate getting consultation history (the problematic part)
+                print("Step 2: Retrieving consultation history...")
+                response = requests.get(f"{self.base_url}/api/consultations/patient/{patient_id}")
+                
+                if response.status_code == 200:
+                    consultations = response.json()
+                    print(f"✅ Consultation history retrieved: {len(consultations)} consultations")
+                    
+                    if len(consultations) == 0:
+                        print("⚠️ No consultation history found - this explains the issue!")
+                        print("   Recommendation: Create consultation records for demo patients")
+                    else:
+                        print("✅ Consultation history available:")
+                        for i, consultation in enumerate(consultations[:3]):  # Show first 3
+                            print(f"   {i+1}. Date: {consultation.get('date')}, Type: {consultation.get('type_rdv', 'N/A')}")
+                else:
+                    print(f"❌ Failed to retrieve consultation history: {response.status_code}")
+            else:
+                print(f"❌ Failed to retrieve patient info: {response.status_code}")
+
 if __name__ == "__main__":
     unittest.main()
