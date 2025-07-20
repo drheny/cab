@@ -201,11 +201,11 @@ const Consultation = ({ user }) => {
   };
 
   // Actualiser les consultations
-  const refreshConsultations = useCallback(async () => {
+  const refreshConsultations = async () => {
     if (selectedPatient) {
       await fetchPatientConsultations(selectedPatient.id);
     }
-  }, [selectedPatient, fetchPatientConsultations]);
+  };
 
   // Ouvrir modal d'ajout de consultation
   const handleAddConsultation = () => {
