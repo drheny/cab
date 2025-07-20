@@ -242,7 +242,7 @@ const Consultation = ({ user }) => {
   };
 
   // Récupérer le montant du paiement pour une consultation
-  const getPaymentAmount = useCallback(async (appointmentId) => {
+  const getPaymentAmount = async (appointmentId) => {
     try {
       console.log(`🔍 Fetching payment for appointment: ${appointmentId}`);
       
@@ -280,7 +280,7 @@ const Consultation = ({ user }) => {
         return null;
       }
     }
-  }, []);
+  };
 
   // Voir une consultation avec montant
   const handleViewConsultation = async (consultation) => {
