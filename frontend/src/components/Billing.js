@@ -33,6 +33,7 @@ const Billing = ({ user }) => {
   const [payments, setPayments] = useState([]);
   const [unpaidAppointments, setUnpaidAppointments] = useState([]);
   const [stats, setStats] = useState({});
+  const [advancedStats, setAdvancedStats] = useState({});
   const [patients, setPatients] = useState([]);
   
   // States for UI
@@ -46,11 +47,33 @@ const Billing = ({ user }) => {
   const [methodFilter, setMethodFilter] = useState('');
   const [assureFilter, setAssureFilter] = useState('');
   
+  // Advanced stats filters
+  const [statsPeriod, setStatsPeriod] = useState('month'); // day, week, month, year
+  
   // Modal states
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [editingPayment, setEditingPayment] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  
+  // Export modal states
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportOptions, setExportOptions] = useState({
+    date: true,
+    patient: true,
+    montant: true,
+    methode: true,
+    assurance: true,
+    notes: false,
+    periode: 'current', // current, custom
+    indicateurs: {
+      ca: true,
+      visites: true,
+      controles: true,
+      assures: true,
+      paiements: true
+    }
+  });
 
   const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
