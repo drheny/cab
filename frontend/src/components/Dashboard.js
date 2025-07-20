@@ -289,12 +289,12 @@ const Dashboard = ({ user }) => {
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
 
-    try {
-      const messageData = {
-        content: newMessage.trim(),
-        reply_to: replyingTo?.id || null
-      };
+    const messageData = {
+      content: newMessage.trim(),
+      reply_to: replyingTo?.id || null
+    };
 
+    try {
       // Clear input and reply state immediately for better UX
       const messageContent = newMessage.trim();
       const replyToMessage = replyingTo;
