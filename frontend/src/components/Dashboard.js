@@ -801,13 +801,13 @@ const Dashboard = ({ user }) => {
                         {message.sender_type === user.type && (
                           <div className="flex items-center space-x-1">
                             {message.is_read ? (
-                              <div className="flex items-center space-x-1" title="Message lu">
-                                <div className="text-xs text-white text-opacity-80">VU</div>
-                                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                              <div className="flex items-center space-x-1 bg-green-100 bg-opacity-80 px-2 py-1 rounded-full" title="Message lu">
+                                <div className="text-xs font-semibold text-green-600">VU</div>
+                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                               </div>
                             ) : (
-                              <div className="flex items-center space-x-1" title="Message envoyé">
-                                <div className="w-2 h-2 bg-white bg-opacity-60 rounded-full"></div>
+                              <div className="flex items-center space-x-1 bg-white bg-opacity-60 px-2 py-1 rounded-full" title="Message envoyé">
+                                <div className="text-xs font-medium text-white text-opacity-90">✓</div>
                               </div>
                             )}
                           </div>
