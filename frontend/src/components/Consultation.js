@@ -82,41 +82,55 @@ const Consultation = ({ user }) => {
     fetchPatients();
   }, [fetchPatients]);
 
-  // Gérer les paramètres URL pour pré-sélectionner un patient
+  // Gérer les paramètres URL pour pré-sélectionner un patient (sans dépendances de fonctions)
   useEffect(() => {
-    // Use a timeout to ensure all functions are initialized
-    const handleUrlParams = async () => {
-      if (patients.length === 0) return; // Attendre que les patients soient chargés
-      
-      const urlParams = new URLSearchParams(location.search);
-      const patientId = urlParams.get('patient');
-      const patientName = urlParams.get('patientName');
-      
-      if (patientId) {
-        const patient = patients.find(p => p.id === patientId);
-        if (patient) {
-          // Use setTimeout to ensure functions are initialized
-          setTimeout(() => {
-            handlePatientSelect(patient);
-            console.log(`🔗 Patient pre-selected from URL: ${patient.prenom} ${patient.nom}`);
-          }, 100);
-        } else if (patientName) {
+    if (patients.length === 0) return; // Attendre que les patients soient chargés
+    
+    const urlParams = new URLSearchParams(location.search);
+    const patientId = urlParams.get('patient');
+    const patientName = urlParams.get('patientName');
+    
+    if (patientId || patientName) {
+      // Use a longer timeout to ensure all functions are fully initialized
+      const timer = setTimeout(() => {
+        let patient = null;
+        
+        if (patientId) {
+          patient = patients.find(p => p.id === patientId);
+        }
+        
+        if (!patient && patientName) {
           // Si on n'a pas trouvé par ID, essayer par nom
-          const patientByName = patients.find(p => 
+          patient = patients.find(p => 
             `${p.prenom} ${p.nom}`.toLowerCase().includes(patientName.toLowerCase())
           );
-          if (patientByName) {
-            setTimeout(() => {
-              handlePatientSelect(patientByName);
-              console.log(`🔗 Patient found by name from URL: ${patientByName.prenom} ${patientByName.nom}`);
-            }, 100);
-          }
         }
-      }
-    };
-    
-    handleUrlParams();
-  }, [patients, location.search]); // Remove function dependencies to avoid timing issues
+        
+        if (patient) {
+          // Directly set state without calling functions to avoid timing issues
+          setSelectedPatient(patient);
+          setSearchTerm(`${patient.prenom} ${patient.nom}`);
+          setFilteredPatients([]);
+          
+          // Call fetchPatientConsultations directly
+          const loadConsultations = async () => {
+            try {
+              const timestamp = Date.now();
+              const response = await axios.get(`${API_BASE_URL}/api/consultations/patient/${patient.id}?_t=${timestamp}`);
+              setConsultations(response.data || []);
+              console.log(`🔗 Patient pre-selected from URL: ${patient.prenom} ${patient.nom}`);
+            } catch (error) {
+              console.error('Error fetching consultations:', error);
+            }
+          };
+          
+          loadConsultations();
+        }
+      }, 500); // Longer timeout to ensure initialization
+      
+      return () => clearTimeout(timer);
+    }
+  }, [patients, location.search]); // Only depend on data, not functions
 
   // Gestion du chronomètre
   useEffect(() => {
