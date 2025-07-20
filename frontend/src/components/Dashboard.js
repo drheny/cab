@@ -9,7 +9,10 @@ import {
   Phone,
   AlertCircle,
   Gift,
-  PhoneCall
+  PhoneCall,
+  Eye,
+  X,
+  MessageSquare
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
