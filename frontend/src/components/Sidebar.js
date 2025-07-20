@@ -28,6 +28,7 @@ const Sidebar = ({ user, isOpen, onClose }) => {
     if (user.type === 'medecin') return true;
     if (permission === 'all') return true;
     if (permission === 'billing' || permission === 'admin') return false;
+    if (permission === 'messages') return true; // Both can access messages
     return user.permissions?.includes(permission);
   };
 
