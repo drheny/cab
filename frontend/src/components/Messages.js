@@ -143,9 +143,51 @@ const Messages = ({ user }) => {
   };
 
   // Navigate to consultation page for patient
-  const viewPatientConsultations = (patientId) => {
-    // This would navigate to consultation page with patient pre-selected
-    window.location.href = `/consultation?patient=${patientId}`;
+  const viewPatientConsultations = (patientId, patientName) => {
+    // Navigate to consultation page with patient pre-selected
+    const params = new URLSearchParams({
+      patient: patientId,
+      patientName: patientName || ''
+    });
+    window.location.href = `/consultation?${params.toString()}`;
+  };
+
+  // Edit phone message
+  const handleEditMessage = (message) => {
+    setEditingMessage(message);
+    setEditContent(message.message_content);
+    setEditPriority(message.priority);
+  };
+
+  // Save edited message
+  const handleSaveEdit = async () => {
+    if (!editContent.trim()) {
+      toast.error('Le contenu du message ne peut pas être vide');
+      return;
+    }
+
+    try {
+      await axios.put(`/api/phone-messages/${editingMessage.id}`, {
+        message_content: editContent,
+        priority: editPriority
+      });
+
+      toast.success('Message modifié avec succès');
+      setEditingMessage(null);
+      setEditContent('');
+      setEditPriority('normal');
+      loadPhoneMessages();
+    } catch (error) {
+      console.error('Error editing message:', error);
+      toast.error('Erreur lors de la modification du message');
+    }
+  };
+
+  // Cancel edit
+  const handleCancelEdit = () => {
+    setEditingMessage(null);
+    setEditContent('');
+    setEditPriority('normal');
   };
 
   // Initialize component
