@@ -181,42 +181,17 @@ const Dashboard = ({ user }) => {
     }
   };
 
-  const playNotificationSound = () => {
-    try {
-      // Create a pleasant notification sound
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      
-      // Resume AudioContext if suspended (required by some browsers)
-      if (audioContext.state === 'suspended') {
-        audioContext.resume();
+  // Clear all messages
+  const handleClearMessages = async () => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer tous les messages ? Cette action est irréversible.')) {
+      try {
+        await axios.delete('/api/messages');
+        toast.success('Tous les messages ont été supprimés');
+        setMessages([]);
+      } catch (error) {
+        console.error('Error clearing messages:', error);
+        toast.error('Erreur lors de la suppression des messages');
       }
-      
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      // Create a pleasant two-tone notification sound
-      oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
-      oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.1);
-      oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.2);
-      
-      // Set volume - audible but not too loud
-      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-      gainNode.gain.linearRampToValueAtTime(0.2, audioContext.currentTime + 0.05);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
-      
-      // Use sine wave for pleasant sound
-      oscillator.type = 'sine';
-      
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.4);
-      
-      console.log('🔊 Notification sound played successfully');
-      
-    } catch (error) {
-      console.log('Could not play notification sound:', error);
     }
   };
 
