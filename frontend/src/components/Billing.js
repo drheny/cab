@@ -45,6 +45,8 @@ const Billing = ({ user }) => {
     fin: new Date().toISOString().split('T')[0] // Today
   });
   const [methodFilter, setMethodFilter] = useState('');
+  const [assureFilter, setAssureFilter] = useState('');
+  
   // States for advanced search
   const [searchFilters, setSearchFilters] = useState({
     patientName: '',
