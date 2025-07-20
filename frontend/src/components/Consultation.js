@@ -166,8 +166,8 @@ const Consultation = ({ user }) => {
     }
   }, [searchTerm, patients]);
 
-  // Charger tous les patients
-  const fetchPatients = useCallback(async () => {
+  // Charger tous les patients - function moved to useEffect to avoid circular deps
+  const fetchPatients = async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/api/patients`);
       setPatients(response.data.patients || []);
@@ -177,10 +177,10 @@ const Consultation = ({ user }) => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
   // Charger les consultations d'un patient
-  const fetchPatientConsultations = useCallback(async (patientId) => {
+  const fetchPatientConsultations = async (patientId) => {
     try {
       // Force fresh data by adding timestamp to prevent caching
       const timestamp = Date.now();
@@ -190,15 +190,15 @@ const Consultation = ({ user }) => {
       console.error('Error fetching consultations:', error);
       toast.error('Erreur lors du chargement des consultations');
     }
-  }, []);
+  };
 
   // Sélectionner un patient
-  const handlePatientSelect = useCallback(async (patient) => {
+  const handlePatientSelect = async (patient) => {
     setSelectedPatient(patient);
     setSearchTerm(`${patient.prenom} ${patient.nom}`);
     setFilteredPatients([]);
     await fetchPatientConsultations(patient.id);
-  }, [fetchPatientConsultations]);
+  };
 
   // Actualiser les consultations
   const refreshConsultations = useCallback(async () => {
