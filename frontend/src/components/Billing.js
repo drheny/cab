@@ -366,7 +366,82 @@ const Billing = ({ user }) => {
     setShowEditModal(true);
   };
 
-  const handleUpdatePayment = async (paymentId, updatedData) => {
+  const handleAdvancedSearch = async (page = 1) => {
+    setIsSearching(true);
+    try {
+      const params = new URLSearchParams();
+      if (searchFilters.patientName) params.append('patient_name', searchFilters.patientName);
+      if (searchFilters.dateDebut) params.append('date_debut', searchFilters.dateDebut);
+      if (searchFilters.dateFin) params.append('date_fin', searchFilters.dateFin);
+      if (searchFilters.method) params.append('method', searchFilters.method);
+      if (searchFilters.assure !== '') params.append('assure', searchFilters.assure);
+      params.append('page', page.toString());
+      params.append('limit', pagination.limit.toString());
+      
+      const response = await axios.get(`${API_BASE_URL}/api/payments/search?${params.toString()}`);
+      const data = response.data;
+      
+      setSearchResults(data.payments || []);
+      setPagination({
+        currentPage: data.pagination.current_page,
+        totalPages: data.pagination.total_pages,
+        totalCount: data.pagination.total_count,
+        limit: data.pagination.limit
+      });
+      
+    } catch (error) {
+      console.error('Error in advanced search:', error);
+      toast.error('Erreur lors de la recherche');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const clearAdvancedSearch = () => {
+    setSearchFilters({
+      patientName: '',
+      dateDebut: '',
+      dateFin: '',
+      method: '',
+      assure: ''
+    });
+    setSearchResults([]);
+    setPagination({
+      currentPage: 1,
+      totalPages: 1,
+      totalCount: 0,
+      limit: 20
+    });
+  };
+
+  const handleDeletePayment = async (payment) => {
+    if (!window.confirm(`Êtes-vous sûr de vouloir supprimer ce paiement de ${payment.patient?.prenom} ${payment.patient?.nom} ?`)) {
+      return;
+    }
+    
+    try {
+      await axios.delete(`${API_BASE_URL}/api/payments/${payment.id}`);
+      
+      toast.success('Paiement supprimé avec succès');
+      
+      // Refresh data
+      await Promise.all([
+        fetchPayments(),
+        fetchStats(),
+        fetchAdvancedStats(),
+        fetchUnpaidAppointments()
+      ]);
+      
+      // Refresh search results if searching
+      if (searchResults.length > 0) {
+        handleAdvancedSearch(pagination.currentPage);
+      }
+      
+    } catch (error) {
+      console.error('Error deleting payment:', error);
+      toast.error('Erreur lors de la suppression du paiement');
+    }
+  };
     try {
       const paymentData = {
         paye: updatedData.paye,
