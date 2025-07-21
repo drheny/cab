@@ -392,8 +392,7 @@ const Billing = ({ user }) => {
       await Promise.all([
         fetchPayments(),
         fetchStats(),
-        fetchAdvancedStats(),
-        fetchUnpaidAppointments()
+        fetchAdvancedStats()
       ]);
       
       // Refresh search results if searching
