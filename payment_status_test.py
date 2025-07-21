@@ -228,10 +228,14 @@ class PaymentStatusTest(unittest.TestCase):
             # Verify required fields for badge display
             self.assertIn("type_rdv", payment, "type_rdv required for badge type")
             self.assertIn("statut", payment, "statut required for badge display")
-            self.assertIn("patient_nom", payment, "patient_nom required for display")
-            self.assertIn("patient_prenom", payment, "patient_prenom required for display")
+            self.assertIn("patient", payment, "patient object required for display")
             self.assertIn("montant", payment, "montant required for display")
             self.assertIn("date", payment, "date required for display")
+            
+            # Verify patient info structure
+            patient_info = payment["patient"]
+            self.assertIn("nom", patient_info, "patient nom required for display")
+            self.assertIn("prenom", patient_info, "patient prenom required for display")
             
             # Count badge types
             if payment["type_rdv"] in badge_types:
