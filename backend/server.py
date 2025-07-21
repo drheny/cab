@@ -794,9 +794,165 @@ async def root():
 
 @app.get("/api/init-demo")
 async def init_demo():
-    """Initialize demo data"""
-    create_demo_data()
-    return {"message": "Demo data created successfully"}
+    """Initialize demo data with test consultations and payments"""
+    try:
+        # Clear existing data for fresh test
+        patients_collection.delete_many({})
+        appointments_collection.delete_many({})
+        consultations_collection.delete_many({})
+        payments_collection.delete_many({})
+        
+        # Create test patients
+        test_patients = [
+            {
+                "id": "patient1",
+                "nom": "Martin",
+                "prenom": "Jean",
+                "date_naissance": "2018-05-15",
+                "age": "6 ans",
+                "adresse": "123 Rue de la Paix, Tunis",
+                "numero_whatsapp": "+21612345678"
+            },
+            {
+                "id": "patient2", 
+                "nom": "Dupont",
+                "prenom": "Marie",
+                "date_naissance": "2020-08-22",
+                "age": "4 ans",
+                "adresse": "456 Avenue Bourguiba, Sfax",
+                "numero_whatsapp": "+21698765432"
+            },
+            {
+                "id": "patient3",
+                "nom": "Ben Ali",
+                "prenom": "Ahmed",
+                "date_naissance": "2019-12-10", 
+                "age": "5 ans",
+                "adresse": "789 Rue Habib Thameur, Sousse",
+                "numero_whatsapp": "+21654321098"
+            }
+        ]
+        
+        for patient in test_patients:
+            patients_collection.insert_one(patient)
+        
+        # Create test appointments and consultations with different types
+        today = datetime.now()
+        test_data = [
+            # Visites payées
+            {
+                "appointment_id": "appt1",
+                "patient_id": "patient1", 
+                "type": "visite",
+                "status": "paye",
+                "date": (today - timedelta(days=5)).strftime("%Y-%m-%d"),
+                "montant": 65.0
+            },
+            {
+                "appointment_id": "appt2", 
+                "patient_id": "patient2",
+                "type": "visite", 
+                "status": "paye",
+                "date": (today - timedelta(days=3)).strftime("%Y-%m-%d"),
+                "montant": 65.0
+            },
+            # Contrôles payés
+            {
+                "appointment_id": "appt3",
+                "patient_id": "patient1",
+                "type": "controle",
+                "status": "paye", 
+                "date": (today - timedelta(days=2)).strftime("%Y-%m-%d"),
+                "montant": 0.0  # Contrôles gratuits
+            },
+            {
+                "appointment_id": "appt4",
+                "patient_id": "patient3",
+                "type": "controle",
+                "status": "paye",
+                "date": (today - timedelta(days=1)).strftime("%Y-%m-%d"), 
+                "montant": 0.0
+            },
+            # Visites impayées
+            {
+                "appointment_id": "appt5",
+                "patient_id": "patient2",
+                "type": "visite",
+                "status": "impaye",
+                "date": today.strftime("%Y-%m-%d"),
+                "montant": 65.0
+            },
+            {
+                "appointment_id": "appt6",
+                "patient_id": "patient3", 
+                "type": "visite",
+                "status": "impaye",
+                "date": today.strftime("%Y-%m-%d"),
+                "montant": 65.0
+            }
+        ]
+        
+        # Create appointments, consultations and payments
+        for data in test_data:
+            # Create appointment
+            appointment = {
+                "id": data["appointment_id"],
+                "patient_id": data["patient_id"],
+                "date": data["date"],
+                "heure": "10:00",
+                "type_rdv": data["type"],
+                "motif": "Consultation pédiatrique",
+                "statut": "termine",
+                "paye": data["status"] == "paye",
+                "created_at": datetime.now()
+            }
+            appointments_collection.insert_one(appointment)
+            
+            # Create consultation
+            consultation = {
+                "id": f"cons_{data['appointment_id']}",
+                "patient_id": data["patient_id"],
+                "appointment_id": data["appointment_id"],
+                "date": data["date"],
+                "type_rdv": data["type"],
+                "duree": 30,
+                "observations": f"Consultation {data['type']} - Patient en bonne santé",
+                "created_at": datetime.now()
+            }
+            consultations_collection.insert_one(consultation)
+            
+            # Create payment only if paid
+            if data["status"] == "paye":
+                payment = {
+                    "id": f"pay_{data['appointment_id']}",
+                    "patient_id": data["patient_id"],
+                    "appointment_id": data["appointment_id"],
+                    "montant": data["montant"],
+                    "type_paiement": "espece",
+                    "statut": "paye",
+                    "assure": data["patient_id"] == "patient2",  # Marie est assurée
+                    "date": data["date"],
+                    "notes": f"Paiement {data['type']}",
+                    "created_at": datetime.now()
+                }
+                payments_collection.insert_one(payment)
+        
+        return {
+            "message": "Demo data created successfully",
+            "summary": {
+                "patients": 3,
+                "appointments": 6,
+                "consultations": 6,
+                "payments": 4,
+                "visites_payees": 2,
+                "controles_payes": 2, 
+                "visites_impayees": 2,
+                "montant_total_encaisse": 130.0
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating demo data: {str(e)}")
 
 @app.get("/api/dashboard/birthdays")
 async def get_birthdays_today():
