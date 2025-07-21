@@ -127,7 +127,8 @@ const Billing = ({ user }) => {
         fetchUnpaidAppointments(),
         fetchPatients(),
         fetchStats(),
-        fetchAdvancedStats()
+        fetchAdvancedStats(),
+        fetchCashMovements()
       ]);
     } catch (error) {
       console.error('Error fetching initial data:', error);
