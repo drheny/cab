@@ -1053,9 +1053,8 @@ async def get_dashboard():
     rdv_en_cours = len([a for a in today_appointments if a["statut"] == "en_cours"])
     rdv_termines = len([a for a in today_appointments if a["statut"] == "termine"])
     
-    # Get today's payments
-    today_payments = list(payments_collection.find({"date": today, "statut": "paye"}))
-    recette_jour = sum([p["montant"] for p in today_payments])
+    # Get today's revenue (payments + cash movements)
+    recette_jour = await get_daily_cash_balance()
     
     # Get patient count
     total_patients = patients_collection.count_documents({})
