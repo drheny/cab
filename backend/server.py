@@ -2120,7 +2120,21 @@ async def get_payments_stats(
         payments = list(payments_collection.find(query, {"_id": 0}))
         
         # Calculate statistics
-        total_montant = sum(p.get("montant", 0) for p in payments)
+        total_montant_payments = sum(p.get("montant", 0) for p in payments)
+        
+        # Add cash movements for the period
+        cash_movements = list(cash_movements_collection.find({
+            "date": {"$gte": date_debut, "$lte": date_fin}
+        }, {"_id": 0}))
+        
+        mouvements_total = 0
+        for movement in cash_movements:
+            if movement["type_mouvement"] == "ajout":
+                mouvements_total += movement["montant"]
+            else:
+                mouvements_total -= movement["montant"]
+        
+        total_montant = total_montant_payments + mouvements_total
         nb_paiements = len(payments)
         
         # Group by payment method
