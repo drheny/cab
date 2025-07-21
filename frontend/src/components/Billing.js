@@ -483,6 +483,72 @@ const Billing = ({ user }) => {
     }
   };
 
+  // Fonctions pour la gestion de caisse
+  const fetchCashMovements = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/cash-movements`, {
+        params: {
+          date_debut: dateFilter.debut,
+          date_fin: dateFilter.fin
+        }
+      });
+      setCashMovements(response.data.movements || []);
+      setCashBalance(response.data.solde_jour || 0);
+    } catch (error) {
+      console.error('Error fetching cash movements:', error);
+      toast.error('Erreur lors du chargement des mouvements de caisse');
+    }
+  };
+
+  const handleCreateCashMovement = async () => {
+    try {
+      if (!cashForm.montant || !cashForm.motif) {
+        toast.error('Veuillez remplir tous les champs obligatoires');
+        return;
+      }
+
+      const response = await axios.post(`${API_BASE_URL}/api/cash-movements`, {
+        montant: parseFloat(cashForm.montant),
+        type_mouvement: cashForm.type_mouvement,
+        motif: cashForm.motif,
+        date: cashForm.date
+      });
+
+      toast.success('Mouvement de caisse ajouté avec succès');
+      
+      // Reset form
+      setCashForm({
+        montant: '',
+        type_mouvement: 'ajout',
+        motif: '',
+        date: new Date().toISOString().split('T')[0]
+      });
+      
+      // Refresh data
+      await fetchCashMovements();
+      setShowCashForm(false);
+      
+    } catch (error) {
+      console.error('Error creating cash movement:', error);
+      toast.error('Erreur lors de la création du mouvement de caisse');
+    }
+  };
+
+  const handleDeleteCashMovement = async (movementId) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce mouvement de caisse ?')) {
+      return;
+    }
+    
+    try {
+      await axios.delete(`${API_BASE_URL}/api/cash-movements/${movementId}`);
+      toast.success('Mouvement de caisse supprimé avec succès');
+      await fetchCashMovements();
+    } catch (error) {
+      console.error('Error deleting cash movement:', error);
+      toast.error('Erreur lors de la suppression du mouvement de caisse');
+    }
+  };
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-TN', {
       style: 'decimal',
