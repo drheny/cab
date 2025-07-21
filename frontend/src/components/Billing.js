@@ -44,7 +44,7 @@ const Billing = ({ user }) => {
     patientName: '',
     dateDebut: '',
     dateFin: '',
-    method: '',
+    statutPaiement: '',
     assure: ''
   });
   
