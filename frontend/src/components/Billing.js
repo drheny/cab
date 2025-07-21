@@ -132,46 +132,10 @@ const Billing = ({ user }) => {
       const response = await axios.get(`${API_BASE_URL}/api/payments`);
       const paymentsData = response.data || [];
       
-      // Enrich payments with patient info
-      const enrichedPayments = await Promise.all(
-        paymentsData.map(async (payment) => {
-          try {
-            const patientResponse = await axios.get(`${API_BASE_URL}/api/patients/${payment.patient_id}`);
-            return {
-              ...payment,
-              patient: patientResponse.data
-            };
-          } catch (error) {
-            return {
-              ...payment,
-              patient: { nom: 'Inconnu', prenom: '' }
-            };
-          }
-        })
-      );
-      
-      setPayments(enrichedPayments);
+      setPayments(paymentsData);
     } catch (error) {
       console.error('Error fetching payments:', error);
       toast.error('Erreur lors du chargement des paiements');
-    }
-  };
-
-  const fetchUnpaidAppointments = async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/payments/unpaid`);
-      setUnpaidAppointments(response.data || []);
-    } catch (error) {
-      console.error('Error fetching unpaid appointments:', error);
-    }
-  };
-
-  const fetchPatients = async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/patients`);
-      setPatients(response.data.patients || []);
-    } catch (error) {
-      console.error('Error fetching patients:', error);
     }
   };
 
