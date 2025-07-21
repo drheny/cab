@@ -1,28 +1,20 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   DollarSign, 
-  Calendar, 
   Search, 
   Download, 
   TrendingUp,
   Users,
   FileText,
-  Filter,
   CreditCard,
-  AlertTriangle,
   Edit,
   Trash2,
   Eye,
   RefreshCw,
   PieChart,
-  BarChart3,
-  Clock,
   CheckCircle,
   XCircle,
-  Phone,
-  Euro,
   X,
-  Settings,
   Activity
 } from 'lucide-react';
 import axios from 'axios';
