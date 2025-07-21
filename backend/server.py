@@ -215,6 +215,22 @@ class PhoneMessageEdit(BaseModel):
     message_content: str
     priority: str = "normal"
 
+# Modèles pour la gestion de caisse
+class CashMovement(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    montant: float
+    type_mouvement: str  # "ajout" ou "soustraction"
+    motif: str
+    date: str
+    created_at: datetime = Field(default_factory=datetime.now)
+    created_by: str = "system"  # Qui a créé le mouvement
+
+class CashMovementCreate(BaseModel):
+    montant: float
+    type_mouvement: str  # "ajout" ou "soustraction"
+    motif: str
+    date: str
+
 # Helper functions
 def calculate_age(date_naissance: str) -> str:
     """Calculate age from birth date in format '2 ans, 3 mois, 15 jours'"""
