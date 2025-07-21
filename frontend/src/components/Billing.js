@@ -811,12 +811,22 @@ const Billing = ({ user }) => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center space-x-2">
-                          {getPaymentMethodIcon(payment.type_paiement)}
-                          <span className="text-sm text-gray-900 capitalize">
-                            {payment.type_paiement}
+                        {/* Déterminer le statut du paiement */}
+                        {payment.statut === 'paye' ? (
+                          payment.type_rdv === 'controle' ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                              Contrôle
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              Visite
+                            </span>
+                          )
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            Impayé
                           </span>
-                        </div>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {payment.assure ? (
