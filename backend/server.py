@@ -2890,15 +2890,26 @@ async def create_cash_movement(movement: CashMovementCreate):
             created_at=datetime.now()
         ).dict()
         
-        cash_movements_collection.insert_one(movement_data)
+        # Insert into database
+        result = cash_movements_collection.insert_one(movement_data)
         
         # Calculer le nouveau solde de caisse pour aujourd'hui
         solde = await get_daily_cash_balance()
         
+        # Prepare clean data for response (without ObjectId)
+        clean_movement_data = {
+            "id": movement_data["id"],
+            "montant": movement_data["montant"],
+            "type_mouvement": movement_data["type_mouvement"],
+            "motif": movement_data["motif"],
+            "date": movement_data["date"],
+            "created_at": movement_data["created_at"].isoformat()
+        }
+        
         # Notification WebSocket
         notification_data = {
             "type": "cash_movement_created",
-            "movement": movement_data,
+            "movement": clean_movement_data,
             "solde_actuel": solde,
             "timestamp": datetime.now().isoformat()
         }
@@ -2906,7 +2917,7 @@ async def create_cash_movement(movement: CashMovementCreate):
         
         return {
             "message": "Mouvement de caisse créé avec succès",
-            "movement": movement_data,
+            "movement": clean_movement_data,
             "solde_actuel": solde
         }
         
