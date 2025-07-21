@@ -39,6 +39,7 @@ payments_collection = db.payments
 users_collection = db.users
 messages_collection = db.messages
 phone_messages_collection = db.phone_messages
+cash_movements_collection = db.cash_movements
 
 # Security
 security = HTTPBearer()
