@@ -786,51 +786,6 @@ const Billing = ({ user }) => {
             </div>
           </div>
 
-          {/* Basic Search and Filters (for non-advanced search) */}
-          {searchResults.length === 0 && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <input
-                    type="text"
-                    placeholder="Rechercher un patient..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 input-field"
-                  />
-                </div>
-                
-                <select
-                  value={methodFilter}
-                  onChange={(e) => setMethodFilter(e.target.value)}
-                  className="input-field"
-                >
-                  <option value="">Toutes les méthodes</option>
-                  <option value="espece">Espèces</option>
-                  <option value="carte">Carte bancaire</option>
-                  <option value="cheque">Chèque</option>
-                  <option value="virement">Virement</option>
-                  <option value="gratuit">Gratuit</option>
-                </select>
-
-                <select
-                  value={assureFilter}
-                  onChange={(e) => setAssureFilter(e.target.value)}
-                  className="input-field"
-                >
-                  <option value="">Tous les patients</option>
-                  <option value="true">Assurés</option>
-                  <option value="false">Non assurés</option>
-                </select>
-
-                <div className="text-sm text-gray-500 flex items-center">
-                  {filteredPayments.length} paiement(s) trouvé(s)
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Results Table */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="overflow-x-auto">
