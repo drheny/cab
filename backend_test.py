@@ -4559,6 +4559,172 @@ class CabinetMedicalAPITest(unittest.TestCase):
         
         print("✅ Realistic Workflow Scenarios: ALL TESTS PASSED")
 
+    # ========== PAYMENT STATUS FUNCTIONALITY TESTS - IMPAYÉ FILTER CORRECTION ==========
+    
+    def test_impaye_filter_correction(self):
+        """Test the corrected 'Impayé' filter functionality - Priority Test from Review Request"""
+        print("\n🔍 TESTING IMPAYÉ FILTER CORRECTION - Priority Test")
+        
+        # Step 1: Initialize test data with unpaid consultations
+        print("Step 1: Initializing test data...")
+        response = requests.get(f"{self.base_url}/api/init-test-data")
+        self.assertEqual(response.status_code, 200, "Failed to initialize test data")
+        
+        init_data = response.json()
+        print(f"✅ Test data initialized: {init_data.get('summary', {})}")
+        
+        # Verify expected data structure
+        summary = init_data.get('summary', {})
+        self.assertEqual(summary.get('patients'), 3, "Should have 3 test patients")
+        self.assertEqual(summary.get('appointments'), 6, "Should have 6 appointments")
+        self.assertEqual(summary.get('consultations'), 6, "Should have 6 consultations")
+        self.assertEqual(summary.get('payments'), 4, "Should have 4 payment records")
+        self.assertEqual(summary.get('visites_payees'), 2, "Should have 2 paid visits")
+        self.assertEqual(summary.get('controles_payes'), 2, "Should have 2 paid controls")
+        self.assertEqual(summary.get('visites_impayees'), 2, "Should have 2 unpaid visits")
+        
+        # Step 2: Test Visite filter (paid visits)
+        print("\nStep 2: Testing Visite filter...")
+        response = requests.get(f"{self.base_url}/api/payments/search?statut_paiement=visite")
+        self.assertEqual(response.status_code, 200, "Visite filter request failed")
+        
+        visite_data = response.json()
+        self.assertIn('payments', visite_data, "Response should contain 'payments' array")
+        visite_payments = visite_data['payments']
+        
+        print(f"✅ Visite filter returned {len(visite_payments)} payments")
+        self.assertEqual(len(visite_payments), 2, "Should return 2 paid visite appointments")
+        
+        # Verify visite payment structure
+        for payment in visite_payments:
+            self.assertEqual(payment.get('type_rdv'), 'visite', "Should be visite type")
+            self.assertEqual(payment.get('statut'), 'paye', "Should be paid status")
+            self.assertEqual(payment.get('montant'), 65.0, "Should be 65 TND")
+            self.assertIn('patient', payment, "Should include patient information")
+            
+            # Verify patient info structure
+            patient = payment['patient']
+            self.assertIn('nom', patient, "Patient should have nom")
+            self.assertIn('prenom', patient, "Patient should have prenom")
+        
+        # Step 3: Test Contrôle filter (paid controls)
+        print("\nStep 3: Testing Contrôle filter...")
+        response = requests.get(f"{self.base_url}/api/payments/search?statut_paiement=controle")
+        self.assertEqual(response.status_code, 200, "Contrôle filter request failed")
+        
+        controle_data = response.json()
+        self.assertIn('payments', controle_data, "Response should contain 'payments' array")
+        controle_payments = controle_data['payments']
+        
+        print(f"✅ Contrôle filter returned {len(controle_payments)} payments")
+        self.assertEqual(len(controle_payments), 2, "Should return 2 paid contrôle appointments")
+        
+        # Verify contrôle payment structure
+        for payment in controle_payments:
+            self.assertEqual(payment.get('type_rdv'), 'controle', "Should be controle type")
+            self.assertEqual(payment.get('statut'), 'paye', "Should be paid status")
+            self.assertEqual(payment.get('montant'), 0.0, "Should be 0 TND (gratuit)")
+            self.assertIn('patient', payment, "Should include patient information")
+        
+        # Step 4: Test Impayé filter (THE MAIN TEST - corrected functionality)
+        print("\nStep 4: Testing Impayé filter (CORRECTED FUNCTIONALITY)...")
+        response = requests.get(f"{self.base_url}/api/payments/search?statut_paiement=impaye")
+        self.assertEqual(response.status_code, 200, "Impayé filter request failed")
+        
+        impaye_data = response.json()
+        self.assertIn('payments', impaye_data, "Response should contain 'payments' array")
+        impaye_payments = impaye_data['payments']
+        
+        print(f"✅ Impayé filter returned {len(impaye_payments)} unpaid consultations")
+        self.assertEqual(len(impaye_payments), 2, "Should return 2 unpaid visite appointments")
+        
+        # Verify impayé payment structure (these come from appointments, not payments collection)
+        for payment in impaye_payments:
+            self.assertEqual(payment.get('type_rdv'), 'visite', "Unpaid should only be visite type")
+            self.assertEqual(payment.get('statut'), 'impaye', "Should have impaye status")
+            self.assertEqual(payment.get('montant'), 65.0, "Should be 65 TND")
+            self.assertIn('patient', payment, "Should include patient information")
+            
+            # Verify patient info is complete
+            patient = payment['patient']
+            self.assertIn('nom', patient, "Patient should have nom")
+            self.assertIn('prenom', patient, "Patient should have prenom")
+            self.assertTrue(patient['nom'] and patient['prenom'], "Patient name should not be empty")
+            
+            # Verify this is from appointments with paye=False
+            self.assertIn('appointment_id', payment, "Should have appointment_id")
+            self.assertIn('date', payment, "Should have date")
+        
+        # Step 5: Verify patient names in unpaid consultations
+        print("\nStep 5: Verifying patient information in unpaid consultations...")
+        patient_names = [(p['patient']['prenom'], p['patient']['nom']) for p in impaye_payments]
+        print(f"✅ Unpaid consultations for patients: {patient_names}")
+        
+        # Should include Marie Dupont and Ahmed Ben Ali based on test data
+        expected_patients = [('Marie', 'Dupont'), ('Ahmed', 'Ben Ali')]
+        for expected_patient in expected_patients:
+            found = any(p[0] == expected_patient[0] and p[1] == expected_patient[1] for p in patient_names)
+            self.assertTrue(found, f"Expected patient {expected_patient} not found in unpaid consultations")
+        
+        # Step 6: Verify pagination and response structure
+        print("\nStep 6: Verifying response structure and pagination...")
+        self.assertIn('total', impaye_data, "Response should include total count")
+        self.assertIn('page', impaye_data, "Response should include page number")
+        self.assertIn('limit', impaye_data, "Response should include limit")
+        
+        # Verify pagination values
+        self.assertIsInstance(impaye_data['total'], int, "Total should be integer")
+        self.assertIsInstance(impaye_data['page'], int, "Page should be integer")
+        self.assertIsInstance(impaye_data['limit'], int, "Limit should be integer")
+        
+        print(f"✅ Pagination: total={impaye_data['total']}, page={impaye_data['page']}, limit={impaye_data['limit']}")
+        
+        # Step 7: Test that unpaid consultations are NOT in payments collection
+        print("\nStep 7: Verifying unpaid consultations are NOT in payments collection...")
+        response = requests.get(f"{self.base_url}/api/payments")
+        self.assertEqual(response.status_code, 200, "Failed to get all payments")
+        
+        all_payments = response.json()
+        payment_appointment_ids = [p.get('appointment_id') for p in all_payments if p.get('appointment_id')]
+        
+        # Verify that unpaid appointment IDs are NOT in payments collection
+        for unpaid_payment in impaye_payments:
+            unpaid_appointment_id = unpaid_payment.get('appointment_id')
+            self.assertNotIn(unpaid_appointment_id, payment_appointment_ids, 
+                           f"Unpaid appointment {unpaid_appointment_id} should NOT be in payments collection")
+        
+        print("✅ Confirmed: Unpaid consultations are correctly NOT in payments collection")
+        
+        # Step 8: Verify total amounts calculation
+        print("\nStep 8: Verifying amount calculations...")
+        total_paid_visites = sum(p.get('montant', 0) for p in visite_payments)
+        total_paid_controles = sum(p.get('montant', 0) for p in controle_payments)
+        total_unpaid_amount = sum(p.get('montant', 0) for p in impaye_payments)
+        
+        print(f"✅ Total paid visites: {total_paid_visites} TND (2 × 65 = 130 TND)")
+        print(f"✅ Total paid contrôles: {total_paid_controles} TND (2 × 0 = 0 TND)")
+        print(f"✅ Total unpaid amount: {total_unpaid_amount} TND (2 × 65 = 130 TND)")
+        
+        self.assertEqual(total_paid_visites, 130.0, "Paid visites should total 130 TND")
+        self.assertEqual(total_paid_controles, 0.0, "Paid contrôles should total 0 TND")
+        self.assertEqual(total_unpaid_amount, 130.0, "Unpaid amount should total 130 TND")
+        
+        print("\n🎉 IMPAYÉ FILTER CORRECTION TEST COMPLETED SUCCESSFULLY!")
+        print("✅ All success criteria met:")
+        print("  - Impayé filter returns unpaid consultations from appointments (not payments)")
+        print("  - Unpaid consultations have complete patient information")
+        print("  - Only visite appointments appear as unpaid (contrôles are free)")
+        print("  - Correct amounts and statuses for all filter types")
+        print("  - Proper pagination and data structure")
+        
+        return {
+            'visite_payments': len(visite_payments),
+            'controle_payments': len(controle_payments), 
+            'impaye_payments': len(impaye_payments),
+            'total_paid_amount': total_paid_visites + total_paid_controles,
+            'total_unpaid_amount': total_unpaid_amount
+        }
+
     # ========== PAYMENT STATUS FUNCTIONALITY TESTS ==========
     
     def test_init_demo_endpoint(self):
