@@ -78,6 +78,15 @@ const Billing = ({ user }) => {
   const [editingPayment, setEditingPayment] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
   
+  // Cash movement states
+  const [showCashForm, setShowCashForm] = useState(false);
+  const [cashForm, setCashForm] = useState({
+    montant: '',
+    type_mouvement: 'ajout',
+    motif: '',
+    date: new Date().toISOString().split('T')[0]
+  });
+  
   // Export modal states
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportOptions, setExportOptions] = useState({
