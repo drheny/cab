@@ -685,57 +685,6 @@ const Billing = ({ user }) => {
               </div>
             </div>
           )}
-
-          {/* Original Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Méthodes de paiement</h3>
-              <div className="space-y-3">
-                {Object.entries(stats.by_method || {}).map(([method, data]) => (
-                  <div key={method} className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      {getPaymentMethodIcon(method)}
-                      <span className="text-sm font-medium text-gray-700 capitalize">
-                        {method}
-                      </span>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm font-medium text-gray-900">
-                        {formatCurrency(data.total)}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {data.count} paiements
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Statut assurance</h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                    <span className="text-sm font-medium text-gray-700">Assurés</span>
-                  </div>
-                  <span className="text-lg font-bold text-green-600">
-                    {stats.consultations?.nb_assures || 0}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <XCircle className="w-5 h-5 text-gray-600" />
-                    <span className="text-sm font-medium text-gray-700">Non assurés</span>
-                  </div>
-                  <span className="text-lg font-bold text-gray-600">
-                    {stats.consultations?.nb_non_assures || 0}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       )}
 
