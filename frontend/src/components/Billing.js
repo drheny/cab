@@ -169,36 +169,16 @@ const Billing = ({ user }) => {
   const filteredPayments = useMemo(() => {
     let filtered = [...payments];
 
-    // Search filter
-    if (searchTerm) {
-      filtered = filtered.filter(payment => {
-        const fullName = `${payment.patient?.prenom} ${payment.patient?.nom}`.toLowerCase();
-        return fullName.includes(searchTerm.toLowerCase()) ||
-               payment.appointment_id.toLowerCase().includes(searchTerm.toLowerCase());
-      });
-    }
-
     // Date filter
     filtered = filtered.filter(payment => 
       payment.date >= dateFilter.debut && payment.date <= dateFilter.fin
     );
 
-    // Method filter
-    if (methodFilter) {
-      filtered = filtered.filter(payment => payment.type_paiement === methodFilter);
-    }
-
-    // Insurance filter
-    if (assureFilter !== '') {
-      const isAssured = assureFilter === 'true';
-      filtered = filtered.filter(payment => payment.assure === isAssured);
-    }
-
     // Sort by date (most recent first)
     filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
 
     return filtered;
-  }, [payments, searchTerm, dateFilter, methodFilter, assureFilter]);
+  }, [payments, dateFilter]);
 
   const exportToExcel = () => {
     setShowExportModal(true);
