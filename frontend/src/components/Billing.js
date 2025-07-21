@@ -38,7 +38,7 @@ const Billing = ({ user }) => {
   
   // States for UI
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('dashboard'); // dashboard, payments, unpaid
+  const [activeTab, setActiveTab] = useState('dashboard'); // dashboard, payments, caisse
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState({
     debut: new Date().toISOString().split('T')[0].substring(0, 7) + '-01', // First day of current month
