@@ -35,6 +35,8 @@ const Billing = ({ user }) => {
   const [stats, setStats] = useState({});
   const [advancedStats, setAdvancedStats] = useState({});
   const [patients, setPatients] = useState([]);
+  const [cashMovements, setCashMovements] = useState([]);
+  const [cashBalance, setCashBalance] = useState(0);
   
   // States for UI
   const [loading, setLoading] = useState(true);
