@@ -1678,9 +1678,47 @@ async def delete_consultation(consultation_id: str):
 
 @app.get("/api/payments")
 async def get_payments():
-    """Get all payments"""
-    payments = list(payments_collection.find({}, {"_id": 0}))
-    return payments
+    """Get all payments with enriched data"""
+    try:
+        payments = list(payments_collection.find({}, {"_id": 0}))
+        
+        # Enrich each payment with appointment and patient data
+        for payment in payments:
+            # Get appointment data
+            appointment = appointments_collection.find_one({"id": payment["appointment_id"]}, {"_id": 0})
+            if appointment:
+                payment["type_rdv"] = appointment.get("type_rdv", "visite")
+                payment["patient_id"] = appointment.get("patient_id", "")
+                
+                # Get patient data
+                if appointment.get("patient_id"):
+                    patient = patients_collection.find_one({"id": appointment["patient_id"]}, {"_id": 0})
+                    if patient:
+                        payment["patient"] = {
+                            "nom": patient.get("nom", ""),
+                            "prenom": patient.get("prenom", "")
+                        }
+            
+            # If no appointment found, try to get from consultation
+            if not appointment:
+                consultation = consultations_collection.find_one({"appointment_id": payment["appointment_id"]}, {"_id": 0})
+                if consultation:
+                    payment["type_rdv"] = consultation.get("type_rdv", "visite")
+                    payment["patient_id"] = consultation.get("patient_id", "")
+                    
+                    # Get patient data
+                    if consultation.get("patient_id"):
+                        patient = patients_collection.find_one({"id": consultation["patient_id"]}, {"_id": 0})
+                        if patient:
+                            payment["patient"] = {
+                                "nom": patient.get("nom", ""),
+                                "prenom": patient.get("prenom", "")
+                            }
+        
+        return payments
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching payments: {str(e)}")
 
 @app.get("/api/payments/advanced-stats")
 async def get_advanced_stats(
