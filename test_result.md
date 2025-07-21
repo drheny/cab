@@ -22,6 +22,60 @@
 
 ## Current Implementation Status
 
+### IMPAYÉ FILTER CORRECTION - BACKEND TESTING ✅ COMPLETED
+**Status:** IMPAYÉ FILTER CORRECTION FULLY TESTED AND WORKING - Critical Fix Successfully Implemented
+
+**Test Results Summary (2025-01-21 - Impayé Filter Correction Backend Testing):**
+✅ **GET /api/init-test-data** - Successfully creates test data with 3 patients, 6 appointments (2 unpaid visites), 4 payments
+✅ **GET /api/payments/search?statut_paiement=visite** - Returns 2 paid visite appointments (Jean Martin, Marie Dupont) with 65 TND each
+✅ **GET /api/payments/search?statut_paiement=controle** - Returns 2 paid contrôle appointments (gratuit, 0 TND each)
+✅ **GET /api/payments/search?statut_paiement=impaye** - **CORRECTED FUNCTIONALITY** - Returns 2 unpaid visite appointments (Marie Dupont, Ahmed Ben Ali)
+✅ **Unpaid Consultations Logic** - Correctly searches appointments collection with paye=False, statut=["termine", "absent", "retard"], type_rdv="visite"
+✅ **Patient Information** - All unpaid consultations include complete patient information (nom, prenom)
+✅ **Data Integrity** - Unpaid consultations are NOT in payments collection (as expected)
+✅ **Amount Calculations** - Verified: 2 paid visites × 65 = 130 TND, 2 unpaid visites × 65 = 130 TND pending
+✅ **Response Structure** - Proper pagination structure with payments array and pagination metadata
+✅ **Business Logic** - Only visite appointments appear as unpaid (contrôles are free/gratuit)
+
+**Detailed Test Results:**
+
+**IMPAYÉ FILTER CORRECTION: ✅ CRITICAL FIX WORKING**
+- ✅ **Root Cause Fixed**: Impayé filter now searches appointments collection instead of payments collection
+- ✅ **Correct Logic**: Finds appointments with paye=False, completed status, and type_rdv="visite"
+- ✅ **Patient Data**: All unpaid consultations include complete patient information
+- ✅ **Expected Patients**: Marie Dupont and Ahmed Ben Ali found in unpaid consultations
+- ✅ **Amount Accuracy**: Each unpaid consultation shows 65 TND (correct default amount)
+- ✅ **Status Mapping**: Unpaid appointments correctly mapped to statut="impaye"
+- ✅ **Data Exclusion**: Contrôle appointments correctly excluded (they are free)
+- ✅ **Collection Separation**: Unpaid consultations correctly NOT in payments collection
+
+**FILTER COMPARISON TESTING: ✅ ALL FILTERS WORKING**
+- ✅ **Visite Filter**: Returns 2 paid visite appointments from payments collection
+- ✅ **Contrôle Filter**: Returns 2 paid contrôle appointments from payments collection  
+- ✅ **Impayé Filter**: Returns 2 unpaid visite appointments from appointments collection
+- ✅ **Data Consistency**: Total of 4 paid + 2 unpaid = 6 total consultations
+- ✅ **Amount Totals**: 130 TND paid + 130 TND unpaid = 260 TND total potential revenue
+
+**PAGINATION AND STRUCTURE: ✅ COMPREHENSIVE**
+- ✅ **Response Format**: Consistent structure with payments array and pagination object
+- ✅ **Pagination Fields**: current_page, total_pages, total_count, limit all present and correct
+- ✅ **Data Types**: All pagination fields are integers as expected
+- ✅ **Count Accuracy**: total_count matches actual number of results returned
+
+**SUCCESS CRITERIA VERIFICATION: ✅ ALL MET**
+- ✅ **Filter Returns Unpaid**: Impayé filter returns consultations with paye=False from appointments
+- ✅ **Patient Information**: Complete patient data (nom, prenom) included in all results
+- ✅ **Correct Filtering**: Only visite appointments appear as unpaid (contrôles excluded)
+- ✅ **Data Structure**: Proper response format with pagination metadata
+- ✅ **Amount Accuracy**: Correct 65 TND amounts for all unpaid consultations
+- ✅ **Collection Logic**: Unpaid items correctly sourced from appointments, not payments
+
+**CRITICAL ISSUE RESOLUTION:**
+The impayé filter was previously broken because it was searching the payments collection for unpaid items, but unpaid consultations don't exist in the payments collection by definition. The fix correctly searches the appointments collection for completed appointments (termine, absent, retard) with paye=False and type_rdv="visite", then formats them as payment-like objects for consistent frontend display.
+
+**IMPAYÉ FILTER CORRECTION: BACKEND IMPLEMENTATION COMPLETE AND FULLY TESTED**
+All requirements from the review request have been successfully implemented and validated. The critical fix for the impayé filter is working correctly and ready for production use.
+
 ### PAYMENT STATUS FUNCTIONALITY - BACKEND TESTING ✅ COMPLETED
 **Status:** ALL PAYMENT STATUS BACKEND TESTS PASSED - System Fully Functional and Production Ready
 
