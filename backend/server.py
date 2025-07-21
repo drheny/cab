@@ -2553,57 +2553,112 @@ async def search_payments(
         if assure is not None:
             query["assure"] = assure
             
-        # Status filter (impaye = payments with statut != 'paye')
+        # Handle "impaye" status differently - find unpaid consultations
         if statut_paiement == "impaye":
-            query["statut"] = {"$ne": "paye"}
-        elif statut_paiement in ["visite", "controle"]:
-            query["statut"] = "paye"  # Only paid payments for visite/controle filtering
-        
-        # Get all payments matching basic criteria
-        payments = list(payments_collection.find(query, {"_id": 0}))
-        
-        # Enrich payments with appointment/consultation data and apply type filter
-        filtered_payments = []
-        for payment in payments:
-            # Get appointment data first
-            appointment = appointments_collection.find_one({"id": payment["appointment_id"]}, {"_id": 0})
-            if appointment:
-                payment["type_rdv"] = appointment.get("type_rdv", "visite")
-                payment["patient_id"] = appointment.get("patient_id", "")
-            else:
-                # Try to get from consultation
-                consultation = consultations_collection.find_one({"appointment_id": payment["appointment_id"]}, {"_id": 0})
-                if consultation:
-                    payment["type_rdv"] = consultation.get("type_rdv", "visite")
-                    payment["patient_id"] = consultation.get("patient_id", "")
-                else:
-                    payment["type_rdv"] = "visite"  # Default
+            # Find appointments that are completed but not paid (paye = False)
+            appointments_query = {
+                "paye": False,
+                "statut": {"$in": ["termine", "absent", "retard"]},  # Completed appointments
+                "type_rdv": "visite"  # Only visite appointments can be unpaid (controles are free)
+            }
             
-            # Apply statut_paiement filter
-            if statut_paiement == "visite" and payment["type_rdv"] != "visite":
-                continue
-            elif statut_paiement == "controle" and payment["type_rdv"] != "controle":
-                continue
+            # Add date filter to appointments query
+            if date_debut and date_fin:
+                appointments_query["date"] = {"$gte": date_debut, "$lte": date_fin}
+            elif date_debut:
+                appointments_query["date"] = {"$gte": date_debut}
+            elif date_fin:
+                appointments_query["date"] = {"$lte": date_fin}
+                
+            # Add insurance filter to appointments query
+            if assure is not None:
+                appointments_query["assure"] = assure
             
-            # Get patient info
-            try:
-                if payment.get("patient_id"):
-                    patient = patients_collection.find_one({"id": payment["patient_id"]}, {"_id": 0})
+            # Get unpaid appointments
+            unpaid_appointments = list(appointments_collection.find(appointments_query, {"_id": 0}))
+            
+            # Convert appointments to payment-like format for consistency
+            payments = []
+            for appointment in unpaid_appointments:
+                # Create a payment-like object for unpaid appointment
+                fake_payment = {
+                    "id": f"impaye_{appointment['id']}",
+                    "patient_id": appointment["patient_id"],
+                    "appointment_id": appointment["id"],
+                    "montant": 65.0,  # Default amount for unpaid visite
+                    "type_paiement": "espece",  # Would be espece if paid
+                    "statut": "impaye",  # Special status for unpaid
+                    "type_rdv": appointment.get("type_rdv", "visite"),
+                    "assure": appointment.get("assure", False),
+                    "date": appointment.get("date", ""),
+                    "notes": "Consultation non payée",
+                    "created_at": appointment.get("created_at", datetime.now())
+                }
+                
+                # Get patient info
+                try:
+                    patient = patients_collection.find_one({"id": appointment["patient_id"]}, {"_id": 0})
                     if patient:
-                        payment["patient"] = {
+                        fake_payment["patient"] = {
                             "nom": patient.get("nom", ""),
                             "prenom": patient.get("prenom", "")
                         }
                     else:
-                        payment["patient"] = {"nom": "Inconnu", "prenom": ""}
-                else:
-                    payment["patient"] = {"nom": "Inconnu", "prenom": ""}
-            except:
-                payment["patient"] = {"nom": "Inconnu", "prenom": ""}
+                        fake_payment["patient"] = {"nom": "Inconnu", "prenom": ""}
+                except:
+                    fake_payment["patient"] = {"nom": "Inconnu", "prenom": ""}
+                
+                payments.append(fake_payment)
+                
+        else:
+            # Handle paid payments (visite and controle)
+            query["statut"] = "paye"  # Only paid payments for visite/controle filtering
             
-            filtered_payments.append(payment)
-        
-        payments = filtered_payments
+            # Get all payments matching basic criteria
+            payments = list(payments_collection.find(query, {"_id": 0}))
+            
+            # Enrich payments with appointment/consultation data and apply type filter
+            filtered_payments = []
+            for payment in payments:
+                # Get appointment data first
+                appointment = appointments_collection.find_one({"id": payment["appointment_id"]}, {"_id": 0})
+                if appointment:
+                    payment["type_rdv"] = appointment.get("type_rdv", "visite")
+                    payment["patient_id"] = appointment.get("patient_id", "")
+                else:
+                    # Try to get from consultation
+                    consultation = consultations_collection.find_one({"appointment_id": payment["appointment_id"]}, {"_id": 0})
+                    if consultation:
+                        payment["type_rdv"] = consultation.get("type_rdv", "visite")
+                        payment["patient_id"] = consultation.get("patient_id", "")
+                    else:
+                        payment["type_rdv"] = "visite"  # Default
+                
+                # Apply statut_paiement filter
+                if statut_paiement == "visite" and payment["type_rdv"] != "visite":
+                    continue
+                elif statut_paiement == "controle" and payment["type_rdv"] != "controle":
+                    continue
+                
+                # Get patient info
+                try:
+                    if payment.get("patient_id"):
+                        patient = patients_collection.find_one({"id": payment["patient_id"]}, {"_id": 0})
+                        if patient:
+                            payment["patient"] = {
+                                "nom": patient.get("nom", ""),
+                                "prenom": patient.get("prenom", "")
+                            }
+                        else:
+                            payment["patient"] = {"nom": "Inconnu", "prenom": ""}
+                    else:
+                        payment["patient"] = {"nom": "Inconnu", "prenom": ""}
+                except:
+                    payment["patient"] = {"nom": "Inconnu", "prenom": ""}
+                
+                filtered_payments.append(payment)
+            
+            payments = filtered_payments
         
         # Filter by patient name if provided
         if patient_name:
