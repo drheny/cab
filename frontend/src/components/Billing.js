@@ -31,13 +31,10 @@ const Billing = ({ user }) => {
   // States for UI
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard'); // dashboard, payments, caisse
-  const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState({
     debut: new Date().toISOString().split('T')[0].substring(0, 7) + '-01', // First day of current month
     fin: new Date().toISOString().split('T')[0] // Today
   });
-  const [methodFilter, setMethodFilter] = useState('');
-  const [assureFilter, setAssureFilter] = useState('');
   
   // States for advanced search
   const [searchFilters, setSearchFilters] = useState({
