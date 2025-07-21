@@ -188,16 +188,21 @@ def test_impaye_filter_correction():
         
         # Step 6: Verify pagination and response structure
         print("\nStep 6: Verifying response structure and pagination...")
-        required_fields = ['total', 'page', 'limit']
-        for field in required_fields:
-            if field not in impaye_data:
-                print(f"❌ Response should include {field}")
+        if 'pagination' not in impaye_data:
+            print("❌ Response should include pagination object")
+            return False
+        
+        pagination = impaye_data['pagination']
+        required_pagination_fields = ['current_page', 'total_pages', 'total_count', 'limit']
+        for field in required_pagination_fields:
+            if field not in pagination:
+                print(f"❌ Pagination should include {field}")
                 return False
-            if not isinstance(impaye_data[field], int):
+            if not isinstance(pagination[field], int):
                 print(f"❌ {field} should be integer")
                 return False
         
-        print(f"✅ Pagination: total={impaye_data['total']}, page={impaye_data['page']}, limit={impaye_data['limit']}")
+        print(f"✅ Pagination: total_count={pagination['total_count']}, current_page={pagination['current_page']}, limit={pagination['limit']}")
         
         # Step 7: Test that unpaid consultations are NOT in payments collection
         print("\nStep 7: Verifying unpaid consultations are NOT in payments collection...")
