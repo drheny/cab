@@ -316,7 +316,6 @@ const Billing = ({ user }) => {
       // Refresh data
       await Promise.all([
         fetchPayments(),
-        fetchUnpaidAppointments(),
         fetchStats()
       ]);
       
