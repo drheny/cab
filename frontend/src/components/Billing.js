@@ -308,7 +308,7 @@ const Billing = ({ user }) => {
       if (searchFilters.patientName) params.append('patient_name', searchFilters.patientName);
       if (searchFilters.dateDebut) params.append('date_debut', searchFilters.dateDebut);
       if (searchFilters.dateFin) params.append('date_fin', searchFilters.dateFin);
-      if (searchFilters.method) params.append('method', searchFilters.method);
+      if (searchFilters.statutPaiement) params.append('statut_paiement', searchFilters.statutPaiement);
       if (searchFilters.assure !== '') params.append('assure', searchFilters.assure);
       params.append('page', page.toString());
       params.append('limit', pagination.limit.toString());
