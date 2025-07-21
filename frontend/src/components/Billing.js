@@ -729,21 +729,19 @@ const Billing = ({ user }) => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Méthode</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Statut paiement</label>
                 <select
-                  value={searchFilters.method}
+                  value={searchFilters.statutPaiement}
                   onChange={(e) => setSearchFilters(prev => ({
                     ...prev,
-                    method: e.target.value
+                    statutPaiement: e.target.value
                   }))}
                   className="input-field"
                 >
-                  <option value="">Toutes</option>
-                  <option value="espece">Espèces</option>
-                  <option value="carte">Carte bancaire</option>
-                  <option value="cheque">Chèque</option>
-                  <option value="virement">Virement</option>
-                  <option value="gratuit">Gratuit</option>
+                  <option value="">Tous</option>
+                  <option value="visite">Visite</option>
+                  <option value="controle">Contrôle gratuit</option>
+                  <option value="impaye">Impayé</option>
                 </select>
               </div>
 
