@@ -116,6 +116,7 @@ const Billing = ({ user }) => {
     if (dateFilter.debut && dateFilter.fin) {
       fetchStats();
       fetchAdvancedStats();
+      fetchCashMovements();
     }
   }, [dateFilter, statsPeriod]);
 
