@@ -295,7 +295,7 @@ class AdminAPITest(unittest.TestCase):
         stats = stats_response.json()
         
         # Verify total patients by counting manually
-        patients_response = requests.get(f"{self.base_url}/api/patients?limit=1000")  # Get all patients
+        patients_response = requests.get(f"{self.base_url}/api/patients")  # Get patients with default pagination
         self.assertEqual(patients_response.status_code, 200)
         patients_data = patients_response.json()
         actual_total_patients = patients_data["total_count"]
