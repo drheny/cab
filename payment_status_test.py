@@ -105,7 +105,12 @@ class PaymentStatusTest(unittest.TestCase):
         # Test filter for visites payées
         response = requests.get(f"{self.base_url}/api/payments/search?statut_paiement=visite")
         self.assertEqual(response.status_code, 200)
-        visite_payments = response.json()
+        visite_data = response.json()
+        
+        # Verify response structure
+        self.assertIn("payments", visite_data)
+        self.assertIn("pagination", visite_data)
+        visite_payments = visite_data["payments"]
         
         # Should return only visite payments
         self.assertGreater(len(visite_payments), 0, "Should have visite payments")
@@ -117,7 +122,12 @@ class PaymentStatusTest(unittest.TestCase):
         # Test filter for contrôles payés
         response = requests.get(f"{self.base_url}/api/payments/search?statut_paiement=controle")
         self.assertEqual(response.status_code, 200)
-        controle_payments = response.json()
+        controle_data = response.json()
+        
+        # Verify response structure
+        self.assertIn("payments", controle_data)
+        self.assertIn("pagination", controle_data)
+        controle_payments = controle_data["payments"]
         
         # Should return only controle payments
         self.assertGreater(len(controle_payments), 0, "Should have controle payments")
@@ -129,10 +139,12 @@ class PaymentStatusTest(unittest.TestCase):
         # Test filter for impayé (should return empty since we're looking in payments collection)
         response = requests.get(f"{self.base_url}/api/payments/search?statut_paiement=impaye")
         self.assertEqual(response.status_code, 200)
-        impaye_results = response.json()
+        impaye_data = response.json()
         
         # This should return empty or handle unpaid appointments differently
         # Since payments collection only contains paid items
+        self.assertIn("payments", impaye_data)
+        impaye_results = impaye_data["payments"]
         self.assertIsInstance(impaye_results, list, "Should return a list even if empty")
         
         print("✅ Payment search with statut_paiement filter working correctly")
