@@ -2271,14 +2271,14 @@ async def search_payments(
     patient_name: Optional[str] = Query(None, description="Search by patient name"),
     date_debut: Optional[str] = Query(None, description="Start date filter"),
     date_fin: Optional[str] = Query(None, description="End date filter"),
-    method: Optional[str] = Query(None, description="Payment method filter"),
+    statut_paiement: Optional[str] = Query(None, description="Payment status filter: visite, controle, impaye"),
     assure: Optional[bool] = Query(None, description="Insurance status filter"),
     page: int = Query(1, ge=1, description="Page number"),
     limit: int = Query(20, ge=1, le=100, description="Items per page")
 ):
     """Advanced search for payments with pagination"""
     try:
-        # Build search query
+        # Build search query for payments
         query = {}
         
         # Date range filter
@@ -2289,46 +2289,69 @@ async def search_payments(
         elif date_fin:
             query["date"] = {"$lte": date_fin}
         
-        # Payment method filter
-        if method:
-            query["type_paiement"] = method
-        
         # Insurance filter
         if assure is not None:
             query["assure"] = assure
+            
+        # Status filter (impaye = payments with statut != 'paye')
+        if statut_paiement == "impaye":
+            query["statut"] = {"$ne": "paye"}
+        elif statut_paiement in ["visite", "controle"]:
+            query["statut"] = "paye"  # Only paid payments for visite/controle filtering
         
         # Get all payments matching basic criteria
         payments = list(payments_collection.find(query, {"_id": 0}))
         
+        # Enrich payments with appointment/consultation data and apply type filter
+        filtered_payments = []
+        for payment in payments:
+            # Get appointment data first
+            appointment = appointments_collection.find_one({"id": payment["appointment_id"]}, {"_id": 0})
+            if appointment:
+                payment["type_rdv"] = appointment.get("type_rdv", "visite")
+                payment["patient_id"] = appointment.get("patient_id", "")
+            else:
+                # Try to get from consultation
+                consultation = consultations_collection.find_one({"appointment_id": payment["appointment_id"]}, {"_id": 0})
+                if consultation:
+                    payment["type_rdv"] = consultation.get("type_rdv", "visite")
+                    payment["patient_id"] = consultation.get("patient_id", "")
+                else:
+                    payment["type_rdv"] = "visite"  # Default
+            
+            # Apply statut_paiement filter
+            if statut_paiement == "visite" and payment["type_rdv"] != "visite":
+                continue
+            elif statut_paiement == "controle" and payment["type_rdv"] != "controle":
+                continue
+            
+            # Get patient info
+            try:
+                if payment.get("patient_id"):
+                    patient = patients_collection.find_one({"id": payment["patient_id"]}, {"_id": 0})
+                    if patient:
+                        payment["patient"] = {
+                            "nom": patient.get("nom", ""),
+                            "prenom": patient.get("prenom", "")
+                        }
+                    else:
+                        payment["patient"] = {"nom": "Inconnu", "prenom": ""}
+                else:
+                    payment["patient"] = {"nom": "Inconnu", "prenom": ""}
+            except:
+                payment["patient"] = {"nom": "Inconnu", "prenom": ""}
+            
+            filtered_payments.append(payment)
+        
+        payments = filtered_payments
+        
         # Filter by patient name if provided
         if patient_name:
             patient_name = patient_name.lower()
-            filtered_payments = []
-            
-            for payment in payments:
-                # Get patient info
-                try:
-                    patient = patients_collection.find_one({"id": payment["patient_id"]}, {"_id": 0})
-                    if patient:
-                        full_name = f"{patient.get('prenom', '')} {patient.get('nom', '')}".lower()
-                        if patient_name in full_name:
-                            payment["patient"] = patient
-                            filtered_payments.append(payment)
-                except:
-                    continue
-            
-            payments = filtered_payments
-        else:
-            # Enrich all payments with patient info
-            for payment in payments:
-                try:
-                    patient = patients_collection.find_one({"id": payment["patient_id"]}, {"_id": 0})
-                    if patient:
-                        payment["patient"] = patient
-                    else:
-                        payment["patient"] = {"nom": "Inconnu", "prenom": ""}
-                except:
-                    payment["patient"] = {"nom": "Inconnu", "prenom": ""}
+            payments = [
+                payment for payment in payments 
+                if patient_name in f"{payment['patient'].get('prenom', '')} {payment['patient'].get('nom', '')}".lower()
+            ]
         
         # Sort by date (most recent first)
         payments.sort(key=lambda x: x.get("date", ""), reverse=True)
