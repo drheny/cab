@@ -2659,6 +2659,238 @@ async def delete_phone_message(message_id: str):
 
 # ==================== End Phone Messages API ====================
 
+# ==================== Cash Movements API ====================
+
+@app.post("/api/cash-movements")
+async def create_cash_movement(movement: CashMovementCreate):
+    """Créer un nouveau mouvement de caisse"""
+    try:
+        movement_data = CashMovement(
+            montant=movement.montant,
+            type_mouvement=movement.type_mouvement,
+            motif=movement.motif,
+            date=movement.date,
+            created_at=datetime.now()
+        ).dict()
+        
+        cash_movements_collection.insert_one(movement_data)
+        
+        # Calculer le nouveau solde de caisse pour aujourd'hui
+        solde = await get_daily_cash_balance()
+        
+        # Notification WebSocket
+        notification_data = {
+            "type": "cash_movement_created",
+            "movement": movement_data,
+            "solde_actuel": solde,
+            "timestamp": datetime.now().isoformat()
+        }
+        await manager.broadcast(notification_data)
+        
+        return {
+            "message": "Mouvement de caisse créé avec succès",
+            "movement": movement_data,
+            "solde_actuel": solde
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating cash movement: {str(e)}")
+
+@app.get("/api/cash-movements")
+async def get_cash_movements(
+    date_debut: Optional[str] = Query(None),
+    date_fin: Optional[str] = Query(None),
+    type_mouvement: Optional[str] = Query(None),
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100)
+):
+    """Récupérer les mouvements de caisse avec filtres et pagination"""
+    try:
+        # Construction du filtre
+        filter_query = {}
+        
+        if date_debut and date_fin:
+            filter_query["date"] = {"$gte": date_debut, "$lte": date_fin}
+        elif date_debut:
+            filter_query["date"] = {"$gte": date_debut}
+        elif date_fin:
+            filter_query["date"] = {"$lte": date_fin}
+            
+        if type_mouvement:
+            filter_query["type_mouvement"] = type_mouvement
+        
+        # Compter total
+        total_count = cash_movements_collection.count_documents(filter_query)
+        
+        # Récupérer les mouvements avec pagination
+        skip = (page - 1) * limit
+        movements = list(cash_movements_collection.find(filter_query, {"_id": 0})
+                        .sort("created_at", -1)
+                        .skip(skip)
+                        .limit(limit))
+        
+        # Calcul pagination
+        total_pages = (total_count + limit - 1) // limit
+        
+        return {
+            "movements": movements,
+            "pagination": {
+                "current_page": page,
+                "total_pages": total_pages,
+                "total_count": total_count,
+                "limit": limit
+            },
+            "solde_jour": await get_daily_cash_balance()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching cash movements: {str(e)}")
+
+@app.get("/api/cash-movements/balance")
+async def get_cash_balance(date: Optional[str] = Query(None)):
+    """Obtenir le solde de caisse pour une date donnée (ou aujourd'hui par défaut)"""
+    try:
+        target_date = date or datetime.now().strftime("%Y-%m-%d")
+        
+        # Calculer le solde depuis les paiements consultations
+        payments_total = 0
+        consultations_with_payment = list(consultations_collection.find(
+            {"date": target_date}, {"_id": 0}
+        ))
+        
+        for consultation in consultations_with_payment:
+            # Chercher le paiement associé
+            payment = payments_collection.find_one({"appointment_id": consultation["appointment_id"]})
+            if payment and payment.get("statut") == "paye":
+                payments_total += payment.get("montant", 0)
+        
+        # Calculer les mouvements de caisse
+        mouvements = list(cash_movements_collection.find(
+            {"date": target_date}, {"_id": 0}
+        ))
+        
+        mouvements_total = 0
+        for movement in mouvements:
+            if movement["type_mouvement"] == "ajout":
+                mouvements_total += movement["montant"]
+            else:  # soustraction
+                mouvements_total -= movement["montant"]
+        
+        solde_final = payments_total + mouvements_total
+        
+        return {
+            "date": target_date,
+            "recette_consultations": payments_total,
+            "mouvements_caisse": mouvements_total,
+            "solde_final": solde_final,
+            "details_mouvements": mouvements
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error calculating cash balance: {str(e)}")
+
+@app.put("/api/cash-movements/{movement_id}")
+async def update_cash_movement(movement_id: str, movement_update: CashMovementCreate):
+    """Modifier un mouvement de caisse"""
+    try:
+        update_data = {
+            "montant": movement_update.montant,
+            "type_mouvement": movement_update.type_mouvement,
+            "motif": movement_update.motif,
+            "date": movement_update.date,
+            "updated_at": datetime.now()
+        }
+        
+        result = cash_movements_collection.update_one(
+            {"id": movement_id},
+            {"$set": update_data}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Mouvement de caisse non trouvé")
+        
+        # Nouveau solde
+        solde = await get_daily_cash_balance()
+        
+        # Notification
+        notification_data = {
+            "type": "cash_movement_updated",
+            "movement_id": movement_id,
+            "solde_actuel": solde,
+            "timestamp": datetime.now().isoformat()
+        }
+        await manager.broadcast(notification_data)
+        
+        return {
+            "message": "Mouvement de caisse modifié avec succès",
+            "solde_actuel": solde
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating cash movement: {str(e)}")
+
+@app.delete("/api/cash-movements/{movement_id}")
+async def delete_cash_movement(movement_id: str):
+    """Supprimer un mouvement de caisse"""
+    try:
+        result = cash_movements_collection.delete_one({"id": movement_id})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Mouvement de caisse non trouvé")
+        
+        # Nouveau solde
+        solde = await get_daily_cash_balance()
+        
+        # Notification
+        notification_data = {
+            "type": "cash_movement_deleted",
+            "movement_id": movement_id,
+            "solde_actuel": solde,
+            "timestamp": datetime.now().isoformat()
+        }
+        await manager.broadcast(notification_data)
+        
+        return {
+            "message": "Mouvement de caisse supprimé avec succès",
+            "solde_actuel": solde
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting cash movement: {str(e)}")
+
+async def get_daily_cash_balance():
+    """Fonction helper pour calculer le solde de caisse du jour"""
+    today = datetime.now().strftime("%Y-%m-%d")
+    
+    # Paiements du jour
+    payments_total = 0
+    consultations_today = list(consultations_collection.find(
+        {"date": today}, {"_id": 0}
+    ))
+    
+    for consultation in consultations_today:
+        payment = payments_collection.find_one({"appointment_id": consultation["appointment_id"]})
+        if payment and payment.get("statut") == "paye":
+            payments_total += payment.get("montant", 0)
+    
+    # Mouvements de caisse du jour
+    mouvements_total = 0
+    mouvements = list(cash_movements_collection.find({"date": today}, {"_id": 0}))
+    
+    for movement in mouvements:
+        if movement["type_mouvement"] == "ajout":
+            mouvements_total += movement["montant"]
+        else:
+            mouvements_total -= movement["montant"]
+    
+    return payments_total + mouvements_total
+
+# ==================== End Cash Movements API ====================
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
