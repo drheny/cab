@@ -792,9 +792,9 @@ def create_demo_data():
 async def root():
     return {"message": "Cabinet Médical API"}
 
-@app.get("/api/init-demo")
-async def init_demo():
-    """Initialize demo data with test consultations and payments"""
+@app.get("/api/init-test-data")
+async def init_test_data():
+    """Initialize test data specifically for unpaid consultations testing"""
     try:
         # Clear existing data for fresh test
         patients_collection.delete_many({})
@@ -836,59 +836,71 @@ async def init_demo():
         for patient in test_patients:
             patients_collection.insert_one(patient)
         
-        # Create test appointments and consultations with different types
+        # Create test appointments and consultations with different payment statuses
         today = datetime.now()
         test_data = [
-            # Visites payées
+            # Visites payées (avec paiement dans la collection payments)
             {
                 "appointment_id": "appt1",
                 "patient_id": "patient1", 
                 "type": "visite",
-                "status": "paye",
+                "paye": True,  # Appointment is marked as paid
+                "assure": True,
                 "date": (today - timedelta(days=5)).strftime("%Y-%m-%d"),
-                "montant": 65.0
+                "montant": 65.0,
+                "create_payment": True  # Create payment record
             },
             {
                 "appointment_id": "appt2", 
                 "patient_id": "patient2",
                 "type": "visite", 
-                "status": "paye",
+                "paye": True,
+                "assure": False,
                 "date": (today - timedelta(days=3)).strftime("%Y-%m-%d"),
-                "montant": 65.0
+                "montant": 65.0,
+                "create_payment": True
             },
-            # Contrôles payés
+            # Contrôles payés (gratuits mais marqués comme payés)
             {
                 "appointment_id": "appt3",
                 "patient_id": "patient1",
                 "type": "controle",
-                "status": "paye", 
+                "paye": True,
+                "assure": True,
                 "date": (today - timedelta(days=2)).strftime("%Y-%m-%d"),
-                "montant": 0.0  # Contrôles gratuits
+                "montant": 0.0,  # Contrôles gratuits
+                "create_payment": True
             },
             {
                 "appointment_id": "appt4",
                 "patient_id": "patient3",
                 "type": "controle",
-                "status": "paye",
+                "paye": True,
+                "assure": False,
                 "date": (today - timedelta(days=1)).strftime("%Y-%m-%d"), 
-                "montant": 0.0
+                "montant": 0.0,
+                "create_payment": True
             },
-            # Visites impayées
+            # *** VISITES IMPAYÉES *** - appointments terminés mais paye=False, PAS de record payment
             {
                 "appointment_id": "appt5",
                 "patient_id": "patient2",
                 "type": "visite",
-                "status": "impaye",
+                "paye": False,  # NOT PAID - this should appear in "impaye" filter
+                "assure": False,
                 "date": today.strftime("%Y-%m-%d"),
-                "montant": 65.0
+                "montant": 65.0,
+                "create_payment": False  # NO payment record for unpaid
             },
             {
                 "appointment_id": "appt6",
                 "patient_id": "patient3", 
                 "type": "visite",
-                "status": "impaye",
-                "date": today.strftime("%Y-%m-%d"),
-                "montant": 65.0
+                "paye": False,  # NOT PAID - this should appear in "impaye" filter
+                "assure": True,
+                "date": (today - timedelta(days=1)).strftime("%Y-%m-%d"),
+                "montant": 65.0,
+                "create_payment": False  # NO payment record for unpaid
             }
         ]
         
@@ -902,8 +914,9 @@ async def init_demo():
                 "heure": "10:00",
                 "type_rdv": data["type"],
                 "motif": "Consultation pédiatrique",
-                "statut": "termine",
-                "paye": data["status"] == "paye",
+                "statut": "termine",  # All appointments completed
+                "paye": data["paye"],  # Key field for unpaid detection
+                "assure": data["assure"],
                 "created_at": datetime.now()
             }
             appointments_collection.insert_one(appointment)
@@ -921,8 +934,8 @@ async def init_demo():
             }
             consultations_collection.insert_one(consultation)
             
-            # Create payment only if paid
-            if data["status"] == "paye":
+            # Create payment only if paid (create_payment = True)
+            if data["create_payment"]:
                 payment = {
                     "id": f"pay_{data['appointment_id']}",
                     "patient_id": data["patient_id"],
@@ -930,7 +943,7 @@ async def init_demo():
                     "montant": data["montant"],
                     "type_paiement": "espece",
                     "statut": "paye",
-                    "assure": data["patient_id"] == "patient2",  # Marie est assurée
+                    "assure": data["assure"],
                     "date": data["date"],
                     "notes": f"Paiement {data['type']}",
                     "created_at": datetime.now()
@@ -938,21 +951,22 @@ async def init_demo():
                 payments_collection.insert_one(payment)
         
         return {
-            "message": "Demo data created successfully",
+            "message": "Test data created successfully with unpaid consultations",
             "summary": {
                 "patients": 3,
                 "appointments": 6,
                 "consultations": 6,
-                "payments": 4,
+                "payments": 4,  # Only 4 payments (2 unpaid have no payment records)
                 "visites_payees": 2,
                 "controles_payes": 2, 
-                "visites_impayees": 2,
-                "montant_total_encaisse": 130.0
+                "visites_impayees": 2,  # These should show up in "impaye" filter
+                "montant_total_encaisse": 130.0,
+                "montant_en_attente": 130.0  # 2 unpaid visites * 65 TND
             }
         }
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error creating demo data: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error creating test data: {str(e)}")
 
 @app.get("/api/dashboard/birthdays")
 async def get_birthdays_today():
