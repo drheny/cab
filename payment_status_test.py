@@ -306,12 +306,14 @@ class PaymentStatusTest(unittest.TestCase):
         # Test 2: Filter by visite status
         response = requests.get(f"{self.base_url}/api/payments/search?statut_paiement=visite")
         self.assertEqual(response.status_code, 200)
-        visite_payments = response.json()
+        visite_data = response.json()
+        visite_payments = visite_data["payments"]
         
         # Test 3: Filter by controle status
         response = requests.get(f"{self.base_url}/api/payments/search?statut_paiement=controle")
         self.assertEqual(response.status_code, 200)
-        controle_payments = response.json()
+        controle_data = response.json()
+        controle_payments = controle_data["payments"]
         
         # Test 4: Get unpaid appointments
         response = requests.get(f"{self.base_url}/api/appointments")
