@@ -2150,10 +2150,21 @@ async def get_payments_stats(
         assures = len([p for p in payments if p.get("assure", False)])
         non_assures = nb_paiements - assures
         
-        # Today's stats
+        # Today's stats (include cash movements for today)
         today_str = datetime.now().strftime("%Y-%m-%d")
         today_payments = [p for p in payments if p.get("date") == today_str]
-        ca_jour = sum(p.get("montant", 0) for p in today_payments)
+        ca_payments_jour = sum(p.get("montant", 0) for p in today_payments)
+        
+        # Add today's cash movements
+        today_cash_movements = list(cash_movements_collection.find({"date": today_str}, {"_id": 0}))
+        today_mouvements_total = 0
+        for movement in today_cash_movements:
+            if movement["type_mouvement"] == "ajout":
+                today_mouvements_total += movement["montant"]
+            else:
+                today_mouvements_total -= movement["montant"]
+        
+        ca_jour = ca_payments_jour + today_mouvements_total
         
         # Get appointments data for visit/control statistics
         appointments = list(appointments_collection.find({
