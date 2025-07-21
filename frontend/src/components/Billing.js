@@ -296,35 +296,6 @@ const Billing = ({ user }) => {
     }
   };
 
-  const handleMarkAsPaid = async (appointment) => {
-    try {
-      // Calculer le montant par défaut (65 TND pour visite)
-      const defaultAmount = appointment.type_rdv === 'visite' ? 65 : 0;
-      
-      const paymentData = {
-        paye: true,
-        montant: defaultAmount,
-        type_paiement: 'espece', // Toujours espèces
-        assure: false,
-        notes: 'Marqué comme payé depuis la facturation'
-      };
-
-      await axios.put(`${API_BASE_URL}/api/rdv/${appointment.id}/paiement`, paymentData);
-      
-      toast.success('Paiement marqué comme payé');
-      
-      // Refresh data
-      await Promise.all([
-        fetchPayments(),
-        fetchStats()
-      ]);
-      
-    } catch (error) {
-      console.error('Error marking as paid:', error);
-      toast.error('Erreur lors de la mise à jour du paiement');
-    }
-  };
-
   const handleEditPayment = async (payment) => {
     setEditingPayment(payment);
     setShowEditModal(true);
