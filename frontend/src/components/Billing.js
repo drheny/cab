@@ -430,7 +430,7 @@ const Billing = ({ user }) => {
         return;
       }
 
-      const response = await axios.post(`${API_BASE_URL}/api/cash-movements`, {
+      await axios.post(`${API_BASE_URL}/api/cash-movements`, {
         montant: parseFloat(cashForm.montant),
         type_mouvement: cashForm.type_mouvement,
         motif: cashForm.motif,
