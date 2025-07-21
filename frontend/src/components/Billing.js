@@ -945,7 +945,7 @@ const Billing = ({ user }) => {
       {/* Caisse Tab */}
       {activeTab === 'caisse' && (
         <div className="space-y-6">
-          {/* Header with balance and add button */}
+          {/* Header */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
@@ -955,12 +955,6 @@ const Billing = ({ user }) => {
                 </p>
               </div>
               <div className="flex items-center space-x-4">
-                <div className="text-right">
-                  <p className="text-sm text-gray-600">Solde de la journée</p>
-                  <p className="text-2xl font-bold text-green-600">
-                    {formatCurrency(cashBalance)}
-                  </p>
-                </div>
                 <button
                   onClick={() => setShowCashForm(true)}
                   className="btn-primary flex items-center space-x-2"
