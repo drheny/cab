@@ -642,7 +642,7 @@ const Billing = ({ user }) => {
           {[
             { id: 'dashboard', label: 'Tableau de bord', icon: PieChart },
             { id: 'payments', label: 'Historique paiements', icon: CreditCard },
-            { id: 'unpaid', label: 'Impayés', icon: AlertTriangle }
+            { id: 'caisse', label: 'Caisse', icon: DollarSign }
           ].map((tab) => {
             const Icon = tab.icon;
             return (
