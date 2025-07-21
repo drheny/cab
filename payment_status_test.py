@@ -84,11 +84,13 @@ class PaymentStatusTest(unittest.TestCase):
             self.assertIn("type_rdv", payment, "Payment should include type_rdv from appointment")
             self.assertIn(payment["type_rdv"], ["visite", "controle"], "type_rdv should be visite or controle")
             
-            # Enriched fields - patient information
-            self.assertIn("patient_nom", payment, "Payment should include patient_nom")
-            self.assertIn("patient_prenom", payment, "Payment should include patient_prenom")
-            self.assertIsInstance(payment["patient_nom"], str)
-            self.assertIsInstance(payment["patient_prenom"], str)
+            # Enriched fields - patient information (nested object)
+            self.assertIn("patient", payment, "Payment should include patient object")
+            patient_info = payment["patient"]
+            self.assertIn("nom", patient_info, "Patient should include nom")
+            self.assertIn("prenom", patient_info, "Patient should include prenom")
+            self.assertIsInstance(patient_info["nom"], str)
+            self.assertIsInstance(patient_info["prenom"], str)
             
             # Verify payment amounts based on type
             if payment["type_rdv"] == "visite":
