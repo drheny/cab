@@ -2072,12 +2072,92 @@ async def get_advanced_stats(
                 if appointment.get("assure", False):
                     period_stats[year_key]["nb_assures"] += 1
         
-        # Calculate totals
-        total_ca = sum(p.get("montant", 0) for p in payments)
+        # Calculate totals from payments
+        total_ca_payments = sum(p.get("montant", 0) for p in payments)
         total_payments = len(payments)
         total_visites = len([a for a in appointments if a.get("type_rdv") == "visite"])
         total_controles = len([a for a in appointments if a.get("type_rdv") == "controle"])
         total_assures = len([a for a in appointments if a.get("assure", False)])
+        
+        # Get cash movements for the period
+        cash_movements = list(cash_movements_collection.find({
+            "date": {"$gte": date_debut, "$lte": date_fin}
+        }, {"_id": 0}))
+        
+        # Add cash movements to the period breakdown
+        for movement in cash_movements:
+            movement_date = movement["date"]
+            movement_amount = movement["montant"] if movement["type_mouvement"] == "ajout" else -movement["montant"]
+            
+            if period == "day":
+                day_key = movement_date
+                if day_key not in period_stats:
+                    period_stats[day_key] = {
+                        "date": day_key,
+                        "ca": 0,
+                        "nb_paiements": 0,
+                        "nb_visites": 0,
+                        "nb_controles": 0,
+                        "nb_assures": 0
+                    }
+                period_stats[day_key]["ca"] += movement_amount
+                
+            elif period == "week":
+                movement_date_obj = datetime.strptime(movement_date, "%Y-%m-%d")
+                week_start = movement_date_obj - timedelta(days=movement_date_obj.weekday())
+                week_key = f"Semaine du {week_start.strftime('%d/%m/%Y')}"
+                
+                if week_key not in period_stats:
+                    period_stats[week_key] = {
+                        "periode": week_key,
+                        "ca": 0,
+                        "nb_paiements": 0,
+                        "nb_visites": 0,
+                        "nb_controles": 0,
+                        "nb_assures": 0
+                    }
+                period_stats[week_key]["ca"] += movement_amount
+                
+            elif period == "month":
+                movement_date_obj = datetime.strptime(movement_date, "%Y-%m-%d")
+                month_key = movement_date_obj.strftime("%B %Y")
+                
+                if month_key not in period_stats:
+                    period_stats[month_key] = {
+                        "periode": month_key,
+                        "ca": 0,
+                        "nb_paiements": 0,
+                        "nb_visites": 0,
+                        "nb_controles": 0,
+                        "nb_assures": 0
+                    }
+                period_stats[month_key]["ca"] += movement_amount
+                
+            elif period == "year":
+                movement_date_obj = datetime.strptime(movement_date, "%Y-%m-%d")
+                year_key = movement_date_obj.strftime("%Y")
+                
+                if year_key not in period_stats:
+                    period_stats[year_key] = {
+                        "periode": f"Année {year_key}",
+                        "ca": 0,
+                        "nb_paiements": 0,
+                        "nb_visites": 0,
+                        "nb_controles": 0,
+                        "nb_assures": 0
+                    }
+                period_stats[year_key]["ca"] += movement_amount
+        
+        # Calculate total cash movements
+        total_cash_movements = 0
+        for movement in cash_movements:
+            if movement["type_mouvement"] == "ajout":
+                total_cash_movements += movement["montant"]
+            else:
+                total_cash_movements -= movement["montant"]
+        
+        # Final totals including cash movements
+        total_ca = total_ca_payments + total_cash_movements
         
         return {
             "period": period,
