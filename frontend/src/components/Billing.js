@@ -23,10 +23,8 @@ import toast from 'react-hot-toast';
 const Billing = ({ user }) => {
   // States for data
   const [payments, setPayments] = useState([]);
-  const [unpaidAppointments, setUnpaidAppointments] = useState([]);
   const [stats, setStats] = useState({});
   const [advancedStats, setAdvancedStats] = useState({});
-  const [patients, setPatients] = useState([]);
   const [cashMovements, setCashMovements] = useState([]);
   const [cashBalance, setCashBalance] = useState(0);
   
