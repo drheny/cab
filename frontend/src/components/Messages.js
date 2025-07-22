@@ -14,7 +14,8 @@ import {
   Filter,
   FileText,
   Edit2,
-  Save
+  Save,
+  Trash2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
