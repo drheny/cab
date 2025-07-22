@@ -883,7 +883,7 @@ const PatientsListComponent = ({ user }) => {
           setSelectedPatient(null);
         }}
         appointment={null} // Nouveau RDV
-        patients={[selectedPatient].filter(Boolean)} // Passer seulement le patient sélectionné
+        patients={patients} // Passer tous les patients pour la recherche
         formData={appointmentFormData}
         setFormData={setAppointmentFormData}
         onSave={handleSaveAppointment}
