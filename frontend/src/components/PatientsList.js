@@ -10,10 +10,12 @@ import {
   MessageCircle,
   ChevronLeft,
   ChevronRight,
-  MapPin
+  MapPin,
+  Calendar
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import AppointmentModal from './AppointmentModal';
 
 const PatientsListComponent = ({ user }) => {
   const location = useLocation();
