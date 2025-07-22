@@ -313,6 +313,88 @@ class CashMovementCreate(BaseModel):
     motif: str
     date: str
 
+# Helper functions for authentication
+def hash_password(password: str) -> str:
+    """Hash a password using bcrypt"""
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+def verify_password(password: str, hashed_password: str) -> bool:
+    """Verify a password against its hash"""
+    return bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8'))
+
+def create_access_token(data: dict) -> str:
+    """Create JWT access token"""
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+    """Get current user from JWT token"""
+    try:
+        payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise HTTPException(status_code=401, detail="Invalid authentication credentials")
+        
+        user = users_collection.find_one({"username": username}, {"_id": 0})
+        if user is None:
+            raise HTTPException(status_code=401, detail="User not found")
+        
+        return user
+    except jwt.PyJWTError:
+        raise HTTPException(status_code=401, detail="Invalid authentication credentials")
+
+def create_default_users():
+    """Create default users if they don't exist"""
+    try:
+        # Check if users exist
+        if users_collection.count_documents({}) == 0:
+            # Create default doctor
+            doctor_permissions = UserPermissions(
+                administration=True,
+                delete_appointment=True,
+                delete_payments=True,
+                export_data=True,
+                reset_data=True,
+                manage_users=True
+            )
+            
+            doctor = User(
+                username="medecin",
+                full_name="Dr Heni Dridi",
+                role="medecin",
+                hashed_password=hash_password("medecin123"),
+                permissions=doctor_permissions
+            )
+            
+            # Create default secretary
+            secretary_permissions = UserPermissions(
+                administration=False,
+                delete_appointment=False,
+                delete_payments=False,
+                export_data=False,
+                reset_data=False,
+                manage_users=False,
+                consultation_read_only=True
+            )
+            
+            secretary = User(
+                username="secretaire",
+                full_name="Secrétaire",
+                role="secretaire",
+                hashed_password=hash_password("secretaire123"),
+                permissions=secretary_permissions
+            )
+            
+            # Insert users
+            users_collection.insert_one(doctor.dict())
+            users_collection.insert_one(secretary.dict())
+            print("Default users created successfully")
+        
+    except Exception as e:
+        print(f"Error creating default users: {e}")
+
 # Helper functions
 def calculate_age(date_naissance: str) -> str:
     """Calculate age from birth date in format '2 ans, 3 mois, 15 jours'"""
