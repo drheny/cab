@@ -48,6 +48,7 @@ const Dashboard = ({ user }) => {
   const [editingMessage, setEditingMessage] = useState(null);
   const [editingContent, setEditingContent] = useState('');
   const [ws, setWs] = useState(null);
+  const [isFirstConnection, setIsFirstConnection] = useState(true);
   const [deleteConfirmDialog, setDeleteConfirmDialog] = useState({ show: false, messageId: null, messageContent: '' });
   const messagesEndRef = useRef(null);
   
