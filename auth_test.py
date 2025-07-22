@@ -252,7 +252,7 @@ class AuthenticationSystemTest(unittest.TestCase):
         users_data = response.json()
         users = users_data["users"]
         
-        test_user = next((u for u in users if u["username"] == "test_user"), None)
+        test_user = next((u for u in users if u["username"] == f"test_user_{unique_id}"), None)
         self.assertIsNotNone(test_user)
         self.assertEqual(test_user["email"], "test@example.com")
         self.assertEqual(test_user["full_name"], "Test User")
