@@ -136,7 +136,7 @@ const Dashboard = ({ user }) => {
       websocket.onerror = (error) => {
         console.error('❌ WebSocket error:', error);
         // Only show error on first connection attempt, not on reconnections
-        if (!ws) {
+        if (isFirstConnection) {
           toast.error('Erreur de connexion messagerie temps réel');
         }
       };
