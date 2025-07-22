@@ -873,6 +873,216 @@ const Administration = ({ user }) => {
             </div>
           )}
 
+          {/* Advanced Reports Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center space-x-2 mb-6">
+              <FileText className="w-5 h-5 text-gray-600" />
+              <h2 className="text-lg font-semibold text-gray-900">Rapports Avancés</h2>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Report Configuration */}
+              <div className="space-y-4">
+                <h3 className="font-medium text-gray-900">Configuration du rapport</h3>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Type de rapport</label>
+                  <select
+                    value={reportForm.reportType}
+                    onChange={(e) => setReportForm(prev => ({ ...prev, reportType: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  >
+                    <option value="single">Mois unique</option>
+                    <option value="multi">Période multi-mois</option>
+                  </select>
+                </div>
+
+                {reportForm.reportType === 'single' ? (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Mois</label>
+                      <select
+                        value={reportForm.singleMonth}
+                        onChange={(e) => setReportForm(prev => ({ ...prev, singleMonth: parseInt(e.target.value) }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      >
+                        {Array.from({ length: 12 }, (_, i) => (
+                          <option key={i + 1} value={i + 1}>
+                            {new Date(2023, i, 1).toLocaleDateString('fr-FR', { month: 'long' })}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Année</label>
+                      <select
+                        value={reportForm.singleYear}
+                        onChange={(e) => setReportForm(prev => ({ ...prev, singleYear: parseInt(e.target.value) }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      >
+                        {Array.from({ length: 5 }, (_, i) => (
+                          <option key={2024 - i} value={2024 - i}>
+                            {2024 - i}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Mois de début</label>
+                        <select
+                          value={reportForm.startMonth}
+                          onChange={(e) => setReportForm(prev => ({ ...prev, startMonth: parseInt(e.target.value) }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        >
+                          {Array.from({ length: 12 }, (_, i) => (
+                            <option key={i + 1} value={i + 1}>
+                              {new Date(2023, i, 1).toLocaleDateString('fr-FR', { month: 'long' })}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Année de début</label>
+                        <select
+                          value={reportForm.startYear}
+                          onChange={(e) => setReportForm(prev => ({ ...prev, startYear: parseInt(e.target.value) }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        >
+                          {Array.from({ length: 5 }, (_, i) => (
+                            <option key={2024 - i} value={2024 - i}>
+                              {2024 - i}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Mois de fin</label>
+                        <select
+                          value={reportForm.endMonth}
+                          onChange={(e) => setReportForm(prev => ({ ...prev, endMonth: parseInt(e.target.value) }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        >
+                          {Array.from({ length: 12 }, (_, i) => (
+                            <option key={i + 1} value={i + 1}>
+                              {new Date(2023, i, 1).toLocaleDateString('fr-FR', { month: 'long' })}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Année de fin</label>
+                        <select
+                          value={reportForm.endYear}
+                          onChange={(e) => setReportForm(prev => ({ ...prev, endYear: parseInt(e.target.value) }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        >
+                          {Array.from({ length: 5 }, (_, i) => (
+                            <option key={2024 - i} value={2024 - i}>
+                              {2024 - i}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  onClick={generateAdvancedReport}
+                  disabled={reportLoading}
+                  className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-primary-600 hover:bg-primary-700 disabled:bg-primary-300 text-white rounded-lg"
+                >
+                  {reportLoading ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span>Génération...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-4 h-4" />
+                      <span>Générer le rapport</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Report Preview */}
+              <div className="space-y-4">
+                <h3 className="font-medium text-gray-900">Aperçu du rapport</h3>
+                
+                {reportData ? (
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-gray-700">Période</span>
+                        <span className="text-sm text-gray-900">{reportData.periode}</span>
+                      </div>
+                      
+                      {reportData.type === 'multi_month' ? (
+                        <>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium text-gray-700">Nombre de mois</span>
+                            <span className="text-sm text-gray-900">{reportData.num_months}</span>
+                          </div>
+                          
+                          <div className="border-t pt-3 space-y-2">
+                            <h4 className="text-sm font-medium text-gray-900">Totaux</h4>
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Nouveaux patients:</span>
+                                <span className="font-medium">{reportData.totals.nouveaux_patients}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Consultations:</span>
+                                <span className="font-medium">{reportData.totals.consultations_totales}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Recette:</span>
+                                <span className="font-medium">{reportData.totals.recette_totale} TND</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Moy./mois:</span>
+                                <span className="font-medium">{reportData.averages.recette_totale} TND</span>
+                              </div>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium text-gray-700">Nouveaux patients</span>
+                            <span className="text-sm text-gray-900">{reportData.nouveaux_patients}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium text-gray-700">Consultations</span>
+                            <span className="text-sm text-gray-900">{reportData.consultations_totales}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium text-gray-700">Recette</span>
+                            <span className="text-sm text-gray-900">{reportData.recette_totale} TND</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-500 text-center">
+                      Configurez et générez un rapport pour voir l'aperçu
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* Actions rapides */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center space-x-2 mb-6">
