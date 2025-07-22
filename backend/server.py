@@ -3609,101 +3609,183 @@ async def reset_database_collection(collection_name: str):
 @app.get("/api/admin/monthly-report")
 async def get_monthly_report(
     year: int = Query(None, description="Year (default: current year)"),
-    month: int = Query(None, description="Month 1-12 (default: current month)")
+    month: int = Query(None, description="Month 1-12 (default: current month)"),
+    start_month: int = Query(None, description="Start month for multi-month report"),
+    end_month: int = Query(None, description="End month for multi-month report"),
+    start_year: int = Query(None, description="Start year for multi-month report"),
+    end_year: int = Query(None, description="End year for multi-month report")
 ):
-    """Generate monthly report with all statistics"""
+    """Generate monthly report with all statistics - supports single month or date range"""
     try:
-        # Default to current month/year
-        if not year:
-            year = datetime.now().year
-        if not month:
-            month = datetime.now().month
-            
-        # Date range for the month
-        start_date = datetime(year, month, 1).strftime("%Y-%m-%d")
-        
-        # Calculate end date (last day of month)
-        if month == 12:
-            end_date = datetime(year + 1, 1, 1) - timedelta(days=1)
-        else:
-            end_date = datetime(year, month + 1, 1) - timedelta(days=1)
-        end_date_str = end_date.strftime("%Y-%m-%d")
-        
-        # New patients this month
-        nouveaux_patients = patients_collection.count_documents({
-            "created_at": {
-                "$gte": datetime.strptime(start_date, "%Y-%m-%d"),
-                "$lte": datetime.strptime(end_date_str, "%Y-%m-%d")
+        # Handle multi-month report
+        if start_month and end_month:
+            if not start_year:
+                start_year = datetime.now().year
+            if not end_year:
+                end_year = start_year
+                
+            # Generate multi-month report
+            monthly_reports = []
+            total_stats = {
+                "nouveaux_patients": 0,
+                "consultations_totales": 0,
+                "nb_visites": 0,
+                "nb_controles": 0,
+                "nb_assures": 0,
+                "recette_totale": 0.0,
+                "nb_relances_telephoniques": 0
             }
-        })
-        
-        # Consultations this month  
-        consultations_mois = consultations_collection.count_documents({
-            "date": {"$gte": start_date, "$lte": end_date_str}
-        })
-        
-        # Visites vs Controles
-        nb_visites = consultations_collection.count_documents({
-            "date": {"$gte": start_date, "$lte": end_date_str},
-            "type_rdv": "visite"
-        })
-        
-        nb_controles = consultations_collection.count_documents({
-            "date": {"$gte": start_date, "$lte": end_date_str},
-            "type_rdv": "controle"
-        })
-        
-        # Patients assurés (appointments with assure=true)
-        nb_assures = appointments_collection.count_documents({
-            "date": {"$gte": start_date, "$lte": end_date_str},
-            "assure": True,
-            "statut": {"$in": ["termine", "absent", "retard"]}  # Completed appointments
-        })
-        
-        # Total revenue for the month
-        recette_totale = 0
-        
-        # From payments
-        payments_month = list(payments_collection.find({
-            "date": {"$gte": start_date, "$lte": end_date_str},
-            "statut": "paye"
-        }, {"_id": 0}))
-        
-        for payment in payments_month:
-            recette_totale += payment.get("montant", 0)
             
-        # From cash movements
-        cash_movements_month = list(cash_movements_collection.find({
-            "date": {"$gte": start_date, "$lte": end_date_str}
-        }, {"_id": 0}))
+            # Generate reports for each month in range
+            current_year = start_year
+            current_month = start_month
+            
+            while (current_year < end_year) or (current_year == end_year and current_month <= end_month):
+                # Date range for the month
+                start_date = datetime(current_year, current_month, 1).strftime("%Y-%m-%d")
+                
+                # Calculate end date (last day of month)
+                if current_month == 12:
+                    end_date = datetime(current_year + 1, 1, 1) - timedelta(days=1)
+                    next_year = current_year + 1
+                    next_month = 1
+                else:
+                    end_date = datetime(current_year, current_month + 1, 1) - timedelta(days=1)
+                    next_year = current_year
+                    next_month = current_month + 1
+                    
+                end_date_str = end_date.strftime("%Y-%m-%d")
+                
+                # Calculate monthly stats
+                monthly_data = await calculate_monthly_stats(start_date, end_date_str, current_year, current_month)
+                monthly_reports.append(monthly_data)
+                
+                # Add to totals
+                for key in total_stats:
+                    total_stats[key] += monthly_data[key]
+                
+                # Move to next month
+                current_year = next_year
+                current_month = next_month
+            
+            # Calculate averages
+            num_months = len(monthly_reports)
+            averages = {key: round(value / num_months, 2) for key, value in total_stats.items()}
+            
+            return {
+                "periode": f"{start_month:02d}/{start_year} - {end_month:02d}/{end_year}",
+                "type": "multi_month",
+                "start_date": monthly_reports[0]["start_date"],
+                "end_date": monthly_reports[-1]["end_date"],
+                "monthly_reports": monthly_reports,
+                "totals": total_stats,
+                "averages": averages,
+                "num_months": num_months,
+                "generated_at": datetime.now().isoformat()
+            }
         
-        for movement in cash_movements_month:
-            if movement["type_mouvement"] == "ajout":
-                recette_totale += movement["montant"]
+        # Single month report (existing logic)
+        else:
+            # Default to current month/year
+            if not year:
+                year = datetime.now().year
+            if not month:
+                month = datetime.now().month
+                
+            # Date range for the month
+            start_date = datetime(year, month, 1).strftime("%Y-%m-%d")
+            
+            # Calculate end date (last day of month)
+            if month == 12:
+                end_date = datetime(year + 1, 1, 1) - timedelta(days=1)
             else:
-                recette_totale -= movement["montant"]
-        
-        # Phone reminders count (relances téléphoniques)
-        nb_relances = phone_messages_collection.count_documents({
-            "call_date": {"$gte": start_date, "$lte": end_date_str}
-        })
-        
-        return {
-            "periode": f"{month:02d}/{year}",
-            "start_date": start_date,
-            "end_date": end_date_str,
-            "nouveaux_patients": nouveaux_patients,
-            "consultations_totales": consultations_mois,
-            "nb_visites": nb_visites,
-            "nb_controles": nb_controles,
-            "nb_assures": nb_assures,
-            "recette_totale": recette_totale,
-            "nb_relances_telephoniques": nb_relances,
-            "generated_at": datetime.now().isoformat()
-        }
+                end_date = datetime(year, month + 1, 1) - timedelta(days=1)
+            end_date_str = end_date.strftime("%Y-%m-%d")
+            
+            monthly_data = await calculate_monthly_stats(start_date, end_date_str, year, month)
+            
+            return {
+                **monthly_data,
+                "type": "single_month",
+                "generated_at": datetime.now().isoformat()
+            }
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating monthly report: {str(e)}")
+
+async def calculate_monthly_stats(start_date: str, end_date_str: str, year: int, month: int):
+    """Calculate statistics for a specific month"""
+    # New patients this month
+    nouveaux_patients = patients_collection.count_documents({
+        "created_at": {
+            "$gte": datetime.strptime(start_date, "%Y-%m-%d"),
+            "$lte": datetime.strptime(end_date_str, "%Y-%m-%d")
+        }
+    })
+    
+    # Consultations this month  
+    consultations_mois = consultations_collection.count_documents({
+        "date": {"$gte": start_date, "$lte": end_date_str}
+    })
+    
+    # Visites vs Controles
+    nb_visites = consultations_collection.count_documents({
+        "date": {"$gte": start_date, "$lte": end_date_str},
+        "type_rdv": "visite"
+    })
+    
+    nb_controles = consultations_collection.count_documents({
+        "date": {"$gte": start_date, "$lte": end_date_str},
+        "type_rdv": "controle"
+    })
+    
+    # Patients assurés (appointments with assure=true)
+    nb_assures = appointments_collection.count_documents({
+        "date": {"$gte": start_date, "$lte": end_date_str},
+        "assure": True,
+        "statut": {"$in": ["termine", "absent", "retard"]}  # Completed appointments
+    })
+    
+    # Total revenue for the month
+    recette_totale = 0
+    
+    # From payments
+    payments_month = list(payments_collection.find({
+        "date": {"$gte": start_date, "$lte": end_date_str},
+        "statut": "paye"
+    }, {"_id": 0}))
+    
+    for payment in payments_month:
+        recette_totale += payment.get("montant", 0)
+        
+    # From cash movements
+    cash_movements_month = list(cash_movements_collection.find({
+        "date": {"$gte": start_date, "$lte": end_date_str}
+    }, {"_id": 0}))
+    
+    for movement in cash_movements_month:
+        if movement["type_mouvement"] == "ajout":
+            recette_totale += movement["montant"]
+        else:
+            recette_totale -= movement["montant"]
+    
+    # Phone reminders count (relances téléphoniques)
+    nb_relances = phone_messages_collection.count_documents({
+        "call_date": {"$gte": start_date, "$lte": end_date_str}
+    })
+    
+    return {
+        "periode": f"{month:02d}/{year}",
+        "start_date": start_date,
+        "end_date": end_date_str,
+        "nouveaux_patients": nouveaux_patients,
+        "consultations_totales": consultations_mois,
+        "nb_visites": nb_visites,
+        "nb_controles": nb_controles,
+        "nb_assures": nb_assures,
+        "recette_totale": round(recette_totale, 2),
+        "nb_relances_telephoniques": nb_relances
+    }
 
 @app.get("/api/admin/export/{collection_name}")
 async def export_collection_data(collection_name: str):
