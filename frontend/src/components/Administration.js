@@ -22,7 +22,18 @@ import {
   DollarSign,
   UserPlus,
   ClipboardCheck,
-  FileText
+  FileText,
+  Edit2,
+  Save,
+  X,
+  Key,
+  Lock,
+  UserCheck,
+  Monitor,
+  HardDrive,
+  Gauge,
+  TrendingUp,
+  PieChart
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
