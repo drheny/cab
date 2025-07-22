@@ -392,8 +392,10 @@ class AuthenticationSystemTest(unittest.TestCase):
         headers = {"Authorization": f"Bearer {token}"}
         
         # Create a test user to delete
+        import time
+        unique_id = str(int(time.time()))
         new_user_data = {
-            "username": "temp_user",
+            "username": f"temp_user_{unique_id}",
             "full_name": "Temporary User",
             "role": "secretaire",
             "password": "temppassword123"
@@ -401,7 +403,7 @@ class AuthenticationSystemTest(unittest.TestCase):
         
         response = requests.post(f"{self.base_url}/api/admin/users", json=new_user_data, headers=headers)
         self.assertEqual(response.status_code, 200)
-        user_id = response.json()["user_id"]
+        user_id = response.json()["id"]
         
         # Delete the user
         response = requests.delete(f"{self.base_url}/api/admin/users/{user_id}", headers=headers)
