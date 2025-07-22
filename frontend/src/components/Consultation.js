@@ -1060,45 +1060,72 @@ const Consultation = ({ user }) => {
                         </div>
                       </div>
 
-                      {/* Observations et traitement */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Observation médicale
-                          </label>
-                          <textarea
-                            value={consultationData.observation_medicale}
-                            onChange={(e) => setConsultationData({...consultationData, observation_medicale: e.target.value})}
-                            className="input-field"
-                            rows="4"
-                            placeholder="Observations du médecin..."
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Traitement
-                          </label>
-                          <textarea
-                            value={consultationData.traitement}
-                            onChange={(e) => setConsultationData({...consultationData, traitement: e.target.value})}
-                            className="input-field"
-                            rows="4"
-                            placeholder="Traitement prescrit..."
-                          />
-                        </div>
+                      {/* Observations médicales - Toute largeur optimisée pour stylus */}
+                      <div className="mb-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Observation médicale
+                        </label>
+                        <textarea
+                          value={consultationData.observation_medicale}
+                          onChange={(e) => setConsultationData({...consultationData, observation_medicale: e.target.value})}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none text-base leading-relaxed"
+                          rows="6"
+                          placeholder="Observations du médecin..."
+                          style={{
+                            fontFamily: 'system-ui, -apple-system, sans-serif',
+                            lineHeight: '1.8',
+                            letterSpacing: '0.5px'
+                          }}
+                          // iPad stylus optimization
+                          inputMode="text"
+                          autoCapitalize="sentences"
+                          spellCheck="true"
+                        />
                       </div>
 
-                      {/* Bilans */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {/* Traitement - Toute largeur optimisée pour stylus */}
+                      <div className="mb-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Traitement
+                        </label>
+                        <textarea
+                          value={consultationData.traitement}
+                          onChange={(e) => setConsultationData({...consultationData, traitement: e.target.value})}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none text-base leading-relaxed"
+                          rows="5"
+                          placeholder="Traitement prescrit..."
+                          style={{
+                            fontFamily: 'system-ui, -apple-system, sans-serif',
+                            lineHeight: '1.8',
+                            letterSpacing: '0.5px'
+                          }}
+                          // iPad stylus optimization
+                          inputMode="text"
+                          autoCapitalize="sentences"
+                          spellCheck="true"
+                        />
+                      </div>
+
+                      {/* Bilans - Toute largeur optimisée pour stylus */}
+                      <div className="mb-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
                           Bilans
                         </label>
                         <textarea
                           value={consultationData.bilans}
                           onChange={(e) => setConsultationData({...consultationData, bilans: e.target.value})}
-                          className="input-field"
-                          rows="3"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none text-base leading-relaxed"
+                          rows="4"
                           placeholder="Bilans demandés..."
+                          style={{
+                            fontFamily: 'system-ui, -apple-system, sans-serif',
+                            lineHeight: '1.8',
+                            letterSpacing: '0.5px'
+                          }}
+                          // iPad stylus optimization
+                          inputMode="text"
+                          autoCapitalize="sentences"
+                          spellCheck="true"
                         />
                       </div>
 
