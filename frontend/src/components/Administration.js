@@ -175,38 +175,39 @@ const Administration = ({ user }) => {
   const exportData = async (dataType) => {
     try {
       setLoading(true);
-      let data = [];
-      let filename = '';
       
-      switch (dataType) {
-        case 'patients':
-          const patientsResponse = await axios.get('/api/patients');
-          data = patientsResponse.data;
-          filename = 'base_patients.csv';
-          break;
-        case 'consultations':
-          const consultationsResponse = await axios.get('/api/consultations');
-          data = consultationsResponse.data;
-          filename = 'base_consultations.csv';
-          break;
-        case 'payments':
-          const paymentsResponse = await axios.get('/api/payments');
-          data = paymentsResponse.data;
-          filename = 'base_paiements.csv';
-          break;
-      }
+      // Use the new admin export endpoint
+      const response = await axios.get(`/api/admin/export/${dataType}`);
+      const { data, count, collection } = response.data;
       
-      if (data.length === 0) {
+      if (count === 0) {
         toast.error('Aucune donnée à exporter');
         return;
       }
       
-      // Convert to CSV
+      // Generate filename
+      const filename = `sauvegarde_${collection}_${new Date().toISOString().split('T')[0]}.csv`;
+      
+      // Convert to CSV with UTF-8 BOM for Excel compatibility
       const headers = Object.keys(data[0]).join(',');
-      const csvContent = [headers, ...data.map(row => Object.values(row).join(','))].join('\n');
+      const csvRows = data.map(row => 
+        Object.values(row).map(value => {
+          // Handle commas and quotes in data
+          const stringValue = String(value || '');
+          return stringValue.includes(',') || stringValue.includes('"') 
+            ? `"${stringValue.replace(/"/g, '""')}"` 
+            : stringValue;
+        }).join(',')
+      );
+      
+      const csvContent = [headers, ...csvRows].join('\n');
+      
+      // Add UTF-8 BOM for Excel compatibility
+      const BOM = '\uFEFF';
+      const csvWithBOM = BOM + csvContent;
       
       // Download
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const blob = new Blob([csvWithBOM], { type: 'text/csv;charset=utf-8;' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -214,10 +215,10 @@ const Administration = ({ user }) => {
       a.click();
       window.URL.revokeObjectURL(url);
       
-      toast.success(`Export ${dataType} terminé`);
+      toast.success(`Sauvegarde ${collection} terminée (${count} éléments)`);
     } catch (error) {
       console.error(`Error exporting ${dataType}:`, error);
-      toast.error(`Erreur lors de l'export ${dataType}`);
+      toast.error(`Erreur lors de la sauvegarde ${dataType}: ${error.response?.data?.detail || error.message}`);
     } finally {
       setLoading(false);
     }
