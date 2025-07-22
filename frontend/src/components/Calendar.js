@@ -1825,17 +1825,8 @@ const WorkflowCard = React.memo(({
 
   // Fonction pour déterminer si le paiement peut être modifié par la secrétaire
   const canSecretaryModifyPayment = () => {
-    console.log("🔍 DEBUG canSecretaryModifyPayment:", {
-      user: user,
-      userType: user?.type,
-      appointmentStatut: appointment?.statut,
-      appointmentPaye: appointment?.paye,
-      appointmentTypeRdv: appointment?.type_rdv
-    });
-
     // Si l'utilisateur est médecin, il peut toujours modifier
     if (user?.type === 'medecin') {
-      console.log("✅ Médecin - accès autorisé");
       return true;
     }
     
@@ -1843,31 +1834,24 @@ const WorkflowCard = React.memo(({
     if (user?.type === 'secretaire') {
       // Si la consultation n'est pas terminée, la secrétaire peut modifier
       if (appointment?.statut !== 'termine') {
-        console.log("✅ Secrétaire - consultation non terminée, accès autorisé");
         return true;
       }
       
       // Si la consultation est terminée, vérifier le statut de paiement
       if (appointment?.statut === 'termine') {
-        console.log("🔍 Secrétaire - consultation terminée, vérification des restrictions...");
-        
         // Si c'est un contrôle, toujours non modifiable (gratuit)
         if (appointment?.type_rdv === 'controle') {
-          console.log("🔒 Secrétaire - contrôle terminé, accès refusé");
           return false;
         }
         
         // Pour les visites terminées :
         // - Si "non payé", la secrétaire peut encore modifier
         // - Si "payé" ou autre statut défini, la secrétaire ne peut plus modifier
-        const canModify = !appointment?.paye;
-        console.log(`${canModify ? '✅' : '🔒'} Secrétaire - visite terminée, paye=${appointment?.paye}, accès ${canModify ? 'autorisé' : 'refusé'}`);
-        return canModify;
+        return !appointment?.paye;
       }
     }
     
     // Par défaut, autoriser la modification
-    console.log("✅ Défaut - accès autorisé");
     return true;
   };
 
