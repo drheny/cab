@@ -892,13 +892,13 @@ const Administration = ({ user }) => {
               </button>
 
               <button
-                onClick={generateMonthlyReport}
-                disabled={loading}
+                onClick={generateAdvancedReport}
+                disabled={reportLoading}
                 className="flex flex-col items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors border border-blue-200"
               >
                 <FileText className="w-8 h-8 text-blue-600 mb-2" />
-                <span className="text-sm font-medium text-blue-900">Rapport mensuel</span>
-                <span className="text-xs text-blue-600 mt-1">Générer CSV</span>
+                <span className="text-sm font-medium text-blue-900">Rapport avancé</span>
+                <span className="text-xs text-blue-600 mt-1">Multi-mois + Stats</span>
               </button>
 
               <button
