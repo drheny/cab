@@ -198,7 +198,7 @@ const PaymentModal = ({
                     name="paye"
                     checked={paymentData.paye}
                     onChange={() => setPaymentData(prev => ({ ...prev, paye: true }))}
-                    disabled={isControle}
+                    disabled={isControle || !canModifyPayment}
                     className="mr-2"
                   />
                   <span className="text-sm text-gray-700">Payé</span>
@@ -209,7 +209,7 @@ const PaymentModal = ({
                     name="paye"
                     checked={!paymentData.paye}
                     onChange={() => setPaymentData(prev => ({ ...prev, paye: false }))}
-                    disabled={isControle}
+                    disabled={isControle || !canModifyPayment}
                     className="mr-2"
                   />
                   <span className="text-sm text-gray-700">Non payé</span>
