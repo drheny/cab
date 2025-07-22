@@ -112,7 +112,7 @@ const AppointmentModal = ({
         toast.error('Veuillez sélectionner un patient');
         return;
       }
-      const result = await onSave();
+      const result = await onSave(formData);
       // Le modal se ferme automatiquement en cas de succès dans handleCreateAppointment
     }
   };
