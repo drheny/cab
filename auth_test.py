@@ -298,7 +298,8 @@ class AuthenticationSystemTest(unittest.TestCase):
         # Get secretary user ID
         response = requests.get(f"{self.base_url}/api/admin/users", headers=headers)
         self.assertEqual(response.status_code, 200)
-        users = response.json()
+        users_data = response.json()
+        users = users_data["users"]
         
         secretary_user = next((u for u in users if u["username"] == "secretaire"), None)
         self.assertIsNotNone(secretary_user)
