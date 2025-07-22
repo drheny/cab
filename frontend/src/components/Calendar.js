@@ -1273,6 +1273,7 @@ const Calendar = ({ user }) => {
           appointment={selectedPaymentAppointment}
           onPaymentUpdate={handlePaymentUpdate}
           API_BASE_URL={API_BASE_URL}
+          user={user}
         />
       )}
     </div>
