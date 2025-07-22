@@ -243,7 +243,7 @@ class AuthenticationSystemTest(unittest.TestCase):
         # Verify response
         data = response.json()
         self.assertIn("id", data)
-        self.assertEqual(data["username"], "test_user")
+        self.assertEqual(data["username"], f"test_user_{unique_id}")
         user_id = data["id"]
         
         # Verify user was created
