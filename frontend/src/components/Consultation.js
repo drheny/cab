@@ -1068,18 +1068,15 @@ const Consultation = ({ user }) => {
                         <textarea
                           value={consultationData.observation_medicale}
                           onChange={(e) => setConsultationData({...consultationData, observation_medicale: e.target.value})}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none text-base leading-relaxed"
+                          className="textarea-stylus"
                           rows="6"
                           placeholder="Observations du médecin..."
-                          style={{
-                            fontFamily: 'system-ui, -apple-system, sans-serif',
-                            lineHeight: '1.8',
-                            letterSpacing: '0.5px'
-                          }}
-                          // iPad stylus optimization
+                          // iPad stylus optimization attributes
                           inputMode="text"
                           autoCapitalize="sentences"
                           spellCheck="true"
+                          autoComplete="off"
+                          data-gramm="false"
                         />
                       </div>
 
@@ -1091,18 +1088,15 @@ const Consultation = ({ user }) => {
                         <textarea
                           value={consultationData.traitement}
                           onChange={(e) => setConsultationData({...consultationData, traitement: e.target.value})}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none text-base leading-relaxed"
+                          className="textarea-stylus"
                           rows="5"
                           placeholder="Traitement prescrit..."
-                          style={{
-                            fontFamily: 'system-ui, -apple-system, sans-serif',
-                            lineHeight: '1.8',
-                            letterSpacing: '0.5px'
-                          }}
-                          // iPad stylus optimization
+                          // iPad stylus optimization attributes
                           inputMode="text"
                           autoCapitalize="sentences"
                           spellCheck="true"
+                          autoComplete="off"
+                          data-gramm="false"
                         />
                       </div>
 
@@ -1114,18 +1108,15 @@ const Consultation = ({ user }) => {
                         <textarea
                           value={consultationData.bilans}
                           onChange={(e) => setConsultationData({...consultationData, bilans: e.target.value})}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none text-base leading-relaxed"
+                          className="textarea-stylus"
                           rows="4"
                           placeholder="Bilans demandés..."
-                          style={{
-                            fontFamily: 'system-ui, -apple-system, sans-serif',
-                            lineHeight: '1.8',
-                            letterSpacing: '0.5px'
-                          }}
-                          // iPad stylus optimization
+                          // iPad stylus optimization attributes
                           inputMode="text"
                           autoCapitalize="sentences"
                           spellCheck="true"
+                          autoComplete="off"
+                          data-gramm="false"
                         />
                       </div>
 
