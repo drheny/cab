@@ -442,12 +442,12 @@ const Administration = ({ user }) => {
       
       // Download CSV
       const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-      const url = window.URL.createObjectURL(blob);
+      const downloadUrl = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
+      a.href = downloadUrl;
       a.download = `rapport_${report.type === 'multi_month' ? 'multi_mois' : 'mensuel'}_${report.periode.replace(/[\/\-\s]/g, '-')}.csv`;
       a.click();
-      window.URL.revokeObjectURL(url);
+      window.URL.revokeObjectURL(downloadUrl);
       
       toast.success(`Rapport généré avec succès`);
     } catch (error) {
