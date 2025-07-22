@@ -327,11 +327,11 @@ const Administration = ({ user }) => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `rapport_mensuel_${reportData.periode.replace('/', '_')}.csv`;
+      a.download = `rapport_mensuel_${reportData.periode.replace('/', '-')}.csv`;
       a.click();
       window.URL.revokeObjectURL(url);
       
-      toast.success('Rapport mensuel généré et téléchargé');
+      toast.success(`Rapport ${reportData.periode} généré avec succès`);
     } catch (error) {
       console.error('Error generating monthly report:', error);
       toast.error('Erreur lors de la génération du rapport');
@@ -471,235 +471,577 @@ const Administration = ({ user }) => {
 
       {/* Tab Content */}
       {activeTab === 'statistiques' && (
-        <div className="space-y-6">{/* Statistics Cards - Only the 3 required */}
+        <div className="space-y-6">
+          {/* Statistics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <StatCard
               icon={Users}
               title="Total Patients"
               value={stats.total_patients}
               color="text-blue-600"
-              subtitle="Patients dans la base"
+              subtitle="Patients enregistrés"
             />
             <StatCard
               icon={UserPlus}
               title="Nouveaux cette année"
               value={stats.nouveaux_patients_annee}
               color="text-green-600"
-              subtitle="Depuis janvier"
+              subtitle="Nouveaux patients"
             />
             <StatCard
               icon={Activity}
-              title="Patients inactifs"
+              title="Patients Inactifs"
               value={stats.patients_inactifs}
               color="text-orange-600"
-              subtitle="+12 mois sans consultation"
+              subtitle=">12 mois sans consultation"
             />
           </div>
 
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Section Gestion de Données */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <Database className="w-5 h-5 mr-2" />
-                Gestion de Données
-              </h3>
-              
-              <div className="space-y-4">
-                {/* Réinitialisation base de données */}
-                <div className="border border-gray-200 rounded-lg p-4">
-                  <h4 className="font-medium text-gray-900 mb-2 flex items-center">
-                    <Trash2 className="w-4 h-4 mr-2 text-red-500" />
-                    Réinitialiser la base de données
-                  </h4>
-                  <button
-                    onClick={() => setShowResetModal(true)}
-                    className="w-full btn-outline border-red-200 text-red-700 hover:bg-red-50"
-                  >
-                    Configurer la réinitialisation
-                  </button>
-                </div>
-
-                {/* Exports */}
-                <div className="border border-gray-200 rounded-lg p-4">
-                  <h4 className="font-medium text-gray-900 mb-3 flex items-center">
-                    <Download className="w-4 h-4 mr-2 text-blue-500" />
-                    Sauvegarde et Export Excel
-                  </h4>
-                  <div className="grid grid-cols-1 gap-2">
-                    <button
-                      onClick={() => exportData('patients')}
-                      disabled={loading}
-                      className="btn-outline flex items-center justify-center space-x-2"
-                    >
-                      <FileSpreadsheet className="w-4 h-4" />
-                      <span>Base Patients</span>
-                    </button>
-                    <button
-                      onClick={() => exportData('consultations')}
-                      disabled={loading}
-                      className="btn-outline flex items-center justify-center space-x-2"
-                    >
-                      <FileSpreadsheet className="w-4 h-4" />
-                      <span>Base Consultations</span>
-                    </button>
-                    <button
-                      onClick={() => exportData('payments')}
-                      disabled={loading}
-                      className="btn-outline flex items-center justify-center space-x-2"
-                    >
-                      <FileSpreadsheet className="w-4 h-4" />
-                      <span>Base Paiements</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Section Gestion Utilisateurs */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <Shield className="w-5 h-5 mr-2" />
-                Gestion Utilisateurs
-              </h3>
-              
-              <div className="space-y-4">
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <h4 className="font-medium text-gray-900">Dr Heni Dridi</h4>
-                      <p className="text-sm text-gray-500">Médecin - Accès complet</p>
-                    </div>
-                    <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
-                      Actif
-                    </span>
-                  </div>
-                  <button className="btn-outline w-full">
-                    Modifier code d'accès
-                  </button>
-                </div>
-                
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <h4 className="font-medium text-gray-900">Secrétaire</h4>
-                      <p className="text-sm text-gray-500">Secrétaire - Accès restreint</p>
-                    </div>
-                    <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
-                      Actif
-                    </span>
-                  </div>
-                  <button className="btn-outline w-full">
-                    Modifier droits d'accès
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Actions Rapides */}
+          {/* Actions rapides */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <Settings className="w-5 h-5 mr-2" />
-              Actions Rapides
-            </h3>
+            <div className="flex items-center space-x-2 mb-6">
+              <RefreshCw className="w-5 h-5 text-gray-600" />
+              <h2 className="text-lg font-semibold text-gray-900">Actions Rapides</h2>
+            </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Rapport mensuel */}
-              <button 
-                onClick={generateMonthlyReport}
-                disabled={loading}
-                className="p-4 bg-blue-50 hover:bg-blue-100 rounded-lg text-left transition-colors"
-              >
-                <BarChart3 className="w-6 h-6 text-blue-600 mb-2" />
-                <h4 className="font-medium text-gray-900">Rapport mensuel</h4>
-                <p className="text-sm text-gray-600">PDF + Excel avec toutes les stats</p>
-              </button>
-              
-              {/* Patients inactifs */}
-              <button 
+              <button
                 onClick={fetchInactivePatients}
                 disabled={loading}
-                className="p-4 bg-orange-50 hover:bg-orange-100 rounded-lg text-left transition-colors"
+                className="flex flex-col items-center p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors border border-orange-200"
               >
-                <Users className="w-6 h-6 text-orange-600 mb-2" />
-                <h4 className="font-medium text-gray-900">Patients inactifs</h4>
-                <p className="text-sm text-gray-600">Liste + actions de contact</p>
+                <Activity className="w-8 h-8 text-orange-600 mb-2" />
+                <span className="text-sm font-medium text-orange-900">Patients inactifs</span>
+                <span className="text-xs text-orange-600 mt-1">Voir la liste</span>
               </button>
-              
-              {/* Maintenance - Nettoyage messages */}
-              <button 
-                onClick={() => performMaintenance('cleanup_messages')}
+
+              <button
+                onClick={generateMonthlyReport}
                 disabled={loading}
-                className="p-4 bg-purple-50 hover:bg-purple-100 rounded-lg text-left transition-colors"
+                className="flex flex-col items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors border border-blue-200"
               >
-                <MessageSquare className="w-6 h-6 text-purple-600 mb-2" />
-                <h4 className="font-medium text-gray-900">Nettoyer messages</h4>
-                <p className="text-sm text-gray-600">Supprimer anciens messages</p>
+                <FileText className="w-8 h-8 text-blue-600 mb-2" />
+                <span className="text-sm font-medium text-blue-900">Rapport mensuel</span>
+                <span className="text-xs text-blue-600 mt-1">Générer CSV</span>
               </button>
-              
-              {/* Maintenance - Vérification intégrité */}
-              <button 
-                onClick={() => performMaintenance('verify_data_integrity')}
-                disabled={loading}
-                className="p-4 bg-green-50 hover:bg-green-100 rounded-lg text-left transition-colors"
-              >
-                <CheckCircle className="w-6 h-6 text-green-600 mb-2" />
-                <h4 className="font-medium text-gray-900">Vérifier intégrité</h4>
-                <p className="text-sm text-gray-600">Contrôler cohérence données</p>
-              </button>
-              
-              {/* Maintenance - Mise à jour champs */}
-              <button 
+
+              <button
                 onClick={() => performMaintenance('update_calculated_fields')}
                 disabled={loading}
-                className="p-4 bg-indigo-50 hover:bg-indigo-100 rounded-lg text-left transition-colors"
+                className="flex flex-col items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors border border-green-200"
               >
-                <RefreshCw className="w-6 h-6 text-indigo-600 mb-2" />
-                <h4 className="font-medium text-gray-900">MàJ champs calculés</h4>
-                <p className="text-sm text-gray-600">Âge, liens WhatsApp</p>
+                <RefreshCw className="w-8 h-8 text-green-600 mb-2" />
+                <span className="text-sm font-medium text-green-900">Mise à jour</span>
+                <span className="text-xs text-green-600 mt-1">Champs calculés</span>
               </button>
-              
-              {/* Maintenance - Optimisation */}
-              <button 
-                onClick={() => performMaintenance('optimize_database')}
+
+              <button
+                onClick={() => performMaintenance('verify_data_integrity')}
                 disabled={loading}
-                className="p-4 bg-teal-50 hover:bg-teal-100 rounded-lg text-left transition-colors"
+                className="flex flex-col items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors border border-purple-200"
               >
-                <Activity className="w-6 h-6 text-teal-600 mb-2" />
-                <h4 className="font-medium text-gray-900">Optimiser BDD</h4>
-                <p className="text-sm text-gray-600">Performance et stockage</p>
+                <ClipboardCheck className="w-8 h-8 text-purple-600 mb-2" />
+                <span className="text-sm font-medium text-purple-900">Vérification</span>
+                <span className="text-xs text-purple-600 mt-1">Intégrité</span>
               </button>
             </div>
           </div>
+        </div>
+      )}
 
-          {/* Results of maintenance actions */}
-          {Object.keys(maintenanceResults).length > 0 && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Résultats Maintenance</h3>
-              <div className="space-y-3">
-                {Object.entries(maintenanceResults).map(([action, result]) => (
-                  <div key={action} className="bg-gray-50 rounded-lg p-3">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-gray-900 capitalize">{action.replace('_', ' ')}</span>
-                      <span className={`px-2 py-1 rounded-full text-xs ${
-                        result.completed ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}>
-                        {result.completed ? 'Terminé' : 'Erreur'}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600 mt-1">{result.message}</p>
-                    {result.details && (
-                      <div className="text-xs text-gray-500 mt-2">
-                        {JSON.stringify(result.details, null, 2)}
-                      </div>
-                    )}
+      {activeTab === 'donnees' && (
+        <div className="space-y-6">
+          {/* Data Management */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center space-x-2 mb-6">
+              <Database className="w-5 h-5 text-gray-600" />
+              <h2 className="text-lg font-semibold text-gray-900">Gestion des Données</h2>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Data Export */}
+              <div className="space-y-4">
+                <h3 className="font-medium text-gray-900">Sauvegarde des données</h3>
+                <div className="space-y-3">
+                  <button
+                    onClick={() => exportData('patients')}
+                    disabled={loading}
+                    className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Sauvegarder patients</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => exportData('consultations')}
+                    disabled={loading}
+                    className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg disabled:opacity-50"
+                  >
+                    <FileSpreadsheet className="w-4 h-4" />
+                    <span>Sauvegarder consultations</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => exportData('payments')}
+                    disabled={loading}
+                    className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg disabled:opacity-50"
+                  >
+                    <DollarSign className="w-4 h-4" />
+                    <span>Sauvegarder paiements</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Data Reset */}
+              <div className="space-y-4">
+                <h3 className="font-medium text-gray-900">Réinitialisation</h3>
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <AlertTriangle className="w-4 h-4 text-red-600" />
+                    <span className="text-sm font-medium text-red-800">Zone dangereuse</span>
                   </div>
-                ))}
+                  <p className="text-xs text-red-600 mb-3">
+                    La réinitialisation supprime définitivement les données sélectionnées.
+                  </p>
+                  <button
+                    onClick={() => setShowResetModal(true)}
+                    className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>Réinitialiser base</span>
+                  </button>
+                </div>
               </div>
             </div>
-          )}
-        </>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'utilisateurs' && user?.permissions?.manage_users && (
+        <div className="space-y-6">
+          {/* User Management */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-2">
+                <Users className="w-5 h-5 text-gray-600" />
+                <h2 className="text-lg font-semibold text-gray-900">Gestion des Utilisateurs</h2>
+              </div>
+              <button
+                onClick={() => {
+                  setEditingUser(null);
+                  setUserForm({ username: '', email: '', full_name: '', role: 'secretaire', password: '' });
+                  setShowUserModal(true);
+                }}
+                className="flex items-center space-x-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Nouvel utilisateur</span>
+              </button>
+            </div>
+
+            {/* Users List */}
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Utilisateur</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rôle</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {allUsers.map((user) => (
+                    <tr key={user.id}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">{user.full_name}</div>
+                          <div className="text-sm text-gray-500">{user.username}</div>
+                          {user.email && <div className="text-xs text-gray-400">{user.email}</div>}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          user.role === 'medecin' 
+                            ? 'bg-blue-100 text-blue-800' 
+                            : 'bg-green-100 text-green-800'
+                        }`}>
+                          {user.role === 'medecin' ? 'Médecin' : 'Secrétaire'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          user.is_active 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {user.is_active ? 'Actif' : 'Inactif'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => openEditUser(user)}
+                            className="text-blue-600 hover:text-blue-900"
+                            title="Modifier"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          
+                          <button
+                            onClick={() => setEditingPermissions(user)}
+                            className="text-green-600 hover:text-green-900"
+                            title="Permissions"
+                          >
+                            <Shield className="w-4 h-4" />
+                          </button>
+                          
+                          {user.id !== user.id && (
+                            <button
+                              onClick={() => handleDeleteUser(user.id, user.username)}
+                              className="text-red-600 hover:text-red-900"
+                              title="Supprimer"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'acces' && (
+        <div className="space-y-6">
+          {/* Access Management */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center space-x-2 mb-6">
+              <Key className="w-5 h-5 text-gray-600" />
+              <h2 className="text-lg font-semibold text-gray-900">Gestion des Accès</h2>
+            </div>
+
+            <div className="space-y-6">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h3 className="font-medium text-blue-900 mb-2">Mon mot de passe</h3>
+                <p className="text-sm text-blue-700 mb-4">Modifier votre mot de passe de connexion</p>
+                <button
+                  onClick={() => setShowPasswordModal(true)}
+                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+                >
+                  <Lock className="w-4 h-4" />
+                  <span>Changer le mot de passe</span>
+                </button>
+              </div>
+
+              {user?.permissions?.manage_users && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <h3 className="font-medium text-yellow-900 mb-2">Comptes par défaut</h3>
+                  <p className="text-sm text-yellow-700 mb-4">
+                    Médecin: medecin / medecin123<br />
+                    Secrétaire: secretaire / secretaire123
+                  </p>
+                  <p className="text-xs text-yellow-600">
+                    ⚠️ Changez ces mots de passe par défaut pour sécuriser le système
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'droits' && user?.permissions?.manage_users && (
+        <div className="space-y-6">
+          {/* Rights Management */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center space-x-2 mb-6">
+              <Shield className="w-5 h-5 text-gray-600" />
+              <h2 className="text-lg font-semibold text-gray-900">Gestion des Droits</h2>
+            </div>
+
+            <div className="space-y-6">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <h3 className="font-medium text-green-900 mb-2">Droits par défaut</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-green-700">
+                  <div>
+                    <h4 className="font-medium mb-2">Médecin (Accès complet)</h4>
+                    <ul className="space-y-1">
+                      <li>• Toutes les pages</li>
+                      <li>• Gestion des utilisateurs</li>
+                      <li>• Export/Réinitialisation</li>
+                      <li>• Administration</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-medium mb-2">Secrétaire (Accès limité)</h4>
+                    <ul className="space-y-1">
+                      <li>• Dashboard, Patients, Calendrier</li>
+                      <li>• Messages, Facturation</li>
+                      <li>• Consultation (lecture seule)</li>
+                      <li>• Pas d'administration</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h3 className="font-medium text-blue-900 mb-2">Permissions personnalisables</h3>
+                <p className="text-sm text-blue-700 mb-4">
+                  Cliquez sur l'icône permissions (🛡️) dans la liste des utilisateurs pour personnaliser les droits de chaque secrétaire.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-blue-600">
+                  <div>
+                    <h5 className="font-medium">Pages</h5>
+                    <ul>
+                      <li>• Dashboard</li>
+                      <li>• Patients</li>
+                      <li>• Calendrier</li>
+                      <li>• Messages</li>
+                      <li>• Facturation</li>
+                      <li>• Consultation</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h5 className="font-medium">Actions</h5>
+                    <ul>
+                      <li>• Créer RDV</li>
+                      <li>• Modifier RDV</li>
+                      <li>• Voir paiements</li>
+                      <li>• Modifier paiements</li>
+                      <li>• Export données</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h5 className="font-medium">Restrictions</h5>
+                    <ul>
+                      <li>• Consultation lecture seule</li>
+                      <li>• Pas de suppression</li>
+                      <li>• Pas d'administration</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'systeme' && (
+        <div className="space-y-6">
+          {/* System Information */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center space-x-2 mb-6">
+              <Monitor className="w-5 h-5 text-gray-600" />
+              <h2 className="text-lg font-semibold text-gray-900">Informations Système</h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Settings className="w-4 h-4 text-gray-600" />
+                  <h3 className="font-medium text-gray-900">Version</h3>
+                </div>
+                <p className="text-2xl font-bold text-gray-900">{systemInfo.version}</p>
+                <p className="text-xs text-gray-500">Cabinet Médical</p>
+              </div>
+
+              <div className="bg-green-50 rounded-lg p-4">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Activity className="w-4 h-4 text-green-600" />
+                  <h3 className="font-medium text-gray-900">Uptime</h3>
+                </div>
+                <p className="text-2xl font-bold text-green-600">{systemInfo.uptime}</p>
+                <p className="text-xs text-gray-500">Temps de fonctionnement</p>
+              </div>
+
+              <div className="bg-blue-50 rounded-lg p-4">
+                <div className="flex items-center space-x-2 mb-2">
+                  <HardDrive className="w-4 h-4 text-blue-600" />
+                  <h3 className="font-medium text-gray-900">Stockage</h3>
+                </div>
+                <p className="text-2xl font-bold text-blue-600">{systemInfo.storage.used}%</p>
+                <p className="text-xs text-gray-500">Espace utilisé</p>
+              </div>
+
+              <div className="bg-purple-50 rounded-lg p-4">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Gauge className="w-4 h-4 text-purple-600" />
+                  <h3 className="font-medium text-gray-900">Performance</h3>
+                </div>
+                <p className="text-2xl font-bold text-purple-600">{systemInfo.performance.responseTime}ms</p>
+                <p className="text-xs text-gray-500">Temps de réponse</p>
+              </div>
+            </div>
+
+            <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <h3 className="font-medium text-yellow-900 mb-2">Dernière sauvegarde</h3>
+              <p className="text-sm text-yellow-700">
+                {systemInfo.lastBackup 
+                  ? new Date(systemInfo.lastBackup).toLocaleString('fr-FR')
+                  : 'Aucune sauvegarde effectuée'
+                }
+              </p>
+              <p className="text-xs text-yellow-600 mt-1">
+                Effectuez régulièrement des sauvegardes via l'onglet "Gestion Données"
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* User Create/Edit Modal */}
+      {showUserModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                {editingUser ? 'Modifier utilisateur' : 'Nouvel utilisateur'}
+              </h3>
+              <button
+                onClick={() => setShowUserModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nom d'utilisateur *</label>
+                <input
+                  type="text"
+                  value={userForm.username}
+                  onChange={(e) => setUserForm(prev => ({ ...prev, username: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  placeholder="nom_utilisateur"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nom complet *</label>
+                <input
+                  type="text"
+                  value={userForm.full_name}
+                  onChange={(e) => setUserForm(prev => ({ ...prev, full_name: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  placeholder="Prénom Nom"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input
+                  type="email"
+                  value={userForm.email}
+                  onChange={(e) => setUserForm(prev => ({ ...prev, email: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  placeholder="email@example.com"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Rôle</label>
+                <select
+                  value={userForm.role}
+                  onChange={(e) => setUserForm(prev => ({ ...prev, role: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                >
+                  <option value="secretaire">Secrétaire</option>
+                  <option value="medecin">Médecin</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Mot de passe {editingUser ? '(laisser vide pour ne pas modifier)' : '*'}
+                </label>
+                <input
+                  type="password"
+                  value={userForm.password}
+                  onChange={(e) => setUserForm(prev => ({ ...prev, password: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  placeholder="••••••••"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={() => setShowUserModal(false)}
+                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={editingUser ? handleUpdateUser : handleCreateUser}
+                className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg"
+              >
+                {editingUser ? 'Modifier' : 'Créer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Password Change Modal */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Changer le mot de passe</h3>
+              <button
+                onClick={() => setShowPasswordModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nouveau mot de passe</label>
+                <input
+                  type="password"
+                  value={passwordForm.newPassword}
+                  onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  placeholder="••••••••"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Confirmer le mot de passe</label>
+                <input
+                  type="password"
+                  value={passwordForm.confirmPassword}
+                  onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  placeholder="••••••••"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={() => setShowPasswordModal(false)}
+                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleUpdatePassword}
+                className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg"
+              >
+                Modifier
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Reset Database Modal */}
@@ -712,7 +1054,7 @@ const Administration = ({ user }) => {
                 onClick={() => setShowResetModal(false)}
                 className="text-gray-400 hover:text-gray-600"
               >
-                ×
+                <X className="w-5 h-5" />
               </button>
             </div>
             
@@ -767,14 +1109,14 @@ const Administration = ({ user }) => {
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setShowResetModal(false)}
-                className="btn-outline"
+                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg"
               >
                 Annuler
               </button>
               <button
                 onClick={handleResetDatabase}
                 disabled={loading}
-                className="btn-primary bg-red-600 hover:bg-red-700"
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg disabled:opacity-50"
               >
                 {loading ? 'Réinitialisation...' : 'Confirmer'}
               </button>
@@ -796,7 +1138,7 @@ const Administration = ({ user }) => {
                   onClick={() => setShowInactivePatients(false)}
                   className="text-gray-400 hover:text-gray-600"
                 >
-                  ×
+                  <X className="w-5 h-5" />
                 </button>
               </div>
               
@@ -814,14 +1156,20 @@ const Administration = ({ user }) => {
                     {inactivePatients.map((patient) => (
                       <tr key={patient.id}>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">
+                          <button 
+                            className="text-left hover:text-blue-600"
+                            onClick={() => {
+                              // Navigate to patient details
+                              window.location.href = `/patients?patient=${patient.id}`;
+                            }}
+                          >
+                            <div className="text-sm font-medium text-gray-900 hover:text-blue-600">
                               {patient.prenom} {patient.nom}
                             </div>
                             <div className="text-sm text-gray-500">
                               ID: {patient.id}
                             </div>
-                          </div>
+                          </button>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {patient.age}
@@ -834,13 +1182,6 @@ const Administration = ({ user }) => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex items-center space-x-2">
-                            <button 
-                              className="text-blue-600 hover:text-blue-900"
-                              title="Consulter fiche"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                            
                             {patient.lien_whatsapp && (
                               <a 
                                 href={patient.lien_whatsapp}
@@ -852,13 +1193,6 @@ const Administration = ({ user }) => {
                                 <MessageSquare className="w-4 h-4" />
                               </a>
                             )}
-                            
-                            <button 
-                              className="text-red-600 hover:text-red-900"
-                              title="Supprimer patient"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
                           </div>
                         </td>
                       </tr>
