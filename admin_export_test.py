@@ -20,7 +20,7 @@ class AdminExportAPITest(unittest.TestCase):
     def init_demo_data(self):
         """Initialize demo data for testing"""
         try:
-            response = requests.get(f"{self.base_url}/api/init-demo")
+            response = requests.get(f"{self.base_url}/api/init-test-data")
             self.assertEqual(response.status_code, 200)
             print("Demo data initialized successfully")
         except Exception as e:
