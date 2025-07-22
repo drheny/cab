@@ -106,12 +106,7 @@ function App() {
   }
 
   if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <LoginPage onLogin={handleLogin} />
-        <Toaster position="top-right" />
-      </div>
-    );
+    return <LoginPage onLogin={handleLogin} />;
   }
 
   return (
