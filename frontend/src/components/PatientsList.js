@@ -297,6 +297,16 @@ const PatientsListComponent = ({ user }) => {
     }
   };
 
+  // Navigate to consultation page for patient
+  const viewPatientConsultations = (patientId, patientName) => {
+    // Navigate to consultation page with patient pre-selected
+    const params = new URLSearchParams({
+      patient: patientId,
+      patientName: patientName || ''
+    });
+    window.location.href = `/consultation?${params.toString()}`;
+  };
+
   // Memoize the patients list rendering to prevent unnecessary re-renders
   const patientsListContent = useMemo(() => {
     return patients.map((patient) => (
