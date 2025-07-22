@@ -437,7 +437,8 @@ class AuthenticationSystemTest(unittest.TestCase):
         doctor_headers = {"Authorization": f"Bearer {doctor_token}"}
         
         response = requests.get(f"{self.base_url}/api/admin/users", headers=doctor_headers)
-        users = response.json()
+        users_data = response.json()
+        users = users_data["users"]
         doctor_user = next((u for u in users if u["username"] == "medecin"), None)
         doctor_id = doctor_user["id"]
         
