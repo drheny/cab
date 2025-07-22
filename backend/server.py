@@ -10,6 +10,8 @@ from dotenv import load_dotenv
 import uuid
 import json
 import asyncio
+import bcrypt
+import jwt
 
 # Load environment variables
 load_dotenv()
