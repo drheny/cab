@@ -1168,35 +1168,35 @@ const Calendar = ({ user }) => {
                         </div>
                       </div>
 
-                      {/* Observations et traitement */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Observation médicale
-                          </label>
-                          <textarea
-                            value={consultationData.observation_medicale}
-                            onChange={(e) => setConsultationData({...consultationData, observation_medicale: e.target.value})}
-                            className="input-field"
-                            rows="4"
-                            placeholder="Observations du médecin..."
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Traitement
-                          </label>
-                          <textarea
-                            value={consultationData.traitement}
-                            onChange={(e) => setConsultationData({...consultationData, traitement: e.target.value})}
-                            className="input-field"
-                            rows="4"
-                            placeholder="Traitement prescrit..."
-                          />
-                        </div>
+                      {/* Observations cliniques - Full width pour iPad/stylet */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Observation clinique
+                        </label>
+                        <textarea
+                          value={consultationData.observation_medicale}
+                          onChange={(e) => setConsultationData({...consultationData, observation_medicale: e.target.value})}
+                          className="input-field textarea-stylus"
+                          rows="5"
+                          placeholder="Observations du médecin... (Optimisé pour Apple Pencil)"
+                        />
                       </div>
 
-                      {/* Bilans */}
+                      {/* Traitement - Full width pour iPad/stylet */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Traitements
+                        </label>
+                        <textarea
+                          value={consultationData.traitement}
+                          onChange={(e) => setConsultationData({...consultationData, traitement: e.target.value})}
+                          className="input-field textarea-stylus"
+                          rows="5"
+                          placeholder="Traitement prescrit... (Optimisé pour Apple Pencil)"
+                        />
+                      </div>
+
+                      {/* Bilans - Full width pour iPad/stylet */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Bilans
@@ -1204,9 +1204,9 @@ const Calendar = ({ user }) => {
                         <textarea
                           value={consultationData.bilans}
                           onChange={(e) => setConsultationData({...consultationData, bilans: e.target.value})}
-                          className="input-field"
-                          rows="3"
-                          placeholder="Bilans demandés..."
+                          className="input-field textarea-stylus"
+                          rows="4"
+                          placeholder="Bilans demandés... (Optimisé pour Apple Pencil)"
                         />
                       </div>
 
