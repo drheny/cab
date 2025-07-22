@@ -193,6 +193,42 @@ const Messages = ({ user }) => {
     setEditPriority('normal');
   };
 
+  // Delete individual message
+  const handleDeleteMessage = async (messageId, patientName) => {
+    const confirmed = window.confirm(
+      `Êtes-vous sûr de vouloir supprimer ce message de ${patientName} ?\n\nCette action est irréversible.`
+    );
+    
+    if (!confirmed) return;
+    
+    try {
+      await axios.delete(`/api/phone-messages/${messageId}`);
+      toast.success('Message supprimé avec succès');
+      await loadPhoneMessages(); // Reload messages
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      toast.error('Erreur lors de la suppression du message');
+    }
+  };
+
+  // Delete all messages
+  const handleDeleteAllMessages = async () => {
+    const confirmed = window.confirm(
+      `🗑️ SUPPRIMER TOUS LES MESSAGES\n\nÊtes-vous sûr de vouloir supprimer TOUS les messages téléphoniques ?\n\nCette action est IRRÉVERSIBLE.\n\n⚠️ Cliquez OK pour confirmer la suppression.`
+    );
+    
+    if (!confirmed) return;
+    
+    try {
+      const response = await axios.delete('/api/phone-messages');
+      toast.success(response.data.message);
+      await loadPhoneMessages(); // Reload messages
+    } catch (error) {
+      console.error('Error deleting all messages:', error);
+      toast.error('Erreur lors de la suppression des messages');
+    }
+  };
+
   // Initialize component
   useEffect(() => {
     loadPhoneMessages();
