@@ -15,7 +15,8 @@ const PaymentModal = ({
   onClose, 
   appointment, 
   onPaymentUpdate,
-  API_BASE_URL 
+  API_BASE_URL,
+  user
 }) => {
   const [paymentData, setPaymentData] = useState({
     paye: false,
