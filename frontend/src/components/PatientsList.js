@@ -863,22 +863,30 @@ const PatientsListComponent = ({ user }) => {
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-3 mt-6">
+              <div className="flex justify-between space-x-3 mt-6">
                 <button
-                  onClick={() => {
-                    setShowPatientModal(false);
-                    openModal(selectedPatient);
-                  }}
-                  className="btn-outline"
-                >
-                  Modifier
-                </button>
-                <button
-                  onClick={() => setShowPatientModal(false)}
+                  onClick={() => viewPatientConsultations(selectedPatient.id, `${selectedPatient.prenom} ${selectedPatient.nom}`)}
                   className="btn-primary"
                 >
-                  Fermer
+                  Voir Consultations
                 </button>
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => {
+                      setShowPatientModal(false);
+                      openModal(selectedPatient);
+                    }}
+                    className="btn-outline"
+                  >
+                    Modifier
+                  </button>
+                  <button
+                    onClick={() => setShowPatientModal(false)}
+                    className="btn-outline"
+                  >
+                    Fermer
+                  </button>
+                </div>
               </div>
             </div>
           </div>
