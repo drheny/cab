@@ -26,10 +26,20 @@ function App() {
   const [phoneMessagesCount, setPhoneMessagesCount] = useState(0);
 
   useEffect(() => {
-    // Check if user is logged in (stored in localStorage)
+    // Check if user is logged in (check token and user data)
+    const token = localStorage.getItem('auth_token');
     const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
+    
+    if (token && savedUser) {
+      try {
+        const userData = JSON.parse(savedUser);
+        // Set axios default authorization header
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        setUser(userData);
+      } catch (error) {
+        console.error('Error parsing saved user data:', error);
+        handleLogout();
+      }
     }
     setLoading(false);
   }, []);
@@ -69,20 +79,18 @@ function App() {
     return () => clearInterval(interval);
   }, [user]);
 
-  const handleLogin = (userType) => {
-    const userData = {
-      type: userType,
-      name: userType === 'medecin' ? 'Dr Heni Dridi' : 'Secrétaire',
-      permissions: userType === 'medecin' ? ['all'] : ['patients', 'appointments', 'consultations']
-    };
-    
+  const handleLogin = (userData, token) => {
+    // Set axios default authorization header for future requests
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
   };
 
   const handleLogout = () => {
-    setUser(null);
+    // Clear token and user data
+    localStorage.removeItem('auth_token');
     localStorage.removeItem('user');
+    delete axios.defaults.headers.common['Authorization'];
+    setUser(null);
   };
 
   const toggleSidebar = () => {
