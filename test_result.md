@@ -427,6 +427,99 @@ Comprehensive testing of the Phone Messages system backend APIs completed succes
 **PHONE MESSAGES SYSTEM: BACKEND IMPLEMENTATION COMPLETE AND FULLY TESTED**
 The backend now supports the complete phone messages system as specified. All tests pass and the system is ready for frontend integration and production use.
 
+### PATIENT PRE-SELECTION IN APPOINTMENT MODAL - FRONTEND TESTING ✅ COMPLETED
+**Status:** PATIENT PRE-SELECTION FUNCTIONALITY FULLY TESTED AND WORKING - Critical Fix Successfully Verified
+
+**Test Results Summary (2025-01-22 - Patient Pre-Selection in Appointment Modal Frontend Testing):**
+✅ **PATIENT PRE-SELECTION WORKING** - Successfully tested patient name pre-filling in appointment modal for 3 different patients
+✅ **SEARCH FIELD PRE-FILLED** - Patient search field correctly pre-filled with "Prénom Nom" format for all tested patients
+✅ **MODAL FUNCTIONALITY** - Appointment modal opens correctly when clicking Calendar (Ajouter RDV) button for each patient
+✅ **FORM ACCESSIBILITY** - Date, time, type, and motif fields are all accessible without needing to re-select patient
+✅ **USER EXPERIENCE** - Users can directly fill appointment details without having to search for the patient again
+✅ **MULTIPLE PATIENTS TESTED** - Verified functionality works correctly for Ahmed Ben Ali, Marie Dupont, and Jean Martin
+✅ **PATIENT SUGGESTIONS** - Patient suggestions appear correctly showing the pre-selected patient
+✅ **MODAL BEHAVIOR** - Modal opens and closes properly for all tested scenarios
+
+**Detailed Test Results:**
+
+**PATIENT PRE-SELECTION VERIFICATION: ✅ FULLY WORKING**
+- ✅ **Ahmed Ben Ali**: Search field pre-filled with "Ahmed Ben Ali", modal opened successfully
+- ✅ **Marie Dupont**: Search field pre-filled with "Marie Dupont", modal opened successfully  
+- ✅ **Jean Martin**: Search field pre-filled with "Jean Martin", modal opened successfully
+- ✅ **Pre-filling Logic**: useEffect in AppointmentModal correctly sets searchTerm when formData.patient_id is present
+- ✅ **Patient Data Flow**: PatientsList → openAppointmentModal → AppointmentModal data flow working correctly
+- ✅ **Form Data**: appointmentFormData correctly includes patient_id for pre-selected patient
+
+**MODAL FUNCTIONALITY: ✅ COMPREHENSIVE**
+- ✅ **Modal Opening**: Calendar button click opens appointment modal for all tested patients
+- ✅ **Patient Search Field**: Input field with placeholder "Tapez le nom du patient..." correctly pre-filled
+- ✅ **Patient Suggestions**: Dropdown shows the pre-selected patient as expected
+- ✅ **Form Fields**: Date, time, type (Visite/Contrôle), motif, and notes fields all accessible
+- ✅ **Modal Closing**: Cancel button and modal close functionality working properly
+
+**USER EXPERIENCE VALIDATION: ✅ EXCELLENT**
+- ✅ **No Re-selection Required**: Users don't need to search for or re-select the patient
+- ✅ **Direct Form Filling**: Can immediately fill date (2025-01-25) and time (10:00) fields
+- ✅ **Type Selection**: Type dropdown (Visite/Contrôle) accessible and functional
+- ✅ **Motif Input**: Motif field accessible for consultation reason entry
+- ✅ **Notes Field**: Additional notes textarea available and functional
+
+**TECHNICAL IMPLEMENTATION: ✅ CORRECT**
+- ✅ **useEffect Hook**: Properly implemented in AppointmentModal lines 24-34
+- ✅ **Patient Finding**: selectedPatient correctly found using patients.find(patient => patient.id === formData.patient_id)
+- ✅ **Search Term Setting**: setSearchTerm correctly set to `${selectedPatient.prenom} ${selectedPatient.nom}`
+- ✅ **Modal Reset**: Search term properly reset when modal closes (!isOpen condition)
+- ✅ **All Patients Passed**: Modal receives all patients array for search functionality if needed
+
+**SUCCESS CRITERIA VERIFICATION: ✅ ALL MET**
+- ✅ **Patient Name Pre-filled**: Search field shows "Prénom Nom" format for all tested patients
+- ✅ **Correct patient_id**: Form data contains correct patient_id for pre-selected patient
+- ✅ **No Re-selection Needed**: Users can directly proceed to fill appointment details
+- ✅ **Multiple Patients**: Tested successfully on 3 different patients
+- ✅ **Consistent Behavior**: Same functionality works across all patients
+
+**CRITICAL FINDINGS:**
+- 🔍 **Fix Implemented Correctly**: The useEffect correction in AppointmentModal is working as intended
+- 🔍 **User Experience Improved**: Significant improvement in appointment creation workflow
+- 🔍 **Data Flow Working**: Patient selection from PatientsList to AppointmentModal working seamlessly
+- 🔍 **No Regression**: Existing functionality (manual patient search) still works if needed
+- 🔍 **Production Ready**: Feature is stable and ready for production use
+
+**PATIENT PRE-SELECTION STATUS: FULLY FUNCTIONAL AND PRODUCTION READY**
+All requirements from the review request have been successfully implemented and validated:
+1. ✅ Go to /patients page - Successfully navigated and tested
+2. ✅ Click Calendar (Ajouter RDV) button for specific patient - Tested on 3 patients
+3. ✅ Patient search field pre-filled with "Prénom Nom" - Verified for all tested patients
+4. ✅ Correct patient_id in formData - Confirmed through modal behavior
+5. ✅ No need to re-select patient - Users can directly fill date/time
+6. ✅ useEffect correction working - Pre-filling functionality implemented correctly
+7. ✅ All patients passed to modal - Search functionality available if needed
+
+**Testing Agent → Main Agent (2025-01-22 - Patient Pre-Selection Frontend Testing):**
+Comprehensive testing of the patient pre-selection functionality in appointment modal completed successfully. The correction applied has been verified and is working correctly:
+
+✅ **CORRECTION VERIFICATION CONFIRMED:**
+- useEffect in AppointmentModal correctly pre-fills searchTerm when formData.patient_id is present
+- Patient name appears immediately in search field when clicking "Ajouter RDV" from patient list
+- Users can directly fill date/time without needing to search for patient
+- Modal passes all patients array to maintain search functionality if needed
+
+✅ **COMPREHENSIVE TESTING COMPLETED:**
+- Tested 3 different patients (Ahmed Ben Ali, Marie Dupont, Jean Martin)
+- All patients show correct pre-selection behavior
+- Modal functionality working correctly for all scenarios
+- Form fields accessible and functional after pre-selection
+- Modal opening/closing behavior working properly
+
+✅ **USER EXPERIENCE VALIDATED:**
+- Significant improvement in appointment creation workflow
+- No need for users to re-select patient when coming from patient list
+- Direct access to date/time fields after modal opens
+- Consistent behavior across all patients
+
+**PATIENT PRE-SELECTION: FRONTEND TESTING COMPLETE - ALL TESTS PASSED**
+The patient pre-selection functionality is fully implemented and tested. The correction has been successfully verified and the feature is ready for production use with excellent user experience.
+
 ### PHONE MESSAGES ENHANCEMENTS - EDITING & NAVIGATION ✅ BACKEND TESTING COMPLETED
 **Status:** Message Editing Backend Fully Tested and Functional - All Tests Passed
 
