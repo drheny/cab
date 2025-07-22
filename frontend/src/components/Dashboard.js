@@ -117,8 +117,9 @@ const Dashboard = ({ user }) => {
         console.log('✅ WebSocket connected successfully');
         setWs(websocket);
         // Only show activation message on first connection, not on reconnections
-        if (!ws) {
+        if (isFirstConnection) {
           toast.success('Messagerie temps réel activée');
+          setIsFirstConnection(false);
         }
       };
       
