@@ -4066,6 +4066,102 @@ async def update_user_permissions(user_id: str, permissions: UserPermissions, cu
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating permissions: {str(e)}")
 
+@app.get("/api/admin/charts/yearly-evolution")
+async def get_yearly_evolution_charts():
+    """Get yearly evolution data for charts (revenue, new patients, consultations)"""
+    try:
+        current_year = datetime.now().year
+        monthly_data = []
+        
+        # Generate data for each month of current year
+        for month in range(1, 13):
+            # Date range for the month
+            start_date = datetime(current_year, month, 1).strftime("%Y-%m-%d")
+            
+            # Calculate end date (last day of month)
+            if month == 12:
+                end_date = datetime(current_year + 1, 1, 1) - timedelta(days=1)
+            else:
+                end_date = datetime(current_year, month + 1, 1) - timedelta(days=1)
+            end_date_str = end_date.strftime("%Y-%m-%d")
+            
+            # New patients this month
+            nouveaux_patients = patients_collection.count_documents({
+                "created_at": {
+                    "$gte": datetime.strptime(start_date, "%Y-%m-%d"),
+                    "$lte": datetime.strptime(end_date_str, "%Y-%m-%d")
+                }
+            })
+            
+            # Total consultations this month
+            consultations_mois = consultations_collection.count_documents({
+                "date": {"$gte": start_date, "$lte": end_date_str}
+            })
+            
+            # Revenue this month (from payments + cash movements)
+            recette_mensuelle = 0
+            
+            # From payments
+            payments_month = list(payments_collection.find({
+                "date": {"$gte": start_date, "$lte": end_date_str},
+                "statut": "paye"
+            }, {"_id": 0, "montant": 1}))
+            
+            for payment in payments_month:
+                recette_mensuelle += payment.get("montant", 0)
+                
+            # From cash movements (additions only)
+            cash_movements_month = list(cash_movements_collection.find({
+                "date": {"$gte": start_date, "$lte": end_date_str}
+            }, {"_id": 0, "montant": 1, "type_mouvement": 1}))
+            
+            for movement in cash_movements_month:
+                if movement["type_mouvement"] == "ajout":
+                    recette_mensuelle += movement["montant"]
+                else:
+                    recette_mensuelle -= movement["montant"]
+            
+            # Visites vs Controles breakdown
+            nb_visites = consultations_collection.count_documents({
+                "date": {"$gte": start_date, "$lte": end_date_str},
+                "type_rdv": "visite"
+            })
+            
+            nb_controles = consultations_collection.count_documents({
+                "date": {"$gte": start_date, "$lte": end_date_str},
+                "type_rdv": "controle"
+            })
+            
+            monthly_data.append({
+                "month": month,
+                "month_name": datetime(current_year, month, 1).strftime("%B"),
+                "month_short": datetime(current_year, month, 1).strftime("%b"),
+                "nouveaux_patients": nouveaux_patients,
+                "consultations_totales": consultations_mois,
+                "nb_visites": nb_visites,
+                "nb_controles": nb_controles,
+                "recette_mensuelle": round(recette_mensuelle, 2)
+            })
+        
+        # Calculate totals for year
+        total_nouveaux = sum(data["nouveaux_patients"] for data in monthly_data)
+        total_consultations = sum(data["consultations_totales"] for data in monthly_data)
+        total_recette = sum(data["recette_mensuelle"] for data in monthly_data)
+        
+        return {
+            "year": current_year,
+            "monthly_data": monthly_data,
+            "totals": {
+                "nouveaux_patients_annee": total_nouveaux,
+                "consultations_annee": total_consultations,
+                "recette_annee": round(total_recette, 2)
+            },
+            "generated_at": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating yearly charts data: {str(e)}")
+
 # ==================== END USER MANAGEMENT API ====================
 
 # ==================== END ADMINISTRATION API ====================
