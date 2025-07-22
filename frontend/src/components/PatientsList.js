@@ -261,7 +261,7 @@ const PatientsListComponent = ({ user }) => {
 
   const handleSaveAppointment = async (formData) => {
     try {
-      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/rdv`, formData);
+      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/appointments`, formData);
       
       if (response.status === 200 || response.status === 201) {
         toast.success(`Rendez-vous créé avec succès pour ${selectedPatient.prenom} ${selectedPatient.nom}`);
