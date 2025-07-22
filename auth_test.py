@@ -247,7 +247,8 @@ class AuthenticationSystemTest(unittest.TestCase):
         # Verify user was created
         response = requests.get(f"{self.base_url}/api/admin/users", headers=headers)
         self.assertEqual(response.status_code, 200)
-        users = response.json()
+        users_data = response.json()
+        users = users_data["users"]
         
         test_user = next((u for u in users if u["username"] == "test_user"), None)
         self.assertIsNotNone(test_user)
@@ -256,7 +257,6 @@ class AuthenticationSystemTest(unittest.TestCase):
         self.assertEqual(test_user["role"], "secretaire")
         
         # Clean up - delete the test user
-        user_id = test_user["id"]
         response = requests.delete(f"{self.base_url}/api/admin/users/{user_id}", headers=headers)
         self.assertEqual(response.status_code, 200)
         
