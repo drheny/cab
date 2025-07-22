@@ -297,15 +297,27 @@ const PaymentModal = ({
               </button>
               <button
                 type="submit"
-                disabled={loading}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-lg transition-colors flex items-center space-x-2"
+                disabled={loading || !canModifyPayment}
+                className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors flex items-center space-x-2 ${
+                  canModifyPayment 
+                    ? 'bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400'
+                    : 'bg-gray-400 cursor-not-allowed'
+                }`}
+                title={!canModifyPayment ? "Modification non autorisée pour la secrétaire" : ""}
               >
                 {loading ? (
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                 ) : (
                   <Check className="w-4 h-4" />
                 )}
-                <span>{loading ? 'Sauvegarde...' : 'Sauvegarder'}</span>
+                <span>
+                  {loading 
+                    ? 'Sauvegarde...' 
+                    : canModifyPayment 
+                      ? 'Sauvegarder' 
+                      : 'Lecture seule'
+                  }
+                </span>
               </button>
             </div>
           </form>
