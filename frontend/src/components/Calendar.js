@@ -1697,7 +1697,8 @@ const WorkflowCard = React.memo(({
   onViewPatient,
   onPatientReorder,
   onOpenPaymentModal,
-  isCompleted
+  isCompleted,
+  user
 }) => {
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
