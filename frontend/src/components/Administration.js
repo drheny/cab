@@ -118,6 +118,7 @@ const Administration = ({ user }) => {
         fetchUsers();
       }
       fetchSystemInfo();
+      fetchChartsData();
     }
   }, [user]);
 
