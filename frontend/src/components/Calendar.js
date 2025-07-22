@@ -1620,7 +1620,8 @@ const WorkflowSection = ({
   onViewPatient,
   onPatientReorder,
   onOpenPaymentModal,
-  isCompleted = false 
+  isCompleted = false,
+  user
 }) => {
   const getSectionColor = () => {
     switch (sectionType) {
