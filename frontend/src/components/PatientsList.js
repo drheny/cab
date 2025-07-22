@@ -874,6 +874,21 @@ const PatientsListComponent = ({ user }) => {
           </div>
         </div>
       )}
+
+      {/* Appointment Modal */}
+      <AppointmentModal
+        isOpen={showAppointmentModal}
+        onClose={() => {
+          setShowAppointmentModal(false);
+          setSelectedPatient(null);
+        }}
+        appointment={null} // Nouveau RDV
+        patients={[selectedPatient].filter(Boolean)} // Passer seulement le patient sélectionné
+        formData={appointmentFormData}
+        setFormData={setAppointmentFormData}
+        onSave={handleSaveAppointment}
+        onRefresh={() => {}} // Pas besoin de refresh pour la liste patients
+      />
     </div>
   );
 };
