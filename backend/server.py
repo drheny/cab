@@ -548,6 +548,8 @@ async def cleanup_phone_messages_daily():
 
 def create_demo_data():
     """Create demo data for testing"""
+    # Create default users first
+    create_default_users()
     
     # Demo patients
     demo_patients = [
