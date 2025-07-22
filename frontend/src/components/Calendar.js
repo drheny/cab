@@ -1965,13 +1965,29 @@ const WorkflowCard = React.memo(({
             )}
           </div>
 
-          {/* Badge Paiement - Cliquable pour modal */}
+          {/* Badge Paiement - Cliquable pour modal avec restrictions de sécurité */}
           <button
-            onClick={() => onOpenPaymentModal(appointment)}
-            className={`px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer hover:opacity-80 ${paymentStatus.color}`}
-            title="Cliquer pour gérer le paiement"
+            onClick={() => canModifyPayment ? onOpenPaymentModal(appointment) : null}
+            className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+              canModifyPayment 
+                ? 'cursor-pointer hover:opacity-80' 
+                : 'cursor-not-allowed opacity-60'
+            } ${paymentStatus.color} ${
+              !canModifyPayment ? 'border-2 border-gray-400' : ''
+            }`}
+            title={
+              canModifyPayment 
+                ? "Cliquer pour gérer le paiement" 
+                : user?.type === 'secretaire' 
+                  ? "Paiement verrouillé - Seul le médecin peut modifier après paiement défini" 
+                  : "Cliquer pour gérer le paiement"
+            }
+            disabled={!canModifyPayment}
           >
             {paymentStatus.text}
+            {!canModifyPayment && user?.type === 'secretaire' && (
+              <span className="ml-1 text-gray-600">🔒</span>
+            )}
           </button>
 
           {/* Dropdown Salle - Pour patients en attente */}
