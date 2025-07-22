@@ -824,6 +824,7 @@ const Calendar = ({ user }) => {
             onViewPatient={viewPatientDetails}
             onPatientReorder={handlePatientReorder}
             onOpenPaymentModal={handleOpenPaymentModal}
+            user={user}
           />
           
           {/* 2. RDV Programmés */}
@@ -838,6 +839,7 @@ const Calendar = ({ user }) => {
             onDelete={handleDeleteAppointment}
             onViewPatient={viewPatientDetails}
             onOpenPaymentModal={handleOpenPaymentModal}
+            user={user}
           />
           
           {/* 3. En retard */}
@@ -853,6 +855,7 @@ const Calendar = ({ user }) => {
             onDelete={handleDeleteAppointment}
             onViewPatient={viewPatientDetails}
             onOpenPaymentModal={handleOpenPaymentModal}
+            user={user}
           />
           
           {/* 4. En consultation */}
@@ -869,6 +872,7 @@ const Calendar = ({ user }) => {
             onDelete={handleDeleteAppointment}
             onViewPatient={viewPatientDetails}
             onOpenPaymentModal={handleOpenPaymentModal}
+            user={user}
           />
           
           {/* 5. Terminé (en bas) */}
@@ -884,6 +888,7 @@ const Calendar = ({ user }) => {
             onViewPatient={viewPatientDetails}
             onOpenPaymentModal={handleOpenPaymentModal}
             isCompleted={true}
+            user={user}
           />
           
           {/* Empty state */}
