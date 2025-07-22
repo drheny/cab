@@ -86,7 +86,9 @@ const Administration = ({ user }) => {
   useEffect(() => {
     if (user?.permissions?.administration) {
       fetchAdminStats();
-      fetchUsers();
+      if (user?.permissions?.manage_users) {
+        fetchUsers();
+      }
       fetchSystemInfo();
     }
   }, [user]);
