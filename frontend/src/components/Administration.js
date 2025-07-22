@@ -107,9 +107,18 @@ const Administration = ({ user }) => {
     lastBackup: null
   });
 
-  // Charts data
-  const [chartsData, setChartsData] = useState(null);
-  const [chartsLoading, setChartsLoading] = useState(false);
+  // Reports data
+  const [reportData, setReportData] = useState(null);
+  const [reportLoading, setReportLoading] = useState(false);
+  const [reportForm, setReportForm] = useState({
+    reportType: 'single', // 'single' or 'multi'
+    singleMonth: new Date().getMonth() + 1,
+    singleYear: new Date().getFullYear(),
+    startMonth: new Date().getMonth() + 1,
+    startYear: new Date().getFullYear(),
+    endMonth: new Date().getMonth() + 1,
+    endYear: new Date().getFullYear()
+  });
 
   useEffect(() => {
     if (user?.permissions?.administration) {
