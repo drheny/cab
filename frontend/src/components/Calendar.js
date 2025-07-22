@@ -1672,6 +1672,7 @@ const WorkflowSection = ({
               onPatientReorder={onPatientReorder}
               onOpenPaymentModal={onOpenPaymentModal}
               isCompleted={isCompleted}
+              user={user}
             />
           ))
         )}
