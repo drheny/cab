@@ -244,6 +244,48 @@ const PatientsListComponent = ({ user }) => {
     }
   }, [fetchPatients]);
 
+  const openAppointmentModal = (patient) => {
+    // Pré-remplir les données du RDV avec le patient sélectionné
+    setAppointmentFormData({
+      patient_id: patient.id,
+      date: '',
+      heure: '',
+      type_rdv: 'visite',
+      motif: '',
+      notes: '',
+      statut: 'programme'
+    });
+    setSelectedPatient(patient);
+    setShowAppointmentModal(true);
+  };
+
+  const handleSaveAppointment = async (formData) => {
+    try {
+      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/rdv`, formData);
+      
+      if (response.status === 200 || response.status === 201) {
+        toast.success(`Rendez-vous créé avec succès pour ${selectedPatient.prenom} ${selectedPatient.nom}`);
+        setShowAppointmentModal(false);
+        setSelectedPatient(null);
+        setAppointmentFormData({
+          patient_id: '',
+          date: '',
+          heure: '',
+          type_rdv: 'visite',
+          motif: '',
+          notes: '',
+          statut: 'programme'
+        });
+        return { success: true };
+      } else {
+        return { success: false, error: 'Erreur lors de la création du rendez-vous' };
+      }
+    } catch (error) {
+      console.error('Error creating appointment:', error);
+      return { success: false, error: error.response?.data?.detail || 'Erreur lors de la création du rendez-vous' };
+    }
+  };
+
   const viewPatientDetails = async (patientId) => {
     try {
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/patients/${patientId}`);
