@@ -84,10 +84,29 @@ const Administration = ({ user }) => {
   });
 
   useEffect(() => {
-    if (user.type === 'medecin') {
+    if (user?.permissions?.administration) {
       fetchAdminStats();
+      fetchUsers();
+      fetchSystemInfo();
     }
-  }, [user.type]);
+  }, [user]);
+
+  // Check if user has administration access
+  const hasAdminAccess = user?.permissions?.administration || user?.role === 'medecin';
+  
+  if (!hasAdminAccess) {
+    return (
+      <div className="p-6 bg-white rounded-lg shadow-sm">
+        <div className="flex items-center space-x-3 text-red-600">
+          <AlertTriangle className="w-6 h-6" />
+          <div>
+            <h3 className="font-medium">Accès refusé</h3>
+            <p className="text-sm text-gray-600">Vous n'avez pas les permissions pour accéder à cette page.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const fetchAdminStats = async () => {
     try {
