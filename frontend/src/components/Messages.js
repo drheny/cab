@@ -305,6 +305,18 @@ const Messages = ({ user }) => {
             }
           </p>
         </div>
+        
+        {/* Delete All Messages Button */}
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={handleDeleteAllMessages}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2"
+            title="Supprimer tous les messages"
+          >
+            <Trash2 className="w-4 h-4" />
+            <span className="hidden sm:inline">Effacer tout</span>
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
