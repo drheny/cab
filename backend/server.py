@@ -3045,6 +3045,19 @@ async def delete_phone_message(message_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error deleting phone message: {str(e)}")
 
+@app.delete("/api/phone-messages")
+async def delete_all_phone_messages():
+    """Delete all phone messages"""
+    try:
+        result = phone_messages_collection.delete_many({})
+        
+        return {
+            "message": f"{result.deleted_count} message(s) supprimé(s) avec succès",
+            "deleted_count": result.deleted_count
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting all phone messages: {str(e)}")
 
 
 # ==================== End Phone Messages API ====================
