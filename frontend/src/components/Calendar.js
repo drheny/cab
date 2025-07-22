@@ -2080,6 +2080,7 @@ const WorkflowCard = React.memo(({
           appointment={appointment}
           onClose={() => setShowPaymentModal(false)}
           onUpdate={onPaymentUpdate}
+          user={user}
         />
       )}
     </div>
