@@ -20,6 +20,19 @@ const AppointmentModal = ({
     telephone: ''
   });
 
+  // Pre-fill patient when modal opens from patient list (formData has patient_id)
+  useEffect(() => {
+    if (isOpen && formData.patient_id && patients.length > 0) {
+      const selectedPatient = patients.find(patient => patient.id === formData.patient_id);
+      if (selectedPatient) {
+        setSearchTerm(`${selectedPatient.prenom} ${selectedPatient.nom}`);
+      }
+    } else if (!isOpen) {
+      // Reset search when modal closes
+      setSearchTerm('');
+    }
+  }, [isOpen, formData.patient_id, patients]);
+
   // Filter patients based on search term
   const filteredPatients = patients.filter(patient => 
     `${patient.prenom} ${patient.nom}`.toLowerCase().includes(searchTerm.toLowerCase())
