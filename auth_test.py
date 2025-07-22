@@ -167,9 +167,13 @@ class AuthenticationSystemTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         
         # Verify response structure
-        users = response.json()
+        data = response.json()
+        self.assertIn("users", data)
+        self.assertIn("count", data)
+        users = data["users"]
         self.assertIsInstance(users, list)
         self.assertGreaterEqual(len(users), 2)  # At least doctor and secretary
+        self.assertEqual(data["count"], len(users))
         
         # Verify user structure
         for user in users:
