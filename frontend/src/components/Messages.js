@@ -649,6 +649,15 @@ const Messages = ({ user }) => {
 
                         {/* Action Buttons */}
                         <div className="flex items-center space-x-2 ml-4">
+                          {/* Delete Button */}
+                          <button
+                            onClick={() => handleDeleteMessage(message.id, message.patient_name)}
+                            className="text-red-600 hover:text-red-700 p-1"
+                            title="Supprimer le message"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+
                           {/* Edit Button (for original message creators) */}
                           {!editingMessage && (
                             <button
