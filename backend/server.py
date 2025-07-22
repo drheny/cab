@@ -3823,6 +3823,239 @@ async def perform_maintenance(action: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error performing maintenance: {str(e)}")
 
+# ==================== USER MANAGEMENT API ====================
+
+@app.post("/api/auth/login", response_model=Token)
+async def login(user_login: UserLogin):
+    """Authenticate user and return JWT token"""
+    try:
+        user = users_collection.find_one({"username": user_login.username}, {"_id": 0})
+        
+        if not user or not verify_password(user_login.password, user["hashed_password"]):
+            raise HTTPException(status_code=401, detail="Nom d'utilisateur ou mot de passe incorrect")
+        
+        if not user.get("is_active", True):
+            raise HTTPException(status_code=401, detail="Compte utilisateur désactivé")
+        
+        # Update last login
+        users_collection.update_one(
+            {"username": user_login.username}, 
+            {"$set": {"last_login": datetime.now()}}
+        )
+        
+        # Create access token
+        access_token = create_access_token(data={"sub": user["username"]})
+        
+        # Prepare user response (without password)
+        user_response = {
+            "id": user["id"],
+            "username": user["username"],
+            "email": user.get("email", ""),
+            "full_name": user["full_name"],
+            "role": user["role"],
+            "permissions": user.get("permissions", {}),
+            "last_login": user.get("last_login")
+        }
+        
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user": user_response
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error during login: {str(e)}")
+
+@app.get("/api/auth/me", response_model=UserResponse)
+async def get_current_user_info(current_user: dict = Depends(get_current_user)):
+    """Get current user information"""
+    return UserResponse(**current_user)
+
+@app.get("/api/admin/users")
+async def get_all_users(current_user: dict = Depends(get_current_user)):
+    """Get all users (admin only)"""
+    if not current_user.get("permissions", {}).get("manage_users", False):
+        raise HTTPException(status_code=403, detail="Permission refusée: gestion des utilisateurs requise")
+    
+    try:
+        users = list(users_collection.find({}, {"_id": 0, "hashed_password": 0}))
+        return {"users": users, "count": len(users)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching users: {str(e)}")
+
+@app.post("/api/admin/users", response_model=UserResponse)
+async def create_user(user_create: UserCreate, current_user: dict = Depends(get_current_user)):
+    """Create new user (admin only)"""
+    if not current_user.get("permissions", {}).get("manage_users", False):
+        raise HTTPException(status_code=403, detail="Permission refusée: gestion des utilisateurs requise")
+    
+    try:
+        # Check if username already exists
+        existing_user = users_collection.find_one({"username": user_create.username})
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Ce nom d'utilisateur existe déjà")
+        
+        # Set default permissions based on role
+        if user_create.permissions is None:
+            if user_create.role == "medecin":
+                permissions = UserPermissions(
+                    administration=True,
+                    delete_appointment=True,
+                    delete_payments=True,
+                    export_data=True,
+                    reset_data=True,
+                    manage_users=True
+                )
+            else:  # secretaire
+                permissions = UserPermissions(
+                    administration=False,
+                    delete_appointment=False,
+                    delete_payments=False,
+                    export_data=False,
+                    reset_data=False,
+                    manage_users=False,
+                    consultation_read_only=True
+                )
+        else:
+            permissions = user_create.permissions
+        
+        # Create user
+        new_user = User(
+            username=user_create.username,
+            email=user_create.email,
+            full_name=user_create.full_name,
+            role=user_create.role,
+            hashed_password=hash_password(user_create.password),
+            permissions=permissions
+        )
+        
+        # Insert to database
+        users_collection.insert_one(new_user.dict())
+        
+        # Return user without password
+        return UserResponse(**new_user.dict())
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating user: {str(e)}")
+
+@app.put("/api/admin/users/{user_id}")
+async def update_user(user_id: str, user_update: UserUpdate, current_user: dict = Depends(get_current_user)):
+    """Update user (admin only or self)"""
+    # Allow users to update themselves or admins to update anyone
+    can_update = (
+        current_user.get("id") == user_id or 
+        current_user.get("permissions", {}).get("manage_users", False)
+    )
+    
+    if not can_update:
+        raise HTTPException(status_code=403, detail="Permission refusée")
+    
+    try:
+        user = users_collection.find_one({"id": user_id}, {"_id": 0})
+        if not user:
+            raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+        
+        # Prepare update data
+        update_data = {"updated_at": datetime.now()}
+        
+        if user_update.username is not None:
+            # Check if new username is taken by someone else
+            existing = users_collection.find_one({"username": user_update.username, "id": {"$ne": user_id}})
+            if existing:
+                raise HTTPException(status_code=400, detail="Ce nom d'utilisateur est déjà pris")
+            update_data["username"] = user_update.username
+        
+        if user_update.email is not None:
+            update_data["email"] = user_update.email
+        
+        if user_update.full_name is not None:
+            update_data["full_name"] = user_update.full_name
+        
+        if user_update.password is not None:
+            update_data["hashed_password"] = hash_password(user_update.password)
+        
+        if user_update.is_active is not None:
+            # Only admins can change active status
+            if current_user.get("permissions", {}).get("manage_users", False):
+                update_data["is_active"] = user_update.is_active
+        
+        if user_update.permissions is not None:
+            # Only admins can change permissions
+            if current_user.get("permissions", {}).get("manage_users", False):
+                update_data["permissions"] = user_update.permissions.dict()
+        
+        # Update user
+        users_collection.update_one({"id": user_id}, {"$set": update_data})
+        
+        # Return updated user
+        updated_user = users_collection.find_one({"id": user_id}, {"_id": 0, "hashed_password": 0})
+        return {"message": "Utilisateur mis à jour avec succès", "user": updated_user}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating user: {str(e)}")
+
+@app.delete("/api/admin/users/{user_id}")
+async def delete_user(user_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete user (admin only)"""
+    if not current_user.get("permissions", {}).get("manage_users", False):
+        raise HTTPException(status_code=403, detail="Permission refusée: gestion des utilisateurs requise")
+    
+    try:
+        # Don't allow deleting yourself
+        if current_user.get("id") == user_id:
+            raise HTTPException(status_code=400, detail="Impossible de supprimer votre propre compte")
+        
+        user = users_collection.find_one({"id": user_id})
+        if not user:
+            raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+        
+        # Delete user
+        result = users_collection.delete_one({"id": user_id})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+        
+        return {"message": "Utilisateur supprimé avec succès"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting user: {str(e)}")
+
+@app.put("/api/admin/users/{user_id}/permissions")
+async def update_user_permissions(user_id: str, permissions: UserPermissions, current_user: dict = Depends(get_current_user)):
+    """Update user permissions (admin only)"""
+    if not current_user.get("permissions", {}).get("manage_users", False):
+        raise HTTPException(status_code=403, detail="Permission refusée: gestion des utilisateurs requise")
+    
+    try:
+        user = users_collection.find_one({"id": user_id})
+        if not user:
+            raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+        
+        # Update permissions
+        users_collection.update_one(
+            {"id": user_id}, 
+            {"$set": {"permissions": permissions.dict(), "updated_at": datetime.now()}}
+        )
+        
+        # Return updated user
+        updated_user = users_collection.find_one({"id": user_id}, {"_id": 0, "hashed_password": 0})
+        return {"message": "Permissions mises à jour avec succès", "user": updated_user}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating permissions: {str(e)}")
+
+# ==================== END USER MANAGEMENT API ====================
+
 # ==================== END ADMINISTRATION API ====================
 
 # ==================== End Cash Movements API ====================
