@@ -258,7 +258,8 @@ const PaymentModal = ({
                     ...prev, 
                     assure: e.target.checked
                   }))}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  disabled={!canModifyPayment}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:bg-gray-100"
                 />
                 <label htmlFor="assure" className="text-sm font-medium text-gray-700">
                   Patient assuré
