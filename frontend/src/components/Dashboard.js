@@ -195,7 +195,7 @@ const Dashboard = ({ user }) => {
     if (confirmed) {
       try {
         await axios.delete(`${API_BASE_URL}/api/messages`);
-        toast.success('✅ Tous les messages ont été supprimés');
+        // Don't show local toast here - WebSocket will handle the notification
         setMessages([]);
       } catch (error) {
         console.error('Error clearing messages:', error);
