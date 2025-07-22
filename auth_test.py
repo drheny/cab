@@ -412,7 +412,8 @@ class AuthenticationSystemTest(unittest.TestCase):
         # Verify user was deleted
         response = requests.get(f"{self.base_url}/api/admin/users", headers=headers)
         self.assertEqual(response.status_code, 200)
-        users = response.json()
+        users_data = response.json()
+        users = users_data["users"]
         
         deleted_user = next((u for u in users if u["id"] == user_id), None)
         self.assertIsNone(deleted_user)
