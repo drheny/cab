@@ -19,7 +19,7 @@ class SearchPerformanceTest(unittest.TestCase):
     
     def setUp(self):
         # Use the correct backend URL from environment
-        backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://9fbf800f-d1de-4fd5-ab5a-a9ad9ec8040f.preview.emergentagent.com')
+        backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://76fc97b4-df71-4359-a709-ea680b6d1830.preview.emergentagent.com')
         self.base_url = backend_url
         print(f"Testing search performance at: {self.base_url}")
         

@@ -11,7 +11,7 @@ load_dotenv('/app/frontend/.env')
 class PaymentSecurityRestrictionsTest(unittest.TestCase):
     def setUp(self):
         # Use the correct backend URL from environment
-        backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://f6c701c8-dc2c-457e-b87f-700674ab3589.preview.emergentagent.com')
+        backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://76fc97b4-df71-4359-a709-ea680b6d1830.preview.emergentagent.com')
         self.base_url = backend_url
         print(f"Testing backend at: {self.base_url}")
         # Initialize demo data before running tests
