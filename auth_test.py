@@ -240,8 +240,9 @@ class AuthenticationSystemTest(unittest.TestCase):
         
         # Verify response
         data = response.json()
-        self.assertIn("message", data)
-        self.assertIn("user_id", data)
+        self.assertIn("id", data)
+        self.assertEqual(data["username"], "test_user")
+        user_id = data["id"]
         
         # Verify user was created
         response = requests.get(f"{self.base_url}/api/admin/users", headers=headers)
