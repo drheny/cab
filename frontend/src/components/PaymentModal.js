@@ -280,8 +280,9 @@ const PaymentModal = ({
                   ...prev, 
                   notes: e.target.value 
                 }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Notes sur le paiement..."
+                disabled={!canModifyPayment}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
+                placeholder={canModifyPayment ? "Notes sur le paiement..." : "Lecture seule - Seul le médecin peut modifier"}
               />
             </div>
 
