@@ -169,6 +169,22 @@ const PaymentModal = ({
             </div>
           )}
 
+          {/* Message de restriction pour secrétaire */}
+          {!canModifyPayment && user?.type === 'secretaire' && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <div className="flex items-start space-x-3">
+                <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-red-800">🔒 Paiement verrouillé</p>
+                  <p className="text-sm text-red-600">
+                    Cette consultation est terminée et son statut de paiement a été déterminé. 
+                    Seul le médecin peut modifier le paiement à ce stade pour des raisons de sécurité.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="space-y-4">
             {/* Payment Status */}
             <div>
