@@ -226,8 +226,10 @@ class AuthenticationSystemTest(unittest.TestCase):
         token = response.json()["access_token"]
         
         # Create new user
+        import time
+        unique_id = str(int(time.time()))
         new_user_data = {
-            "username": "test_user",
+            "username": f"test_user_{unique_id}",
             "email": "test@example.com",
             "full_name": "Test User",
             "role": "secretaire",
