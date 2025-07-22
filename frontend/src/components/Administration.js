@@ -110,6 +110,135 @@ const Administration = ({ user }) => {
     );
   }
 
+  // User Management Functions
+  const fetchUsers = async () => {
+    try {
+      const response = await axios.get('/api/admin/users');
+      setAllUsers(response.data.users || []);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      toast.error('Erreur lors du chargement des utilisateurs');
+    }
+  };
+
+  const fetchSystemInfo = async () => {
+    try {
+      // Mock system info - in production, this would come from an API
+      setSystemInfo({
+        version: '2.0',
+        uptime: Math.floor(Date.now() / (1000 * 60 * 60 * 24)) + ' jours',
+        storage: { used: 45, total: 100 },
+        performance: { responseTime: 125, errors: 2 },
+        lastBackup: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error fetching system info:', error);
+    }
+  };
+
+  const handleCreateUser = async () => {
+    try {
+      if (!userForm.username || !userForm.full_name || !userForm.password) {
+        toast.error('Veuillez remplir tous les champs obligatoires');
+        return;
+      }
+
+      await axios.post('/api/admin/users', userForm);
+      toast.success('Utilisateur créé avec succès');
+      setShowUserModal(false);
+      setUserForm({ username: '', email: '', full_name: '', role: 'secretaire', password: '' });
+      fetchUsers();
+    } catch (error) {
+      console.error('Error creating user:', error);
+      toast.error(error.response?.data?.detail || 'Erreur lors de la création de l\'utilisateur');
+    }
+  };
+
+  const handleUpdateUser = async () => {
+    try {
+      if (!editingUser) return;
+
+      const updateData = { ...userForm };
+      if (!updateData.password) {
+        delete updateData.password; // Don't update password if empty
+      }
+
+      await axios.put(`/api/admin/users/${editingUser.id}`, updateData);
+      toast.success('Utilisateur mis à jour avec succès');
+      setShowUserModal(false);
+      setEditingUser(null);
+      setUserForm({ username: '', email: '', full_name: '', role: 'secretaire', password: '' });
+      fetchUsers();
+    } catch (error) {
+      console.error('Error updating user:', error);
+      toast.error(error.response?.data?.detail || 'Erreur lors de la mise à jour');
+    }
+  };
+
+  const handleDeleteUser = async (userId, username) => {
+    if (!window.confirm(`Êtes-vous sûr de vouloir supprimer l'utilisateur "${username}" ?\n\nCette action est irréversible.`)) {
+      return;
+    }
+
+    try {
+      await axios.delete(`/api/admin/users/${userId}`);
+      toast.success('Utilisateur supprimé avec succès');
+      fetchUsers();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast.error(error.response?.data?.detail || 'Erreur lors de la suppression');
+    }
+  };
+
+  const handleUpdatePassword = async () => {
+    try {
+      if (!passwordForm.newPassword || !passwordForm.confirmPassword) {
+        toast.error('Veuillez saisir le nouveau mot de passe');
+        return;
+      }
+
+      if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+        toast.error('Les mots de passe ne correspondent pas');
+        return;
+      }
+
+      await axios.put(`/api/admin/users/${user.id}`, {
+        password: passwordForm.newPassword
+      });
+
+      toast.success('Mot de passe mis à jour avec succès');
+      setShowPasswordModal(false);
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (error) {
+      console.error('Error updating password:', error);
+      toast.error(error.response?.data?.detail || 'Erreur lors de la mise à jour du mot de passe');
+    }
+  };
+
+  const handleUpdatePermissions = async (userId, permissions) => {
+    try {
+      await axios.put(`/api/admin/users/${userId}/permissions`, permissions);
+      toast.success('Permissions mises à jour avec succès');
+      setEditingPermissions(null);
+      fetchUsers();
+    } catch (error) {
+      console.error('Error updating permissions:', error);
+      toast.error(error.response?.data?.detail || 'Erreur lors de la mise à jour des permissions');
+    }
+  };
+
+  const openEditUser = (user) => {
+    setEditingUser(user);
+    setUserForm({
+      username: user.username,
+      email: user.email || '',
+      full_name: user.full_name,
+      role: user.role,
+      password: '' // Don't prefill password
+    });
+    setShowUserModal(true);
+  };
+
   const fetchAdminStats = async () => {
     try {
       setLoading(true);
