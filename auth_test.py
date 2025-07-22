@@ -333,7 +333,8 @@ class AuthenticationSystemTest(unittest.TestCase):
         # Verify permissions were updated
         response = requests.get(f"{self.base_url}/api/admin/users", headers=headers)
         self.assertEqual(response.status_code, 200)
-        users = response.json()
+        users_data = response.json()
+        users = users_data["users"]
         
         updated_secretary = next((u for u in users if u["id"] == secretary_id), None)
         self.assertIsNotNone(updated_secretary)
