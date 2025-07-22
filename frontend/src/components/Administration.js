@@ -39,6 +39,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 
 const Administration = ({ user }) => {
+  const [activeTab, setActiveTab] = useState('statistiques');
   const [stats, setStats] = useState({
     total_patients: 0,
     nouveaux_patients_annee: 0,
@@ -55,6 +56,32 @@ const Administration = ({ user }) => {
     facturation: false
   });
   const [maintenanceResults, setMaintenanceResults] = useState({});
+
+  // User Management States
+  const [allUsers, setAllUsers] = useState([]);
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [userForm, setUserForm] = useState({
+    username: '',
+    email: '',
+    full_name: '',
+    role: 'secretaire',
+    password: ''
+  });
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [editingPermissions, setEditingPermissions] = useState(null);
+  const [systemInfo, setSystemInfo] = useState({
+    version: '2.0',
+    uptime: '0 jours',
+    storage: { used: 0, total: 100 },
+    performance: { responseTime: 0, errors: 0 },
+    lastBackup: null
+  });
 
   useEffect(() => {
     if (user.type === 'medecin') {
