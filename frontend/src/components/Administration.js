@@ -107,6 +107,10 @@ const Administration = ({ user }) => {
     lastBackup: null
   });
 
+  // Charts data
+  const [chartsData, setChartsData] = useState(null);
+  const [chartsLoading, setChartsLoading] = useState(false);
+
   // Reports data
   const [reportData, setReportData] = useState(null);
   const [reportLoading, setReportLoading] = useState(false);
