@@ -30,6 +30,16 @@ const PatientsListComponent = ({ user }) => {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [showPatientModal, setShowPatientModal] = useState(false);
+  const [showAppointmentModal, setShowAppointmentModal] = useState(false);
+  const [appointmentFormData, setAppointmentFormData] = useState({
+    patient_id: '',
+    date: '',
+    heure: '',
+    type_rdv: 'visite',
+    motif: '',
+    notes: '',
+    statut: 'programme'
+  });
   const searchInputRef = useRef(null);
   const [formData, setFormData] = useState({
     nom: '',
