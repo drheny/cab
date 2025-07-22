@@ -193,6 +193,80 @@ class MessageCreate(BaseModel):
 class MessageUpdate(BaseModel):
     content: str
 
+# User Models for Authentication and Authorization
+class UserPermissions(BaseModel):
+    # Page access permissions
+    dashboard: bool = True
+    patients: bool = True
+    calendar: bool = True
+    messages: bool = True
+    billing: bool = True
+    consultation: bool = True
+    administration: bool = False  # Only doctors by default
+    
+    # Action permissions
+    create_appointment: bool = True
+    edit_appointment: bool = True
+    delete_appointment: bool = False
+    view_payments: bool = True
+    edit_payments: bool = True
+    delete_payments: bool = False
+    export_data: bool = False
+    reset_data: bool = False
+    manage_users: bool = False
+    
+    # Special restrictions
+    consultation_read_only: bool = False  # If true, can only view consultations
+
+class User(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    username: str
+    email: str = ""
+    full_name: str
+    role: str  # "medecin" or "secretaire"
+    hashed_password: str
+    is_active: bool = True
+    permissions: UserPermissions = Field(default_factory=UserPermissions)
+    last_login: Optional[datetime] = None
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
+
+class UserCreate(BaseModel):
+    username: str
+    email: str = ""
+    full_name: str
+    role: str  # "medecin" or "secretaire"
+    password: str
+    permissions: Optional[UserPermissions] = None
+
+class UserUpdate(BaseModel):
+    username: Optional[str] = None
+    email: Optional[str] = None
+    full_name: Optional[str] = None
+    password: Optional[str] = None
+    is_active: Optional[bool] = None
+    permissions: Optional[UserPermissions] = None
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+    user: Dict[str, Any]
+
+class UserResponse(BaseModel):
+    id: str
+    username: str
+    email: str
+    full_name: str
+    role: str
+    is_active: bool
+    permissions: UserPermissions
+    last_login: Optional[datetime]
+    created_at: datetime
+
 # Modèles pour les messages téléphoniques
 class PhoneMessage(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
