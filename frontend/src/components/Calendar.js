@@ -1815,7 +1815,40 @@ const WorkflowCard = React.memo(({
     return salle === 'salle1' ? 'bg-purple-100 text-purple-800' : 'bg-orange-100 text-orange-800';
   };
 
+  // Fonction pour déterminer si le paiement peut être modifié par la secrétaire
+  const canSecretaryModifyPayment = () => {
+    // Si l'utilisateur est médecin, il peut toujours modifier
+    if (user?.type === 'medecin') {
+      return true;
+    }
+    
+    // Si l'utilisateur est secrétaire
+    if (user?.type === 'secretaire') {
+      // Si la consultation n'est pas terminée, la secrétaire peut modifier
+      if (appointment.statut !== 'termine') {
+        return true;
+      }
+      
+      // Si la consultation est terminée, vérifier le statut de paiement
+      if (appointment.statut === 'termine') {
+        // Si c'est un contrôle, toujours non modifiable (gratuit)
+        if (appointment.type_rdv === 'controle') {
+          return false;
+        }
+        
+        // Pour les visites terminées :
+        // - Si "non payé", la secrétaire peut encore modifier
+        // - Si "payé" ou autre statut défini, la secrétaire ne peut plus modifier
+        return !appointment.paye;
+      }
+    }
+    
+    // Par défaut, autoriser la modification
+    return true;
+  };
+
   const paymentStatus = getPaymentStatus();
+  const canModifyPayment = canSecretaryModifyPayment();
 
   return (
     <div className="p-4 hover:bg-white/50 transition-colors">
