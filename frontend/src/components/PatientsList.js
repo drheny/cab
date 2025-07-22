@@ -395,14 +395,23 @@ const PatientsListComponent = ({ user }) => {
             </div>
             <div className="flex items-center space-x-1">
               <button
+                onClick={() => openAppointmentModal(patient)}
+                className="p-1.5 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50"
+                title="Ajouter RDV"
+              >
+                <Calendar className="w-4 h-4" />
+              </button>
+              <button
                 onClick={() => openModal(patient)}
                 className="p-1.5 text-gray-400 hover:text-primary-600 rounded-lg hover:bg-primary-50"
+                title="Modifier patient"
               >
                 <Edit className="w-4 h-4" />
               </button>
               <button
                 onClick={() => handleDeletePatient(patient.id)}
                 className="p-1.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50"
+                title="Supprimer patient"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
