@@ -957,10 +957,22 @@ def create_demo_data():
 async def root():
     return {"message": "Cabinet Médical API"}
 
+@app.get("/api/init-demo")
+async def init_demo_data():
+    """Initialize demo data including default users"""
+    try:
+        create_demo_data()
+        return {"message": "Demo data initialized successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error initializing demo data: {str(e)}")
+
 @app.get("/api/init-test-data")
 async def init_test_data():
     """Initialize test data specifically for unpaid consultations testing"""
     try:
+        # Create default users first
+        create_default_users()
+        
         # Clear existing data for fresh test
         patients_collection.delete_many({})
         appointments_collection.delete_many({})
