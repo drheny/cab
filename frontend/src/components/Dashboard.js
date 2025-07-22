@@ -115,7 +115,10 @@ const Dashboard = ({ user }) => {
       websocket.onopen = () => {
         console.log('✅ WebSocket connected successfully');
         setWs(websocket);
-        toast.success('Messagerie temps réel activée');
+        // Only show activation message on first connection, not on reconnections
+        if (!ws) {
+          toast.success('Messagerie temps réel activée');
+        }
       };
       
       websocket.onmessage = (event) => {
@@ -130,18 +133,24 @@ const Dashboard = ({ user }) => {
       
       websocket.onerror = (error) => {
         console.error('❌ WebSocket error:', error);
-        toast.error('Erreur de connexion messagerie temps réel');
+        // Only show error on first connection attempt, not on reconnections
+        if (!ws) {
+          toast.error('Erreur de connexion messagerie temps réel');
+        }
       };
       
       websocket.onclose = (event) => {
         console.log('WebSocket disconnected. Code:', event.code, 'Reason:', event.reason);
+        const wasConnected = ws !== null;
         setWs(null);
         
-        // Attempt to reconnect after 3 seconds
-        setTimeout(() => {
-          console.log('🔄 Attempting WebSocket reconnection...');
-          initializeWebSocket();
-        }, 3000);
+        // Only attempt reconnection if we were previously connected and the page is still active
+        if (wasConnected && !event.wasClean) {
+          setTimeout(() => {
+            console.log('🔄 Attempting WebSocket reconnection...');
+            initializeWebSocket();
+          }, 3000);
+        }
       };
     } catch (error) {
       console.error('Failed to initialize WebSocket:', error);
