@@ -567,7 +567,8 @@ class AuthenticationSystemTest(unittest.TestCase):
         # Get all users
         response = requests.get(f"{self.base_url}/api/admin/users", headers=headers)
         self.assertEqual(response.status_code, 200)
-        users = response.json()
+        users_data = response.json()
+        users = users_data["users"]
         
         # Verify that hashed_password is not exposed in API responses
         for user in users:
@@ -575,8 +576,10 @@ class AuthenticationSystemTest(unittest.TestCase):
             self.assertNotIn("password", user)
         
         # Create a test user to verify password hashing
+        import time
+        unique_id = str(int(time.time()))
         new_user_data = {
-            "username": "hash_test_user",
+            "username": f"hash_test_user_{unique_id}",
             "full_name": "Hash Test User",
             "role": "secretaire",
             "password": "plaintext_password_123"
@@ -584,15 +587,15 @@ class AuthenticationSystemTest(unittest.TestCase):
         
         response = requests.post(f"{self.base_url}/api/admin/users", json=new_user_data, headers=headers)
         self.assertEqual(response.status_code, 200)
-        user_id = response.json()["user_id"]
+        user_id = response.json()["id"]
         
         # Verify the user can login with the password (meaning it was hashed and stored correctly)
-        test_login = {"username": "hash_test_user", "password": "plaintext_password_123"}
+        test_login = {"username": f"hash_test_user_{unique_id}", "password": "plaintext_password_123"}
         response = requests.post(f"{self.base_url}/api/auth/login", json=test_login)
         self.assertEqual(response.status_code, 200)
         
         # Verify wrong password fails
-        wrong_login = {"username": "hash_test_user", "password": "wrong_password"}
+        wrong_login = {"username": f"hash_test_user_{unique_id}", "password": "wrong_password"}
         response = requests.post(f"{self.base_url}/api/auth/login", json=wrong_login)
         self.assertEqual(response.status_code, 401)
         
