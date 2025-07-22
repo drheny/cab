@@ -43,6 +43,11 @@ messages_collection = db.messages
 phone_messages_collection = db.phone_messages
 cash_movements_collection = db.cash_movements
 
+# Security configuration
+SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 1440  # 24 hours
+
 # Security
 security = HTTPBearer()
 
