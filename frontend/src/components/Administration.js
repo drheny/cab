@@ -107,6 +107,10 @@ const Administration = ({ user }) => {
     lastBackup: null
   });
 
+  // Charts data
+  const [chartsData, setChartsData] = useState(null);
+  const [chartsLoading, setChartsLoading] = useState(false);
+
   useEffect(() => {
     if (user?.permissions?.administration) {
       fetchAdminStats();
