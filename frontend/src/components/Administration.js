@@ -355,6 +355,109 @@ const Administration = ({ user }) => {
     }
   };
 
+  const generateAdvancedReport = async () => {
+    try {
+      setReportLoading(true);
+      
+      let url = '/api/admin/monthly-report';
+      const params = new URLSearchParams();
+      
+      if (reportForm.reportType === 'single') {
+        params.append('year', reportForm.singleYear);
+        params.append('month', reportForm.singleMonth);
+      } else {
+        params.append('start_month', reportForm.startMonth);
+        params.append('start_year', reportForm.startYear);
+        params.append('end_month', reportForm.endMonth);
+        params.append('end_year', reportForm.endYear);
+      }
+      
+      const response = await axios.get(`${url}?${params}`);
+      const report = response.data;
+      setReportData(report);
+      
+      // Create enhanced CSV content
+      let csvContent = [];
+      
+      if (report.type === 'multi_month') {
+        // Multi-month report CSV
+        csvContent = [
+          ['Rapport Multi-Mois', report.periode],
+          ['Période', `Du ${report.start_date} au ${report.end_date}`],
+          ['Nombre de mois', report.num_months],
+          [''],
+          ['=== TOTAUX ==='],
+          ['Nouveaux patients', report.totals.nouveaux_patients],
+          ['Total consultations', report.totals.consultations_totales],
+          ['Nombre de visites', report.totals.nb_visites],
+          ['Nombre de contrôles', report.totals.nb_controles],
+          ['Patients assurés', report.totals.nb_assures],
+          ['Recette totale (TND)', report.totals.recette_totale],
+          ['Relances téléphoniques', report.totals.nb_relances_telephoniques],
+          [''],
+          ['=== MOYENNES MENSUELLES ==='],
+          ['Nouveaux patients/mois', report.averages.nouveaux_patients],
+          ['Consultations/mois', report.averages.consultations_totales],
+          ['Visites/mois', report.averages.nb_visites],
+          ['Contrôles/mois', report.averages.nb_controles],
+          ['Recette/mois (TND)', report.averages.recette_totale],
+          [''],
+          ['=== DÉTAIL PAR MOIS ==='],
+          ['Mois', 'Nouveaux Patients', 'Consultations', 'Visites', 'Contrôles', 'Assurés', 'Recette (TND)', 'Relances']
+        ];
+        
+        // Add monthly details
+        report.monthly_reports.forEach(monthData => {
+          csvContent.push([
+            monthData.periode,
+            monthData.nouveaux_patients,
+            monthData.consultations_totales,
+            monthData.nb_visites,
+            monthData.nb_controles,
+            monthData.nb_assures,
+            monthData.recette_totale,
+            monthData.nb_relances_telephoniques
+          ]);
+        });
+        
+      } else {
+        // Single month report CSV (existing logic)
+        csvContent = [
+          ['Rapport Mensuel', report.periode],
+          [''],
+          ['Indicateur', 'Valeur'],
+          ['Nouveaux patients', report.nouveaux_patients],
+          ['Total consultations', report.consultations_totales],
+          ['Nombre de visites', report.nb_visites],
+          ['Nombre de contrôles', report.nb_controles],
+          ['Patients assurés', report.nb_assures],
+          ['Recette totale (TND)', report.recette_totale],
+          ['Relances téléphoniques', report.nb_relances_telephoniques]
+        ];
+      }
+      
+      csvContent.push([''], ['Généré le', new Date(report.generated_at).toLocaleString('fr-FR')]);
+      
+      const csvString = csvContent.map(row => row.join(',')).join('\n');
+      
+      // Download CSV
+      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `rapport_${report.type === 'multi_month' ? 'multi_mois' : 'mensuel'}_${report.periode.replace(/[\/\-\s]/g, '-')}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success(`Rapport généré avec succès`);
+    } catch (error) {
+      console.error('Error generating advanced report:', error);
+      toast.error('Erreur lors de la génération du rapport');
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
   const generateMonthlyReport = async () => {
     try {
       setLoading(true);
