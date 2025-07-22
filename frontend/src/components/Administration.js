@@ -140,6 +140,19 @@ const Administration = ({ user }) => {
   }
 
   // User Management Functions
+  const fetchChartsData = async () => {
+    try {
+      setChartsLoading(true);
+      const response = await axios.get('/api/admin/charts/yearly-evolution');
+      setChartsData(response.data);
+    } catch (error) {
+      console.error('Error fetching charts data:', error);
+      toast.error('Erreur lors du chargement des graphiques');
+    } finally {
+      setChartsLoading(false);
+    }
+  };
+
   const fetchUsers = async () => {
     try {
       const response = await axios.get('/api/admin/users');
