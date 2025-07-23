@@ -369,9 +369,12 @@ class AdministrationSystemTest(unittest.TestCase):
         """Test DELETE /api/admin/users/{user_id} - Delete user (admin only)"""
         headers = self.get_auth_headers("medecin")
         
+        import time
+        timestamp = str(int(time.time()))
+        
         # Create a test user to delete
         test_user = {
-            "username": "test_delete_user",
+            "username": f"test_delete_user_{timestamp}",
             "full_name": "Test Delete User",
             "role": "secretaire",
             "password": "test123"
