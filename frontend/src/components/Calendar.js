@@ -54,6 +54,10 @@ const Calendar = ({ user }) => {
   // Modal consultation states - Support multi-instances
   const [consultationModals, setConsultationModals] = useState(new Map());
   
+  // Chronomètre pour consultation
+  const [timer, setTimer] = useState(0);
+  const [isRunning, setIsRunning] = useState(false);
+  
   // Données de la consultation - Maintenant par patient
   const [consultationDataMap, setConsultationDataMap] = useState(new Map());
   
