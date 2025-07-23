@@ -479,7 +479,7 @@ const PatientsListComponent = ({ user }) => {
         </div>
       </div>
     ));
-  }, [patients, handleDeletePatient]);
+  }, [patients, handleDeletePatient, openAppointmentModal]);
 
   const openModal = (patient = null) => {
     if (patient) {
