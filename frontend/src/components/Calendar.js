@@ -1986,7 +1986,7 @@ const WorkflowCard = React.memo(({
             title={
               canModifyPayment 
                 ? "Cliquer pour gérer le paiement" 
-                : user?.type === 'secretaire' 
+                : user?.role === 'secretaire' 
                   ? "Paiement verrouillé - Seul le médecin peut modifier après paiement défini" 
                   : "Cliquer pour gérer le paiement"
             }
