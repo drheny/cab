@@ -483,10 +483,13 @@ const Consultation = ({ user }) => {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
           <input
             type="text"
-            placeholder="Rechercher un patient (nom, prénom, téléphone)..."
+            placeholder="Rechercher un patient (nom, prénom, téléphone) - Écriture manuscrite supportée"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 input-field w-full"
+            className="search-stylus pl-10 w-full"
+            inputMode="text"
+            autoCapitalize="words"
+            autoComplete="off"
           />
         </div>
         
