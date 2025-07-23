@@ -146,8 +146,6 @@ const Administration = ({ user }) => {
   const [demographicsData, setDemographicsData] = useState(null);
   const [topPatientsData, setTopPatientsData] = useState(null);
   const [alerts, setAlerts] = useState([]);
-    startMonth: new Date().getMonth() + 1,
-    startYear: new Date().getFullYear(),
     endMonth: new Date().getMonth() + 1,
     endYear: new Date().getFullYear()
   });
