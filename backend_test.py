@@ -1270,6 +1270,448 @@ class CabinetMedicalAPITest(unittest.TestCase):
         for appointment_id in created_appointments:
             requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
 
+    # ========== ADVANCED REPORTS FUNCTIONALITY TESTS ==========
+    
+    def test_advanced_reports_monthly_current_month(self):
+        """Test GET /api/admin/advanced-reports with period_type='monthly' for current month"""
+        print("\n🔍 Testing Advanced Reports - Monthly Current Month")
+        
+        # Initialize demo data first
+        response = requests.get(f"{self.base_url}/api/init-demo")
+        self.assertEqual(response.status_code, 200)
+        
+        # Test monthly report for current month
+        response = requests.get(f"{self.base_url}/api/admin/advanced-reports?period_type=monthly")
+        self.assertEqual(response.status_code, 200)
+        
+        data = response.json()
+        print(f"✅ Advanced reports endpoint responded successfully")
+        
+        # Verify response structure - metadata
+        self.assertIn("metadata", data)
+        metadata = data["metadata"]
+        self.assertIn("periode", metadata)
+        self.assertIn("type", metadata)
+        self.assertIn("generated_at", metadata)
+        self.assertEqual(metadata["type"], "monthly")
+        print(f"✅ Metadata structure verified: {metadata['periode']}")
+        
+        # Verify response structure - advanced_statistics
+        self.assertIn("advanced_statistics", data)
+        advanced_stats = data["advanced_statistics"]
+        
+        # Check consultations breakdown
+        self.assertIn("consultations", advanced_stats)
+        consultations = advanced_stats["consultations"]
+        self.assertIn("visites", consultations)
+        self.assertIn("controles", consultations)
+        self.assertIn("total", consultations)
+        
+        # Verify visites structure
+        visites = consultations["visites"]
+        self.assertIn("count", visites)
+        self.assertIn("percentage", visites)
+        self.assertIn("revenue", visites)
+        
+        # Verify controles structure
+        controles = consultations["controles"]
+        self.assertIn("count", controles)
+        self.assertIn("percentage", controles)
+        self.assertIn("revenue", controles)
+        
+        print(f"✅ Consultations breakdown: {consultations['visites']['count']} visites, {consultations['controles']['count']} contrôles")
+        
+        # Check top patients
+        self.assertIn("top_patients", advanced_stats)
+        top_patients = advanced_stats["top_patients"]
+        self.assertIsInstance(top_patients, list)
+        if len(top_patients) > 0:
+            patient = top_patients[0]
+            self.assertIn("name", patient)
+            self.assertIn("consultations", patient)
+            self.assertIn("revenue", patient)
+            print(f"✅ Top patients data available: {len(top_patients)} patients")
+        
+        # Check durations
+        self.assertIn("durees", advanced_stats)
+        durees = advanced_stats["durees"]
+        self.assertIn("attente_moyenne", durees)
+        self.assertIn("consultation_moyenne", durees)
+        print(f"✅ Duration statistics: {durees['attente_moyenne']}min wait, {durees['consultation_moyenne']}min consultation")
+        
+        # Check phone reminders
+        self.assertIn("relances", advanced_stats)
+        relances = advanced_stats["relances"]
+        self.assertIn("total", relances)
+        self.assertIn("taux_reponse", relances)
+        print(f"✅ Phone reminders: {relances['total']} total, {relances['taux_reponse']}% response rate")
+        
+        # Check demographics
+        self.assertIn("demographics", advanced_stats)
+        demographics = advanced_stats["demographics"]
+        self.assertIn("age_groups", demographics)
+        self.assertIn("addresses", demographics)
+        print(f"✅ Demographics data available")
+        
+        # Check inactive patients
+        self.assertIn("patients_inactifs", advanced_stats)
+        patients_inactifs = advanced_stats["patients_inactifs"]
+        self.assertIn("count", patients_inactifs)
+        self.assertIn("percentage", patients_inactifs)
+        print(f"✅ Inactive patients: {patients_inactifs['count']} ({patients_inactifs['percentage']}%)")
+        
+        # Check patient retention
+        self.assertIn("fidelisation", advanced_stats)
+        fidelisation = advanced_stats["fidelisation"]
+        self.assertIn("nouveaux_patients", fidelisation)
+        self.assertIn("patients_recurrents", fidelisation)
+        self.assertIn("taux_retour", fidelisation)
+        print(f"✅ Patient retention: {fidelisation['taux_retour']}% return rate")
+        
+        # Check room utilization
+        self.assertIn("salles", advanced_stats)
+        salles = advanced_stats["salles"]
+        self.assertIn("salle1", salles)
+        self.assertIn("salle2", salles)
+        print(f"✅ Room utilization data available")
+        
+        # Verify response structure - evolution
+        self.assertIn("evolution", data)
+        evolution = data["evolution"]
+        self.assertIsInstance(evolution, list)
+        if len(evolution) > 0:
+            month_data = evolution[0]
+            self.assertIn("mois", month_data)
+            self.assertIn("visites", month_data)
+            self.assertIn("controles", month_data)
+            self.assertIn("revenue", month_data)
+            print(f"✅ Evolution data: {len(evolution)} months of data")
+        
+        # Verify response structure - predictions
+        self.assertIn("predictions", data)
+        predictions = data["predictions"]
+        self.assertIn("next_month", predictions)
+        next_month = predictions["next_month"]
+        self.assertIn("consultations_estimees", next_month)
+        self.assertIn("revenue_estime", next_month)
+        self.assertIn("confiance", next_month)
+        print(f"✅ ML Predictions: {next_month['consultations_estimees']} consultations, {next_month['revenue_estime']} TND revenue, {next_month['confiance']}% confidence")
+        
+        # Verify response structure - alerts
+        self.assertIn("alerts", data)
+        alerts = data["alerts"]
+        self.assertIsInstance(alerts, list)
+        print(f"✅ Alerts system: {len(alerts)} alerts triggered")
+        
+        # Verify response structure - seasonality
+        self.assertIn("seasonality", data)
+        seasonality = data["seasonality"]
+        self.assertIn("pics", seasonality)
+        self.assertIn("creux", seasonality)
+        print(f"✅ Seasonality analysis available")
+        
+        print(f"🎉 Advanced Reports Monthly Test: ALL CRITERIA MET")
+        return data
+    
+    def test_advanced_reports_alerts_functionality(self):
+        """Test alerts functionality - check if alerts are triggered based on thresholds"""
+        print("\n🔍 Testing Advanced Reports - Alerts Functionality")
+        
+        # Get current month report to check alerts
+        response = requests.get(f"{self.base_url}/api/admin/advanced-reports?period_type=monthly")
+        self.assertEqual(response.status_code, 200)
+        
+        data = response.json()
+        alerts = data["alerts"]
+        advanced_stats = data["advanced_statistics"]
+        
+        print(f"📊 Current Alert Status: {len(alerts)} alerts active")
+        
+        # Check alert structure if any alerts exist
+        for alert in alerts:
+            self.assertIn("type", alert)
+            self.assertIn("severity", alert)
+            self.assertIn("message", alert)
+            self.assertIn("value", alert)
+            self.assertIn("threshold", alert)
+            
+            alert_type = alert["type"]
+            severity = alert["severity"]
+            message = alert["message"]
+            value = alert["value"]
+            threshold = alert["threshold"]
+            
+            print(f"🚨 Alert: {alert_type} ({severity}) - {message} (Value: {value}, Threshold: {threshold})")
+            
+            # Verify alert logic
+            if alert_type == "revenue_drop":
+                self.assertGreater(value, 20, "Revenue drop alert should trigger when drop > 20%")
+                self.assertIn(severity, ["high", "critical"])
+            elif alert_type == "inactive_patients":
+                inactive_percentage = advanced_stats.get("patients_inactifs", {}).get("percentage", 0)
+                self.assertGreater(inactive_percentage, 30, "Inactive patients alert should trigger when > 30%")
+                self.assertIn(severity, ["medium", "high"])
+            elif alert_type == "waiting_time":
+                avg_waiting_time = advanced_stats.get("durees", {}).get("attente_moyenne", 0)
+                self.assertGreater(avg_waiting_time, 30, "Waiting time alert should trigger when > 30min")
+                self.assertIn(severity, ["medium", "high"])
+        
+        # Test specific alert thresholds
+        inactive_percentage = advanced_stats.get("patients_inactifs", {}).get("percentage", 0)
+        avg_waiting_time = advanced_stats.get("durees", {}).get("attente_moyenne", 0)
+        
+        print(f"📈 Current Metrics:")
+        print(f"   - Inactive patients: {inactive_percentage}% (threshold: 30%)")
+        print(f"   - Average waiting time: {avg_waiting_time}min (threshold: 30min)")
+        
+        # Verify alert logic matches thresholds
+        inactive_alert_expected = inactive_percentage > 30
+        waiting_alert_expected = avg_waiting_time > 30
+        
+        inactive_alert_found = any(alert["type"] == "inactive_patients" for alert in alerts)
+        waiting_alert_found = any(alert["type"] == "waiting_time" for alert in alerts)
+        
+        if inactive_alert_expected:
+            self.assertTrue(inactive_alert_found, f"Expected inactive patients alert for {inactive_percentage}%")
+        if waiting_alert_expected:
+            self.assertTrue(waiting_alert_found, f"Expected waiting time alert for {avg_waiting_time}min")
+        
+        print(f"✅ Alert thresholds verification completed")
+        print(f"🎉 Alerts Functionality Test: PASSED")
+    
+    def test_advanced_reports_prediction_algorithm(self):
+        """Test the prediction algorithm - verify it returns reasonable estimates with confidence levels"""
+        print("\n🔍 Testing Advanced Reports - ML Prediction Algorithm")
+        
+        # Get monthly report to access predictions
+        response = requests.get(f"{self.base_url}/api/admin/advanced-reports?period_type=monthly")
+        self.assertEqual(response.status_code, 200)
+        
+        data = response.json()
+        predictions = data["predictions"]
+        evolution = data["evolution"]
+        
+        # Verify prediction structure
+        self.assertIn("next_month", predictions)
+        next_month = predictions["next_month"]
+        
+        # Check required prediction fields
+        self.assertIn("consultations_estimees", next_month)
+        self.assertIn("revenue_estime", next_month)
+        self.assertIn("confiance", next_month)
+        
+        consultations_pred = next_month["consultations_estimees"]
+        revenue_pred = next_month["revenue_estime"]
+        confidence = next_month["confiance"]
+        
+        print(f"🤖 ML Predictions:")
+        print(f"   - Estimated consultations: {consultations_pred}")
+        print(f"   - Estimated revenue: {revenue_pred} TND")
+        print(f"   - Confidence level: {confidence}%")
+        
+        # Verify prediction reasonableness
+        self.assertIsInstance(consultations_pred, (int, float))
+        self.assertIsInstance(revenue_pred, (int, float))
+        self.assertIsInstance(confidence, (int, float))
+        
+        # Predictions should be non-negative
+        self.assertGreaterEqual(consultations_pred, 0, "Predicted consultations should be non-negative")
+        self.assertGreaterEqual(revenue_pred, 0, "Predicted revenue should be non-negative")
+        
+        # Confidence should be between 0 and 100
+        self.assertGreaterEqual(confidence, 0, "Confidence should be >= 0")
+        self.assertLessEqual(confidence, 100, "Confidence should be <= 100")
+        
+        # Check trend analysis
+        if "trend" in predictions:
+            trend = predictions["trend"]
+            self.assertIn(trend, ["croissant", "décroissant", "stable"], f"Invalid trend: {trend}")
+            print(f"   - Trend: {trend}")
+        
+        # Verify prediction logic against historical data
+        if len(evolution) > 0:
+            # Calculate historical averages for comparison
+            historical_consultations = [month["visites"] + month["controles"] for month in evolution]
+            historical_revenue = [month["revenue"] for month in evolution]
+            
+            if historical_consultations:
+                avg_consultations = sum(historical_consultations) / len(historical_consultations)
+                avg_revenue = sum(historical_revenue) / len(historical_revenue)
+                
+                print(f"📊 Historical Averages:")
+                print(f"   - Average consultations: {avg_consultations:.1f}")
+                print(f"   - Average revenue: {avg_revenue:.1f} TND")
+                
+                # Predictions should be within reasonable range of historical data
+                # Allow for 3x variation (growth or decline)
+                max_reasonable_consultations = avg_consultations * 3
+                max_reasonable_revenue = avg_revenue * 3
+                
+                self.assertLessEqual(consultations_pred, max_reasonable_consultations, 
+                                   f"Predicted consultations ({consultations_pred}) seems unreasonably high compared to historical average ({avg_consultations:.1f})")
+                self.assertLessEqual(revenue_pred, max_reasonable_revenue,
+                                   f"Predicted revenue ({revenue_pred}) seems unreasonably high compared to historical average ({avg_revenue:.1f})")
+        
+        # Test different period types for prediction consistency
+        print(f"🔄 Testing prediction consistency across period types...")
+        
+        # Test semester predictions
+        semester_response = requests.get(f"{self.base_url}/api/admin/advanced-reports?period_type=semester")
+        if semester_response.status_code == 200:
+            semester_data = semester_response.json()
+            semester_predictions = semester_data.get("predictions", {})
+            if "next_month" in semester_predictions:
+                semester_confidence = semester_predictions["next_month"].get("confiance", 0)
+                print(f"   - Semester prediction confidence: {semester_confidence}%")
+        
+        # Test annual predictions
+        annual_response = requests.get(f"{self.base_url}/api/admin/advanced-reports?period_type=annual")
+        if annual_response.status_code == 200:
+            annual_data = annual_response.json()
+            annual_predictions = annual_data.get("predictions", {})
+            if "next_month" in annual_predictions:
+                annual_confidence = annual_predictions["next_month"].get("confiance", 0)
+                print(f"   - Annual prediction confidence: {annual_confidence}%")
+        
+        print(f"✅ ML prediction algorithm validation completed")
+        print(f"🎉 Prediction Algorithm Test: PASSED")
+    
+    def test_advanced_reports_all_period_types(self):
+        """Test advanced reports with all period types (monthly, semester, annual, custom)"""
+        print("\n🔍 Testing Advanced Reports - All Period Types")
+        
+        current_year = datetime.now().year
+        current_month = datetime.now().month
+        
+        # Test monthly
+        print(f"📅 Testing monthly reports...")
+        monthly_response = requests.get(f"{self.base_url}/api/admin/advanced-reports?period_type=monthly&year={current_year}&month={current_month}")
+        self.assertEqual(monthly_response.status_code, 200)
+        monthly_data = monthly_response.json()
+        self.assertEqual(monthly_data["metadata"]["type"], "monthly")
+        print(f"✅ Monthly report: {monthly_data['metadata']['periode']}")
+        
+        # Test semester
+        print(f"📅 Testing semester reports...")
+        semester = 1 if current_month <= 6 else 2
+        semester_response = requests.get(f"{self.base_url}/api/admin/advanced-reports?period_type=semester&year={current_year}&semester={semester}")
+        self.assertEqual(semester_response.status_code, 200)
+        semester_data = semester_response.json()
+        self.assertEqual(semester_data["metadata"]["type"], "semester")
+        print(f"✅ Semester report: {semester_data['metadata']['periode']}")
+        
+        # Test annual
+        print(f"📅 Testing annual reports...")
+        annual_response = requests.get(f"{self.base_url}/api/admin/advanced-reports?period_type=annual&year={current_year}")
+        self.assertEqual(annual_response.status_code, 200)
+        annual_data = annual_response.json()
+        self.assertEqual(annual_data["metadata"]["type"], "annual")
+        print(f"✅ Annual report: {annual_data['metadata']['periode']}")
+        
+        # Test custom period
+        print(f"📅 Testing custom period reports...")
+        start_date = f"{current_year}-01-01"
+        end_date = f"{current_year}-{current_month:02d}-28"
+        custom_response = requests.get(f"{self.base_url}/api/admin/advanced-reports?period_type=custom&start_date={start_date}&end_date={end_date}")
+        self.assertEqual(custom_response.status_code, 200)
+        custom_data = custom_response.json()
+        self.assertEqual(custom_data["metadata"]["type"], "custom")
+        print(f"✅ Custom report: {custom_data['metadata']['periode']}")
+        
+        # Test invalid period type
+        print(f"📅 Testing invalid period type...")
+        invalid_response = requests.get(f"{self.base_url}/api/admin/advanced-reports?period_type=invalid")
+        self.assertEqual(invalid_response.status_code, 400)
+        print(f"✅ Invalid period type properly rejected")
+        
+        print(f"🎉 All Period Types Test: PASSED")
+    
+    def test_demographics_report_endpoint(self):
+        """Test GET /api/admin/reports/demographics endpoint"""
+        print("\n🔍 Testing Demographics Report Endpoint")
+        
+        current_year = datetime.now().year
+        current_month = datetime.now().month
+        start_date = f"{current_year}-{current_month:02d}-01"
+        end_date = f"{current_year}-{current_month:02d}-28"
+        
+        response = requests.get(f"{self.base_url}/api/admin/reports/demographics?start_date={start_date}&end_date={end_date}")
+        self.assertEqual(response.status_code, 200)
+        
+        data = response.json()
+        
+        # Verify response structure
+        self.assertIn("period", data)
+        self.assertIn("total_active_patients", data)
+        self.assertIn("age_breakdown", data)
+        self.assertIn("top_addresses", data)
+        self.assertIn("top_cities", data)
+        self.assertIn("generated_at", data)
+        
+        # Verify age breakdown structure
+        age_breakdown = data["age_breakdown"]
+        expected_age_groups = ["0-1", "2-3", "4-5", "6-8", "9-12", "13-15", "16-18", "18+"]
+        for age_group in expected_age_groups:
+            self.assertIn(age_group, age_breakdown)
+            self.assertIsInstance(age_breakdown[age_group], int)
+        
+        print(f"✅ Demographics report: {data['total_active_patients']} active patients")
+        print(f"✅ Age breakdown: {age_breakdown}")
+        print(f"🎉 Demographics Report Test: PASSED")
+    
+    def test_top_patients_report_endpoint(self):
+        """Test GET /api/admin/reports/top-patients endpoint"""
+        print("\n🔍 Testing Top Patients Report Endpoint")
+        
+        # Test with default parameters
+        response = requests.get(f"{self.base_url}/api/admin/reports/top-patients")
+        self.assertEqual(response.status_code, 200)
+        
+        data = response.json()
+        
+        # Verify response structure
+        self.assertIn("period", data)
+        self.assertIn("metric", data)
+        self.assertIn("total_patients_analyzed", data)
+        self.assertIn("top_patients", data)
+        self.assertIn("summary", data)
+        self.assertIn("generated_at", data)
+        
+        # Verify top patients structure
+        top_patients = data["top_patients"]
+        self.assertIsInstance(top_patients, list)
+        
+        if len(top_patients) > 0:
+            patient = top_patients[0]
+            self.assertIn("patient_id", patient)
+            self.assertIn("name", patient)
+            self.assertIn("statistics", patient)
+            
+            stats = patient["statistics"]
+            self.assertIn("consultations", stats)
+            self.assertIn("revenue", stats)
+            self.assertIn("visites", stats)
+            self.assertIn("controles", stats)
+        
+        # Verify summary structure
+        summary = data["summary"]
+        self.assertIn("total_revenue", summary)
+        self.assertIn("total_consultations", summary)
+        self.assertIn("average_revenue_per_patient", summary)
+        
+        print(f"✅ Top patients report: {len(top_patients)} patients analyzed")
+        print(f"✅ Total revenue: {summary['total_revenue']} TND")
+        
+        # Test different metrics
+        for metric in ["revenue", "consultations", "frequency"]:
+            metric_response = requests.get(f"{self.base_url}/api/admin/reports/top-patients?metric={metric}&limit=5")
+            self.assertEqual(metric_response.status_code, 200)
+            metric_data = metric_response.json()
+            self.assertEqual(metric_data["metric"], metric)
+            print(f"✅ Top patients by {metric}: {len(metric_data['top_patients'])} patients")
+        
+        print(f"🎉 Top Patients Report Test: PASSED")
+
     # ========== CALENDAR RDV BACKEND IMPLEMENTATION (PHASE 1) TESTS ==========
     
     def test_enhanced_appointment_model(self):
