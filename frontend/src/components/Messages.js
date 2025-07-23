@@ -321,7 +321,7 @@ const Messages = ({ user }) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Secrétaire Interface */}
-        {user.type === 'secretaire' && (
+        {user.role === 'secretaire' && (
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
