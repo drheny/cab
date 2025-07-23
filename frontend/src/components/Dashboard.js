@@ -805,7 +805,7 @@ const Dashboard = ({ user }) => {
                 >
                   <div
                     className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl shadow-sm relative ${
-                      message.sender_type === user.type
+                      message.sender_type === user.role
                         ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-primary-200'
                         : message.sender_type === 'medecin'
                         ? 'bg-gradient-to-r from-green-100 to-green-50 text-green-900 border border-green-200 shadow-green-100'
