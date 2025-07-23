@@ -904,7 +904,7 @@ const Dashboard = ({ user }) => {
                         )}
                         
                         {/* Read receipt indicator */}
-                        {message.sender_type === user.type && (
+                        {message.sender_type === user.role && (
                           <div className="flex items-center space-x-1">
                             {message.is_read ? (
                               <div className="flex items-center space-x-1 bg-green-100 bg-opacity-80 px-2 py-1 rounded-full" title="Message lu">
