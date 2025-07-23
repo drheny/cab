@@ -4253,6 +4253,816 @@ async def get_yearly_evolution_charts():
 
 # ==================== END USER MANAGEMENT API ====================
 
+# ==================== ADVANCED REPORTS API ====================
+
+from collections import defaultdict
+import numpy as np
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error
+
+# Advanced Report Models
+class AdvancedReportRequest(BaseModel):
+    period_type: str = Field(..., description="monthly, semester, annual, custom")
+    year: Optional[int] = None
+    month: Optional[int] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+
+class AlertThresholds(BaseModel):
+    revenue_drop_threshold: float = 20.0  # %
+    inactive_patients_threshold: float = 30.0  # %
+    waiting_time_threshold: float = 30.0  # minutes
+
+async def calculate_advanced_statistics(start_date: str, end_date: str):
+    """Calculate comprehensive statistics for advanced reports"""
+    try:
+        start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+        end_dt = datetime.strptime(end_date, "%Y-%m-%d")
+        
+        # Get all appointments in period
+        appointments = list(appointments_collection.find({
+            "date": {"$gte": start_date, "$lte": end_date}
+        }))
+        
+        # Get all consultations in period
+        consultations = list(consultations_collection.find({
+            "date": {"$gte": start_date, "$lte": end_date}
+        }))
+        
+        # Get all patients
+        all_patients = list(patients_collection.find({}, {"_id": 0}))
+        
+        # 1. Répartition Visite/Contrôle
+        visites = [apt for apt in appointments if apt.get("type_rdv") == "visite"]
+        controles = [apt for apt in appointments if apt.get("type_rdv") == "controle"]
+        
+        visite_revenue = len(visites) * 65  # Assuming 65 TND per visite
+        controle_revenue = 0  # Contrôles are free
+        
+        consultations_stats = {
+            "visites": {
+                "count": len(visites),
+                "percentage": round((len(visites) / max(len(appointments), 1)) * 100, 1),
+                "revenue": visite_revenue
+            },
+            "controles": {
+                "count": len(controles),
+                "percentage": round((len(controles) / max(len(appointments), 1)) * 100, 1),
+                "revenue": controle_revenue
+            },
+            "total": len(appointments)
+        }
+        
+        # 2. Top 10 Patients Rentables
+        patient_revenue = defaultdict(lambda: {"consultations": 0, "revenue": 0, "last_visit": None})
+        
+        for apt in appointments:
+            patient_id = apt.get("patient_id")
+            if patient_id and apt.get("type_rdv") == "visite" and apt.get("paye", True):
+                patient_revenue[patient_id]["consultations"] += 1
+                patient_revenue[patient_id]["revenue"] += 65
+                if not patient_revenue[patient_id]["last_visit"] or apt["date"] > patient_revenue[patient_id]["last_visit"]:
+                    patient_revenue[patient_id]["last_visit"] = apt["date"]
+        
+        # Get patient names and create top 10 list
+        top_patients = []
+        for patient_id, stats in patient_revenue.items():
+            patient = patients_collection.find_one({"id": patient_id}, {"_id": 0})
+            if patient:
+                top_patients.append({
+                    "name": f"{patient.get('prenom', '')} {patient.get('nom', '')}".strip(),
+                    "consultations": stats["consultations"],
+                    "revenue": stats["revenue"],
+                    "last_visit": stats["last_visit"]
+                })
+        
+        top_patients = sorted(top_patients, key=lambda x: x["revenue"], reverse=True)[:10]
+        
+        # 3. Durées moyennes
+        waiting_times = []
+        consultation_durations = []
+        
+        for apt in appointments:
+            if apt.get("duree_attente"):
+                waiting_times.append(apt["duree_attente"])
+        
+        for consultation in consultations:
+            if consultation.get("duree"):
+                consultation_durations.append(consultation["duree"])
+        
+        durees = {
+            "attente_moyenne": round(np.mean(waiting_times) if waiting_times else 0, 1),
+            "consultation_moyenne": round(np.mean(consultation_durations) if consultation_durations else 0, 1),
+            "attente_max": max(waiting_times) if waiting_times else 0,
+            "consultation_max": max(consultation_durations) if consultation_durations else 0
+        }
+        
+        # 4. Relances téléphoniques
+        relances_total = len([c for c in consultations if c.get("relance_date")])
+        relances_traitees = len([c for c in consultations if c.get("relance_date") and c.get("relance_traitee", False)])
+        
+        relances = {
+            "total": relances_total,
+            "traitees": relances_traitees,
+            "en_attente": relances_total - relances_traitees,
+            "taux_reponse": round((relances_traitees / max(relances_total, 1)) * 100, 1)
+        }
+        
+        # 5. Répartition démographique
+        age_groups = {"0-2": 0, "3-5": 0, "6-12": 0, "13-18": 0, "18+": 0}
+        address_distribution = defaultdict(int)
+        
+        for patient in all_patients:
+            age = patient.get("age", 0)
+            if isinstance(age, (int, float)):
+                if age <= 2:
+                    age_groups["0-2"] += 1
+                elif age <= 5:
+                    age_groups["3-5"] += 1
+                elif age <= 12:
+                    age_groups["6-12"] += 1
+                elif age <= 18:
+                    age_groups["13-18"] += 1
+                else:
+                    age_groups["18+"] += 1
+            
+            # Address distribution
+            address = patient.get("adresse", "Non spécifié")
+            if address:
+                # Extract city name (simplified)
+                city = address.split(",")[0].strip() if "," in address else address
+                address_distribution[city] += 1
+        
+        # Get top 5 addresses
+        top_addresses = dict(sorted(address_distribution.items(), key=lambda x: x[1], reverse=True)[:5])
+        
+        demographics = {
+            "age_groups": age_groups,
+            "addresses": top_addresses
+        }
+        
+        # 6. Patients inactifs (plus de 6 mois sans consultation)
+        six_months_ago = (datetime.now() - timedelta(days=180)).strftime("%Y-%m-%d")
+        recent_patients = set()
+        
+        for apt in appointments_collection.find({"date": {"$gte": six_months_ago}}):
+            recent_patients.add(apt.get("patient_id"))
+        
+        total_patients = len(all_patients)
+        inactive_count = total_patients - len(recent_patients)
+        
+        patients_inactifs = {
+            "count": inactive_count,
+            "percentage": round((inactive_count / max(total_patients, 1)) * 100, 1),
+            "details": []  # Could be populated with actual patient list if needed
+        }
+        
+        # 7. Taux de fidélisation
+        period_patients = set()
+        new_patients_in_period = 0
+        
+        for apt in appointments:
+            patient_id = apt.get("patient_id")
+            period_patients.add(patient_id)
+            
+            # Check if this is patient's first appointment ever
+            first_apt = appointments_collection.find_one(
+                {"patient_id": patient_id}, 
+                sort=[("date", 1)]
+            )
+            if first_apt and first_apt["date"] >= start_date:
+                new_patients_in_period += 1
+        
+        recurring_patients = len(period_patients) - new_patients_in_period
+        
+        fidelisation = {
+            "nouveaux_patients": new_patients_in_period,
+            "patients_recurrents": recurring_patients,
+            "taux_retour": round((recurring_patients / max(len(period_patients), 1)) * 100, 1)
+        }
+        
+        # 8. Utilisation des salles
+        salle_usage = {"salle1": 0, "salle2": 0, "sans_salle": 0}
+        
+        for apt in appointments:
+            salle = apt.get("salle", "")
+            if salle == "salle1":
+                salle_usage["salle1"] += 1
+            elif salle == "salle2":
+                salle_usage["salle2"] += 1
+            else:
+                salle_usage["sans_salle"] += 1
+        
+        total_with_room = salle_usage["salle1"] + salle_usage["salle2"]
+        
+        salles = {
+            "salle1": {
+                "utilisation": round((salle_usage["salle1"] / max(total_with_room, 1)) * 100, 1),
+                "consultations": salle_usage["salle1"]
+            },
+            "salle2": {
+                "utilisation": round((salle_usage["salle2"] / max(total_with_room, 1)) * 100, 1),
+                "consultations": salle_usage["salle2"]
+            },
+            "sans_salle": {
+                "consultations": salle_usage["sans_salle"]
+            }
+        }
+        
+        return {
+            "consultations": consultations_stats,
+            "top_patients": top_patients,
+            "durees": durees,
+            "relances": relances,
+            "demographics": demographics,
+            "patients_inactifs": patients_inactifs,
+            "fidelisation": fidelisation,
+            "salles": salles
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error calculating advanced statistics: {str(e)}")
+
+async def calculate_monthly_evolution(start_date: str, end_date: str):
+    """Calculate monthly evolution data for trends"""
+    try:
+        start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+        end_dt = datetime.strptime(end_date, "%Y-%m-%d")
+        
+        evolution = []
+        current_date = start_dt
+        
+        while current_date <= end_dt:
+            month_start = current_date.replace(day=1).strftime("%Y-%m-%d")
+            
+            # Calculate end of month
+            if current_date.month == 12:
+                month_end = current_date.replace(year=current_date.year + 1, month=1, day=1) - timedelta(days=1)
+            else:
+                month_end = current_date.replace(month=current_date.month + 1, day=1) - timedelta(days=1)
+            
+            month_end_str = month_end.strftime("%Y-%m-%d")
+            
+            # Get appointments for this month
+            monthly_appointments = list(appointments_collection.find({
+                "date": {"$gte": month_start, "$lte": month_end_str}
+            }))
+            
+            visites = len([apt for apt in monthly_appointments if apt.get("type_rdv") == "visite"])
+            controles = len([apt for apt in monthly_appointments if apt.get("type_rdv") == "controle"])
+            revenue = visites * 65
+            
+            evolution.append({
+                "mois": current_date.strftime("%b"),
+                "visites": visites,
+                "controles": controles,
+                "revenue": revenue,
+                "date": month_start
+            })
+            
+            # Move to next month
+            if current_date.month == 12:
+                current_date = current_date.replace(year=current_date.year + 1, month=1)
+            else:
+                current_date = current_date.replace(month=current_date.month + 1)
+        
+        return evolution
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error calculating monthly evolution: {str(e)}")
+
+async def calculate_year_comparison(current_year: int):
+    """Calculate comparison between current year and previous year"""
+    try:
+        previous_year = current_year - 1
+        
+        # Current year data
+        current_start = f"{current_year}-01-01"
+        current_end = f"{current_year}-12-31"
+        current_appointments = list(appointments_collection.find({
+            "date": {"$gte": current_start, "$lte": current_end}
+        }))
+        
+        # Previous year data
+        previous_start = f"{previous_year}-01-01"
+        previous_end = f"{previous_year}-12-31"
+        previous_appointments = list(appointments_collection.find({
+            "date": {"$gte": previous_start, "$lte": previous_end}
+        }))
+        
+        # Calculate metrics
+        current_consultations = len(current_appointments)
+        previous_consultations = len(previous_appointments)
+        
+        current_visites = len([apt for apt in current_appointments if apt.get("type_rdv") == "visite"])
+        previous_visites = len([apt for apt in previous_appointments if apt.get("type_rdv") == "visite"])
+        
+        current_revenue = current_visites * 65
+        previous_revenue = previous_visites * 65
+        
+        # Calculate evolution percentages
+        def calculate_evolution(current, previous):
+            if previous == 0:
+                return "+100%" if current > 0 else "0%"
+            evolution = ((current - previous) / previous) * 100
+            return f"{'+' if evolution >= 0 else ''}{evolution:.1f}%"
+        
+        return {
+            "consultations": {
+                "current": current_consultations,
+                "previous": previous_consultations,
+                "evolution": calculate_evolution(current_consultations, previous_consultations)
+            },
+            "revenue": {
+                "current": current_revenue,
+                "previous": previous_revenue,
+                "evolution": calculate_evolution(current_revenue, previous_revenue)
+            },
+            "visites": {
+                "current": current_visites,
+                "previous": previous_visites,
+                "evolution": calculate_evolution(current_visites, previous_visites)
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error calculating year comparison: {str(e)}")
+
+async def calculate_seasonality_patterns():
+    """Calculate seasonal patterns and identify peaks/troughs"""
+    try:
+        # Get last 2 years of data for better pattern recognition
+        two_years_ago = (datetime.now() - timedelta(days=730)).strftime("%Y-%m-%d")
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        appointments = list(appointments_collection.find({
+            "date": {"$gte": two_years_ago, "$lte": today}
+        }))
+        
+        # Group by month across years
+        monthly_stats = defaultdict(list)
+        
+        for apt in appointments:
+            apt_date = datetime.strptime(apt["date"], "%Y-%m-%d")
+            month = apt_date.month
+            monthly_stats[month].append(apt)
+        
+        # Calculate average appointments per month
+        monthly_averages = {}
+        for month, apts in monthly_stats.items():
+            monthly_averages[month] = len(apts) / 2  # Average over 2 years
+        
+        # Calculate overall average
+        overall_average = sum(monthly_averages.values()) / len(monthly_averages) if monthly_averages else 0
+        
+        # Identify peaks and troughs
+        peaks = []
+        creux = []
+        
+        month_names = ["", "Janvier", "Février", "Mars", "Avril", "Mai", "Juin", 
+                      "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"]
+        
+        for month, avg in monthly_averages.items():
+            deviation = ((avg - overall_average) / overall_average) * 100 if overall_average > 0 else 0
+            
+            if deviation > 15:  # Peak if 15% above average
+                peaks.append({
+                    "periode": month_names[month],
+                    "raison": get_seasonal_reason(month, "peak"),
+                    "evolution": f"+{deviation:.0f}%"
+                })
+            elif deviation < -15:  # Trough if 15% below average
+                creux.append({
+                    "periode": month_names[month],
+                    "raison": get_seasonal_reason(month, "trough"),
+                    "evolution": f"{deviation:.0f}%"
+                })
+        
+        return {
+            "pics": peaks,
+            "creux": creux,
+            "monthly_averages": monthly_averages,
+            "overall_average": round(overall_average, 1)
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error calculating seasonality: {str(e)}")
+
+def get_seasonal_reason(month: int, pattern_type: str):
+    """Get likely seasonal reason for peaks/troughs"""
+    peak_reasons = {
+        1: "Post-fêtes, maladies hivernales",
+        2: "Maladies hivernales",
+        3: "Allergies printanières",
+        9: "Rentrée scolaire",
+        10: "Maladies automnales",
+        11: "Début de saison froide"
+    }
+    
+    trough_reasons = {
+        7: "Vacances d'été",
+        8: "Vacances d'été",
+        12: "Fêtes de fin d'année"
+    }
+    
+    if pattern_type == "peak":
+        return peak_reasons.get(month, "Pic saisonnier")
+    else:
+        return trough_reasons.get(month, "Creux saisonnier")
+
+async def calculate_predictions(evolution_data: list):
+    """Calculate predictions using linear regression"""
+    try:
+        if len(evolution_data) < 3:
+            return {
+                "next_month": {
+                    "consultations_estimees": 0,
+                    "revenue_estime": 0,
+                    "confiance": 0
+                },
+                "message": "Pas assez de données pour les prédictions"
+            }
+        
+        # Prepare data for prediction
+        X = np.array(range(len(evolution_data))).reshape(-1, 1)
+        y_consultations = np.array([month["visites"] + month["controles"] for month in evolution_data])
+        y_revenue = np.array([month["revenue"] for month in evolution_data])
+        
+        # Train models
+        consultation_model = LinearRegression()
+        revenue_model = LinearRegression()
+        
+        consultation_model.fit(X, y_consultations)
+        revenue_model.fit(X, y_revenue)
+        
+        # Predict next month
+        next_month_index = len(evolution_data)
+        predicted_consultations = consultation_model.predict([[next_month_index]])[0]
+        predicted_revenue = revenue_model.predict([[next_month_index]])[0]
+        
+        # Calculate confidence (simplified R² score)
+        consultation_predictions = consultation_model.predict(X)
+        revenue_predictions = revenue_model.predict(X)
+        
+        consultation_mae = mean_absolute_error(y_consultations, consultation_predictions)
+        revenue_mae = mean_absolute_error(y_revenue, revenue_predictions)
+        
+        # Simplified confidence calculation (inverse of normalized MAE)
+        consultation_conf = max(0, 100 - (consultation_mae / max(np.mean(y_consultations), 1)) * 100)
+        revenue_conf = max(0, 100 - (revenue_mae / max(np.mean(y_revenue), 1)) * 100)
+        
+        average_confidence = (consultation_conf + revenue_conf) / 2
+        
+        return {
+            "next_month": {
+                "consultations_estimees": max(0, round(predicted_consultations)),
+                "revenue_estime": max(0, round(predicted_revenue)),
+                "confiance": round(min(average_confidence, 95), 1)  # Cap at 95%
+            },
+            "trend": "croissant" if predicted_consultations > y_consultations[-1] else "décroissant"
+        }
+        
+    except Exception as e:
+        # Fallback to simple average-based prediction
+        avg_consultations = np.mean([month["visites"] + month["controles"] for month in evolution_data[-3:]])
+        avg_revenue = np.mean([month["revenue"] for month in evolution_data[-3:]])
+        
+        return {
+            "next_month": {
+                "consultations_estimees": round(avg_consultations),
+                "revenue_estime": round(avg_revenue),
+                "confiance": 60  # Lower confidence for fallback method
+            },
+            "trend": "stable",
+            "message": "Prédiction basée sur la moyenne des 3 derniers mois"
+        }
+
+async def check_alert_thresholds(current_data: dict, previous_data: dict = None):
+    """Check if any alert thresholds are exceeded"""
+    alerts = []
+    
+    try:
+        # 1. Revenue drop alert
+        if previous_data:
+            current_revenue = current_data.get("consultations", {}).get("visites", {}).get("revenue", 0)
+            previous_revenue = previous_data.get("consultations", {}).get("visites", {}).get("revenue", 0)
+            
+            if previous_revenue > 0:
+                revenue_drop = ((previous_revenue - current_revenue) / previous_revenue) * 100
+                if revenue_drop > 20:
+                    alerts.append({
+                        "type": "revenue_drop",
+                        "severity": "high",
+                        "message": f"Baisse de revenus de {revenue_drop:.1f}% détectée",
+                        "value": revenue_drop,
+                        "threshold": 20
+                    })
+        
+        # 2. Inactive patients alert
+        inactive_percentage = current_data.get("patients_inactifs", {}).get("percentage", 0)
+        if inactive_percentage > 30:
+            alerts.append({
+                "type": "inactive_patients",
+                "severity": "medium",
+                "message": f"{inactive_percentage}% de patients inactifs",
+                "value": inactive_percentage,
+                "threshold": 30
+            })
+        
+        # 3. Waiting time alert
+        avg_waiting_time = current_data.get("durees", {}).get("attente_moyenne", 0)
+        if avg_waiting_time > 30:
+            alerts.append({
+                "type": "waiting_time",
+                "severity": "medium",
+                "message": f"Temps d'attente moyen: {avg_waiting_time} minutes",
+                "value": avg_waiting_time,
+                "threshold": 30
+            })
+        
+        return alerts
+        
+    except Exception as e:
+        return []
+
+@app.get("/api/admin/advanced-reports")
+async def get_advanced_reports(
+    period_type: str = Query(..., description="monthly, semester, annual, custom"),
+    year: int = Query(None, description="Year"),
+    month: int = Query(None, description="Month (1-12)"),
+    semester: int = Query(None, description="Semester (1 or 2)"),
+    start_date: str = Query(None, description="Start date (YYYY-MM-DD)"),
+    end_date: str = Query(None, description="End date (YYYY-MM-DD)")
+):
+    """Generate comprehensive advanced reports with multiple data points"""
+    try:
+        current_year = datetime.now().year
+        current_month = datetime.now().month
+        
+        # Determine date range based on period type
+        if period_type == "monthly":
+            if not year:
+                year = current_year
+            if not month:
+                month = current_month
+                
+            start_date = f"{year}-{month:02d}-01"
+            # Calculate end of month
+            if month == 12:
+                end_date = f"{year}-12-31"
+            else:
+                last_day = (datetime(year, month + 1, 1) - timedelta(days=1)).day
+                end_date = f"{year}-{month:02d}-{last_day}"
+                
+            periode_label = f"{datetime(year, month, 1).strftime('%B %Y')}"
+            
+        elif period_type == "semester":
+            if not year:
+                year = current_year
+            if not semester:
+                semester = 1 if current_month <= 6 else 2
+                
+            if semester == 1:
+                start_date = f"{year}-01-01"
+                end_date = f"{year}-06-30"
+                periode_label = f"1er semestre {year}"
+            else:
+                start_date = f"{year}-07-01"
+                end_date = f"{year}-12-31"
+                periode_label = f"2e semestre {year}"
+                
+        elif period_type == "annual":
+            if not year:
+                year = current_year
+                
+            start_date = f"{year}-01-01"
+            end_date = f"{year}-12-31"
+            periode_label = f"Année {year}"
+            
+        elif period_type == "custom":
+            if not start_date or not end_date:
+                raise HTTPException(status_code=400, detail="Start date and end date required for custom period")
+            periode_label = f"{start_date} - {end_date}"
+            
+        else:
+            raise HTTPException(status_code=400, detail="Invalid period_type. Use: monthly, semester, annual, custom")
+        
+        # Calculate advanced statistics
+        advanced_stats = await calculate_advanced_statistics(start_date, end_date)
+        
+        # Calculate monthly evolution for trends
+        evolution = await calculate_monthly_evolution(start_date, end_date)
+        
+        # Calculate year comparison if applicable
+        comparison = None
+        if period_type in ["annual", "semester"]:
+            comparison_year = year if year else current_year
+            comparison = await calculate_year_comparison(comparison_year)
+        
+        # Calculate seasonality patterns
+        seasonality = await calculate_seasonality_patterns()
+        
+        # Calculate predictions
+        predictions = await calculate_predictions(evolution)
+        
+        # Check alert thresholds
+        alerts = await check_alert_thresholds(advanced_stats)
+        
+        # Compile comprehensive report
+        report = {
+            "metadata": {
+                "periode": periode_label,
+                "type": period_type,
+                "start_date": start_date,
+                "end_date": end_date,
+                "generated_at": datetime.now().isoformat()
+            },
+            "advanced_statistics": advanced_stats,
+            "evolution": evolution,
+            "comparison": comparison,
+            "seasonality": seasonality,
+            "predictions": predictions,
+            "alerts": alerts
+        }
+        
+        return report
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating advanced reports: {str(e)}")
+
+@app.get("/api/admin/reports/demographics")
+async def get_demographics_report(
+    start_date: str = Query(..., description="Start date (YYYY-MM-DD)"),
+    end_date: str = Query(..., description="End date (YYYY-MM-DD)")
+):
+    """Get detailed demographics breakdown"""
+    try:
+        # Get patients who had appointments in the period
+        appointments = list(appointments_collection.find({
+            "date": {"$gte": start_date, "$lte": end_date}
+        }))
+        
+        active_patient_ids = set(apt.get("patient_id") for apt in appointments if apt.get("patient_id"))
+        
+        # Get patient details
+        active_patients = list(patients_collection.find({
+            "id": {"$in": list(active_patient_ids)}
+        }, {"_id": 0}))
+        
+        # Detailed age analysis
+        age_breakdown = {
+            "0-1": 0, "2-3": 0, "4-5": 0, "6-8": 0, "9-12": 0, 
+            "13-15": 0, "16-18": 0, "18+": 0
+        }
+        
+        # Detailed address analysis
+        address_stats = defaultdict(int)
+        city_stats = defaultdict(int)
+        
+        for patient in active_patients:
+            # Age breakdown
+            age = patient.get("age", 0)
+            if isinstance(age, (int, float)):
+                if age <= 1:
+                    age_breakdown["0-1"] += 1
+                elif age <= 3:
+                    age_breakdown["2-3"] += 1
+                elif age <= 5:
+                    age_breakdown["4-5"] += 1
+                elif age <= 8:
+                    age_breakdown["6-8"] += 1
+                elif age <= 12:
+                    age_breakdown["9-12"] += 1
+                elif age <= 15:
+                    age_breakdown["13-15"] += 1
+                elif age <= 18:
+                    age_breakdown["16-18"] += 1
+                else:
+                    age_breakdown["18+"] += 1
+            
+            # Address analysis
+            address = patient.get("adresse", "")
+            if address:
+                address_stats[address] += 1
+                # Extract city (first part before comma)
+                city = address.split(",")[0].strip() if "," in address else address
+                city_stats[city] += 1
+        
+        # Sort and get top addresses/cities
+        top_addresses = dict(sorted(address_stats.items(), key=lambda x: x[1], reverse=True)[:10])
+        top_cities = dict(sorted(city_stats.items(), key=lambda x: x[1], reverse=True)[:10])
+        
+        return {
+            "period": f"{start_date} - {end_date}",
+            "total_active_patients": len(active_patients),
+            "age_breakdown": age_breakdown,
+            "top_addresses": top_addresses,
+            "top_cities": top_cities,
+            "generated_at": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating demographics report: {str(e)}")
+
+@app.get("/api/admin/reports/top-patients")
+async def get_top_patients_report(
+    limit: int = Query(10, description="Number of top patients to return"),
+    period_months: int = Query(12, description="Period in months to analyze"),
+    metric: str = Query("revenue", description="Metric to rank by: revenue, consultations, frequency")
+):
+    """Get detailed top patients analysis"""
+    try:
+        # Calculate start date
+        start_date = (datetime.now() - timedelta(days=period_months * 30)).strftime("%Y-%m-%d")
+        end_date = datetime.now().strftime("%Y-%m-%d")
+        
+        # Get appointments in period
+        appointments = list(appointments_collection.find({
+            "date": {"$gte": start_date, "$lte": end_date}
+        }))
+        
+        # Analyze patients
+        patient_stats = defaultdict(lambda: {
+            "consultations": 0,
+            "visites": 0,
+            "controles": 0,
+            "revenue": 0,
+            "first_visit": None,
+            "last_visit": None,
+            "visits_per_month": 0
+        })
+        
+        for apt in appointments:
+            patient_id = apt.get("patient_id")
+            if not patient_id:
+                continue
+                
+            stats = patient_stats[patient_id]
+            stats["consultations"] += 1
+            
+            if apt.get("type_rdv") == "visite":
+                stats["visites"] += 1
+                if apt.get("paye", True):
+                    stats["revenue"] += 65
+            else:
+                stats["controles"] += 1
+            
+            apt_date = apt["date"]
+            if not stats["first_visit"] or apt_date < stats["first_visit"]:
+                stats["first_visit"] = apt_date
+            if not stats["last_visit"] or apt_date > stats["last_visit"]:
+                stats["last_visit"] = apt_date
+        
+        # Calculate visits per month
+        for patient_id, stats in patient_stats.items():
+            if stats["first_visit"] and stats["last_visit"]:
+                first_dt = datetime.strptime(stats["first_visit"], "%Y-%m-%d")
+                last_dt = datetime.strptime(stats["last_visit"], "%Y-%m-%d")
+                months_diff = max(1, (last_dt - first_dt).days / 30)
+                stats["visits_per_month"] = round(stats["consultations"] / months_diff, 2)
+        
+        # Get patient details and create results
+        results = []
+        for patient_id, stats in patient_stats.items():
+            patient = patients_collection.find_one({"id": patient_id}, {"_id": 0})
+            if patient:
+                results.append({
+                    "patient_id": patient_id,
+                    "name": f"{patient.get('prenom', '')} {patient.get('nom', '')}".strip(),
+                    "age": patient.get("age"),
+                    "phone": patient.get("numero_whatsapp"),
+                    "address": patient.get("adresse"),
+                    "statistics": stats
+                })
+        
+        # Sort by selected metric
+        if metric == "revenue":
+            results = sorted(results, key=lambda x: x["statistics"]["revenue"], reverse=True)
+        elif metric == "consultations":
+            results = sorted(results, key=lambda x: x["statistics"]["consultations"], reverse=True)
+        elif metric == "frequency":
+            results = sorted(results, key=lambda x: x["statistics"]["visits_per_month"], reverse=True)
+        
+        return {
+            "period": f"{start_date} - {end_date}",
+            "metric": metric,
+            "total_patients_analyzed": len(results),
+            "top_patients": results[:limit],
+            "summary": {
+                "total_revenue": sum(r["statistics"]["revenue"] for r in results),
+                "total_consultations": sum(r["statistics"]["consultations"] for r in results),
+                "average_revenue_per_patient": round(sum(r["statistics"]["revenue"] for r in results) / max(len(results), 1), 2)
+            },
+            "generated_at": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating top patients report: {str(e)}")
+
+# ==================== END ADVANCED REPORTS API ====================
+
 # ==================== END ADMINISTRATION API ====================
 
 # ==================== End Cash Movements API ====================
