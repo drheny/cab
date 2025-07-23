@@ -15,7 +15,7 @@ def test_impaye_filter_correction():
     """Test the corrected 'Impayé' filter functionality - Priority Test from Review Request"""
     
     # Get backend URL from environment
-    backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://124e2ebd-c367-4d01-812a-1c057d915066.preview.emergentagent.com')
+    backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://98ea2688-e431-4ee4-a33d-1c7cb0edbedd.preview.emergentagent.com')
     base_url = backend_url
     
     print(f"\n🔍 TESTING IMPAYÉ FILTER CORRECTION - Priority Test")
