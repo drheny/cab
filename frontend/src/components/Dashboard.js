@@ -853,7 +853,7 @@ const Dashboard = ({ user }) => {
                       
                       <div className="flex items-center space-x-2">
                         <span className={`text-xs ${
-                          message.sender_type === user.type ? 'text-white text-opacity-70' : 'text-gray-500'
+                          message.sender_type === user.role ? 'text-white text-opacity-70' : 'text-gray-500'
                         }`}>
                           {new Date(message.timestamp).toLocaleTimeString('fr-FR', {
                             hour: '2-digit',
