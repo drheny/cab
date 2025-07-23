@@ -158,6 +158,9 @@ const Administration = ({ user }) => {
   const [topPatientsData, setTopPatientsData] = useState(null);
   const [alerts, setAlerts] = useState([]);
 
+  // Tab management
+  const [activeTab, setActiveTab] = useState('statistiques');
+
   useEffect(() => {
     if (user?.permissions?.administration) {
       fetchAdminStats();
