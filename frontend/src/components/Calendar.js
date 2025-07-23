@@ -34,6 +34,9 @@ import AppointmentModal from './AppointmentModal';
 
 import PaymentModal from './PaymentModal';
 
+// Backend URL from environment
+const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+
 const Calendar = ({ user }) => {
   const location = useLocation();
   const navigate = useNavigate();
