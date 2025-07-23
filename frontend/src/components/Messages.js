@@ -683,7 +683,7 @@ const Messages = ({ user }) => {
                           </button>
 
                           {/* Respond Button (médecin only) */}
-                          {user.type === 'medecin' && message.status === 'nouveau' && !editingMessage && (
+                          {user.role === 'medecin' && message.status === 'nouveau' && !editingMessage && (
                             <button
                               onClick={() => {
                                 setRespondingTo(message);
