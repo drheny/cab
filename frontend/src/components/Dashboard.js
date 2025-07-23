@@ -164,7 +164,7 @@ const Dashboard = ({ user }) => {
     switch (data.type) {
       case 'new_message':
         // Ne pas ajouter ses propres messages (déjà ajoutés optimistiquement)
-        if (data.data.sender_type !== user.type || data.data.sender_name !== user.name) {
+        if (data.data.sender_type !== user.role || data.data.sender_name !== user.full_name) {
           setMessages(prev => [...prev, data.data]);
         }
         break;
