@@ -255,10 +255,11 @@ class AdministrationSystemTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         
         data = response.json()
-        self.assertIn("message", data)
-        self.assertIn("user_id", data)
+        # The API returns the user object directly, not with message and user_id
+        self.assertIn("id", data)
+        self.assertIn("username", data)
         
-        created_user_id = data["user_id"]
+        created_user_id = data["id"]
         
         # Verify user was created
         response = requests.get(f"{self.base_url}/api/admin/users", headers=headers)
@@ -293,7 +294,7 @@ class AdministrationSystemTest(unittest.TestCase):
         response = requests.post(f"{self.base_url}/api/admin/users", json=new_medecin, headers=headers)
         self.assertEqual(response.status_code, 200)
         
-        created_medecin_id = response.json()["user_id"]
+        created_medecin_id = response.json()["id"]
         
         # Clean up created users
         requests.delete(f"{self.base_url}/api/admin/users/{created_user_id}", headers=headers)
