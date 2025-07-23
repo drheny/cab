@@ -127,7 +127,7 @@ const Calendar = ({ user }) => {
     }
   }, [selectedDate, viewMode]); // openModal is defined later, will be handled by React
 
-  // Gestion du chronomètre de consultation
+  // Gestion du chronomètre global (legacy)
   useEffect(() => {
     let interval;
     if (isRunning) {
@@ -139,6 +139,34 @@ const Calendar = ({ user }) => {
     }
     return () => clearInterval(interval);
   }, [isRunning, timer]);
+
+  // Gestion des chronomètres individuels pour chaque modal de consultation
+  useEffect(() => {
+    const intervals = new Map();
+    
+    consultationTimers.forEach((timerData, appointmentId) => {
+      if (timerData.isRunning) {
+        const interval = setInterval(() => {
+          setConsultationTimers(prev => {
+            const newMap = new Map(prev);
+            const currentTimer = newMap.get(appointmentId);
+            if (currentTimer) {
+              newMap.set(appointmentId, {
+                ...currentTimer,
+                seconds: currentTimer.seconds + 1
+              });
+            }
+            return newMap;
+          });
+        }, 1000);
+        intervals.set(appointmentId, interval);
+      }
+    });
+
+    return () => {
+      intervals.forEach(interval => clearInterval(interval));
+    };
+  }, [consultationTimers]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
