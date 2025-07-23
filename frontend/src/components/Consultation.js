@@ -1092,8 +1092,7 @@ const Consultation = ({ user }) => {
                           onChange={(e) => setConsultationData({...consultationData, traitement: e.target.value})}
                           className="textarea-stylus"
                           rows="5"
-                          placeholder="Traitement prescrit..."
-                          // iPad stylus optimization attributes
+                          placeholder="Traitement prescrit - Optimisé pour Apple Pencil"
                           inputMode="text"
                           autoCapitalize="sentences"
                           spellCheck="true"
