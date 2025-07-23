@@ -192,24 +192,32 @@ const AppointmentModal = ({
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <input
                       type="text"
-                      placeholder="Nom"
+                      placeholder="Nom - Écriture manuscrite supportée"
                       value={newPatientData.nom}
                       onChange={(e) => setNewPatientData(prev => ({ ...prev, nom: e.target.value }))}
-                      className="border border-gray-300 rounded px-3 py-2"
+                      className="input-stylus"
+                      inputMode="text"
+                      autoCapitalize="words"
+                      autoComplete="family-name"
                     />
                     <input
                       type="text"
-                      placeholder="Prénom"
+                      placeholder="Prénom - Écriture manuscrite supportée"
                       value={newPatientData.prenom}
                       onChange={(e) => setNewPatientData(prev => ({ ...prev, prenom: e.target.value }))}
-                      className="border border-gray-300 rounded px-3 py-2"
+                      className="input-stylus"
+                      inputMode="text"
+                      autoCapitalize="words"
+                      autoComplete="given-name"
                     />
                     <input
                       type="text"
-                      placeholder="Téléphone"
+                      placeholder="Téléphone - Écriture manuscrite supportée"
                       value={newPatientData.telephone}
                       onChange={(e) => setNewPatientData(prev => ({ ...prev, telephone: e.target.value }))}
-                      className="border border-gray-300 rounded px-3 py-2"
+                      className="input-stylus"
+                      inputMode="tel"
+                      autoComplete="tel"
                     />
                   </div>
                   <p className="mt-3 text-sm text-gray-600">
