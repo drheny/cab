@@ -140,14 +140,18 @@ class Consultation(BaseModel):
     appointment_id: str
     date: str
     type_rdv: str = "visite"  # "visite" ou "controle"
+    motif: Optional[str] = ""
     duree: int = 0  # en minutes
-    poids: float = 0.0
-    taille: float = 0.0
-    pc: float = 0.0  # périmètre crânien
-    observations: str = ""
-    traitement: str = ""
-    bilan: str = ""
-    relance_date: str = ""
+    poids: Optional[float] = None
+    taille: Optional[float] = None
+    pc: Optional[float] = None  # périmètre crânien
+    temperature: Optional[float] = None
+    observation_medicale: Optional[str] = ""  # Changed from observations
+    traitement: Optional[str] = ""
+    bilans: Optional[str] = ""  # Changed from bilan
+    notes: Optional[str] = ""
+    relance_telephonique: Optional[bool] = False
+    date_relance: Optional[str] = None  # Changed from relance_date
     created_at: datetime = Field(default_factory=datetime.now)
 
 class Payment(BaseModel):
