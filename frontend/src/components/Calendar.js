@@ -328,103 +328,135 @@ const Calendar = ({ user }) => {
     }
   }, [API_BASE_URL, fetchData, appointments]);
 
-  // Ouvrir consultation (pour patients en cours)
-  const handleOpenConsultation = useCallback((appointment) => {
-    setConsultationModal({
-      isOpen: true,
-      isMinimized: false,
-      appointmentId: appointment.id,
-      patientInfo: appointment.patient
-    });
+  // Fonctions pour gérer les modals de consultation multi-instances
+  const ouvrirModalConsultation = (appointment) => {
+    const appointmentId = appointment.id;
+    const patientInfo = appointment.patient;
     
-    // Démarrer le chronomètre automatiquement
-    setIsRunning(true);
-    setTimer(0);
-  }, []);
+    // Créer une nouvelle instance de modal si elle n'existe pas
+    if (!consultationModals.has(appointmentId)) {
+      const newModal = {
+        isOpen: true,
+        isMinimized: false,
+        appointmentId: appointmentId,
+        patientInfo: patientInfo
+      };
+      
+      setConsultationModals(prev => new Map(prev).set(appointmentId, newModal));
+      
+      // Initialiser les données de consultation pour ce patient s'il n'y en a pas
+      if (!consultationDataMap.has(appointmentId)) {
+        const initialData = {
+          poids: '',
+          taille: '',
+          pc: '',
+          temperature: '',
+          observation_medicale: '',
+          traitement: '',
+          bilans: '',
+          type_rdv: appointment.type_rdv || 'visite',
+          motif: appointment.motif || '',
+          notes: appointment.notes || ''
+        };
+        setConsultationDataMap(prev => new Map(prev).set(appointmentId, initialData));
+      }
+    } else {
+      // Réactiver le modal existant
+      setConsultationModals(prev => {
+        const newMap = new Map(prev);
+        const modal = newMap.get(appointmentId);
+        newMap.set(appointmentId, { ...modal, isOpen: true, isMinimized: false });
+        return newMap;
+      });
+    }
+  };
 
   // Réduire le modal de consultation
-  const reduireModalConsultation = () => {
-    setConsultationModal(prev => ({
-      ...prev,
-      isMinimized: true
-    }));
+  const reduireModalConsultation = (appointmentId) => {
+    setConsultationModals(prev => {
+      const newMap = new Map(prev);
+      const modal = newMap.get(appointmentId);
+      if (modal) {
+        newMap.set(appointmentId, { ...modal, isMinimized: true });
+      }
+      return newMap;
+    });
   };
 
   // Restaurer le modal de consultation
-  const restaurerModalConsultation = () => {
-    setConsultationModal(prev => ({
-      ...prev,
-      isMinimized: false
-    }));
+  const restaurerModalConsultation = (appointmentId) => {
+    setConsultationModals(prev => {
+      const newMap = new Map(prev);
+      const modal = newMap.get(appointmentId);
+      if (modal) {
+        newMap.set(appointmentId, { ...modal, isMinimized: false });
+      }
+      return newMap;
+    });
   };
 
   // Fermer le modal de consultation
-  const fermerModalConsultation = () => {
-    setConsultationModal({
-      isOpen: false,
-      isMinimized: false,
-      appointmentId: null,
-      patientInfo: null
+  const fermerModalConsultation = (appointmentId) => {
+    setConsultationModals(prev => {
+      const newMap = new Map(prev);
+      newMap.delete(appointmentId);
+      return newMap;
     });
-    setIsRunning(false);
-    setTimer(0);
-    resetConsultationData();
+    
+    // Garder les données pour une réouverture potentielle (ne pas supprimer consultationDataMap)
   };
 
-  // Reset des données de consultation
-  const resetConsultationData = () => {
-    setConsultationData({
-      poids: '',
-      taille: '',
-      pc: '',
-      observation_medicale: '',
-      traitement: '',
-      bilans: '',
-      relance_telephonique: false,
-      date_relance: '',
-      duree: 0
+  // Mettre à jour les données de consultation pour un patient spécifique
+  const updateConsultationData = (appointmentId, field, value) => {
+    setConsultationDataMap(prev => {
+      const newMap = new Map(prev);
+      const currentData = newMap.get(appointmentId) || {};
+      newMap.set(appointmentId, { ...currentData, [field]: value });
+      return newMap;
     });
   };
 
-  // Sauvegarder la consultation
-  const sauvegarderConsultation = async () => {
+  // Sauvegarder la consultation pour un patient spécifique
+  const sauvegarderConsultation = async (appointmentId) => {
     try {
-      // Arrêter le chronomètre
-      setIsRunning(false);
+      const appointment = appointments.find(a => a.id === appointmentId);
+      const consultationData = consultationDataMap.get(appointmentId) || {};
       
-      // Obtenir le type de RDV depuis l'appointment
-      const appointment = appointments.find(a => a.id === consultationModal.appointmentId);
-      
-      // Préparer les données
+      if (!appointment) {
+        toast.error('Rendez-vous non trouvé');
+        return;
+      }
+
+      // Créer ou mettre à jour la consultation
       const consultationPayload = {
-        patient_id: appointment?.patient_id,
-        appointment_id: consultationModal.appointmentId,
-        date: new Date().toISOString().split('T')[0],
-        type_rdv: appointment?.type_rdv || 'visite', // Utiliser le type de l'appointment
-        duree: Math.floor(timer / 60), // Convertir en minutes
-        poids: parseFloat(consultationData.poids) || 0,
-        taille: parseFloat(consultationData.taille) || 0,
-        pc: parseFloat(consultationData.pc) || 0,
-        observations: consultationData.observation_medicale,
-        traitement: consultationData.traitement,
-        bilan: consultationData.bilans,
-        relance_date: consultationData.relance_telephonique ? consultationData.date_relance : ""
+        patient_id: appointment.patient_id,
+        appointment_id: appointmentId,
+        date: appointment.date,
+        type_rdv: consultationData.type_rdv || appointment.type_rdv,
+        motif: consultationData.motif || appointment.motif,
+        poids: consultationData.poids || '',
+        taille: consultationData.taille || '',
+        pc: consultationData.pc || '',
+        temperature: consultationData.temperature || '',
+        observation_medicale: consultationData.observation_medicale || '',
+        traitement: consultationData.traitement || '',
+        bilans: consultationData.bilans || '',
+        notes: consultationData.notes || ''
       };
 
-      // Sauvegarder la consultation
       await axios.post(`${API_BASE_URL}/api/consultations`, consultationPayload);
-      
-      // Changer le statut du RDV à "terminé"
-      await axios.put(`${API_BASE_URL}/api/rdv/${consultationModal.appointmentId}/statut`, {
-        statut: "termine"
+
+      // Mettre à jour le statut du RDV à "terminé"
+      await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/statut`, {
+        statut: 'termine'
       });
 
       toast.success('Consultation sauvegardée avec succès');
-      fermerModalConsultation();
+      fermerModalConsultation(appointmentId);
       fetchData(); // Refresh data
     } catch (error) {
       console.error('Error saving consultation:', error);
-      toast.error('Erreur lors de la sauvegarde');
+      toast.error('Erreur lors de la sauvegarde de la consultation');
     }
   };
 
