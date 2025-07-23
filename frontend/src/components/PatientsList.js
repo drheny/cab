@@ -99,102 +99,84 @@ const PatientsListComponent = ({ user }) => {
     setSelectedPatient(null);
   };
 
-  const openModal = useCallback((patient = null) => {
-    if (patient) {
-      setSelectedPatient(patient);
-      setFormData({
-        ...patient,
-        pere: patient.pere || { nom: '', telephone: '', fonction: '' },
-        mere: patient.mere || { nom: '', telephone: '', fonction: '' }
-      });
-    } else {
-      resetForm();
-    }
-    setShowModal(true);
-  }, []);
-
-  // Optimized fetchPatients with separated loading states
-  const fetchPatients = useCallback(async (isSearch = false) => {
+  const fetchPatients = useCallback(async (page = 1, search = '') => {
     try {
-      // Use different loading state for search vs initial load
-      if (isSearch) {
-        setSearchLoading(true);
-      } else {
-        setLoading(true);
-      }
-      
+      setSearchLoading(Boolean(search));
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/patients`, {
         params: {
-          page: currentPage,
+          page,
           limit: 10,
-          search: debouncedSearchTerm
+          search: search || undefined
         }
       });
-      setPatients(response.data.patients);
-      setTotalCount(response.data.total_count);
-      setTotalPages(response.data.total_pages);
+      
+      const { patients: fetchedPatients, total_count: totalCountFromAPI, total_pages: totalPagesFromAPI } = response.data;
+      
+      setPatients(fetchedPatients || []);
+      setTotalCount(totalCountFromAPI || 0);
+      setTotalPages(totalPagesFromAPI || 0);
+      setCurrentPage(page);
     } catch (error) {
       console.error('Error fetching patients:', error);
       toast.error('Erreur lors du chargement des patients');
+      setPatients([]);
+      setTotalCount(0);
+      setTotalPages(0);
     } finally {
-      if (isSearch) {
-        setSearchLoading(false);
-      } else {
-        setLoading(false);
-      }
+      setLoading(false);
+      setSearchLoading(false);
     }
-  }, [currentPage, debouncedSearchTerm]);
+  }, []);
 
-  // Initial load only
+  // Check URL params for pre-selected patient
   useEffect(() => {
-    fetchPatients(false);
-    
-    // Vérifier si on doit ouvrir le modal d'ajout automatiquement
-    const searchParams = new URLSearchParams(location.search);
-    if (searchParams.get('action') === 'add') {
-      openModal();
-      // Nettoyer l'URL
-      window.history.replaceState({}, '', '/patients');
+    const urlParams = new URLSearchParams(location.search);
+    const patientParam = urlParams.get('patient');
+    if (patientParam) {
+      // Pre-populate search with patient ID or name
+      setSearchTerm(patientParam);
+      setDebouncedSearchTerm(patientParam);
     }
-  }, [location, fetchPatients, openModal]);
+  }, [location.search]);
 
-  // Page change effect
+  // Load initial patients
   useEffect(() => {
-    if (currentPage > 1 || debouncedSearchTerm) {
-      fetchPatients(true); // Use search loading for pagination/search
-    }
-  }, [currentPage, debouncedSearchTerm, fetchPatients]);
+    fetchPatients(1, debouncedSearchTerm);
+  }, [fetchPatients, debouncedSearchTerm]);
 
-  // Debounce search term - no loading state change here
+  // Debounce search input
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
-      setCurrentPage(1);
-    }, 250); // Even faster debounce
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  // Format date function
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    if (debouncedSearchTerm !== searchTerm) return;
+    fetchPatients(1, debouncedSearchTerm);
+  }, [debouncedSearchTerm, fetchPatients]);
+
+  // Page change handler
+  useEffect(() => {
+    if (currentPage > 1) {
+      fetchPatients(currentPage, debouncedSearchTerm);
+    }
+  }, [currentPage, fetchPatients, debouncedSearchTerm]);
+
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+    return new Date(dateString).toLocaleDateString('fr-FR');
   };
 
-  // Handle search with completely isolated state management
   const handleSearch = useCallback((e) => {
-    const value = e.target.value;
-    setSearchTerm(value);
-    
-    // Immediate visual feedback without triggering re-render
-    e.target.value = value;
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
   }, []);
 
-  // Prevent any re-render during typing
+  // Memoize search input props to prevent unnecessary re-renders
   const searchInputProps = useMemo(() => ({
     ref: searchInputRef,
     type: "text",
@@ -456,15 +438,48 @@ const PatientsListComponent = ({ user }) => {
                 <span>WhatsApp</span>
               </a>
             ) : (
-              <div className="flex-1 bg-gray-200 text-gray-500 text-sm py-2 px-3 rounded-lg flex items-center justify-center">
-                <span>Pas de WhatsApp</span>
-              </div>
+              <span className="flex-1 text-center text-sm text-gray-400 py-2">Pas de WhatsApp</span>
             )}
           </div>
         </div>
       </div>
     ));
   }, [patients, openModal, handleDeletePatient]);
+
+  const openModal = (patient = null) => {
+    if (patient) {
+      setSelectedPatient(patient);
+      setFormData({
+        nom: patient.nom || '',
+        prenom: patient.prenom || '',
+        date_naissance: patient.date_naissance || '',
+        adresse: patient.adresse || '',
+        pere: {
+          nom: patient.pere?.nom || '',
+          telephone: patient.pere?.telephone || '',
+          fonction: patient.pere?.fonction || ''
+        },
+        mere: {
+          nom: patient.mere?.nom || '',
+          telephone: patient.mere?.telephone || '',
+          fonction: patient.mere?.fonction || ''
+        },
+        numero_whatsapp: patient.numero_whatsapp || '',
+        notes: patient.notes || '',
+        antecedents: patient.antecedents || '',
+        sexe: patient.sexe || 'M',
+        telephone: patient.telephone || '',
+        nom_parent: patient.nom_parent || '',
+        telephone_parent: patient.telephone_parent || '',
+        assurance: patient.assurance || '',
+        numero_assurance: patient.numero_assurance || '',
+        allergies: patient.allergies || ''
+      });
+    } else {
+      resetForm();
+    }
+    setShowModal(true);
+  };
 
   if (loading) {
     return (
@@ -651,7 +666,11 @@ const PatientsListComponent = ({ user }) => {
                               type="text"
                               value={formData.pere.nom}
                               onChange={(e) => setFormData({...formData, pere: {...formData.pere, nom: e.target.value}})}
-                              className="input-field"
+                              className="input-stylus"
+                              placeholder="Nom du père - Écriture manuscrite supportée"
+                              inputMode="text"
+                              autoCapitalize="words"
+                              autoComplete="name"
                             />
                           </div>
                           <div>
@@ -660,7 +679,10 @@ const PatientsListComponent = ({ user }) => {
                               type="tel"
                               value={formData.pere.telephone}
                               onChange={(e) => setFormData({...formData, pere: {...formData.pere, telephone: e.target.value}})}
-                              className="input-field"
+                              className="input-stylus"
+                              placeholder="Numéro du père - Écriture manuscrite supportée"
+                              inputMode="tel"
+                              autoComplete="tel"
                             />
                           </div>
                           <div>
@@ -669,7 +691,11 @@ const PatientsListComponent = ({ user }) => {
                               type="text"
                               value={formData.pere.fonction}
                               onChange={(e) => setFormData({...formData, pere: {...formData.pere, fonction: e.target.value}})}
-                              className="input-field"
+                              className="input-stylus"
+                              placeholder="Profession du père - Écriture manuscrite supportée"
+                              inputMode="text"
+                              autoCapitalize="words"
+                              autoComplete="organization-title"
                             />
                           </div>
                         </div>
@@ -683,7 +709,11 @@ const PatientsListComponent = ({ user }) => {
                               type="text"
                               value={formData.mere.nom}
                               onChange={(e) => setFormData({...formData, mere: {...formData.mere, nom: e.target.value}})}
-                              className="input-field"
+                              className="input-stylus"
+                              placeholder="Nom de la mère - Écriture manuscrite supportée"
+                              inputMode="text"
+                              autoCapitalize="words"
+                              autoComplete="name"
                             />
                           </div>
                           <div>
@@ -692,7 +722,10 @@ const PatientsListComponent = ({ user }) => {
                               type="tel"
                               value={formData.mere.telephone}
                               onChange={(e) => setFormData({...formData, mere: {...formData.mere, telephone: e.target.value}})}
-                              className="input-field"
+                              className="input-stylus"
+                              placeholder="Numéro de la mère - Écriture manuscrite supportée"
+                              inputMode="tel"
+                              autoComplete="tel"
                             />
                           </div>
                           <div>
@@ -701,7 +734,11 @@ const PatientsListComponent = ({ user }) => {
                               type="text"
                               value={formData.mere.fonction}
                               onChange={(e) => setFormData({...formData, mere: {...formData.mere, fonction: e.target.value}})}
-                              className="input-field"
+                              className="input-stylus"
+                              placeholder="Profession de la mère - Écriture manuscrite supportée"
+                              inputMode="text"
+                              autoCapitalize="words"
+                              autoComplete="organization-title"
                             />
                           </div>
                         </div>
@@ -722,8 +759,10 @@ const PatientsListComponent = ({ user }) => {
                           type="tel"
                           value={formData.numero_whatsapp}
                           onChange={(e) => setFormData({...formData, numero_whatsapp: e.target.value})}
-                          className="input-field"
-                          placeholder="216xxxxxxxx"
+                          className="input-stylus"
+                          placeholder="216xxxxxxxx - Écriture manuscrite supportée"
+                          inputMode="tel"
+                          autoComplete="tel"
                         />
                       </div>
                       <div>
@@ -742,7 +781,10 @@ const PatientsListComponent = ({ user }) => {
                         <textarea
                           value={formData.notes}
                           onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                          className="input-field"
+                          className="textarea-stylus"
+                          placeholder="Notes générales - Optimisé pour Apple Pencil"
+                          inputMode="text"
+                          autoCapitalize="sentences"
                           rows="3"
                         />
                       </div>
@@ -751,7 +793,10 @@ const PatientsListComponent = ({ user }) => {
                         <textarea
                           value={formData.antecedents}
                           onChange={(e) => setFormData({...formData, antecedents: e.target.value})}
-                          className="input-field"
+                          className="textarea-stylus"
+                          placeholder="Antécédents médicaux - Optimisé pour Apple Pencil"
+                          inputMode="text"
+                          autoCapitalize="sentences"
                           rows="3"
                         />
                       </div>
@@ -787,18 +832,31 @@ const PatientsListComponent = ({ user }) => {
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-gray-900">
-                  Fiche Patient - {selectedPatient.prenom} {selectedPatient.nom}
+                  Détails du patient
                 </h2>
-                <button
-                  onClick={() => setShowPatientModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <span className="sr-only">Fermer</span>
-                  ×
-                </button>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => viewPatientConsultations(selectedPatient.id, `${selectedPatient.prenom} ${selectedPatient.nom}`)}
+                    className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span>Voir Consultations</span>
+                  </button>
+                  <button
+                    onClick={() => setShowPatientModal(false)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Informations de base */}
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Informations personnelles</h3>
                   <div className="space-y-3">
@@ -807,12 +865,16 @@ const PatientsListComponent = ({ user }) => {
                       <p className="text-gray-900">{selectedPatient.prenom} {selectedPatient.nom}</p>
                     </div>
                     <div>
+                      <span className="text-sm font-medium text-gray-700">Date de naissance:</span>
+                      <p className="text-gray-900">{formatDate(selectedPatient.date_naissance)}</p>
+                    </div>
+                    <div>
                       <span className="text-sm font-medium text-gray-700">Âge:</span>
                       <p className="text-gray-900">{selectedPatient.age || 'N/A'}</p>
                     </div>
                     <div>
-                      <span className="text-sm font-medium text-gray-700">Date de naissance:</span>
-                      <p className="text-gray-900">{selectedPatient.date_naissance || 'N/A'}</p>
+                      <span className="text-sm font-medium text-gray-700">Sexe:</span>
+                      <p className="text-gray-900">{selectedPatient.sexe === 'M' ? 'Masculin' : 'Féminin'}</p>
                     </div>
                     <div>
                       <span className="text-sm font-medium text-gray-700">Adresse:</span>
@@ -821,20 +883,21 @@ const PatientsListComponent = ({ user }) => {
                   </div>
                 </div>
 
+                {/* Informations de contact */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Informations familiales</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Contact</h3>
                   <div className="space-y-3">
                     <div>
                       <span className="text-sm font-medium text-gray-700">Père:</span>
                       <p className="text-gray-900">{selectedPatient.pere?.nom || 'N/A'}</p>
-                      <p className="text-sm text-gray-600">{selectedPatient.pere?.telephone || ''}</p>
-                      <p className="text-sm text-gray-600">{selectedPatient.pere?.fonction || ''}</p>
+                      <p className="text-sm text-gray-600">{selectedPatient.pere?.telephone || 'N/A'}</p>
+                      <p className="text-sm text-gray-600">{selectedPatient.pere?.fonction || 'N/A'}</p>
                     </div>
                     <div>
                       <span className="text-sm font-medium text-gray-700">Mère:</span>
                       <p className="text-gray-900">{selectedPatient.mere?.nom || 'N/A'}</p>
-                      <p className="text-sm text-gray-600">{selectedPatient.mere?.telephone || ''}</p>
-                      <p className="text-sm text-gray-600">{selectedPatient.mere?.fonction || ''}</p>
+                      <p className="text-sm text-gray-600">{selectedPatient.mere?.telephone || 'N/A'}</p>
+                      <p className="text-sm text-gray-600">{selectedPatient.mere?.fonction || 'N/A'}</p>
                     </div>
                     <div>
                       <span className="text-sm font-medium text-gray-700">WhatsApp:</span>
@@ -843,10 +906,9 @@ const PatientsListComponent = ({ user }) => {
                           href={selectedPatient.lien_whatsapp}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center space-x-1 text-green-600 hover:text-green-800"
+                          className="text-green-600 hover:text-green-800"
                         >
-                          <MessageCircle className="w-4 h-4" />
-                          <span>{selectedPatient.numero_whatsapp}</span>
+                          Contacter
                         </a>
                       ) : (
                         <p className="text-gray-900">N/A</p>
@@ -855,52 +917,19 @@ const PatientsListComponent = ({ user }) => {
                   </div>
                 </div>
 
-                <div>
+                {/* Informations médicales */}
+                <div className="md:col-span-2">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Informations médicales</h3>
-                  <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <span className="text-sm font-medium text-gray-700">Notes:</span>
-                      <p className="text-gray-900">{selectedPatient.notes || 'Aucune note'}</p>
+                      <p className="text-gray-900 whitespace-pre-wrap">{selectedPatient.notes || 'Aucune note'}</p>
                     </div>
                     <div>
                       <span className="text-sm font-medium text-gray-700">Antécédents:</span>
-                      <p className="text-gray-900">{selectedPatient.antecedents || 'Aucun antécédent'}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-700">Première consultation:</span>
-                      <p className="text-gray-900">{selectedPatient.date_premiere_consultation || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-700">Dernière consultation:</span>
-                      <p className="text-gray-900">{selectedPatient.date_derniere_consultation || 'N/A'}</p>
+                      <p className="text-gray-900 whitespace-pre-wrap">{selectedPatient.antecedents || 'Aucun antécédent'}</p>
                     </div>
                   </div>
-                </div>
-              </div>
-
-              <div className="flex justify-between space-x-3 mt-6">
-                <button
-                  onClick={() => viewPatientConsultations(selectedPatient.id, `${selectedPatient.prenom} ${selectedPatient.nom}`)}
-                  className="btn-primary"
-                >
-                  Voir Consultations
-                </button>
-                <div className="flex space-x-3">
-                  <button
-                    onClick={() => {
-                      setShowPatientModal(false);
-                      openModal(selectedPatient);
-                    }}
-                    className="btn-outline"
-                  >
-                    Modifier
-                  </button>
-                  <button
-                    onClick={() => setShowPatientModal(false)}
-                    className="btn-outline"
-                  >
-                    Fermer
-                  </button>
                 </div>
               </div>
             </div>
@@ -909,26 +938,21 @@ const PatientsListComponent = ({ user }) => {
       )}
 
       {/* Appointment Modal */}
-      <AppointmentModal
-        isOpen={showAppointmentModal}
-        onClose={() => {
-          setShowAppointmentModal(false);
-          setSelectedPatient(null);
-        }}
-        appointment={null} // Nouveau RDV
-        patients={patients} // Passer tous les patients pour la recherche
-        formData={appointmentFormData}
-        setFormData={setAppointmentFormData}
-        onSave={handleSaveAppointment}
-        onRefresh={() => {}} // Pas besoin de refresh pour la liste patients
-      />
+      {showAppointmentModal && selectedPatient && (
+        <AppointmentModal
+          isOpen={showAppointmentModal}
+          onClose={() => {
+            setShowAppointmentModal(false);
+            setSelectedPatient(null);
+          }}
+          onSave={handleSaveAppointment}
+          formData={appointmentFormData}
+          setFormData={setAppointmentFormData}
+          selectedPatient={selectedPatient}
+        />
+      )}
     </div>
   );
 };
 
-// Memoized component to prevent unnecessary re-renders
-const PatientsList = React.memo(({ user }) => {
-  return <PatientsListComponent user={user} />;
-});
-
-export default PatientsList;
+export default PatientsListComponent;
