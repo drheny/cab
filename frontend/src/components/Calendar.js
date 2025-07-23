@@ -341,6 +341,14 @@ const Calendar = ({ user }) => {
         };
         setConsultationDataMap(prev => new Map(prev).set(appointmentId, initialData));
       }
+      
+      // Initialiser le timer pour ce modal
+      if (!consultationTimers.has(appointmentId)) {
+        setConsultationTimers(prev => new Map(prev).set(appointmentId, {
+          seconds: 0,
+          isRunning: true // Démarrer automatiquement
+        }));
+      }
     } else {
       // Réactiver le modal existant
       setConsultationModals(prev => {
