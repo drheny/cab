@@ -1143,6 +1143,7 @@ const Calendar = ({ user }) => {
       {/* Multi-Instance Consultation Modals */}
       {Array.from(consultationModals.entries()).map(([appointmentId, modal]) => {
         const currentConsultationData = consultationDataMap.get(appointmentId) || {};
+        const currentTimer = consultationTimers.get(appointmentId) || { seconds: 0, isRunning: false };
         
         return (
           <div key={appointmentId}>
@@ -1161,7 +1162,7 @@ const Calendar = ({ user }) => {
                         </div>
                         <div className="flex items-center space-x-2">
                           <span className="text-lg font-mono text-blue-600">
-                            {formatTimer(timer)}
+                            {formatTimer(currentTimer.seconds)}
                           </span>
                           <button
                             onClick={() => restaurerModalConsultation(appointmentId)}
@@ -1185,7 +1186,7 @@ const Calendar = ({ user }) => {
                               Consultation - {modal.patientInfo?.prenom} {modal.patientInfo?.nom}
                             </h2>
                             <p className="text-gray-600">
-                              {new Date().toLocaleDateString('fr-FR')} - {formatTimer(timer)}
+                              {new Date().toLocaleDateString('fr-FR')} - {formatTimer(currentTimer.seconds)}
                             </p>
                           </div>
                           <div className="flex items-center space-x-2">
@@ -1210,25 +1211,22 @@ const Calendar = ({ user }) => {
                             <div className="flex items-center space-x-3">
                               <Clock className="w-6 h-6 text-blue-600" />
                               <span className="text-lg font-semibold text-blue-900">
-                                Durée: {formatTimer(timer)}
+                                Durée: {formatTimer(currentTimer.seconds)}
                               </span>
                             </div>
                             <div className="flex items-center space-x-2">
                               <button
-                                onClick={() => setIsRunning(!isRunning)}
+                                onClick={() => toggleModalTimer(appointmentId)}
                                 className={`p-2 rounded-lg ${
-                                  isRunning 
+                                  currentTimer.isRunning 
                                     ? 'bg-red-100 text-red-600 hover:bg-red-200' 
                                     : 'bg-green-100 text-green-600 hover:bg-green-200'
                                 }`}
                               >
-                                {isRunning ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+                                {currentTimer.isRunning ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
                               </button>
                               <button
-                                onClick={() => {
-                                  setIsRunning(false);
-                                  setTimer(0);
-                                }}
+                                onClick={() => resetModalTimer(appointmentId)}
                                 className="p-2 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-lg"
                               >
                                 <Square className="w-5 h-5" />
