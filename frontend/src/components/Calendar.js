@@ -412,11 +412,55 @@ const Calendar = ({ user }) => {
     });
   };
 
+  // Contrôler le timer d'un modal spécifique
+  const toggleModalTimer = (appointmentId) => {
+    setConsultationTimers(prev => {
+      const newMap = new Map(prev);
+      const currentTimer = newMap.get(appointmentId);
+      if (currentTimer) {
+        newMap.set(appointmentId, {
+          ...currentTimer,
+          isRunning: !currentTimer.isRunning
+        });
+      }
+      return newMap;
+    });
+  };
+
+  // Réinitialiser le timer d'un modal spécifique
+  const resetModalTimer = (appointmentId) => {
+    setConsultationTimers(prev => {
+      const newMap = new Map(prev);
+      const currentTimer = newMap.get(appointmentId);
+      if (currentTimer) {
+        newMap.set(appointmentId, {
+          ...currentTimer,
+          seconds: 0,
+          isRunning: false
+        });
+      }
+      return newMap;
+    });
+  };
+
   // Fermer le modal de consultation
   const fermerModalConsultation = (appointmentId) => {
     setConsultationModals(prev => {
       const newMap = new Map(prev);
       newMap.delete(appointmentId);
+      return newMap;
+    });
+    
+    // Arrêter le timer de ce modal
+    setConsultationTimers(prev => {
+      const newMap = new Map(prev);
+      const currentTimer = newMap.get(appointmentId);
+      if (currentTimer) {
+        newMap.set(appointmentId, {
+          ...currentTimer,
+          isRunning: false
+        });
+      }
       return newMap;
     });
     
