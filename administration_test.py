@@ -749,6 +749,9 @@ class AdministrationSystemTest(unittest.TestCase):
         """Test complete administration workflow end-to-end"""
         headers = self.get_auth_headers("medecin")
         
+        import time
+        timestamp = str(int(time.time()))
+        
         print("🔄 Starting comprehensive administration workflow test...")
         
         # Step 1: Get yearly charts data
@@ -772,7 +775,7 @@ class AdministrationSystemTest(unittest.TestCase):
         
         # Step 4: Create a new user
         new_user = {
-            "username": "workflow_test_user",
+            "username": f"workflow_test_user_{timestamp}",
             "full_name": "Workflow Test User",
             "role": "secretaire",
             "password": "test123"
