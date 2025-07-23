@@ -53,13 +53,13 @@ class AdvancedReportsAPITest(unittest.TestCase):
         
         # Verify advanced statistics structure
         stats = data["advanced_statistics"]
-        self.assertIn("repartition_visite_controle", stats)
-        self.assertIn("top_patients_rentables", stats)
-        self.assertIn("durees_moyennes", stats)
-        self.assertIn("relances_telephoniques", stats)
+        self.assertIn("consultations", stats)
+        self.assertIn("top_patients", stats)
+        self.assertIn("durees", stats)
+        self.assertIn("relances", stats)
         self.assertIn("patients_inactifs", stats)
-        self.assertIn("taux_fidelisation", stats)
-        self.assertIn("utilisation_salles", stats)
+        self.assertIn("fidelisation", stats)
+        self.assertIn("salles", stats)
         
         # Test specific month
         response = requests.get(f"{self.base_url}/api/admin/advanced-reports?period_type=monthly&year=2024&month=12")
