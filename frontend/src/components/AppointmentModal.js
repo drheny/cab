@@ -295,9 +295,11 @@ const AppointmentModal = ({
               <textarea
                 value={formData.notes}
                 onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                placeholder="Notes additionnelles..."
+                placeholder="Notes additionnelles - Optimisé pour Apple Pencil"
                 rows={3}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                className="textarea-stylus"
+                inputMode="text"
+                autoCapitalize="sentences"
               />
             </div>
 
