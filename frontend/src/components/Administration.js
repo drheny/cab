@@ -1326,7 +1326,7 @@ const Administration = ({ user }) => {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                       <div className="flex items-center space-x-2 mb-2">
-                        <CalendarIcon className="w-5 h-5 text-blue-600" />
+                        <Calendar className="w-5 h-5 text-blue-600" />
                         <span className="font-medium text-blue-900">Total Consultations</span>
                       </div>
                       <p className="text-2xl font-bold text-blue-600">
