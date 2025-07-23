@@ -16,10 +16,10 @@ const Sidebar = ({ user, isOpen, onClose, phoneMessagesCount = 0 }) => {
 
   const menuItems = [
     { id: 'dashboard', label: 'Tableau de bord', icon: Home, path: '/dashboard', permission: 'all' },
-    { id: 'patients', label: 'Patients', icon: Users, path: '/patients', permission: 'patients' },
-    { id: 'calendar', label: 'Calendrier', icon: Calendar, path: '/calendar', permission: 'appointments' },
-    { id: 'messages', label: 'Messages', icon: MessageSquare, path: '/messages', permission: 'messages' },
-    { id: 'consultation', label: 'Consultation', icon: Stethoscope, path: '/consultation', permission: 'consultations' },
+    { id: 'patients', label: 'Fiches Patients', icon: Users, path: '/patients', permission: 'patients' },
+    { id: 'calendar', label: 'Gestion RDV', icon: Calendar, path: '/calendar', permission: 'appointments' },
+    { id: 'messages', label: 'Messages téléphoniques', icon: MessageSquare, path: '/messages', permission: 'messages' },
+    { id: 'consultation', label: 'Historique Consultations', icon: Stethoscope, path: '/consultation', permission: 'consultations' },
     { id: 'billing', label: 'Facturation', icon: CreditCard, path: '/billing', permission: 'billing' },
     { id: 'administration', label: 'Administration', icon: Settings, path: '/administration', permission: 'admin' }
   ];
