@@ -278,8 +278,11 @@ const AppointmentModal = ({
                   type="text"
                   value={formData.motif}
                   onChange={(e) => setFormData(prev => ({ ...prev, motif: e.target.value }))}
-                  placeholder="Motif de la consultation"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  placeholder="Motif de la consultation - Écriture manuscrite supportée"
+                  className="input-stylus"
+                  inputMode="text"
+                  autoCapitalize="sentences"
+                  autoComplete="off"
                 />
               </div>
             </div>
