@@ -373,7 +373,7 @@ class AdministrationSystemTest(unittest.TestCase):
         
         response = requests.post(f"{self.base_url}/api/admin/users", json=test_user, headers=headers)
         self.assertEqual(response.status_code, 200)
-        user_id = response.json()["user_id"]
+        user_id = response.json()["id"]  # Use "id" instead of "user_id"
         
         # Delete the user
         response = requests.delete(f"{self.base_url}/api/admin/users/{user_id}", headers=headers)
