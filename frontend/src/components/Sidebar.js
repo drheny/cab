@@ -25,11 +25,15 @@ const Sidebar = ({ user, isOpen, onClose, phoneMessagesCount = 0 }) => {
   ];
 
   const hasPermission = (permission) => {
-    if (user.type === 'medecin') return true;
+    if (user?.role === 'medecin') return true;
     if (permission === 'all') return true;
-    if (permission === 'billing' || permission === 'admin') return false;
+    if (permission === 'admin') return user?.permissions?.administration || false;
+    if (permission === 'billing') return user?.permissions?.billing || false;
     if (permission === 'messages') return true; // Both can access messages
-    return user.permissions?.includes(permission);
+    if (permission === 'patients') return user?.permissions?.patients || true;
+    if (permission === 'appointments') return user?.permissions?.appointments || true;
+    if (permission === 'consultations') return user?.permissions?.consultations || true;
+    return false;
   };
 
   const filteredMenuItems = menuItems.filter(item => hasPermission(item.permission));
