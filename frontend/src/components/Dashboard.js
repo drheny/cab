@@ -496,7 +496,7 @@ const Dashboard = ({ user }) => {
   // Marquer automatiquement les messages des autres comme lus quand ils sont affichés
   useEffect(() => {
     const unreadMessages = messages.filter(
-      msg => !msg.is_read && msg.sender_type !== user.type
+      msg => !msg.is_read && msg.sender_type !== user.role
     );
     
     unreadMessages.forEach(message => {
