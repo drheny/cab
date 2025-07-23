@@ -289,20 +289,37 @@ const Calendar = ({ user }) => {
 
   // Démarrer consultation (attente → en_cours)
   const handleStartConsultation = useCallback(async (appointmentId) => {
+    // Calculer la durée d'attente avant le changement de statut
+    const appointment = appointments.find(apt => apt.id === appointmentId);
+    let dureeAttente = 0;
+    
+    if (appointment && appointment.heure_arrivee_attente) {
+      const arriveeTime = new Date(appointment.heure_arrivee_attente);
+      const currentTime = new Date();
+      dureeAttente = Math.floor((currentTime - arriveeTime) / (1000 * 60)); // Durée en minutes
+    }
+
     setAppointments(prevAppointments =>
       prevAppointments.map(apt =>
-        apt.id === appointmentId ? { ...apt, statut: 'en_cours' } : apt
+        apt.id === appointmentId ? { 
+          ...apt, 
+          statut: 'en_cours',
+          duree_attente: dureeAttente 
+        } : apt
       )
     );
 
     try {
-      await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/statut`, { statut: 'en_cours' });
+      await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/statut`, { 
+        statut: 'en_cours',
+        duree_attente: dureeAttente
+      });
       toast.success('Consultation démarrée');
     } catch (error) {
       toast.error('Erreur lors du démarrage de la consultation');
       await fetchData();
     }
-  }, [API_BASE_URL, fetchData]);
+  }, [API_BASE_URL, fetchData, appointments]);
 
   // Ouvrir consultation (pour patients en cours)
   const handleOpenConsultation = useCallback((appointment) => {
