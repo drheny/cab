@@ -476,7 +476,7 @@ const AIRoom = ({ user }) => {
             </div>
             <div className="flex items-center space-x-1">
               <div className="w-3 h-3 bg-red-100 rounded-full"></div>
-              <span>>30min</span>
+              <span>&gt;30min</span>
             </div>
           </div>
         </div>
