@@ -862,7 +862,7 @@ const Dashboard = ({ user }) => {
                         </span>
                         
                         {/* Action buttons for own messages */}
-                        {message.sender_type === user.type && (
+                        {message.sender_type === user.role && (
                           <div className="flex space-x-1 ml-2">
                             <button
                               onClick={(e) => {
