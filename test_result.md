@@ -995,9 +995,9 @@ The backend administration system is fully implemented and tested. All 19 test s
 - ✅ **Button Container**: Proper flex layout with justify-between and space-x-3 classes
 
 **NAVIGATION FUNCTIONALITY: ✅ WORKING PERFECTLY**
-- ✅ **URL Before Click**: https://76fc97b4-df71-4359-a709-ea680b6d1830.preview.emergentagent.com/patients
+- ✅ **URL Before Click**: https://124e2ebd-c367-4d01-812a-1c057d915066.preview.emergentagent.com/patients
 - ✅ **Button Click**: Successfully clicked "Voir Consultations" button
-- ✅ **URL After Click**: https://76fc97b4-df71-4359-a709-ea680b6d1830.preview.emergentagent.com/consultation?patient=patient3&patientName=Ahmed+Ben+Ali
+- ✅ **URL After Click**: https://124e2ebd-c367-4d01-812a-1c057d915066.preview.emergentagent.com/consultation?patient=patient3&patientName=Ahmed+Ben+Ali
 - ✅ **Parameter Extraction**: patient=patient3, patientName=Ahmed Ben Ali
 - ✅ **Navigation Speed**: Redirect completed successfully with networkidle state
 
@@ -6749,7 +6749,7 @@ The consultation modal integration meets all requirements specified in the revie
 
 **PAYMENT API INTEGRATION: ✅ WORKING BUT NO DATA**
 - ✅ **API Call Execution**: GET /api/payments endpoint successfully called (200 response)
-- ✅ **Network Request**: Request URL: https://76fc97b4-df71-4359-a709-ea680b6d1830.preview.emergentagent.com/api/payments
+- ✅ **Network Request**: Request URL: https://124e2ebd-c367-4d01-812a-1c057d915066.preview.emergentagent.com/api/payments
 - ✅ **API Response**: 200 status indicates successful API call
 - ✅ **Payment Search Logic**: Code correctly searches for payment with matching appointment_id and statut='paye'
 - ❌ **CRITICAL FINDING**: No payment records found with appointment_id "consultation_1752939107597"
@@ -6819,7 +6819,7 @@ The payment amount display functionality has two critical issues that prevent it
 Comprehensive payment amount display testing completed with critical issues confirmed. The reported fix has NOT been applied to the codebase:
 
 ❌ **CRITICAL ISSUE 1: URL CONFIGURATION FIX NOT APPLIED:**
-- API calls still use external URL: `https://76fc97b4-df71-4359-a709-ea680b6d1830.preview.emergentagent.com/api/payments`
+- API calls still use external URL: `https://124e2ebd-c367-4d01-812a-1c057d915066.preview.emergentagent.com/api/payments`
 - Should use relative URL: `/api/payments` as mentioned in review request
 - This causes potential CORS errors and prevents proper payment data retrieval
 
@@ -9319,7 +9319,7 @@ agent_communication:
   - agent: "testing"
     message: "Payment API functionality testing completed successfully. All backend APIs mentioned in review request are working correctly. PUT /api/rdv/{id}/paiement endpoint fully functional for marking appointments as paid/unpaid. Payment records correctly created/managed in payments collection. Data consistency verified between appointments and payments. Both controle (gratuit) and visite (paid) appointment logic working correctly. Backend fully supports frontend payment corrections mentioned in review request. No critical issues found - all payment functionality ready for production."
   - agent: "testing"
-    message: "Payment Amount Display Testing Completed - CRITICAL ISSUES IDENTIFIED. The URL configuration fix mentioned in the review request has NOT been applied to the codebase. API calls still use external preview URL 'https://76fc97b4-df71-4359-a709-ea680b6d1830.preview.emergentagent.com/api/payments' instead of relative '/api/payments'. Additionally, payment amounts are not displayed in consultation view modal for 'Visite' consultations even when API calls are made. Two critical fixes required: 1) Apply URL configuration fix (change from external URL to '/api/payments'), 2) Implement payment amount display in modal 'Type & Date' section. Testing confirmed modal functionality works correctly otherwise, with proper consultation type badges and expected behavior for 'Contrôle' consultations."
+    message: "Payment Amount Display Testing Completed - CRITICAL ISSUES IDENTIFIED. The URL configuration fix mentioned in the review request has NOT been applied to the codebase. API calls still use external preview URL 'https://124e2ebd-c367-4d01-812a-1c057d915066.preview.emergentagent.com/api/payments' instead of relative '/api/payments'. Additionally, payment amounts are not displayed in consultation view modal for 'Visite' consultations even when API calls are made. Two critical fixes required: 1) Apply URL configuration fix (change from external URL to '/api/payments'), 2) Implement payment amount display in modal 'Type & Date' section. Testing confirmed modal functionality works correctly otherwise, with proper consultation type badges and expected behavior for 'Contrôle' consultations."
   - agent: "testing"
     message: "PHONE MESSAGES SYSTEM BACKEND TESTING COMPLETED SUCCESSFULLY ✅ All phone messages backend APIs working perfectly: 1) GET /api/phone-messages with all filtering parameters (status, priority, date_from, date_to) working correctly 2) POST /api/phone-messages creating messages with proper patient validation and data structure 3) PUT /api/phone-messages/{message_id}/response adding médecin responses and changing status from 'nouveau' to 'traité' 4) GET /api/phone-messages/stats providing accurate badge counts for notification system 5) DELETE /api/phone-messages/{message_id} removing messages successfully 6) GET /api/patients/search finding patients by name (fixed routing conflict issue) 7) Complete end-to-end workflow tested (create → view → respond → statistics → delete) 8) Advanced filtering functionality with multiple parameters working 9) Data structure validation confirmed for all message fields 10) Error handling tested for all edge cases. CRITICAL ISSUE FIXED: Resolved routing conflict with /api/patients/search endpoint by moving it before parameterized route. All 12 comprehensive test cases passed. Phone messages system backend is production ready and fully functional."
     message: "CRITICAL ISSUE CONFIRMED: Payment amounts NOT displayed for 'Visite' consultations in view modal. Comprehensive testing completed - payment API working and being called, but amounts not appearing in UI. Root cause identified as payment retrieval/display logic issue in getPaymentAmount function or modal state management. This matches exactly the issue described in the review request. Requires immediate fix to display payment amounts in format '(150 DH)' next to Visite badges in consultation view modal."
