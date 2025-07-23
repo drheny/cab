@@ -1981,6 +1981,16 @@ const WorkflowCard = React.memo(({
                 <span className="text-gray-500">d'attente</span>
               </div>
             )}
+
+            {/* Marqueur durée d'attente stockée pour patients en cours et terminés */}
+            {(sectionType === 'en_cours' || sectionType === 'termine') && appointment.duree_attente && (
+              <div className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium border mt-1 ${
+                getStoredWaitingTimeStyle(appointment.duree_attente).bgColor
+              } ${getStoredWaitingTimeStyle(appointment.duree_attente).textColor} ${getStoredWaitingTimeStyle(appointment.duree_attente).borderColor}`}>
+                <Clock className="w-3 h-3 mr-1" />
+                <span>{formatStoredWaitingTime(appointment.duree_attente)}</span>
+              </div>
+            )}
           </div>
         </div>
 
