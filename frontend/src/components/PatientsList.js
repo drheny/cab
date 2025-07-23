@@ -605,7 +605,11 @@ const PatientsListComponent = ({ user }) => {
                           type="text"
                           value={formData.prenom}
                           onChange={(e) => setFormData({...formData, prenom: e.target.value})}
-                          className="input-field"
+                          className="input-stylus"
+                          placeholder="Prénom - Écriture manuscrite supportée"
+                          inputMode="text"
+                          autoCapitalize="words"
+                          autoComplete="given-name"
                           required
                         />
                       </div>
