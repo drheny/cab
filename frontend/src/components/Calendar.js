@@ -54,6 +54,28 @@ const Calendar = ({ user }) => {
   // Modal consultation states - Support multi-instances
   const [consultationModals, setConsultationModals] = useState(new Map());
   
+  // Single consultation modal state (legacy - to be migrated)
+  const [consultationModal, setConsultationModal] = useState({
+    isOpen: false,
+    isMinimized: false,
+    appointmentId: null,
+    patientInfo: null
+  });
+  
+  // Single consultation data state (legacy - to be migrated)
+  const [consultationData, setConsultationData] = useState({
+    poids: '',
+    taille: '',
+    pc: '',
+    temperature: '',
+    observation_medicale: '',
+    traitement: '',
+    bilans: '',
+    type_rdv: 'visite',
+    motif: '',
+    notes: ''
+  });
+  
   // Chronomètre pour consultation
   const [timer, setTimer] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
