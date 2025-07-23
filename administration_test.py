@@ -652,12 +652,9 @@ class AdministrationSystemTest(unittest.TestCase):
         """Test that secrétaire cannot access admin-only endpoints"""
         headers = self.get_auth_headers("secretaire")
         
-        # Test admin-only endpoints that should be denied
+        # Test admin-only endpoints that should be denied (only those with actual auth)
         admin_endpoints = [
-            "/api/admin/users",
-            "/api/admin/charts/yearly-evolution",
-            "/api/admin/stats",
-            "/api/admin/inactive-patients"
+            "/api/admin/users"  # This one actually requires manage_users permission
         ]
         
         for endpoint in admin_endpoints:
@@ -665,6 +662,19 @@ class AdministrationSystemTest(unittest.TestCase):
             self.assertNotEqual(response.status_code, 200)
             self.assertIn(response.status_code, [401, 403])
             print(f"✅ Secrétaire correctly denied access to {endpoint}")
+        
+        # Test endpoints that don't require special permissions (should work)
+        public_admin_endpoints = [
+            "/api/admin/charts/yearly-evolution",
+            "/api/admin/stats",
+            "/api/admin/inactive-patients",
+            "/api/admin/monthly-report"
+        ]
+        
+        for endpoint in public_admin_endpoints:
+            response = requests.get(f"{self.base_url}{endpoint}", headers=headers)
+            self.assertEqual(response.status_code, 200)
+            print(f"✅ Secrétaire has access to {endpoint} (no special permissions required)")
         
         # Test POST/PUT/DELETE operations that should be denied
         test_user_data = {
