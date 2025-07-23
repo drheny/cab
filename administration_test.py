@@ -236,9 +236,12 @@ class AdministrationSystemTest(unittest.TestCase):
         """Test POST /api/admin/users - Create new user (test with different roles)"""
         headers = self.get_auth_headers("medecin")
         
+        import time
+        timestamp = str(int(time.time()))
+        
         # Test creating a new secrétaire
         new_secretaire = {
-            "username": "test_secretaire",
+            "username": f"test_secretaire_{timestamp}",
             "email": "test.secretaire@cabinet.com",
             "full_name": "Test Secrétaire",
             "role": "secretaire",
@@ -273,13 +276,13 @@ class AdministrationSystemTest(unittest.TestCase):
                 break
         
         self.assertIsNotNone(created_user)
-        self.assertEqual(created_user["username"], "test_secretaire")
+        self.assertEqual(created_user["username"], f"test_secretaire_{timestamp}")
         self.assertEqual(created_user["role"], "secretaire")
         self.assertFalse(created_user["permissions"]["administration"])
         
         # Test creating a new médecin
         new_medecin = {
-            "username": "test_medecin",
+            "username": f"test_medecin_{timestamp}",
             "email": "test.medecin@cabinet.com",
             "full_name": "Dr Test Médecin",
             "role": "medecin",
