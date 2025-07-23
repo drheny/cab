@@ -496,8 +496,8 @@ const Calendar = ({ user }) => {
         patient_id: appointment.patient_id,
         appointment_id: appointmentId,
         date: appointment.date,
-        type_rdv: consultationData.type_rdv || appointment.type_rdv,
-        motif: consultationData.motif || appointment.motif,
+        type_rdv: consultationData.type_rdv || appointment.type_rdv || 'visite',
+        motif: consultationData.motif || appointment.motif || '',
         poids: consultationData.poids || '',
         taille: consultationData.taille || '',
         pc: consultationData.pc || '',
@@ -505,22 +505,37 @@ const Calendar = ({ user }) => {
         observation_medicale: consultationData.observation_medicale || '',
         traitement: consultationData.traitement || '',
         bilans: consultationData.bilans || '',
-        notes: consultationData.notes || ''
+        notes: consultationData.notes || '',
+        relance_telephonique: consultationData.relance_telephonique || false,
+        date_relance: consultationData.date_relance || null
       };
 
-      await axios.post(`${API_BASE_URL}/api/consultations`, consultationPayload);
+      console.log('Saving consultation with payload:', consultationPayload);
+
+      // Sauvegarder la consultation
+      const consultationResponse = await axios.post(`${API_BASE_URL}/api/consultations`, consultationPayload);
+      console.log('Consultation saved:', consultationResponse.data);
 
       // Mettre à jour le statut du RDV à "terminé"
-      await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/statut`, {
+      const statusResponse = await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/statut`, {
         statut: 'termine'
       });
+      console.log('Status updated:', statusResponse.data);
 
       toast.success('Consultation sauvegardée avec succès');
       fermerModalConsultation(appointmentId);
       fetchData(); // Refresh data
     } catch (error) {
       console.error('Error saving consultation:', error);
-      toast.error('Erreur lors de la sauvegarde de la consultation');
+      console.error('Error details:', error.response?.data);
+      
+      if (error.response?.data?.detail) {
+        toast.error(`Erreur: ${error.response.data.detail}`);
+      } else if (error.response?.data?.message) {
+        toast.error(`Erreur: ${error.response.data.message}`);
+      } else {
+        toast.error('Erreur lors de la sauvegarde de la consultation');
+      }
     }
   };
 
