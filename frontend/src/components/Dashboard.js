@@ -445,7 +445,7 @@ const Dashboard = ({ user }) => {
       console.log('🔄 Sending DELETE request to server...');
       
       const response = await axios.delete(`${API_BASE_URL}/api/messages/${messageId}`, {
-        params: { user_type: user.type }
+        params: { user_type: user.role } // Changé de user.type vers user.role
       });
       
       console.log('✅ Delete request successful:', response.data);
