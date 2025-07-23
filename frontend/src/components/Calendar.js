@@ -58,18 +58,8 @@ const Calendar = ({ user }) => {
   const [timer, setTimer] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   
-  // Données de la consultation
-  const [consultationData, setConsultationData] = useState({
-    poids: '',
-    taille: '',
-    pc: '',
-    observation_medicale: '',
-    traitement: '',
-    bilans: '',
-    relance_telephonique: false,
-    date_relance: '',
-    duree: 0
-  });
+  // Données de la consultation - Maintenant par patient
+  const [consultationDataMap, setConsultationDataMap] = useState(new Map());
   
   // Form states
   const [formData, setFormData] = useState({
