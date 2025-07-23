@@ -1073,8 +1073,7 @@ const Consultation = ({ user }) => {
                           onChange={(e) => setConsultationData({...consultationData, observation_medicale: e.target.value})}
                           className="textarea-stylus"
                           rows="6"
-                          placeholder="Observations du médecin..."
-                          // iPad stylus optimization attributes
+                          placeholder="Observations du médecin - Optimisé pour Apple Pencil"
                           inputMode="text"
                           autoCapitalize="sentences"
                           spellCheck="true"
