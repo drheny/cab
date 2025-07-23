@@ -1757,7 +1757,7 @@ const Administration = ({ user }) => {
               <h2 className="text-lg font-semibold text-gray-900">Actions Rapides</h2>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <button
                 onClick={fetchInactivePatients}
                 disabled={loading}
@@ -1766,16 +1766,6 @@ const Administration = ({ user }) => {
                 <Activity className="w-8 h-8 text-orange-600 mb-2" />
                 <span className="text-sm font-medium text-orange-900">Patients inactifs</span>
                 <span className="text-xs text-orange-600 mt-1">Voir la liste</span>
-              </button>
-
-              <button
-                onClick={generateAdvancedReport}
-                disabled={reportLoading}
-                className="flex flex-col items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors border border-blue-200"
-              >
-                <FileText className="w-8 h-8 text-blue-600 mb-2" />
-                <span className="text-sm font-medium text-blue-900">Rapport avancé</span>
-                <span className="text-xs text-blue-600 mt-1">Multi-mois + Stats</span>
               </button>
 
               <button
