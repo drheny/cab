@@ -842,7 +842,7 @@ const Dashboard = ({ user }) => {
                         </div>
                         {message.is_edited && (
                           <span className={`text-xs italic px-1.5 py-0.5 rounded-full ${
-                            message.sender_type === user.type 
+                            message.sender_type === user.role 
                               ? 'bg-white bg-opacity-20 text-white text-opacity-80'
                               : 'bg-gray-200 text-gray-600'
                           }`}>
