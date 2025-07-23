@@ -709,9 +709,11 @@ const Messages = ({ user }) => {
                           <textarea
                             value={responseContent}
                             onChange={(e) => setResponseContent(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
+                            className="textarea-stylus text-sm"
                             rows={3}
-                            placeholder="Rédigez votre réponse..."
+                            placeholder="Rédigez votre réponse - Optimisé pour Apple Pencil"
+                            inputMode="text"
+                            autoCapitalize="sentences"
                           />
                           <div className="flex items-center space-x-2 mt-3">
                             <button
