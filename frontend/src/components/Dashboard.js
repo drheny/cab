@@ -56,7 +56,12 @@ const Dashboard = ({ user }) => {
 
   const handleAddPatient = () => {
     // Naviguer vers la page patients avec un paramètre pour ouvrir le modal
-    navigate('/patients?action=add');
+    try {
+      navigate('/patients?action=add');
+    } catch (error) {
+      console.error('Navigation error:', error);
+      toast.error('Erreur lors de l\'ouverture de la page patients');
+    }
   };
 
   const handleNewAppointment = () => {
