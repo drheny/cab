@@ -572,24 +572,24 @@ class AdministrationSystemTest(unittest.TestCase):
         
         data = response.json()
         
-        # Verify multi-month report structure
+        # Verify multi-month report structure (actual API uses different field names)
         self.assertIn("periode", data)
-        self.assertIn("monthly_breakdown", data)
+        self.assertIn("monthly_reports", data)  # Not monthly_breakdown
         self.assertIn("totals", data)
         self.assertIn("averages", data)
         self.assertIn("generated_at", data)
         
         # Verify period format
-        self.assertIn("2024-01", data["periode"])
-        self.assertIn("2024-03", data["periode"])
+        self.assertIn("01/2024", data["periode"])
+        self.assertIn("03/2024", data["periode"])
         
         # Verify monthly breakdown
-        monthly_breakdown = data["monthly_breakdown"]
-        self.assertIsInstance(monthly_breakdown, list)
-        self.assertEqual(len(monthly_breakdown), 3)  # January, February, March
+        monthly_reports = data["monthly_reports"]
+        self.assertIsInstance(monthly_reports, list)
+        self.assertEqual(len(monthly_reports), 3)  # January, February, March
         
-        for month_data in monthly_breakdown:
-            self.assertIn("month", month_data)
+        for month_data in monthly_reports:
+            self.assertIn("periode", month_data)  # Not "month"
             self.assertIn("nouveaux_patients", month_data)
             self.assertIn("consultations_totales", month_data)
             self.assertIn("recette_totale", month_data)
@@ -602,16 +602,16 @@ class AdministrationSystemTest(unittest.TestCase):
         
         # Verify averages
         averages = data["averages"]
-        self.assertIn("nouveaux_patients_par_mois", averages)
-        self.assertIn("consultations_par_mois", averages)
-        self.assertIn("recette_par_mois", averages)
+        self.assertIn("nouveaux_patients", averages)  # Not nouveaux_patients_par_mois
+        self.assertIn("consultations_totales", averages)  # Not consultations_par_mois
+        self.assertIn("recette_totale", averages)  # Not recette_par_mois
         
         # Verify calculations
-        total_patients = sum(month["nouveaux_patients"] for month in monthly_breakdown)
+        total_patients = sum(month["nouveaux_patients"] for month in monthly_reports)
         self.assertEqual(totals["nouveaux_patients"], total_patients)
         
-        avg_patients = total_patients / len(monthly_breakdown)
-        self.assertAlmostEqual(averages["nouveaux_patients_par_mois"], avg_patients, places=2)
+        avg_patients = total_patients / len(monthly_reports)
+        self.assertAlmostEqual(averages["nouveaux_patients"], avg_patients, places=2)
         
         print("✅ Admin monthly report multi-month test passed")
     
