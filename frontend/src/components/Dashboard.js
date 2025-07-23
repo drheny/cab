@@ -815,7 +815,7 @@ const Dashboard = ({ user }) => {
                     {/* Reply indicator */}
                     {message.reply_to && (
                       <div className={`text-xs mb-2 p-2 rounded-lg border-l-3 ${
-                        message.sender_type === user.type 
+                        message.sender_type === user.role 
                           ? 'bg-white bg-opacity-20 border-white border-opacity-50 text-white text-opacity-90'
                           : 'bg-white bg-opacity-70 border-gray-400 text-gray-600'
                       }`}>
