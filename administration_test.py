@@ -760,7 +760,7 @@ class AdministrationSystemTest(unittest.TestCase):
         
         response = requests.post(f"{self.base_url}/api/admin/users", json=new_user, headers=headers)
         self.assertEqual(response.status_code, 200)
-        user_id = response.json()["user_id"]
+        user_id = response.json()["id"]  # Use "id" instead of "user_id"
         print("✅ Step 4: Created new user")
         
         # Step 5: Update user permissions
@@ -776,8 +776,8 @@ class AdministrationSystemTest(unittest.TestCase):
         print("✅ Step 5: Updated user permissions")
         
         # Step 6: Verify all data consistency
-        self.assertIsInstance(charts_data["yearly_data"], list)
-        self.assertIn("monthly_breakdown", report_data)
+        self.assertIsInstance(charts_data["monthly_data"], list)  # Use correct field name
+        self.assertIn("monthly_reports", report_data)  # Use correct field name
         self.assertGreaterEqual(len(users_data["users"]), 3)  # Original 2 + new user
         print("✅ Step 6: Verified data consistency")
         
