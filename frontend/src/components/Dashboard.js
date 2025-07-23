@@ -324,8 +324,8 @@ const Dashboard = ({ user }) => {
       // Add message optimistically (immediately) to UI
       const optimisticMessage = {
         id: `temp_${Date.now()}`, // Temporary ID
-        sender_type: user.type,
-        sender_name: user.name,
+        sender_type: user.role, // Changé de user.type vers user.role
+        sender_name: user.full_name, // Changé de user.name vers user.full_name
         content: messageContent,
         timestamp: new Date().toISOString(),
         is_read: false,
@@ -342,8 +342,8 @@ const Dashboard = ({ user }) => {
       // Send to server
       const response = await axios.post(`${API_BASE_URL}/api/messages`, messageData, {
         params: {
-          sender_type: user.type,
-          sender_name: user.name
+          sender_type: user.role, // Changé de user.type vers user.role
+          sender_name: user.full_name // Changé de user.name vers user.full_name
         }
       });
 
