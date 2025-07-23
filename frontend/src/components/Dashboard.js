@@ -1006,12 +1006,15 @@ const Dashboard = ({ user }) => {
                   type="text"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm shadow-sm placeholder-gray-400"
+                  className="input-stylus flex-1 rounded-full shadow-sm placeholder-gray-400"
                   placeholder={
                     replyingTo
-                      ? `Répondre à ${getShortSenderName(replyingTo.sender_name, replyingTo.sender_type)}...`
-                      : "Tapez votre message..."
+                      ? `Répondre à ${getShortSenderName(replyingTo.sender_name, replyingTo.sender_type)} - Écriture manuscrite supportée`
+                      : "Tapez votre message - Écriture manuscrite supportée"
                   }
+                  inputMode="text"
+                  autoCapitalize="sentences"
+                  autoComplete="off"
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
                       handleSendMessage();
