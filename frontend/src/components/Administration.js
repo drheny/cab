@@ -124,6 +124,34 @@ const Administration = ({ user }) => {
     endYear: new Date().getFullYear()
   });
 
+  // Advanced Reports States
+  const [advancedReportData, setAdvancedReportData] = useState(null);
+  const [advancedReportLoading, setAdvancedReportLoading] = useState(false);
+  const [advancedReportType, setAdvancedReportType] = useState('monthly');
+  const [advancedReportPeriod, setAdvancedReportPeriod] = useState({
+    year: new Date().getFullYear(),
+    month: new Date().getMonth() + 1,
+    semester: 1,
+    startDate: '',
+    endDate: ''
+  });
+  const [selectedMetrics, setSelectedMetrics] = useState({
+    overview: true,
+    financial: true,
+    patients: true,
+    operations: true,
+    predictions: true
+  });
+  const [activeReportTab, setActiveReportTab] = useState('overview');
+  const [demographicsData, setDemographicsData] = useState(null);
+  const [topPatientsData, setTopPatientsData] = useState(null);
+  const [alerts, setAlerts] = useState([]);
+    startMonth: new Date().getMonth() + 1,
+    startYear: new Date().getFullYear(),
+    endMonth: new Date().getMonth() + 1,
+    endYear: new Date().getFullYear()
+  });
+
   useEffect(() => {
     if (user?.permissions?.administration) {
       fetchAdminStats();
