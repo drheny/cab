@@ -628,7 +628,11 @@ const PatientsListComponent = ({ user }) => {
                           type="text"
                           value={formData.adresse}
                           onChange={(e) => setFormData({...formData, adresse: e.target.value})}
-                          className="input-field"
+                          className="input-stylus"
+                          placeholder="Adresse complète - Écriture manuscrite supportée"
+                          inputMode="text"
+                          autoCapitalize="words"
+                          autoComplete="street-address"
                         />
                       </div>
                     </div>
