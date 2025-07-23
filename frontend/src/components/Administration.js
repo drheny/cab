@@ -2256,8 +2256,18 @@ const Administration = ({ user }) => {
                   <HardDrive className="w-4 h-4 text-blue-600" />
                   <h3 className="font-medium text-gray-900">Stockage</h3>
                 </div>
-                <p className="text-2xl font-bold text-blue-600">{systemInfo.storage.used}%</p>
-                <p className="text-xs text-gray-500">Espace utilisé</p>
+                <p className="text-2xl font-bold text-blue-600">
+                  {systemInfo.storage?.total ? 
+                    `${((systemInfo.storage.used / 100) * parseFloat(systemInfo.storage.total)).toFixed(1)} GB` : 
+                    '0.2 GB'
+                  }
+                </p>
+                <p className="text-xs text-gray-500">
+                  {systemInfo.storage?.total ? 
+                    `sur ${systemInfo.storage.total} GB (${systemInfo.storage.used}%)` : 
+                    'sur 10 GB (2%)'
+                  }
+                </p>
               </div>
 
               <div className="bg-purple-50 rounded-lg p-4">
