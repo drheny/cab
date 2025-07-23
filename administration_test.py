@@ -468,38 +468,38 @@ class AdministrationSystemTest(unittest.TestCase):
         
         data = response.json()
         
-        # Verify response structure
-        self.assertIn("yearly_data", data)
+        # Verify response structure (actual API returns monthly_data, not yearly_data)
+        self.assertIn("monthly_data", data)
         self.assertIn("year", data)
-        self.assertIn("total_months", data)
+        self.assertIn("totals", data)
         
-        yearly_data = data["yearly_data"]
-        self.assertIsInstance(yearly_data, list)
-        self.assertEqual(len(yearly_data), 12)  # 12 months
+        monthly_data = data["monthly_data"]
+        self.assertIsInstance(monthly_data, list)
+        self.assertEqual(len(monthly_data), 12)  # 12 months
         
         # Verify monthly data structure
-        for month_data in yearly_data:
+        for month_data in monthly_data:
             self.assertIn("month", month_data)
             self.assertIn("month_name", month_data)
-            self.assertIn("recette", month_data)
+            self.assertIn("recette_mensuelle", month_data)  # Actual field name
             self.assertIn("nouveaux_patients", month_data)
-            self.assertIn("consultations", month_data)
+            self.assertIn("consultations_totales", month_data)
             
             # Verify data types
             self.assertIsInstance(month_data["month"], int)
             self.assertIsInstance(month_data["month_name"], str)
-            self.assertIsInstance(month_data["recette"], (int, float))
+            self.assertIsInstance(month_data["recette_mensuelle"], (int, float))
             self.assertIsInstance(month_data["nouveaux_patients"], int)
-            self.assertIsInstance(month_data["consultations"], int)
+            self.assertIsInstance(month_data["consultations_totales"], int)
             
             # Verify month range
             self.assertGreaterEqual(month_data["month"], 1)
             self.assertLessEqual(month_data["month"], 12)
         
         # Verify data consistency
-        total_recette = sum(month["recette"] for month in yearly_data)
-        total_patients = sum(month["nouveaux_patients"] for month in yearly_data)
-        total_consultations = sum(month["consultations"] for month in yearly_data)
+        total_recette = sum(month["recette_mensuelle"] for month in monthly_data)
+        total_patients = sum(month["nouveaux_patients"] for month in monthly_data)
+        total_consultations = sum(month["consultations_totales"] for month in monthly_data)
         
         self.assertGreaterEqual(total_recette, 0)
         self.assertGreaterEqual(total_patients, 0)
