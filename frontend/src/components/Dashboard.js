@@ -831,7 +831,7 @@ const Dashboard = ({ user }) => {
                     <div className="flex justify-between items-end mt-3 text-xs">
                       <div className="flex items-center space-x-2">
                         <div className={`flex items-center space-x-1 ${
-                          message.sender_type === user.type ? 'text-white text-opacity-80' : 'text-gray-600'
+                          message.sender_type === user.role ? 'text-white text-opacity-80' : 'text-gray-600'
                         }`}>
                           <span className="text-sm">
                             {message.sender_type === 'medecin' ? '👨‍⚕️' : '👩‍💼'}
