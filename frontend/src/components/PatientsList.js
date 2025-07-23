@@ -198,10 +198,13 @@ const PatientsListComponent = ({ user }) => {
   const searchInputProps = useMemo(() => ({
     ref: searchInputRef,
     type: "text",
-    placeholder: "Rechercher par nom, prénom ou date de naissance...",
+    placeholder: "Rechercher par nom, prénom ou date de naissance - Écriture manuscrite supportée",
     defaultValue: searchTerm,
     onChange: handleSearch,
-    className: "w-full pl-8 sm:pl-10 pr-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 responsive-text",
+    className: "search-stylus w-full pl-8 sm:pl-10 pr-4",
+    inputMode: "text",
+    autoCapitalize: "words",
+    autoComplete: "off",
     key: "search-input" // Ensure stable key
   }), [handleSearch, searchTerm]);
 
