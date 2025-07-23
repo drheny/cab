@@ -455,7 +455,7 @@ class AdvancedReportsAPITest(unittest.TestCase):
         monthly_stats = monthly_data["advanced_statistics"]
         
         # Check if top patients from advanced reports match top patients report
-        advanced_top_patients = monthly_stats["top_patients_rentables"]["patients"]
+        advanced_top_patients = monthly_stats["top_patients"]
         dedicated_top_patients = top_patients_data["top_patients"]
         
         # Both should have patient data (or be empty if no data)
