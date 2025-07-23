@@ -1789,6 +1789,46 @@ const WorkflowCard = React.memo(({
     }
   };
 
+  // Fonction pour formatter la durée d'attente stockée
+  const formatStoredWaitingTime = (minutes) => {
+    if (!minutes || minutes === 0) return null;
+    if (minutes === 1) return '1 min d\'attente';
+    if (minutes < 60) return `${minutes} min d\'attente`;
+    
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    if (remainingMinutes === 0) {
+      return hours === 1 ? '1h d\'attente' : `${hours}h d\'attente`;
+    } else {
+      return `${hours}h ${remainingMinutes}min d\'attente`;
+    }
+  };
+
+  // Fonction pour obtenir le style de la durée d'attente stockée
+  const getStoredWaitingTimeStyle = (minutes) => {
+    if (!minutes) return null;
+    
+    if (minutes < 15) {
+      return {
+        bgColor: 'bg-green-50',
+        textColor: 'text-green-600',
+        borderColor: 'border-green-200'
+      };
+    } else if (minutes < 30) {
+      return {
+        bgColor: 'bg-orange-50',
+        textColor: 'text-orange-600',
+        borderColor: 'border-orange-200'
+      };
+    } else {
+      return {
+        bgColor: 'bg-red-50',
+        textColor: 'text-red-600',
+        borderColor: 'border-red-200'
+      };
+    }
+  };
+
   // Fonction pour formatter la durée d'attente
   const formatWaitingTime = (minutes) => {
     if (minutes === 0) return 'Vient d\'arriver';
