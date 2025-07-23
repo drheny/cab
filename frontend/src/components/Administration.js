@@ -329,6 +329,41 @@ const Administration = ({ user }) => {
     setShowUserModal(true);
   };
 
+  const getDefaultPermissions = (role) => {
+    if (role === 'medecin') {
+      return {
+        view_dashboard: true,
+        view_patients: true,
+        manage_patients: true,
+        view_calendar: true,
+        manage_appointments: true,
+        view_consultations: true,
+        view_messages: true,
+        view_billing: true,
+        modify_payments: true,
+        view_administration: true
+      };
+    } else if (role === 'secretaire') {
+      return {
+        view_dashboard: true,
+        view_patients: true,
+        manage_patients: true,
+        view_calendar: true,
+        manage_appointments: true,
+        view_consultations: false,
+        view_messages: true,
+        view_billing: false,
+        modify_payments: false,
+        view_administration: false
+      };
+    }
+    return {};
+  };
+
+  const handleEditUser = (user) => {
+    openEditUser(user);
+  };
+
   const fetchAdminStats = async () => {
     try {
       setLoading(true);
