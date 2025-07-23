@@ -19,6 +19,7 @@ const Sidebar = ({ user, isOpen, onClose, phoneMessagesCount = 0 }) => {
     { id: 'dashboard', label: 'Tableau de bord', icon: Home, path: '/dashboard', permission: 'all' },
     { id: 'patients', label: 'Fiches Patients', icon: Users, path: '/patients', permission: 'patients' },
     { id: 'calendar', label: 'Gestion RDV', icon: Calendar, path: '/calendar', permission: 'appointments' },
+    { id: 'ai-room', label: 'AI Room', icon: Brain, path: '/ai-room', permission: 'appointments' },
     { id: 'messages', label: 'Messages Tel', icon: MessageSquare, path: '/messages', permission: 'messages' },
     { id: 'consultation', label: 'Historique Consultations', icon: Stethoscope, path: '/consultation', permission: 'consultations' },
     { id: 'billing', label: 'Facturation', icon: CreditCard, path: '/billing', permission: 'billing' },
