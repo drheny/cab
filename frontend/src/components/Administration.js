@@ -158,26 +158,6 @@ const Administration = ({ user }) => {
   const [topPatientsData, setTopPatientsData] = useState(null);
   const [alerts, setAlerts] = useState([]);
 
-  // User management states
-  const [editingUser, setEditingUser] = useState(null);
-  const [userFormData, setUserFormData] = useState({
-    nom_utilisateur: '',
-    mot_de_passe: '',
-    role: 'secretaire',
-    permissions: {
-      view_dashboard: true,
-      view_patients: true,
-      view_calendar: true,
-      view_consultations: true,
-      view_messages: true,
-      view_billing: true,
-      view_administration: false,
-      manage_patients: true,
-      manage_appointments: true,
-      modify_payments: false
-    }
-  });
-
   useEffect(() => {
     if (user?.permissions?.administration) {
       fetchAdminStats();
