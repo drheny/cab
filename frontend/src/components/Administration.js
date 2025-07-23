@@ -593,6 +593,185 @@ const Administration = ({ user }) => {
     }
   };
 
+  // ========== ADVANCED REPORTS FUNCTIONS ==========
+  
+  const generateAdvancedReport = async () => {
+    try {
+      setAdvancedReportLoading(true);
+      const period = advancedReportPeriod;
+      
+      let params = new URLSearchParams({
+        period_type: advancedReportType
+      });
+      
+      // Add period-specific parameters
+      if (advancedReportType === 'monthly') {
+        params.append('year', period.year);
+        params.append('month', period.month);
+      } else if (advancedReportType === 'semester') {
+        params.append('year', period.year);
+        params.append('semester', period.semester);
+      } else if (advancedReportType === 'annual') {
+        params.append('year', period.year);
+      } else if (advancedReportType === 'custom') {
+        params.append('start_date', period.startDate);
+        params.append('end_date', period.endDate);
+      }
+      
+      const response = await axios.get(`/api/admin/advanced-reports?${params}`);
+      const reportData = response.data;
+      
+      setAdvancedReportData(reportData);
+      setAlerts(reportData.alerts || []);
+      
+      toast.success('Rapport avancé généré avec succès');
+    } catch (error) {
+      console.error('Error generating advanced report:', error);
+      toast.error('Erreur lors de la génération du rapport avancé');
+    } finally {
+      setAdvancedReportLoading(false);
+    }
+  };
+
+  const fetchDemographicsData = async () => {
+    try {
+      const today = new Date();
+      const oneYearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+      
+      const params = new URLSearchParams({
+        start_date: oneYearAgo.toISOString().split('T')[0],
+        end_date: today.toISOString().split('T')[0]
+      });
+      
+      const response = await axios.get(`/api/admin/reports/demographics?${params}`);
+      setDemographicsData(response.data);
+    } catch (error) {
+      console.error('Error fetching demographics:', error);
+    }
+  };
+
+  const fetchTopPatientsData = async (metric = 'revenue', limit = 10) => {
+    try {
+      const params = new URLSearchParams({
+        metric,
+        limit: limit.toString(),
+        period_months: '12'
+      });
+      
+      const response = await axios.get(`/api/admin/reports/top-patients?${params}`);
+      setTopPatientsData(response.data);
+    } catch (error) {
+      console.error('Error fetching top patients:', error);
+    }
+  };
+
+  const exportAdvancedReportToExcel = () => {
+    if (!advancedReportData) {
+      toast.error('Aucun rapport à exporter');
+      return;
+    }
+
+    try {
+      const data = advancedReportData;
+      const stats = data.advanced_statistics;
+      
+      // Create comprehensive Excel-style CSV
+      let csvContent = [
+        ['=== RAPPORT AVANCÉ ==='],
+        ['Période', data.metadata.periode],
+        ['Type', data.metadata.type],
+        ['Généré le', new Date(data.metadata.generated_at).toLocaleString('fr-FR')],
+        [''],
+        ['=== SYNTHÈSE EXÉCUTIVE ==='],
+        ['Total Consultations', stats.consultations.total],
+        ['Visites', `${stats.consultations.visites.count} (${stats.consultations.visites.percentage}%)`],
+        ['Contrôles', `${stats.consultations.controles.count} (${stats.consultations.controles.percentage}%)`],
+        ['Revenus Visites (TND)', stats.consultations.visites.revenue],
+        ['Temps Attente Moyen (min)', stats.durees.attente_moyenne],
+        ['Temps Consultation Moyen (min)', stats.durees.consultation_moyenne],
+        ['Patients Inactifs', `${stats.patients_inactifs.count} (${stats.patients_inactifs.percentage}%)`],
+        ['Taux de Fidélisation (%)', stats.fidelisation.taux_retour],
+        [''],
+        ['=== TOP 10 PATIENTS RENTABLES ==='],
+        ['Nom', 'Consultations', 'Revenus (TND)', 'Dernière Visite']
+      ];
+
+      // Add top patients
+      stats.top_patients.forEach(patient => {
+        csvContent.push([
+          patient.name,
+          patient.consultations,
+          patient.revenue,
+          patient.last_visit
+        ]);
+      });
+
+      csvContent.push(['']);
+      csvContent.push(['=== UTILISATION DES SALLES ===']);
+      csvContent.push(['Salle 1', `${stats.salles.salle1.utilisation}%`, `${stats.salles.salle1.consultations} consultations`]);
+      csvContent.push(['Salle 2', `${stats.salles.salle2.utilisation}%`, `${stats.salles.salle2.consultations} consultations`]);
+      
+      // Add alerts if any
+      if (data.alerts && data.alerts.length > 0) {
+        csvContent.push(['']);
+        csvContent.push(['=== ALERTES ===']);
+        data.alerts.forEach(alert => {
+          csvContent.push([alert.type, alert.message, `Seuil: ${alert.threshold}`]);
+        });
+      }
+
+      // Convert to CSV string
+      const csvString = csvContent.map(row => row.join(',')).join('\n');
+      
+      // Download
+      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `rapport_avance_${data.metadata.type}_${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Rapport exporté avec succès');
+    } catch (error) {
+      console.error('Error exporting advanced report:', error);
+      toast.error('Erreur lors de l\'export');
+    }
+  };
+
+  const renderChart = (chartId, chartData, chartOptions) => {
+    const chartRef = React.useRef();
+    
+    React.useEffect(() => {
+      if (chartRef.current && chartData) {
+        const ctx = chartRef.current.getContext('2d');
+        
+        // Destroy existing chart if it exists
+        if (chartRef.current.chartInstance) {
+          chartRef.current.chartInstance.destroy();
+        }
+        
+        // Create new chart
+        chartRef.current.chartInstance = new ChartJS(ctx, {
+          ...chartData,
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            ...chartOptions
+          }
+        });
+      }
+      
+      return () => {
+        if (chartRef.current?.chartInstance) {
+          chartRef.current.chartInstance.destroy();
+        }
+      };
+    }, [chartData, chartOptions]);
+    
+    return <canvas ref={chartRef} id={chartId} style={{ maxHeight: '300px' }} />;
+  };
+
   const StatCard = ({ icon: Icon, title, value, color, subtitle }) => (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
       <div className="flex items-center justify-between">
