@@ -446,6 +446,19 @@ const Calendar = ({ user }) => {
     });
   };
 
+  // Mettre à jour les données de consultation pour un patient spécifique
+  const updateConsultationData = (appointmentId, field, value) => {
+    setConsultationDataMap(prev => {
+      const newMap = new Map(prev);
+      const currentData = newMap.get(appointmentId) || {};
+      newMap.set(appointmentId, {
+        ...currentData,
+        [field]: value
+      });
+      return newMap;
+    });
+  };
+
   // Fermer le modal de consultation
   const fermerModalConsultation = (appointmentId) => {
     setConsultationModals(prev => {
