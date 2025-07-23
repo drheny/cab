@@ -461,7 +461,7 @@ const Messages = ({ user }) => {
         )}
 
         {/* Right Column - Messages List */}
-        <div className={user.type === 'secretaire' ? 'lg:col-span-2' : 'lg:col-span-3'}>
+        <div className={user.role === 'secretaire' ? 'lg:col-span-2' : 'lg:col-span-3'}>
           <div className="bg-white rounded-xl shadow-sm border border-gray-200">
             {/* Messages Header with Filters */}
             <div className="px-6 py-4 border-b border-gray-200">
