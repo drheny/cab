@@ -299,7 +299,7 @@ const Messages = ({ user }) => {
             Messages Téléphoniques
           </h1>
           <p className="text-gray-600">
-            {user.type === 'secretaire' 
+            {user.role === 'secretaire' 
               ? 'Transmettez les messages des patients au médecin'
               : 'Consultez et répondez aux messages des patients'
             }
