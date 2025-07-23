@@ -1895,216 +1895,364 @@ const Administration = ({ user }) => {
         </div>
       )}
 
-      {activeTab === 'utilisateurs' && user?.permissions?.manage_users && (
+      {activeTab === 'utilisateurs' && (
         <div className="space-y-6">
-          {/* User Management */}
+          {/* User Management Combined Section */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-2">
-                <Users className="w-5 h-5 text-gray-600" />
-                <h2 className="text-lg font-semibold text-gray-900">Gestion des Utilisateurs</h2>
-              </div>
-              <button
-                onClick={() => {
-                  setEditingUser(null);
-                  setUserForm({ username: '', email: '', full_name: '', role: 'secretaire', password: '' });
-                  setShowUserModal(true);
-                }}
-                className="flex items-center space-x-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Nouvel utilisateur</span>
-              </button>
+            <div className="flex items-center space-x-2 mb-6">
+              <Users className="w-5 h-5 text-gray-600" />
+              <h2 className="text-lg font-semibold text-gray-900">👥 Gestion Utilisateurs & Droits</h2>
             </div>
 
-            {/* Users List */}
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Utilisateur</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rôle</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {allUsers.map((user) => (
-                    <tr key={user.id}>
-                      <td className="px-6 py-4 whitespace-nowrap">
+            {/* Sub-tabs for Users section */}
+            <div className="border-b border-gray-200 mb-6">
+              <nav className="-mb-px flex space-x-8">
+                {[
+                  { id: 'users-list', label: '👤 Utilisateurs', icon: Users },
+                  { id: 'access-management', label: '🔐 Gestion Accès', icon: Settings },
+                  { id: 'permissions', label: '🛡️ Droits & Permissions', icon: Shield }
+                ].map((subTab) => {
+                  const Icon = subTab.icon;
+                  return (
+                    <button
+                      key={subTab.id}
+                      onClick={() => setActiveUserTab(subTab.id)}
+                      className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+                        activeUserTab === subTab.id
+                          ? 'border-blue-500 text-blue-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <Icon className="w-4 h-4" />
+                        <span>{subTab.label}</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
+
+            {/* Users List Sub-tab */}
+            {activeUserTab === 'users-list' && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium text-gray-900">Liste des Utilisateurs</h3>
+                  <button
+                    onClick={() => {
+                      setEditingUser(null);
+                      setUserForm({ username: '', email: '', full_name: '', role: 'secretaire', password: '' });
+                      setShowUserModal(true);
+                    }}
+                    className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    <span>Nouvel utilisateur</span>
+                  </button>
+                </div>
+
+                {/* Users Table */}
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Utilisateur</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rôle</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dernière connexion</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {allUsers.map((user) => (
+                        <tr key={user.id}>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="flex-shrink-0 h-10 w-10">
+                                <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                  <Users className="w-5 h-5 text-gray-600" />
+                                </div>
+                              </div>
+                              <div className="ml-4">
+                                <div className="text-sm font-medium text-gray-900">
+                                  {user.full_name || user.nom_utilisateur}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  @{user.nom_utilisateur}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              user.role === 'medecin' 
+                                ? 'bg-blue-100 text-blue-800' 
+                                : 'bg-green-100 text-green-800'
+                            }`}>
+                              {user.role === 'medecin' ? '👨‍⚕️ Médecin' : '👩‍💼 Secrétaire'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {user.last_login ? 
+                              new Date(user.last_login).toLocaleDateString('fr-FR') : 
+                              'Jamais connecté'
+                            }
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div className="flex items-center space-x-2">
+                              <button
+                                onClick={() => handleEditUser(user)}
+                                className="text-blue-600 hover:text-blue-900 p-1 rounded"
+                                title="Modifier l'utilisateur"
+                              >
+                                <Edit3 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => setEditingPermissions(user)}
+                                className="text-purple-600 hover:text-purple-900 p-1 rounded"
+                                title="Gérer les permissions"
+                              >
+                                <Shield className="w-4 h-4" />
+                              </button>
+                              {user.id !== user?.id && ( // Don't allow deleting self
+                                <button
+                                  onClick={() => handleDeleteUser(user.id)}
+                                  className="text-red-600 hover:text-red-900 p-1 rounded"
+                                  title="Supprimer l'utilisateur"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {allUsers.length === 0 && (
+                  <div className="text-center py-8">
+                    <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500 text-lg">Aucun utilisateur trouvé</p>
+                    <p className="text-gray-400 text-sm">Créez un nouvel utilisateur pour commencer</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Access Management Sub-tab */}
+            {activeUserTab === 'access-management' && (
+              <div className="space-y-6">
+                <h3 className="text-lg font-medium text-gray-900">🔐 Gestion des Accès</h3>
+                
+                {/* Change Password Section */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <Settings className="w-6 h-6 text-blue-600" />
+                    <h4 className="font-medium text-blue-900">Mon Mot de Passe</h4>
+                  </div>
+                  <p className="text-sm text-blue-700 mb-4">
+                    Modifiez votre mot de passe de connexion pour sécuriser votre compte
+                  </p>
+                  <button
+                    onClick={() => setShowPasswordModal(true)}
+                    className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span>Changer le mot de passe</span>
+                  </button>
+                </div>
+
+                {/* Default Accounts Info */}
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <AlertTriangle className="w-6 h-6 text-yellow-600" />
+                    <h4 className="font-medium text-yellow-900">Comptes par Défaut</h4>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="bg-white p-3 rounded border">
+                      <div className="flex justify-between items-center">
                         <div>
-                          <div className="text-sm font-medium text-gray-900">{user.full_name}</div>
-                          <div className="text-sm text-gray-500">{user.username}</div>
-                          {user.email && <div className="text-xs text-gray-400">{user.email}</div>}
+                          <p className="font-medium text-gray-900">👨‍⚕️ Compte Médecin</p>
+                          <p className="text-sm text-gray-600">Login: medecin</p>
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          user.role === 'medecin' 
-                            ? 'bg-blue-100 text-blue-800' 
-                            : 'bg-green-100 text-green-800'
-                        }`}>
-                          {user.role === 'medecin' ? 'Médecin' : 'Secrétaire'}
+                        <code className="bg-gray-100 px-2 py-1 rounded text-sm">medecin123</code>
+                      </div>
+                    </div>
+                    <div className="bg-white p-3 rounded border">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium text-gray-900">👩‍💼 Compte Secrétaire</p>
+                          <p className="text-sm text-gray-600">Login: secretaire</p>
+                        </div>
+                        <code className="bg-gray-100 px-2 py-1 rounded text-sm">secretaire123</code>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded">
+                    <p className="text-sm text-red-700 font-medium">
+                      ⚠️ Sécurité Important
+                    </p>
+                    <p className="text-xs text-red-600 mt-1">
+                      Changez ces mots de passe par défaut pour sécuriser le système en production
+                    </p>
+                  </div>
+                </div>
+
+                {/* Login History (if needed) */}
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <Activity className="w-6 h-6 text-gray-600" />
+                    <h4 className="font-medium text-gray-900">Historique de Connexion</h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Consultez les dernières connexions pour surveiller l'activité du système
+                  </p>
+                  <div className="mt-4 space-y-2">
+                    {allUsers.slice(0, 3).map((user, index) => (
+                      <div key={user.id} className="flex justify-between items-center py-2 border-b border-gray-200 last:border-0">
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-2 h-2 rounded-full ${
+                            user.last_login && new Date(user.last_login) > new Date(Date.now() - 24*60*60*1000) 
+                              ? 'bg-green-400' : 'bg-gray-300'
+                          }`}></div>
+                          <span className="text-sm font-medium">{user.nom_utilisateur}</span>
+                          <span className={`text-xs px-2 py-1 rounded ${
+                            user.role === 'medecin' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
+                          }`}>
+                            {user.role}
+                          </span>
+                        </div>
+                        <span className="text-xs text-gray-500">
+                          {user.last_login ? 
+                            new Date(user.last_login).toLocaleString('fr-FR') : 
+                            'Jamais connecté'
+                          }
                         </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          user.is_active 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {user.is_active ? 'Actif' : 'Inactif'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex items-center space-x-2">
-                          <button
-                            onClick={() => openEditUser(user)}
-                            className="text-blue-600 hover:text-blue-900"
-                            title="Modifier"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                          
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Permissions Sub-tab */}
+            {activeUserTab === 'permissions' && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium text-gray-900">🛡️ Droits & Permissions</h3>
+                  <div className="text-sm text-gray-500">
+                    Gérez l'accès aux différentes pages pour les secrétaires
+                  </div>
+                </div>
+
+                {/* Permissions Matrix */}
+                <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                  <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                    <h4 className="font-medium text-gray-900">Matrice des Permissions par Rôle</h4>
+                  </div>
+                  
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Permission</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">👨‍⚕️ Médecin</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">👩‍💼 Secrétaire</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {[
+                          { key: 'view_dashboard', label: '🏠 Dashboard', desc: 'Accès à la page d\'accueil' },
+                          { key: 'view_patients', label: '👥 Fiches Patients', desc: 'Voir la liste des patients' },
+                          { key: 'manage_patients', label: '✏️ Gestion Patients', desc: 'Créer/modifier les patients' },
+                          { key: 'view_calendar', label: '📅 Gestion RDV', desc: 'Voir le calendrier des RDV' },
+                          { key: 'manage_appointments', label: '📝 Gestion RDV', desc: 'Créer/modifier les RDV' },
+                          { key: 'view_consultations', label: '🩺 Historique Consultations', desc: 'Voir les consultations' },
+                          { key: 'view_messages', label: '💬 Messages Tel', desc: 'Accès aux messages' },
+                          { key: 'view_billing', label: '💰 Facturation', desc: 'Voir la facturation' },
+                          { key: 'modify_payments', label: '💳 Modifier Paiements', desc: 'Modifier les paiements' },
+                          { key: 'view_administration', label: '⚙️ Administration', desc: 'Accès à l\'administration' }
+                        ].map((permission) => (
+                          <tr key={permission.key}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                              {permission.label}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-center">
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                ✅ Autorisé
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-center">
+                              <select
+                                defaultValue={getDefaultPermissions('secretaire')[permission.key] ? 'true' : 'false'}
+                                className="text-xs border border-gray-300 rounded px-2 py-1"
+                                onChange={(e) => {
+                                  // Handle permission change for secretary role
+                                  console.log(`Changing ${permission.key} to ${e.target.value}`);
+                                }}
+                              >
+                                <option value="true">✅ Autorisé</option>
+                                <option value="false">❌ Refusé</option>
+                              </select>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {permission.desc}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Individual User Permissions */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <Users className="w-6 h-6 text-blue-600" />
+                    <h4 className="font-medium text-blue-900">Permissions Individuelles</h4>
+                  </div>
+                  <p className="text-sm text-blue-700 mb-4">
+                    Modifiez les permissions spécifiques pour chaque utilisateur secrétaire
+                  </p>
+                  
+                  <div className="space-y-3">
+                    {allUsers.filter(u => u.role === 'secretaire').map((user) => (
+                      <div key={user.id} className="bg-white p-3 rounded border">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                              <Users className="w-4 h-4 text-green-600" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900">
+                                {user.full_name || user.nom_utilisateur}
+                              </p>
+                              <p className="text-sm text-gray-500">@{user.nom_utilisateur}</p>
+                            </div>
+                          </div>
                           <button
                             onClick={() => setEditingPermissions(user)}
-                            className="text-green-600 hover:text-green-900"
-                            title="Permissions"
+                            className="flex items-center space-x-2 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm"
                           >
                             <Shield className="w-4 h-4" />
+                            <span>Gérer Droits</span>
                           </button>
-                          
-                          {user.id !== user.id && (
-                            <button
-                              onClick={() => handleDeleteUser(user.id, user.username)}
-                              className="text-red-600 hover:text-red-900"
-                              title="Supprimer"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
                         </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'acces' && (
-        <div className="space-y-6">
-          {/* Access Management */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center space-x-2 mb-6">
-              <Key className="w-5 h-5 text-gray-600" />
-              <h2 className="text-lg font-semibold text-gray-900">Gestion des Accès</h2>
-            </div>
-
-            <div className="space-y-6">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h3 className="font-medium text-blue-900 mb-2">Mon mot de passe</h3>
-                <p className="text-sm text-blue-700 mb-4">Modifier votre mot de passe de connexion</p>
-                <button
-                  onClick={() => setShowPasswordModal(true)}
-                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
-                >
-                  <Lock className="w-4 h-4" />
-                  <span>Changer le mot de passe</span>
-                </button>
-              </div>
-
-              {user?.permissions?.manage_users && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <h3 className="font-medium text-yellow-900 mb-2">Comptes par défaut</h3>
-                  <p className="text-sm text-yellow-700 mb-4">
-                    Médecin: medecin / medecin123<br />
-                    Secrétaire: secretaire / secretaire123
-                  </p>
-                  <p className="text-xs text-yellow-600">
-                    ⚠️ Changez ces mots de passe par défaut pour sécuriser le système
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'droits' && user?.permissions?.manage_users && (
-        <div className="space-y-6">
-          {/* Rights Management */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center space-x-2 mb-6">
-              <Shield className="w-5 h-5 text-gray-600" />
-              <h2 className="text-lg font-semibold text-gray-900">Gestion des Droits</h2>
-            </div>
-
-            <div className="space-y-6">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <h3 className="font-medium text-green-900 mb-2">Droits par défaut</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-green-700">
-                  <div>
-                    <h4 className="font-medium mb-2">Médecin (Accès complet)</h4>
-                    <ul className="space-y-1">
-                      <li>• Toutes les pages</li>
-                      <li>• Gestion des utilisateurs</li>
-                      <li>• Export/Réinitialisation</li>
-                      <li>• Administration</li>
-                    </ul>
+                      </div>
+                    ))}
                   </div>
-                  <div>
-                    <h4 className="font-medium mb-2">Secrétaire (Accès limité)</h4>
-                    <ul className="space-y-1">
-                      <li>• Dashboard, Patients, Calendrier</li>
-                      <li>• Messages, Facturation</li>
-                      <li>• Consultation (lecture seule)</li>
-                      <li>• Pas d'administration</li>
-                    </ul>
-                  </div>
+
+                  {allUsers.filter(u => u.role === 'secretaire').length === 0 && (
+                    <div className="text-center py-4">
+                      <p className="text-sm text-gray-500">Aucun utilisateur secrétaire trouvé</p>
+                      <p className="text-xs text-gray-400">Créez un compte secrétaire pour gérer les permissions</p>
+                    </div>
+                  )}
                 </div>
               </div>
-
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h3 className="font-medium text-blue-900 mb-2">Permissions personnalisables</h3>
-                <p className="text-sm text-blue-700 mb-4">
-                  Cliquez sur l'icône permissions (🛡️) dans la liste des utilisateurs pour personnaliser les droits de chaque secrétaire.
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-blue-600">
-                  <div>
-                    <h5 className="font-medium">Pages</h5>
-                    <ul>
-                      <li>• Dashboard</li>
-                      <li>• Patients</li>
-                      <li>• Calendrier</li>
-                      <li>• Messages</li>
-                      <li>• Facturation</li>
-                      <li>• Consultation</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h5 className="font-medium">Actions</h5>
-                    <ul>
-                      <li>• Créer RDV</li>
-                      <li>• Modifier RDV</li>
-                      <li>• Voir paiements</li>
-                      <li>• Modifier paiements</li>
-                      <li>• Export données</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h5 className="font-medium">Restrictions</h5>
-                    <ul>
-                      <li>• Consultation lecture seule</li>
-                      <li>• Pas de suppression</li>
-                      <li>• Pas d'administration</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       )}
