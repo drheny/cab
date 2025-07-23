@@ -309,9 +309,12 @@ class AdministrationSystemTest(unittest.TestCase):
         """Test PUT /api/admin/users/{user_id} - Update user info and permissions"""
         headers = self.get_auth_headers("medecin")
         
+        import time
+        timestamp = str(int(time.time()))
+        
         # First create a test user
         test_user = {
-            "username": "test_update_user",
+            "username": f"test_update_user_{timestamp}",
             "full_name": "Test Update User",
             "role": "secretaire",
             "password": "test123"
