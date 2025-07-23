@@ -971,8 +971,11 @@ const Dashboard = ({ user }) => {
                   type="text"
                   value={editingContent}
                   onChange={(e) => setEditingContent(e.target.value)}
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm shadow-sm"
-                  placeholder="Modifier le message..."
+                  className="input-stylus flex-1 rounded-full shadow-sm"
+                  placeholder="Modifier le message - Écriture manuscrite supportée"
+                  inputMode="text"
+                  autoCapitalize="sentences"
+                  autoComplete="off"
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
                       handleSaveEdit();
