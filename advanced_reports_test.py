@@ -170,47 +170,53 @@ class AdvancedReportsAPITest(unittest.TestCase):
         
         stats = data["advanced_statistics"]
         
-        # Verify répartition visite/contrôle
-        repartition = stats["repartition_visite_controle"]
-        self.assertIn("visites", repartition)
-        self.assertIn("controles", repartition)
-        self.assertIn("total_consultations", repartition)
-        self.assertIn("pourcentage_visites", repartition)
-        self.assertIn("pourcentage_controles", repartition)
-        self.assertIn("recette_visites", repartition)
-        self.assertIn("recette_controles", repartition)
+        # Verify consultations structure (répartition visite/contrôle)
+        consultations = stats["consultations"]
+        self.assertIn("visites", consultations)
+        self.assertIn("controles", consultations)
+        self.assertIn("total", consultations)
+        
+        # Verify visites and controles structure
+        visites = consultations["visites"]
+        controles = consultations["controles"]
+        
+        self.assertIn("count", visites)
+        self.assertIn("percentage", visites)
+        self.assertIn("revenue", visites)
+        
+        self.assertIn("count", controles)
+        self.assertIn("percentage", controles)
+        self.assertIn("revenue", controles)
         
         # Verify percentages add up to 100 (or close to it if there's data)
-        if repartition["total_consultations"] > 0:
-            total_percentage = repartition["pourcentage_visites"] + repartition["pourcentage_controles"]
+        if consultations["total"] > 0:
+            total_percentage = visites["percentage"] + controles["percentage"]
             self.assertAlmostEqual(total_percentage, 100.0, places=1)
         
-        # Verify top patients rentables
-        top_patients = stats["top_patients_rentables"]
-        self.assertIn("patients", top_patients)
-        self.assertIn("total_patients", top_patients)
-        self.assertIsInstance(top_patients["patients"], list)
-        self.assertLessEqual(len(top_patients["patients"]), 10)  # Should be top 10
+        # Verify top patients
+        top_patients = stats["top_patients"]
+        self.assertIsInstance(top_patients, list)
+        self.assertLessEqual(len(top_patients), 10)  # Should be top 10
         
         # Verify each patient has required fields
-        for patient in top_patients["patients"]:
-            self.assertIn("nom", patient)
-            self.assertIn("prenom", patient)
-            self.assertIn("consultations_count", patient)
+        for patient in top_patients:
+            self.assertIn("name", patient)
+            self.assertIn("consultations", patient)
             self.assertIn("revenue", patient)
+            self.assertIn("last_visit", patient)
         
         # Verify durées moyennes
-        durees = stats["durees_moyennes"]
-        self.assertIn("attente", durees)
-        self.assertIn("consultation", durees)
-        self.assertIsInstance(durees["attente"], (int, float))
-        self.assertIsInstance(durees["consultation"], (int, float))
+        durees = stats["durees"]
+        self.assertIn("attente_moyenne", durees)
+        self.assertIn("consultation_moyenne", durees)
+        self.assertIsInstance(durees["attente_moyenne"], (int, float))
+        self.assertIsInstance(durees["consultation_moyenne"], (int, float))
         
         # Verify relances téléphoniques
-        relances = stats["relances_telephoniques"]
-        self.assertIn("total_relances", relances)
+        relances = stats["relances"]
+        self.assertIn("total", relances)
         self.assertIn("taux_reponse", relances)
-        self.assertIsInstance(relances["total_relances"], int)
+        self.assertIsInstance(relances["total"], int)
         self.assertIsInstance(relances["taux_reponse"], (int, float))
         
         # Verify patients inactifs
@@ -221,13 +227,13 @@ class AdvancedReportsAPITest(unittest.TestCase):
         self.assertIsInstance(inactifs["percentage"], (int, float))
         
         # Verify taux de fidélisation
-        fidelisation = stats["taux_fidelisation"]
+        fidelisation = stats["fidelisation"]
         self.assertIn("nouveaux_patients", fidelisation)
         self.assertIn("patients_recurrents", fidelisation)
-        self.assertIn("taux_fidelisation", fidelisation)
+        self.assertIn("taux_retour", fidelisation)
         
         # Verify utilisation des salles
-        salles = stats["utilisation_salles"]
+        salles = stats["salles"]
         self.assertIn("salle1", salles)
         self.assertIn("salle2", salles)
         self.assertIn("sans_salle", salles)
