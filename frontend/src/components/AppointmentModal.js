@@ -147,8 +147,11 @@ const AppointmentModal = ({
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Tapez le nom du patient..."
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10"
+                  placeholder="Tapez le nom du patient - Écriture manuscrite supportée"
+                  className="search-stylus w-full pr-10"
+                  inputMode="text"
+                  autoCapitalize="words"
+                  autoComplete="off"
                 />
                 <Search className="absolute right-3 top-2.5 w-5 h-5 text-gray-400" />
               </div>
