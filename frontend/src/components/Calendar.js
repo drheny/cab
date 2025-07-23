@@ -1826,12 +1826,12 @@ const WorkflowCard = React.memo(({
   // Fonction pour déterminer si le paiement peut être modifié par la secrétaire
   const canSecretaryModifyPayment = () => {
     // Si l'utilisateur est médecin, il peut toujours modifier
-    if (user?.type === 'medecin') {
+    if (user?.role === 'medecin') {
       return true;
     }
     
     // Si l'utilisateur est secrétaire
-    if (user?.type === 'secretaire') {
+    if (user?.role === 'secretaire') {
       // Si la consultation n'est pas terminée, la secrétaire peut modifier
       if (appointment?.statut !== 'termine') {
         return true;
