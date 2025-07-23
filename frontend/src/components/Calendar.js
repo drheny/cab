@@ -491,22 +491,35 @@ const Calendar = ({ user }) => {
         return;
       }
 
-      // Créer ou mettre à jour la consultation
+      // Helper function to safely get string values
+      const safeString = (value) => {
+        if (value === null || value === undefined) return '';
+        return String(value).trim();
+      };
+
+      // Helper function to safely get numeric values
+      const safeNumber = (value) => {
+        if (value === null || value === undefined || value === '') return null;
+        const num = parseFloat(value);
+        return isNaN(num) ? null : num;
+      };
+
+      // Créer ou mettre à jour la consultation avec des valeurs sûres
       const consultationPayload = {
         patient_id: appointment.patient_id,
         appointment_id: appointmentId,
         date: appointment.date,
-        type_rdv: consultationData.type_rdv || appointment.type_rdv || 'visite',
-        motif: consultationData.motif || appointment.motif || '',
-        poids: consultationData.poids || '',
-        taille: consultationData.taille || '',
-        pc: consultationData.pc || '',
-        temperature: consultationData.temperature || '',
-        observation_medicale: consultationData.observation_medicale || '',
-        traitement: consultationData.traitement || '',
-        bilans: consultationData.bilans || '',
-        notes: consultationData.notes || '',
-        relance_telephonique: consultationData.relance_telephonique || false,
+        type_rdv: safeString(consultationData.type_rdv || appointment.type_rdv || 'visite'),
+        motif: safeString(consultationData.motif || appointment.motif || ''),
+        poids: safeNumber(consultationData.poids),
+        taille: safeNumber(consultationData.taille),
+        pc: safeNumber(consultationData.pc),
+        temperature: safeNumber(consultationData.temperature),
+        observation_medicale: safeString(consultationData.observation_medicale),
+        traitement: safeString(consultationData.traitement),
+        bilans: safeString(consultationData.bilans),
+        notes: safeString(consultationData.notes),
+        relance_telephonique: Boolean(consultationData.relance_telephonique),
         date_relance: consultationData.date_relance || null
       };
 
@@ -527,15 +540,41 @@ const Calendar = ({ user }) => {
       fetchData(); // Refresh data
     } catch (error) {
       console.error('Error saving consultation:', error);
-      console.error('Error details:', error.response?.data);
+      console.error('Error response:', error.response);
       
-      if (error.response?.data?.detail) {
-        toast.error(`Erreur: ${error.response.data.detail}`);
-      } else if (error.response?.data?.message) {
-        toast.error(`Erreur: ${error.response.data.message}`);
-      } else {
-        toast.error('Erreur lors de la sauvegarde de la consultation');
+      // Améliorer la gestion d'erreur pour éviter [object Object]
+      let errorMessage = 'Erreur lors de la sauvegarde de la consultation';
+      
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        
+        if (typeof errorData === 'string') {
+          errorMessage = errorData;
+        } else if (errorData.detail) {
+          if (typeof errorData.detail === 'string') {
+            errorMessage = errorData.detail;
+          } else if (Array.isArray(errorData.detail)) {
+            errorMessage = errorData.detail.map(item => 
+              typeof item === 'string' ? item : item.msg || JSON.stringify(item)
+            ).join(', ');
+          } else {
+            errorMessage = JSON.stringify(errorData.detail);
+          }
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (errorData.error) {
+          errorMessage = errorData.error;
+        } else {
+          // Tenter d'extraire un message lisible de l'objet d'erreur
+          errorMessage = Object.keys(errorData).map(key => 
+            `${key}: ${errorData[key]}`
+          ).join(', ');
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
       }
+      
+      toast.error(`Erreur: ${errorMessage}`);
     }
   };
 
