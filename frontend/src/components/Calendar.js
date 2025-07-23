@@ -54,12 +54,15 @@ const Calendar = ({ user }) => {
   // Modal consultation states - Support multi-instances
   const [consultationModals, setConsultationModals] = useState(new Map());
   
-  // Chronomètre pour consultation
+  // Global timer (can be deprecated once per-modal timers are fully implemented)
   const [timer, setTimer] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   
   // Données de la consultation - Maintenant par patient
   const [consultationDataMap, setConsultationDataMap] = useState(new Map());
+  
+  // Timers par modal de consultation
+  const [consultationTimers, setConsultationTimers] = useState(new Map());
   
   // Form states
   const [formData, setFormData] = useState({
