@@ -800,7 +800,7 @@ const Dashboard = ({ user }) => {
                 <div
                   key={message.id}
                   className={`flex ${
-                    message.sender_type === user.type ? 'justify-end' : 'justify-start'
+                    message.sender_type === user.role ? 'justify-end' : 'justify-start'
                   }`}
                 >
                   <div
