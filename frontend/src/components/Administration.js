@@ -750,37 +750,13 @@ const Administration = ({ user }) => {
     }
   };
 
-  const renderChart = (chartId, chartData, chartOptions) => {
-    const chartRef = React.useRef();
-    
-    React.useEffect(() => {
-      if (chartRef.current && chartData) {
-        const ctx = chartRef.current.getContext('2d');
-        
-        // Destroy existing chart if it exists
-        if (chartRef.current.chartInstance) {
-          chartRef.current.chartInstance.destroy();
-        }
-        
-        // Create new chart
-        chartRef.current.chartInstance = new ChartJS(ctx, {
-          ...chartData,
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            ...chartOptions
-          }
-        });
-      }
-      
-      return () => {
-        if (chartRef.current?.chartInstance) {
-          chartRef.current.chartInstance.destroy();
-        }
-      };
-    }, [chartData, chartOptions]);
-    
-    return <canvas ref={chartRef} id={chartId} style={{ maxHeight: '300px' }} />;
+  const renderChart = (chartData, chartOptions) => {
+    // Simple chart component - to be implemented later
+    return (
+      <div className="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+        <p className="text-gray-500">Graphique à implémenter</p>
+      </div>
+    );
   };
 
   const StatCard = ({ icon: Icon, title, value, color, subtitle }) => (
