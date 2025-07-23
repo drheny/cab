@@ -595,7 +595,7 @@ const Administration = ({ user }) => {
 
   // ========== ADVANCED REPORTS FUNCTIONS ==========
   
-  const generateAdvancedReport = async () => {
+  const generateNewAdvancedReport = async () => {
     try {
       setAdvancedReportLoading(true);
       const period = advancedReportPeriod;
