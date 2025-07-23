@@ -75,6 +75,7 @@ ChartJS.register(
 
 const Administration = ({ user }) => {
   const [activeTab, setActiveTab] = useState('statistiques');
+  const [activeUserTab, setActiveUserTab] = useState('users-list');
   const [stats, setStats] = useState({
     total_patients: 0,
     nouveaux_patients_annee: 0,
