@@ -560,9 +560,11 @@ const Messages = ({ user }) => {
                                 <textarea
                                   value={editContent}
                                   onChange={(e) => setEditContent(e.target.value)}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
+                                  className="textarea-stylus text-sm"
                                   rows={3}
-                                  placeholder="Contenu du message..."
+                                  placeholder="Contenu du message - Optimisé pour Apple Pencil"
+                                  inputMode="text"
+                                  autoCapitalize="sentences"
                                 />
                                 
                                 <div className="flex items-center space-x-4">
