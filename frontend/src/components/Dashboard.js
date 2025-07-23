@@ -386,7 +386,7 @@ const Dashboard = ({ user }) => {
         `${API_BASE_URL}/api/messages/${editingMessage.id}`,
         { content: editingContent.trim() },
         {
-          params: { user_type: user.type }
+          params: { user_type: user.role } // Changé de user.type vers user.role
         }
       );
 
