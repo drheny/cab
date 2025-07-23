@@ -228,7 +228,7 @@ class ConsultationSavingTest(unittest.TestCase):
             "poids": 18.5,  # Filled
             "taille": None,  # Null/None
             "pc": None,  # Null/None
-            "temperature": "",  # Empty string for numeric field
+            "temperature": None,  # None for numeric field
             "observation_medicale": "Consultation de routine, patient en bonne santé générale.",  # Filled
             "traitement": "",  # Empty string
             "bilans": "RAS - Rien à signaler",  # Filled
