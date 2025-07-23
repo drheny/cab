@@ -1111,8 +1111,7 @@ const Consultation = ({ user }) => {
                           onChange={(e) => setConsultationData({...consultationData, bilans: e.target.value})}
                           className="textarea-stylus"
                           rows="4"
-                          placeholder="Bilans demandés..."
-                          // iPad stylus optimization attributes
+                          placeholder="Bilans demandés - Optimisé pour Apple Pencil"
                           inputMode="text"
                           autoCapitalize="sentences"
                           spellCheck="true"
