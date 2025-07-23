@@ -759,6 +759,151 @@ const Administration = ({ user }) => {
     );
   };
 
+  // ========== USER MANAGEMENT FUNCTIONS ==========
+  
+  const handleEditUser = (user) => {
+    setEditingUser(user);
+    setUserForm({
+      username: user.nom_utilisateur || '',
+      email: user.email || '',
+      full_name: user.full_name || '',
+      role: user.role || 'secretaire',
+      password: ''
+    });
+    setShowUserModal(true);
+  };
+
+  const handleSaveUser = async () => {
+    try {
+      setLoading(true);
+      
+      const userData = {
+        ...userForm,
+        permissions: getDefaultPermissions(userForm.role)
+      };
+
+      if (editingUser) {
+        // Update existing user
+        const response = await axios.put(`/api/admin/users/${editingUser.id}`, userData);
+        toast.success('Utilisateur mis à jour avec succès');
+      } else {
+        // Create new user
+        const response = await axios.post('/api/admin/users', userData);
+        toast.success('Utilisateur créé avec succès');
+      }
+
+      setShowUserModal(false);
+      setEditingUser(null);
+      setUserForm({
+        username: '',
+        email: '',
+        full_name: '',
+        role: 'secretaire',
+        password: ''
+      });
+      
+      fetchUsers();
+    } catch (error) {
+      console.error('Error saving user:', error);
+      toast.error('Erreur lors de la sauvegarde de l\'utilisateur');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await axios.delete(`/api/admin/users/${userId}`);
+      toast.success('Utilisateur supprimé avec succès');
+      fetchUsers();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast.error('Erreur lors de la suppression de l\'utilisateur');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdatePermissions = async (userId, permissions) => {
+    try {
+      setLoading(true);
+      await axios.put(`/api/admin/users/${userId}/permissions`, { permissions });
+      toast.success('Permissions mises à jour avec succès');
+      fetchUsers();
+      setEditingPermissions(null);
+    } catch (error) {
+      console.error('Error updating permissions:', error);
+      toast.error('Erreur lors de la mise à jour des permissions');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getDefaultPermissions = (role) => {
+    if (role === 'medecin') {
+      return {
+        view_dashboard: true,
+        view_patients: true,
+        view_calendar: true,
+        view_consultations: true,
+        view_messages: true,
+        view_billing: true,
+        view_administration: true,
+        manage_patients: true,
+        manage_appointments: true,
+        modify_payments: true,
+        manage_users: true
+      };
+    } else {
+      return {
+        view_dashboard: true,
+        view_patients: true,
+        view_calendar: true,
+        view_consultations: false,
+        view_messages: true,
+        view_billing: false,
+        view_administration: false,
+        manage_patients: true,
+        manage_appointments: true,
+        modify_payments: false,
+        manage_users: false
+      };
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      toast.error('Les mots de passe ne correspondent pas');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await axios.post('/api/admin/change-password', {
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword
+      });
+      
+      toast.success('Mot de passe modifié avec succès');
+      setShowPasswordModal(false);
+      setPasswordForm({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+    } catch (error) {
+      console.error('Error changing password:', error);
+      toast.error('Erreur lors du changement de mot de passe');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const StatCard = ({ icon: Icon, title, value, color, subtitle }) => (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
       <div className="flex items-center justify-between">
