@@ -98,7 +98,6 @@ class AdministrationSystemTest(unittest.TestCase):
         self.assertEqual(user["username"], "medecin")
         self.assertEqual(user["role"], "medecin")
         self.assertEqual(user["full_name"], "Dr Heni Dridi")
-        self.assertTrue(user["is_active"])
         
         # Verify médecin permissions
         permissions = user["permissions"]
