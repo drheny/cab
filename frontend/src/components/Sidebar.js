@@ -8,7 +8,8 @@ import {
   CreditCard, 
   Settings,
   X,
-  MessageSquare 
+  MessageSquare,
+  Brain
 } from 'lucide-react';
 
 const Sidebar = ({ user, isOpen, onClose, phoneMessagesCount = 0 }) => {
