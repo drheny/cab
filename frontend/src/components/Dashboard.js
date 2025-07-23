@@ -572,7 +572,7 @@ const Dashboard = ({ user }) => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
         <div>
           <h1 className="responsive-title font-bold text-gray-900">
-            Bonjour {user.name} 👋
+            Bonjour {user.full_name} 👋
           </h1>
           <p className="text-primary-100 responsive-text">
             Voici un aperçu de votre journée
