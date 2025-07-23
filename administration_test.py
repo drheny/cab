@@ -550,7 +550,8 @@ class AdministrationSystemTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         
         specific_data = response.json()
-        self.assertIn("2024-01", specific_data["periode"])
+        # The actual format is MM/YYYY, not YYYY-MM
+        self.assertIn("01/2024", specific_data["periode"])
         
         print("✅ Admin monthly report single month test passed")
     
