@@ -893,7 +893,7 @@ const Dashboard = ({ user }) => {
                         )}
                         
                         {/* Reply button for others' messages */}
-                        {message.sender_type !== user.type && (
+                        {message.sender_type !== user.role && (
                           <button
                             onClick={() => handleReplyToMessage(message)}
                             className="p-1 rounded-full hover:bg-gray-200 transition-colors"
