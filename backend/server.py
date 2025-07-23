@@ -5477,7 +5477,7 @@ async def get_doctor_analytics():
     """Get doctor performance analytics"""
     try:
         today = datetime.now().strftime("%Y-%m-%d")
-        analytics = ai_doctor_analytics_collection.find_one({"date": today})
+        analytics = ai_doctor_analytics_collection.find_one({"date": today}, {"_id": 0})
         
         if not analytics:
             # Create default analytics if none exist
