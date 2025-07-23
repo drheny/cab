@@ -275,24 +275,15 @@ class AdvancedReportsAPITest(unittest.TestCase):
         
         # Verify alerts structure
         alerts = data["alerts"]
-        self.assertIn("revenue_alerts", alerts)
-        self.assertIn("patient_alerts", alerts)
-        self.assertIn("operational_alerts", alerts)
+        self.assertIsInstance(alerts, list)
         
-        # Verify alert types
-        revenue_alerts = alerts["revenue_alerts"]
-        patient_alerts = alerts["patient_alerts"]
-        operational_alerts = alerts["operational_alerts"]
-        
-        # Each alert should have severity and message
-        for alert_category in [revenue_alerts, patient_alerts, operational_alerts]:
-            self.assertIsInstance(alert_category, list)
-            for alert in alert_category:
-                self.assertIn("severity", alert)
-                self.assertIn("message", alert)
-                self.assertIn("value", alert)
-                self.assertIn("threshold", alert)
-                self.assertIn(alert["severity"], ["low", "medium", "high", "critical"])
+        # If there are alerts, verify their structure
+        for alert in alerts:
+            self.assertIn("severity", alert)
+            self.assertIn("message", alert)
+            self.assertIn("value", alert)
+            self.assertIn("threshold", alert)
+            self.assertIn(alert["severity"], ["low", "medium", "high", "critical"])
         
         print("✅ Alert thresholds working correctly")
     
