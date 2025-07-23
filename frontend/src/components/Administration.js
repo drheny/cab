@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Settings, 
   Users, 
@@ -33,7 +33,18 @@ import {
   HardDrive,
   Gauge,
   TrendingUp,
-  PieChart
+  PieChart,
+  Clock,
+  Play,
+  Pause,
+  Square,
+  Minimize2,
+  Maximize2,
+  Weight,
+  Ruler,
+  Brain,
+  Edit3,
+  TrendingDown
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
