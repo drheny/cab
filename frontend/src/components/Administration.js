@@ -854,32 +854,7 @@ const Administration = ({ user }) => {
       {/* Tab Content */}
       {activeTab === 'statistiques' && (
         <div className="space-y-6">
-          {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <StatCard
-              icon={Users}
-              title="Total Patients"
-              value={stats.total_patients}
-              color="text-blue-600"
-              subtitle="Patients enregistrés"
-            />
-            <StatCard
-              icon={UserPlus}
-              title="Nouveaux cette année"
-              value={stats.nouveaux_patients_annee}
-              color="text-green-600"
-              subtitle="Nouveaux patients"
-            />
-            <StatCard
-              icon={Activity}
-              title="Patients Inactifs"
-              value={stats.patients_inactifs}
-              color="text-orange-600"
-              subtitle=">12 mois sans consultation"
-            />
-          </div>
-
-          {/* Charts Section */}
+          {/* Charts Section - moved to top */}
           {chartsData && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <div className="flex items-center space-x-2 mb-6">
