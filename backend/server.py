@@ -1604,10 +1604,12 @@ async def update_rdv_statut(rdv_id: str, status_data: dict):
         statut = status_data.get("statut")
         salle = status_data.get("salle", "")
         heure_arrivee_attente = status_data.get("heure_arrivee_attente", "")
+        duree_attente = status_data.get("duree_attente")  # Nouvelle durée d'attente
     else:
         statut = status_data
         salle = ""
         heure_arrivee_attente = ""
+        duree_attente = None
     
     valid_statuts = ["programme", "attente", "en_cours", "termine", "absent", "retard"]
     if statut not in valid_statuts:
@@ -1621,6 +1623,10 @@ async def update_rdv_statut(rdv_id: str, status_data: dict):
             update_data["heure_arrivee_attente"] = heure_arrivee_attente
         else:
             update_data["heure_arrivee_attente"] = datetime.now().isoformat()
+    
+    # Si on passe en consultation, sauvegarder la durée d'attente
+    if statut == "en_cours" and duree_attente is not None:
+        update_data["duree_attente"] = duree_attente
     
     if salle:
         valid_salles = ["", "salle1", "salle2"]
