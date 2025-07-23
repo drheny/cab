@@ -403,9 +403,11 @@ const Messages = ({ user }) => {
                 <textarea
                   value={messageContent}
                   onChange={(e) => setMessageContent(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="textarea-stylus"
                   rows={4}
-                  placeholder="Décrivez la question ou demande du patient..."
+                  placeholder="Décrivez la question ou demande du patient - Optimisé pour Apple Pencil"
+                  inputMode="text"
+                  autoCapitalize="sentences"
                 />
               </div>
 
