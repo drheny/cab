@@ -158,9 +158,6 @@ const Administration = ({ user }) => {
   const [topPatientsData, setTopPatientsData] = useState(null);
   const [alerts, setAlerts] = useState([]);
 
-  // Tab management
-  const [activeTab, setActiveTab] = useState('statistiques');
-
   // User management states
   const [editingUser, setEditingUser] = useState(null);
   const [userFormData, setUserFormData] = useState({
