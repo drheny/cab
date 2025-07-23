@@ -292,6 +292,41 @@ const PatientsListComponent = ({ user }) => {
     window.location.href = `/consultation?${params.toString()}`;
   };
 
+  const openModal = (patient = null) => {
+    if (patient) {
+      setSelectedPatient(patient);
+      setFormData({
+        nom: patient.nom || '',
+        prenom: patient.prenom || '',
+        date_naissance: patient.date_naissance || '',
+        adresse: patient.adresse || '',
+        pere: {
+          nom: patient.pere?.nom || '',
+          telephone: patient.pere?.telephone || '',
+          fonction: patient.pere?.fonction || ''
+        },
+        mere: {
+          nom: patient.mere?.nom || '',
+          telephone: patient.mere?.telephone || '',
+          fonction: patient.mere?.fonction || ''
+        },
+        numero_whatsapp: patient.numero_whatsapp || '',
+        notes: patient.notes || '',
+        antecedents: patient.antecedents || '',
+        sexe: patient.sexe || 'M',
+        telephone: patient.telephone || '',
+        nom_parent: patient.nom_parent || '',
+        telephone_parent: patient.telephone_parent || '',
+        assurance: patient.assurance || '',
+        numero_assurance: patient.numero_assurance || '',
+        allergies: patient.allergies || ''
+      });
+    } else {
+      resetForm();
+    }
+    setShowModal(true);
+  };
+
   // Memoize the patients list rendering to prevent unnecessary re-renders
   const patientsListContent = useMemo(() => {
     return patients.map((patient) => (
