@@ -146,9 +146,6 @@ const Administration = ({ user }) => {
   const [demographicsData, setDemographicsData] = useState(null);
   const [topPatientsData, setTopPatientsData] = useState(null);
   const [alerts, setAlerts] = useState([]);
-    endMonth: new Date().getMonth() + 1,
-    endYear: new Date().getFullYear()
-  });
 
   useEffect(() => {
     if (user?.permissions?.administration) {
