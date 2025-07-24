@@ -31,6 +31,11 @@ const Dashboard = ({ user }) => {
   });
   const [loading, setLoading] = useState(true);
   
+  // AI Insights states
+  const [aiInsights, setAiInsights] = useState(null);
+  const [showAiInsights, setShowAiInsights] = useState(true);
+  const [aiLoading, setAiLoading] = useState(false);
+  
   // Modal states
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [showPatientModal, setShowPatientModal] = useState(false);
