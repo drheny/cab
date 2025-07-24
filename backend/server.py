@@ -351,8 +351,40 @@ def create_access_token(data: dict) -> str:
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
-    """Get current user from JWT token"""
+    """Get current user from JWT token - WITH AUTO-LOGIN BYPASS"""
     try:
+        # Check for auto-login mock token
+        if credentials.credentials == "auto-login-token":
+            # Return default doctor user for auto-login
+            return {
+                "id": "auto-doctor-id",
+                "username": "medecin",
+                "email": "",
+                "full_name": "Dr Heni Dridi",
+                "role": "medecin",
+                "permissions": {
+                    "dashboard": True,
+                    "patients": True,
+                    "calendar": True,
+                    "messages": True,
+                    "billing": True,
+                    "consultation": True,
+                    "administration": True,
+                    "create_appointment": True,
+                    "edit_appointment": True,
+                    "delete_appointment": True,
+                    "view_payments": True,
+                    "edit_payments": True,
+                    "delete_payments": True,
+                    "export_data": True,
+                    "reset_data": True,
+                    "manage_users": True,
+                    "consultation_read_only": False
+                },
+                "last_login": datetime.now().isoformat()
+            }
+        
+        # Regular JWT token validation
         payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
         if username is None:
