@@ -330,7 +330,9 @@ const WhatsAppModal = ({
                 {/* Message Preview */}
                 <div className="border border-gray-200 rounded-lg">
                   <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-                    <span className="font-medium text-gray-900">Aperçu du Message</span>
+                    <span className="font-medium text-gray-900">
+                      {isEditing ? 'Éditer le Message' : 'Aperçu du Message'}
+                    </span>
                     <div className="flex items-center space-x-2">
                       <button
                         onClick={copyMessageToClipboard}
@@ -339,22 +341,58 @@ const WhatsAppModal = ({
                       >
                         <Copy className="w-4 h-4" />
                       </button>
-                      <button
-                        onClick={handleMessageEdit}
-                        className="p-1 hover:bg-gray-200 rounded"
-                        title="Modifier le message"
-                      >
-                        <Edit3 className="w-4 h-4" />
-                      </button>
+                      {!isEditing ? (
+                        <button
+                          onClick={handleMessageEdit}
+                          className="p-1 hover:bg-gray-200 rounded"
+                          title="Modifier le message"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                      ) : (
+                        <div className="flex items-center space-x-1">
+                          <button
+                            onClick={handleSaveEdit}
+                            className="p-1 hover:bg-green-200 rounded text-green-600"
+                            title="Sauvegarder"
+                          >
+                            <CheckCircle className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={handleCancelEdit}
+                            className="p-1 hover:bg-red-200 rounded text-red-600"
+                            title="Annuler"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="p-4">
-                    <div className="bg-green-100 rounded-lg p-3 inline-block max-w-full">
-                      <p className="text-gray-900 whitespace-pre-wrap">{finalMessage}</p>
-                    </div>
-                    <div className="mt-3 text-xs text-gray-500">
-                      {finalMessage.length} caractères
-                    </div>
+                    {isEditing ? (
+                      <div className="space-y-3">
+                        <textarea
+                          value={customMessage}
+                          onChange={(e) => setCustomMessage(e.target.value)}
+                          rows={6}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          placeholder="Modifiez votre message ici..."
+                        />
+                        <div className="text-xs text-gray-500">
+                          {customMessage.length} caractères
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="bg-green-100 rounded-lg p-3 inline-block max-w-full">
+                          <p className="text-gray-900 whitespace-pre-wrap">{finalMessage}</p>
+                        </div>
+                        <div className="mt-3 text-xs text-gray-500">
+                          {finalMessage.length} caractères
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
