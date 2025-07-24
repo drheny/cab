@@ -23,7 +23,7 @@ const LoginPage = ({ onLogin }) => {
 
     try {
       setLoading(true);
-      const response = await axios.post('/api/auth/login', {
+      const response = await axios.post(`${API_BASE_URL}/api/auth/login`, {
         username: loginForm.username,
         password: loginForm.password
       });
