@@ -1210,6 +1210,567 @@ class CabinetMedicalAPITest(unittest.TestCase):
         print(f"   - End-to-end workflow validated")
         print(f"   - AI-powered features working correctly")
 
+    # ========== AI DATA ENRICHMENT COMPREHENSIVE TESTING ==========
+    
+    def test_ai_learning_initialize(self):
+        """Test POST /api/ai-learning/initialize - Initialize AI Learning system"""
+        print("\n🔍 Testing AI Learning Initialize Endpoint")
+        
+        response = requests.post(f"{self.base_url}/api/ai-learning/initialize")
+        self.assertEqual(response.status_code, 200, f"AI Learning initialization failed: {response.text}")
+        
+        data = response.json()
+        self.assertIn("message", data)
+        self.assertIn("collections_created", data)
+        self.assertIn("status", data)
+        self.assertIsInstance(data["collections_created"], list)
+        self.assertEqual(data["status"], "ready_for_learning")
+        
+        print(f"✅ AI Learning initialized successfully - {len(data['collections_created'])} collections created")
+        print(f"   - Collections: {data['collections_created']}")
+        print(f"🎉 AI Learning Initialize Test: PASSED")
+    
+    def test_ai_learning_doctor_state(self):
+        """Test GET /api/ai-learning/doctor-state - Get doctor current state"""
+        print("\n🔍 Testing AI Learning Doctor State Endpoint")
+        
+        # Initialize AI Learning first
+        init_response = requests.post(f"{self.base_url}/api/ai-learning/initialize")
+        self.assertEqual(init_response.status_code, 200)
+        
+        response = requests.get(f"{self.base_url}/api/ai-learning/doctor-state")
+        self.assertEqual(response.status_code, 200, f"Doctor state failed: {response.text}")
+        
+        data = response.json()
+        self.assertIn("doctor_id", data)
+        self.assertIn("state", data)
+        self.assertIn("retrieved_at", data)
+        
+        # Verify state structure
+        state = data["state"]
+        self.assertIn("efficiency_score", state)
+        self.assertIn("energy_level", state)
+        self.assertIn("consultation_pace", state)
+        self.assertIn("stress_indicators", state)
+        
+        print(f"✅ Doctor state retrieved successfully")
+        print(f"   - Doctor ID: {data['doctor_id']}")
+        print(f"   - Efficiency score: {state['efficiency_score']}")
+        print(f"   - Energy level: {state['energy_level']}")
+        print(f"🎉 AI Learning Doctor State Test: PASSED")
+    
+    def test_ai_learning_suggestions_proactive(self):
+        """Test GET /api/ai-learning/suggestions/proactive - Get proactive suggestions"""
+        print("\n🔍 Testing AI Learning Proactive Suggestions Endpoint")
+        
+        # Initialize AI Learning first
+        init_response = requests.post(f"{self.base_url}/api/ai-learning/initialize")
+        self.assertEqual(init_response.status_code, 200)
+        
+        response = requests.get(f"{self.base_url}/api/ai-learning/suggestions/proactive")
+        self.assertEqual(response.status_code, 200, f"Proactive suggestions failed: {response.text}")
+        
+        data = response.json()
+        self.assertIn("suggestions", data)
+        self.assertIn("context", data)
+        self.assertIn("generated_at", data)
+        self.assertIn("total_suggestions", data)
+        
+        # Verify suggestions structure
+        suggestions = data["suggestions"]
+        self.assertIsInstance(suggestions, list)
+        
+        if len(suggestions) > 0:
+            suggestion = suggestions[0]
+            self.assertIn("type", suggestion)
+            self.assertIn("priority", suggestion)
+            self.assertIn("message", suggestion)
+            self.assertIn("confidence", suggestion)
+        
+        # Verify context structure
+        context = data["context"]
+        self.assertIn("doctor_state", context)
+        self.assertIn("queue_state", context)
+        self.assertIn("temporal_context", context)
+        
+        print(f"✅ Proactive suggestions generated successfully")
+        print(f"   - Total suggestions: {data['total_suggestions']}")
+        print(f"   - Context includes: doctor_state, queue_state, temporal_context")
+        print(f"🎉 AI Learning Proactive Suggestions Test: PASSED")
+    
+    def test_ai_learning_temporal_patterns(self):
+        """Test GET /api/ai-learning/temporal-patterns - Get temporal patterns analysis"""
+        print("\n🔍 Testing AI Learning Temporal Patterns Endpoint")
+        
+        # Initialize AI Learning first
+        init_response = requests.post(f"{self.base_url}/api/ai-learning/initialize")
+        self.assertEqual(init_response.status_code, 200)
+        
+        response = requests.get(f"{self.base_url}/api/ai-learning/temporal-patterns?lookback_days=30")
+        self.assertEqual(response.status_code, 200, f"Temporal patterns failed: {response.text}")
+        
+        data = response.json()
+        self.assertIn("patterns", data)
+        self.assertIn("lookback_days", data)
+        self.assertIn("analysis_date", data)
+        self.assertIn("total_patterns", data)
+        
+        # Verify patterns structure
+        patterns = data["patterns"]
+        self.assertIsInstance(patterns, list)
+        self.assertEqual(data["lookback_days"], 30)
+        self.assertIsInstance(data["total_patterns"], int)
+        
+        print(f"✅ Temporal patterns analyzed successfully")
+        print(f"   - Lookback days: {data['lookback_days']}")
+        print(f"   - Total patterns found: {data['total_patterns']}")
+        print(f"🎉 AI Learning Temporal Patterns Test: PASSED")
+    
+    def test_ai_learning_enrich_consultation(self):
+        """Test POST /api/ai-learning/enrich-consultation - Enrich consultation with AI data"""
+        print("\n🔍 Testing AI Learning Enrich Consultation Endpoint")
+        
+        # Initialize AI Learning first
+        init_response = requests.post(f"{self.base_url}/api/ai-learning/initialize")
+        self.assertEqual(init_response.status_code, 200)
+        
+        # Get a patient for testing
+        patients_response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(patients_response.status_code, 200)
+        patients_data = patients_response.json()
+        
+        if len(patients_data["patients"]) > 0:
+            patient_id = patients_data["patients"][0]["id"]
+            
+            # Sample consultation data
+            consultation_data = {
+                "patient_id": patient_id,
+                "date": "2025-01-23",
+                "heure_programmee": "10:00",
+                "heure_arrivee": "10:05",
+                "duree_reelle": 20,
+                "satisfaction_exprimee": 8,
+                "niveau_preparation": 7,
+                "questions_posees": 3,
+                "compliance_conseils": 0.8,
+                "temps_reponse_confirmation": 12,
+                "engagement_whatsapp": 0.9,
+                "methode_com_preferee": "whatsapp",
+                "flexibilite": 0.7,
+                "doctor_id": "default_doctor"
+            }
+            
+            response = requests.post(f"{self.base_url}/api/ai-learning/enrich-consultation", json=consultation_data)
+            self.assertEqual(response.status_code, 200, f"Enrich consultation failed: {response.text}")
+            
+            data = response.json()
+            self.assertIn("message", data)
+            self.assertIn("enriched_data", data)
+            self.assertIn("enrichment_timestamp", data)
+            
+            # Verify enriched data structure
+            enriched_data = data["enriched_data"]
+            self.assertIn("ai_enrichment", enriched_data)
+            
+            ai_enrichment = enriched_data["ai_enrichment"]
+            self.assertIn("temporal_patterns", ai_enrichment)
+            self.assertIn("doctor_performance", ai_enrichment)
+            self.assertIn("patient_behavior", ai_enrichment)
+            self.assertIn("external_impact", ai_enrichment)
+            self.assertIn("enrichment_timestamp", ai_enrichment)
+            
+            print(f"✅ Consultation enriched successfully")
+            print(f"   - Patient ID: {patient_id}")
+            print(f"   - AI enrichment includes: temporal, doctor, patient, external factors")
+            print(f"🎉 AI Learning Enrich Consultation Test: PASSED")
+        else:
+            print(f"⚠️ No patients available for consultation enrichment testing")
+            print(f"🎉 AI Learning Enrich Consultation Test: SKIPPED")
+    
+    def test_ai_learning_comprehensive_predictions(self):
+        """Test GET /api/ai-learning/comprehensive-predictions - Get comprehensive predictions"""
+        print("\n🔍 Testing AI Learning Comprehensive Predictions Endpoint")
+        
+        # Initialize AI Learning first
+        init_response = requests.post(f"{self.base_url}/api/ai-learning/initialize")
+        self.assertEqual(init_response.status_code, 200)
+        
+        # Get a patient for testing
+        patients_response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(patients_response.status_code, 200)
+        patients_data = patients_response.json()
+        
+        if len(patients_data["patients"]) > 0:
+            patient_id = patients_data["patients"][0]["id"]
+            test_date = "2025-01-23"
+            consultation_type = "visite"
+            
+            response = requests.get(f"{self.base_url}/api/ai-learning/comprehensive-predictions?patient_id={patient_id}&consultation_type={consultation_type}&date={test_date}")
+            self.assertEqual(response.status_code, 200, f"Comprehensive predictions failed: {response.text}")
+            
+            data = response.json()
+            self.assertIn("patient_id", data)
+            self.assertIn("consultation_type", data)
+            self.assertIn("date", data)
+            self.assertIn("comprehensive_predictions", data)
+            self.assertIn("generated_at", data)
+            
+            # Verify predictions structure
+            predictions = data["comprehensive_predictions"]
+            self.assertIn("duration_prediction", predictions)
+            self.assertIn("wait_time_prediction", predictions)
+            self.assertIn("behavioral_insights", predictions)
+            self.assertIn("external_factors_impact", predictions)
+            self.assertIn("confidence_score", predictions)
+            
+            print(f"✅ Comprehensive predictions generated successfully")
+            print(f"   - Patient ID: {patient_id}")
+            print(f"   - Consultation type: {consultation_type}")
+            print(f"   - Date: {test_date}")
+            print(f"   - Confidence score: {predictions.get('confidence_score', 'N/A')}")
+            print(f"🎉 AI Learning Comprehensive Predictions Test: PASSED")
+        else:
+            print(f"⚠️ No patients available for comprehensive predictions testing")
+            print(f"🎉 AI Learning Comprehensive Predictions Test: SKIPPED")
+    
+    def test_ai_learning_patient_behavioral_profile(self):
+        """Test GET /api/ai-learning/patient-behavioral-profile - Get patient behavioral profile"""
+        print("\n🔍 Testing AI Learning Patient Behavioral Profile Endpoint")
+        
+        # Initialize AI Learning first
+        init_response = requests.post(f"{self.base_url}/api/ai-learning/initialize")
+        self.assertEqual(init_response.status_code, 200)
+        
+        # Get a patient for testing
+        patients_response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(patients_response.status_code, 200)
+        patients_data = patients_response.json()
+        
+        if len(patients_data["patients"]) > 0:
+            patient_id = patients_data["patients"][0]["id"]
+            
+            response = requests.get(f"{self.base_url}/api/ai-learning/patient-behavioral-profile?patient_id={patient_id}&lookback_days=90")
+            self.assertEqual(response.status_code, 200, f"Patient behavioral profile failed: {response.text}")
+            
+            data = response.json()
+            self.assertIn("patient_id", data)
+            self.assertIn("lookback_days", data)
+            self.assertIn("behavioral_profile", data)
+            self.assertIn("generated_at", data)
+            
+            # Verify behavioral profile structure
+            profile = data["behavioral_profile"]
+            self.assertIn("punctuality_score", profile)
+            self.assertIn("avg_response_time_hours", profile)
+            self.assertIn("satisfaction_score", profile)
+            self.assertIn("consultation_count", profile)
+            self.assertIn("preferred_time_slot", profile)
+            self.assertIn("communication_effectiveness", profile)
+            self.assertIn("reliability_score", profile)
+            self.assertIn("behavioral_trend", profile)
+            self.assertIn("risk_factors", profile)
+            
+            print(f"✅ Patient behavioral profile generated successfully")
+            print(f"   - Patient ID: {patient_id}")
+            print(f"   - Lookback days: {data['lookback_days']}")
+            print(f"   - Punctuality score: {profile['punctuality_score']}")
+            print(f"   - Consultation count: {profile['consultation_count']}")
+            print(f"   - Behavioral trend: {profile['behavioral_trend']}")
+            print(f"   - Risk factors: {profile['risk_factors']}")
+            print(f"🎉 AI Learning Patient Behavioral Profile Test: PASSED")
+        else:
+            print(f"⚠️ No patients available for behavioral profile testing")
+            print(f"🎉 AI Learning Patient Behavioral Profile Test: SKIPPED")
+    
+    def test_ai_learning_external_factors(self):
+        """Test GET /api/ai-learning/external-factors - Get external factors for date"""
+        print("\n🔍 Testing AI Learning External Factors Endpoint")
+        
+        # Initialize AI Learning first
+        init_response = requests.post(f"{self.base_url}/api/ai-learning/initialize")
+        self.assertEqual(init_response.status_code, 200)
+        
+        test_date = "2025-01-23"
+        response = requests.get(f"{self.base_url}/api/ai-learning/external-factors?date={test_date}")
+        self.assertEqual(response.status_code, 200, f"External factors failed: {response.text}")
+        
+        data = response.json()
+        self.assertIn("date", data)
+        self.assertIn("external_factors", data)
+        self.assertIn("total_impact_score", data)
+        self.assertIn("impact_explanation", data)
+        self.assertIn("generated_at", data)
+        
+        # Verify external factors structure
+        factors = data["external_factors"]
+        self.assertIn("weather_data", factors)
+        self.assertIn("traffic_data", factors)
+        self.assertIn("calendar_events", factors)
+        self.assertIn("seasonal_factors", factors)
+        self.assertIn("regional_factors", factors)
+        
+        # Verify weather data
+        weather = factors["weather_data"]
+        self.assertIn("temperature", weather)
+        self.assertIn("precipitation", weather)
+        self.assertIn("weather_condition", weather)
+        self.assertIn("impact_score", weather)
+        
+        # Verify traffic data
+        traffic = factors["traffic_data"]
+        self.assertIn("morning_congestion", traffic)
+        self.assertIn("afternoon_congestion", traffic)
+        self.assertIn("impact_score", traffic)
+        
+        print(f"✅ External factors retrieved successfully")
+        print(f"   - Date: {data['date']}")
+        print(f"   - Total impact score: {data['total_impact_score']}")
+        print(f"   - Weather impact: {weather['impact_score']}")
+        print(f"   - Traffic impact: {traffic['impact_score']}")
+        print(f"🎉 AI Learning External Factors Test: PASSED")
+    
+    def test_ai_learning_record_patient_behavior(self):
+        """Test POST /api/ai-learning/record-patient-behavior - Record patient behavior"""
+        print("\n🔍 Testing AI Learning Record Patient Behavior Endpoint")
+        
+        # Initialize AI Learning first
+        init_response = requests.post(f"{self.base_url}/api/ai-learning/initialize")
+        self.assertEqual(init_response.status_code, 200)
+        
+        # Get a patient for testing
+        patients_response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(patients_response.status_code, 200)
+        patients_data = patients_response.json()
+        
+        if len(patients_data["patients"]) > 0:
+            patient_id = patients_data["patients"][0]["id"]
+            
+            # Sample consultation data for behavior recording
+            consultation_data = {
+                "id": "test_consultation_123",
+                "heure_programmee": "14:00",
+                "heure_arrivee": "14:10",
+                "duree_reelle": 25,
+                "satisfaction_exprimee": 9,
+                "niveau_preparation": 8,
+                "questions_posees": 4,
+                "compliance_conseils": 0.9,
+                "temps_reponse_confirmation": 8,
+                "engagement_whatsapp": 0.95,
+                "methode_com_preferee": "whatsapp",
+                "taux_lecture_messages": 0.9,
+                "flexibilite": 0.8,
+                "freq_reprogrammation": 0.05
+            }
+            
+            response = requests.post(f"{self.base_url}/api/ai-learning/record-patient-behavior?patient_id={patient_id}", json=consultation_data)
+            self.assertEqual(response.status_code, 200, f"Record patient behavior failed: {response.text}")
+            
+            data = response.json()
+            self.assertIn("message", data)
+            self.assertIn("patient_id", data)
+            self.assertIn("behavior_record_id", data)
+            self.assertIn("recorded_at", data)
+            
+            print(f"✅ Patient behavior recorded successfully")
+            print(f"   - Patient ID: {patient_id}")
+            print(f"   - Behavior record ID: {data['behavior_record_id']}")
+            print(f"🎉 AI Learning Record Patient Behavior Test: PASSED")
+        else:
+            print(f"⚠️ No patients available for behavior recording testing")
+            print(f"🎉 AI Learning Record Patient Behavior Test: SKIPPED")
+    
+    def test_ai_learning_update_external_factors(self):
+        """Test POST /api/ai-learning/update-external-factors - Update external factors"""
+        print("\n🔍 Testing AI Learning Update External Factors Endpoint")
+        
+        # Initialize AI Learning first
+        init_response = requests.post(f"{self.base_url}/api/ai-learning/initialize")
+        self.assertEqual(init_response.status_code, 200)
+        
+        test_date = "2025-01-23"
+        external_data = {
+            "temperature": 18,
+            "precipitation": 5,
+            "weather_condition": "light_rain",
+            "morning_traffic": 0.6,
+            "afternoon_traffic": 0.7,
+            "road_works": True,
+            "transport_disruption": False,
+            "is_school_day": True,
+            "is_holiday": False,
+            "school_vacation": False,
+            "public_events": ["Local festival"],
+            "local_events": ["Market day"],
+            "system_load": 0.7,
+            "illness_peak": False,
+            "allergies_season": False
+        }
+        
+        response = requests.post(f"{self.base_url}/api/ai-learning/update-external-factors?date={test_date}", json=external_data)
+        self.assertEqual(response.status_code, 200, f"Update external factors failed: {response.text}")
+        
+        data = response.json()
+        self.assertIn("message", data)
+        self.assertIn("date", data)
+        self.assertIn("updated_record", data)
+        self.assertIn("updated_at", data)
+        
+        # Verify updated record structure
+        updated_record = data["updated_record"]
+        self.assertIn("weather_data", updated_record)
+        self.assertIn("traffic_data", updated_record)
+        self.assertIn("calendar_events", updated_record)
+        
+        print(f"✅ External factors updated successfully")
+        print(f"   - Date: {data['date']}")
+        print(f"   - Weather condition: {external_data['weather_condition']}")
+        print(f"   - Traffic level: {external_data['morning_traffic']}")
+        print(f"🎉 AI Learning Update External Factors Test: PASSED")
+    
+    def test_ai_learning_dashboard_insights(self):
+        """Test GET /api/ai-learning/dashboard-insights - Get dashboard insights"""
+        print("\n🔍 Testing AI Learning Dashboard Insights Endpoint")
+        
+        # Initialize AI Learning first
+        init_response = requests.post(f"{self.base_url}/api/ai-learning/initialize")
+        self.assertEqual(init_response.status_code, 200)
+        
+        test_date = "2025-01-23"
+        doctor_id = "default_doctor"
+        
+        response = requests.get(f"{self.base_url}/api/ai-learning/dashboard-insights?date={test_date}&doctor_id={doctor_id}")
+        self.assertEqual(response.status_code, 200, f"Dashboard insights failed: {response.text}")
+        
+        data = response.json()
+        self.assertIn("date", data)
+        self.assertIn("doctor_id", data)
+        self.assertIn("insights", data)
+        self.assertIn("generated_at", data)
+        
+        # Verify insights structure
+        insights = data["insights"]
+        self.assertIn("doctor_performance", insights)
+        self.assertIn("external_factors_impact", insights)
+        self.assertIn("patient_flow_predictions", insights)
+        self.assertIn("optimization_opportunities", insights)
+        self.assertIn("risk_alerts", insights)
+        self.assertIn("recommendations", insights)
+        
+        print(f"✅ Dashboard insights generated successfully")
+        print(f"   - Date: {data['date']}")
+        print(f"   - Doctor ID: {data['doctor_id']}")
+        print(f"   - Insights include: performance, external factors, predictions, optimization")
+        print(f"🎉 AI Learning Dashboard Insights Test: PASSED")
+    
+    def test_ai_learning_comprehensive_workflow(self):
+        """Test comprehensive AI Learning workflow - End-to-end testing"""
+        print("\n🔍 Testing AI Learning Comprehensive Workflow")
+        
+        # Step 1: Initialize AI Learning
+        print("  Step 1: Initializing AI Learning system...")
+        init_response = requests.post(f"{self.base_url}/api/ai-learning/initialize")
+        self.assertEqual(init_response.status_code, 200)
+        print("  ✅ AI Learning system initialized")
+        
+        # Step 2: Get doctor state
+        print("  Step 2: Fetching doctor state...")
+        doctor_response = requests.get(f"{self.base_url}/api/ai-learning/doctor-state")
+        self.assertEqual(doctor_response.status_code, 200)
+        doctor_data = doctor_response.json()
+        print(f"  ✅ Doctor state fetched (efficiency: {doctor_data['state']['efficiency_score']})")
+        
+        # Step 3: Get temporal patterns
+        print("  Step 3: Analyzing temporal patterns...")
+        patterns_response = requests.get(f"{self.base_url}/api/ai-learning/temporal-patterns?lookback_days=30")
+        self.assertEqual(patterns_response.status_code, 200)
+        patterns_data = patterns_response.json()
+        print(f"  ✅ Temporal patterns analyzed ({patterns_data['total_patterns']} patterns)")
+        
+        # Step 4: Get external factors
+        print("  Step 4: Fetching external factors...")
+        test_date = "2025-01-23"
+        external_response = requests.get(f"{self.base_url}/api/ai-learning/external-factors?date={test_date}")
+        self.assertEqual(external_response.status_code, 200)
+        external_data = external_response.json()
+        print(f"  ✅ External factors fetched (impact: {external_data['total_impact_score']})")
+        
+        # Step 5: Test with patient data if available
+        patients_response = requests.get(f"{self.base_url}/api/patients")
+        if patients_response.status_code == 200:
+            patients_data = patients_response.json()
+            if len(patients_data["patients"]) > 0:
+                patient_id = patients_data["patients"][0]["id"]
+                
+                # Step 5a: Get patient behavioral profile
+                print("  Step 5a: Analyzing patient behavioral profile...")
+                profile_response = requests.get(f"{self.base_url}/api/ai-learning/patient-behavioral-profile?patient_id={patient_id}")
+                self.assertEqual(profile_response.status_code, 200)
+                profile_data = profile_response.json()
+                print(f"  ✅ Patient profile analyzed (punctuality: {profile_data['behavioral_profile']['punctuality_score']})")
+                
+                # Step 5b: Get comprehensive predictions
+                print("  Step 5b: Generating comprehensive predictions...")
+                predictions_response = requests.get(f"{self.base_url}/api/ai-learning/comprehensive-predictions?patient_id={patient_id}&consultation_type=visite&date={test_date}")
+                self.assertEqual(predictions_response.status_code, 200)
+                predictions_data = predictions_response.json()
+                print(f"  ✅ Comprehensive predictions generated (confidence: {predictions_data['comprehensive_predictions'].get('confidence_score', 'N/A')})")
+                
+                # Step 5c: Record patient behavior
+                print("  Step 5c: Recording patient behavior...")
+                behavior_data = {
+                    "heure_programmee": "10:00",
+                    "heure_arrivee": "10:05",
+                    "satisfaction_exprimee": 8,
+                    "engagement_whatsapp": 0.9
+                }
+                behavior_response = requests.post(f"{self.base_url}/api/ai-learning/record-patient-behavior?patient_id={patient_id}", json=behavior_data)
+                self.assertEqual(behavior_response.status_code, 200)
+                print("  ✅ Patient behavior recorded")
+                
+                # Step 5d: Enrich consultation data
+                print("  Step 5d: Enriching consultation data...")
+                consultation_data = {
+                    "patient_id": patient_id,
+                    "date": test_date,
+                    "heure_programmee": "10:00",
+                    "duree_reelle": 20,
+                    "satisfaction_exprimee": 8
+                }
+                enrich_response = requests.post(f"{self.base_url}/api/ai-learning/enrich-consultation", json=consultation_data)
+                self.assertEqual(enrich_response.status_code, 200)
+                print("  ✅ Consultation data enriched")
+        
+        # Step 6: Update external factors
+        print("  Step 6: Updating external factors...")
+        external_update_data = {
+            "temperature": 20,
+            "weather_condition": "sunny",
+            "morning_traffic": 0.4
+        }
+        update_response = requests.post(f"{self.base_url}/api/ai-learning/update-external-factors?date={test_date}", json=external_update_data)
+        self.assertEqual(update_response.status_code, 200)
+        print("  ✅ External factors updated")
+        
+        # Step 7: Get proactive suggestions
+        print("  Step 7: Generating proactive suggestions...")
+        suggestions_response = requests.get(f"{self.base_url}/api/ai-learning/suggestions/proactive")
+        self.assertEqual(suggestions_response.status_code, 200)
+        suggestions_data = suggestions_response.json()
+        print(f"  ✅ Proactive suggestions generated ({suggestions_data['total_suggestions']} suggestions)")
+        
+        # Step 8: Get dashboard insights
+        print("  Step 8: Fetching dashboard insights...")
+        insights_response = requests.get(f"{self.base_url}/api/ai-learning/dashboard-insights?date={test_date}")
+        self.assertEqual(insights_response.status_code, 200)
+        insights_data = insights_response.json()
+        print("  ✅ Dashboard insights generated")
+        
+        print(f"🎉 AI Learning Comprehensive Workflow Test: PASSED")
+        print(f"   - All AI data enrichment endpoints tested successfully")
+        print(f"   - End-to-end AI learning workflow validated")
+        print(f"   - Patient behavior analysis, external factors, and predictions working correctly")
+
     # ========== WHATSAPP HUB COMPREHENSIVE TESTING ==========
     
     def test_whatsapp_hub_initialize(self):
