@@ -5503,6 +5503,8 @@ async def prepare_whatsapp_message(request: WhatsAppSendRequest):
             "variables_used": generate_whatsapp_variables(patient, appointment, ai_context) if request.template_id else {}
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error preparing message: {str(e)}")
 
