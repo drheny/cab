@@ -86,6 +86,7 @@ const Dashboard = ({ user }) => {
     fetchBirthdays();
     fetchPhoneReminders();
     fetchMessages();
+    fetchAIInsights();
     initializeWebSocket();
     
     // Cleanup WebSocket on unmount
