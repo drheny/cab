@@ -3,6 +3,8 @@ import { Stethoscope, User, Shield, Eye, EyeOff } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
+const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+
 const LoginPage = ({ onLogin }) => {
   const [loginForm, setLoginForm] = useState({
     username: '',
