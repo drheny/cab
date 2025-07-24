@@ -6297,7 +6297,71 @@ class ExternalFactorsCollector:
         
         return max(-0.1, min(0.1, impact))
     
-    def get_current_season(self):
+    def calculate_seasonal_impact(self):
+        """Calcule l'impact saisonnier (-0.2 à +0.2)"""
+        season = self.get_current_season()
+        month = datetime.now().month
+        
+        impact = 0
+        
+        # Impact saisonnier général
+        if season == 'winter':
+            impact -= 0.1  # Plus de retards en hiver
+        elif season == 'spring':
+            impact += 0.05  # Météo agréable
+        elif season == 'summer':
+            impact -= 0.05  # Vacances, désorganisation
+        elif season == 'autumn':
+            impact += 0.1  # Retour de vacances, organisation
+        
+        # Pics de maladie saisonniers
+        if month in [11, 12, 1, 2]:  # Saison grippe
+            impact -= 0.05
+        elif month in [4, 5]:  # Allergies printemps
+            impact -= 0.03
+        
+        return max(-0.2, min(0.2, impact))
+    
+    def calculate_calendar_impact(self, external_data):
+        """Calcule l'impact calendaire (-0.2 à +0.2)"""
+        is_school_day = external_data.get('is_school_day', True)
+        is_holiday = external_data.get('is_holiday', False)
+        school_vacation = external_data.get('school_vacation', False)
+        public_events = external_data.get('public_events', [])
+        
+        impact = 0
+        
+        if is_holiday:
+            impact -= 0.1  # Jours fériés = désorganisation
+        
+        if school_vacation:
+            impact -= 0.05  # Vacances scolaires = familles moins organisées
+        elif not is_school_day:  # Weekend
+            impact += 0.05  # Weekend = moins de contraintes
+        
+        if len(public_events) > 0:
+            impact -= 0.1  # Événements publics = circulation difficile
+        
+        return max(-0.2, min(0.2, impact))
+    
+    def calculate_regional_impact(self, external_data):
+        """Calcule l'impact régional (-0.1 à +0.1)"""
+        local_events = external_data.get('local_events', [])
+        system_load = external_data.get('system_load', 0.5)
+        
+        impact = 0
+        
+        # Impact événements locaux
+        if len(local_events) > 0:
+            impact -= 0.05
+        
+        # Impact charge système santé
+        if system_load > 0.8:
+            impact -= 0.05  # Système surchargé
+        elif system_load < 0.3:
+            impact += 0.03  # Système peu chargé
+        
+        return max(-0.1, min(0.1, impact))
         """Détermine la saison actuelle"""
         month = datetime.now().month
         if month in [12, 1, 2]:
