@@ -5089,6 +5089,383 @@ async def get_top_patients_report(
 
 # ==================== END ADVANCED REPORTS API ====================
 
+# ==================== AI LEARNING ENGINE ====================
+
+# AI Learning collections
+ai_learning_data = db.ai_learning_data
+temporal_patterns = db.temporal_patterns  
+doctor_performance_patterns = db.doctor_performance_patterns
+prediction_accuracy = db.prediction_accuracy
+
+# Data enrichment classes
+class TemporalDataCollector:
+    """Collecte automatique des patterns temporels"""
+    
+    def __init__(self):
+        self.collection = temporal_patterns
+    
+    def record_consultation_timing(self, consultation_data):
+        """Enregistre les données temporelles d'une consultation"""
+        temporal_record = {
+            'consultation_id': consultation_data.get('id'),
+            'patient_id': consultation_data.get('patient_id'),
+            'scheduled_time': consultation_data.get('heure_programmee'),
+            'actual_start_time': consultation_data.get('heure_debut_reelle'),
+            'actual_end_time': consultation_data.get('heure_fin_reelle'),
+            'actual_duration': consultation_data.get('duree_reelle'),
+            'scheduled_duration': consultation_data.get('duree_prevue', 15),
+            'delay_from_schedule': self.calculate_delay(consultation_data),
+            'wait_time_patient': consultation_data.get('temps_attente_patient'),
+            'consultation_type': consultation_data.get('type_rdv'),
+            'complexity_actual': consultation_data.get('complexite_reelle'),
+            'interruptions_count': consultation_data.get('interruptions', 0),
+            'doctor_efficiency_moment': self.calculate_moment_efficiency(consultation_data),
+            'temporal_context': {
+                'hour_of_day': datetime.now().hour,
+                'day_of_week': datetime.now().weekday(),
+                'week_of_month': self.get_week_of_month(),
+                'month': datetime.now().month,
+                'season': self.get_season(),
+                'is_after_break': consultation_data.get('apres_pause', False),
+                'is_before_break': consultation_data.get('avant_pause', False),
+                'position_in_day': consultation_data.get('position_journee'),
+                'patients_seen_already': consultation_data.get('patients_deja_vus', 0)
+            },
+            'recorded_at': datetime.now()
+        }
+        self.collection.insert_one(temporal_record)
+        return temporal_record
+    
+    def calculate_delay(self, consultation_data):
+        """Calcule le retard réel vs programmé"""
+        try:
+            scheduled = datetime.strptime(consultation_data.get('heure_programmee'), '%H:%M')
+            actual = datetime.strptime(consultation_data.get('heure_debut_reelle'), '%H:%M')
+            delay_minutes = (actual - scheduled).total_seconds() / 60
+            return max(0, delay_minutes)
+        except:
+            return 0
+    
+    def get_temporal_patterns(self, lookback_days=30):
+        """Analyse les patterns temporels des derniers jours"""
+        cutoff_date = datetime.now() - timedelta(days=lookback_days)
+        
+        pipeline = [
+            {"$match": {"recorded_at": {"$gte": cutoff_date}}},
+            {"$group": {
+                "_id": {
+                    "hour": "$temporal_context.hour_of_day",
+                    "day_of_week": "$temporal_context.day_of_week"
+                },
+                "avg_duration": {"$avg": "$actual_duration"},
+                "avg_delay": {"$avg": "$delay_from_schedule"},
+                "avg_efficiency": {"$avg": "$doctor_efficiency_moment"},
+                "consultation_count": {"$sum": 1},
+                "complexity_avg": {"$avg": "$complexity_actual"}
+            }},
+            {"$sort": {"_id.day_of_week": 1, "_id.hour": 1}}
+        ]
+        
+        return list(self.collection.aggregate(pipeline))
+
+class DoctorPerformanceCollector:
+    """Collecte des patterns de performance médecin"""
+    
+    def __init__(self):
+        self.collection = doctor_performance_patterns
+    
+    def record_performance_snapshot(self, doctor_id, consultation_data):
+        """Enregistre un snapshot de performance"""
+        performance_record = {
+            'doctor_id': doctor_id,
+            'consultation_id': consultation_data.get('id'),
+            'timestamp': datetime.now(),
+            'performance_metrics': {
+                'consultation_efficiency': self.calculate_efficiency(consultation_data),
+                'patient_satisfaction_estimated': consultation_data.get('satisfaction_estimee', 7),
+                'energy_level_estimated': self.estimate_energy_level(consultation_data),
+                'stress_indicators': self.detect_stress_indicators(consultation_data),
+                'multitasking_score': consultation_data.get('multitasking_score', 5)
+            },
+            'context_factors': {
+                'consultations_done_today': self.get_consultations_count_today(doctor_id),
+                'time_since_last_break': self.get_time_since_break(doctor_id),
+                'queue_pressure': self.get_current_queue_pressure(),
+                'complexity_recent_cases': self.get_recent_complexity_avg(doctor_id),
+                'interruptions_recent': consultation_data.get('interruptions_recentes', 0)
+            },
+            'predictions_accuracy': {
+                'duration_prediction_error': self.calculate_prediction_error(consultation_data, 'duration'),
+                'complexity_prediction_error': self.calculate_prediction_error(consultation_data, 'complexity')
+            }
+        }
+        self.collection.insert_one(performance_record)
+        return performance_record
+    
+    def get_doctor_current_state(self, doctor_id):
+        """Obtient l'état actuel du médecin basé sur les données récentes"""
+        recent_records = list(self.collection.find({
+            'doctor_id': doctor_id,
+            'timestamp': {'$gte': datetime.now() - timedelta(hours=4)}
+        }).sort('timestamp', -1).limit(10))
+        
+        if not recent_records:
+            return self.get_default_doctor_state()
+        
+        # Analyse des tendances récentes
+        avg_efficiency = sum(r['performance_metrics']['consultation_efficiency'] for r in recent_records) / len(recent_records)
+        avg_energy = sum(r['performance_metrics']['energy_level_estimated'] for r in recent_records) / len(recent_records)
+        total_consultations = recent_records[0]['context_factors']['consultations_done_today']
+        
+        return {
+            'current_efficiency': round(avg_efficiency, 2),
+            'energy_level': round(avg_energy, 2),
+            'fatigue_level': min(1.0, total_consultations / 20),  # Fatigue increases with patient count
+            'performance_trend': self.calculate_trend(recent_records),
+            'optimal_break_suggestion': self.suggest_break_timing(recent_records),
+            'predicted_end_day_efficiency': self.predict_end_day_performance(recent_records)
+        }
+
+class PredictiveEngine:
+    """Moteur de prédictions temporelles avancées"""
+    
+    def __init__(self):
+        self.temporal_collector = TemporalDataCollector()
+        self.performance_collector = DoctorPerformanceCollector()
+    
+    def predict_consultation_duration(self, patient_id, consultation_type, doctor_state, temporal_context):
+        """Prédiction avancée de durée de consultation"""
+        
+        # Récupérer les patterns historiques
+        historical_data = self.get_historical_patterns(patient_id, consultation_type, temporal_context)
+        
+        # Facteurs de base
+        base_duration = historical_data.get('avg_duration', 15)
+        
+        # Ajustements basés sur le contexte
+        adjustments = {
+            'doctor_efficiency': doctor_state.get('current_efficiency', 1.0),
+            'time_of_day': self.get_time_efficiency_factor(temporal_context['hour']),
+            'doctor_fatigue': max(0.8, 1 - doctor_state.get('fatigue_level', 0)),
+            'patient_complexity': historical_data.get('avg_complexity', 1.0),
+            'consultation_type_factor': self.get_consultation_type_factor(consultation_type),
+            'day_of_week_factor': self.get_day_efficiency_factor(temporal_context['day_of_week'])
+        }
+        
+        # Calcul de prédiction
+        efficiency_multiplier = (
+            adjustments['doctor_efficiency'] * 
+            adjustments['time_of_day'] * 
+            adjustments['doctor_fatigue'] * 
+            adjustments['day_of_week_factor']
+        )
+        
+        complexity_multiplier = (
+            adjustments['patient_complexity'] * 
+            adjustments['consultation_type_factor']
+        )
+        
+        predicted_duration = base_duration * complexity_multiplier / efficiency_multiplier
+        
+        # Confidence calculation
+        confidence = self.calculate_prediction_confidence(historical_data, adjustments)
+        
+        return {
+            'predicted_minutes': round(max(5, min(45, predicted_duration)), 1),
+            'confidence_level': round(confidence, 2),
+            'base_duration': base_duration,
+            'adjustments_applied': adjustments,
+            'explanation': self.generate_prediction_explanation(adjustments)
+        }
+    
+    def predict_wait_time(self, patient_position, current_queue, doctor_state, temporal_context):
+        """Prédiction avancée de temps d'attente"""
+        
+        if patient_position <= 0:
+            return {'predicted_minutes': 0, 'confidence_level': 1.0}
+        
+        # Analyse de la queue devant le patient
+        patients_ahead = current_queue[:patient_position-1]
+        total_predicted_time = 0
+        confidence_scores = []
+        
+        for i, patient_ahead in enumerate(patients_ahead):
+            # Prédiction pour chaque patient devant
+            patient_prediction = self.predict_consultation_duration(
+                patient_ahead['patient_id'],
+                patient_ahead['consultation_type'],
+                doctor_state,
+                temporal_context
+            )
+            
+            total_predicted_time += patient_prediction['predicted_minutes']
+            confidence_scores.append(patient_prediction['confidence_level'])
+            
+            # Ajustement pour transition entre patients
+            total_predicted_time += self.get_transition_time(i, temporal_context)
+        
+        # Ajustements contextuels
+        contextual_adjustments = {
+            'urgent_insertion_risk': self.calculate_urgent_insertion_probability(),
+            'doctor_break_probability': self.calculate_break_probability(doctor_state, temporal_context),
+            'no_show_adjustments': self.calculate_no_show_impact(patients_ahead),
+            'external_delays': self.estimate_external_delays(temporal_context)
+        }
+        
+        # Application des ajustements
+        final_wait_time = total_predicted_time
+        for adjustment_type, adjustment_value in contextual_adjustments.items():
+            final_wait_time *= (1 + adjustment_value)
+        
+        # Confidence globale
+        avg_confidence = sum(confidence_scores) / len(confidence_scores) if confidence_scores else 0.5
+        final_confidence = avg_confidence * (1 - sum(contextual_adjustments.values()) * 0.1)
+        
+        return {
+            'predicted_minutes': round(max(0, final_wait_time)),
+            'confidence_level': round(max(0.1, min(0.95, final_confidence)), 2),
+            'patients_ahead': len(patients_ahead),
+            'individual_predictions': [p['predicted_minutes'] for p in [
+                self.predict_consultation_duration(pa['patient_id'], pa['consultation_type'], doctor_state, temporal_context) 
+                for pa in patients_ahead
+            ]],
+            'contextual_factors': contextual_adjustments,
+            'explanation': self.generate_wait_time_explanation(patients_ahead, contextual_adjustments)
+        }
+
+class ProactiveSuggestionsEngine:
+    """Générateur de suggestions proactives intelligentes"""
+    
+    def __init__(self):
+        self.predictor = PredictiveEngine()
+        
+    def generate_smart_suggestions(self, current_context):
+        """Génère des suggestions intelligentes basées sur le contexte actuel"""
+        suggestions = []
+        
+        # Récupérer l'état actuel
+        doctor_state = current_context.get('doctor_state', {})
+        queue_state = current_context.get('queue_state', {})
+        temporal_context = current_context.get('temporal_context', {})
+        
+        # 1. Suggestions temporelles
+        suggestions.extend(self.generate_temporal_suggestions(doctor_state, temporal_context))
+        
+        # 2. Suggestions de queue optimization
+        suggestions.extend(self.generate_queue_optimization_suggestions(queue_state, doctor_state))
+        
+        # 3. Suggestions de communication
+        suggestions.extend(self.generate_communication_suggestions(queue_state, temporal_context))
+        
+        # 4. Suggestions de performance
+        suggestions.extend(self.generate_performance_suggestions(doctor_state, temporal_context))
+        
+        # Tri par priorité et relevance
+        suggestions.sort(key=lambda x: (x['priority'], -x['confidence']))
+        
+        return suggestions[:5]  # Top 5 suggestions
+    
+    def generate_temporal_suggestions(self, doctor_state, temporal_context):
+        """Suggestions basées sur les patterns temporels"""
+        suggestions = []
+        
+        current_hour = temporal_context.get('hour', datetime.now().hour)
+        current_efficiency = doctor_state.get('current_efficiency', 1.0)
+        fatigue_level = doctor_state.get('fatigue_level', 0)
+        
+        # Détection de baisse d'efficacité
+        if current_efficiency < 0.8 and fatigue_level > 0.6:
+            suggestions.append({
+                'type': 'performance_alert',
+                'icon': '⚡',
+                'title': 'Pause Performance Recommandée',
+                'message': f'Efficacité à {current_efficiency*100:.0f}% - Pause 10min recommandée pour récupération',
+                'priority': 1,
+                'confidence': 0.85,
+                'action': 'suggest_break',
+                'estimated_benefit': 'Récupération +20% efficacité'
+            })
+        
+        # Détection de période optimale
+        if 9 <= current_hour <= 11 and current_efficiency > 1.1:
+            suggestions.append({
+                'type': 'optimization_opportunity',
+                'icon': '🎯',
+                'title': 'Période Optimale Détectée',
+                'message': f'Performance peak ({current_efficiency*100:.0f}%) - Idéal pour cas complexes',
+                'priority': 2,
+                'confidence': 0.90,
+                'action': 'prioritize_complex_cases',
+                'estimated_benefit': 'Optimisation workflow'
+            })
+        
+        # Prédiction de fin de journée
+        end_day_prediction = doctor_state.get('predicted_end_day_efficiency', 0.8)
+        if end_day_prediction < 0.7:
+            suggestions.append({
+                'type': 'planning_alert',
+                'icon': '📊',
+                'title': 'Fin de Journée Difficile Prédite',
+                'message': f'Efficacité fin journée prédite: {end_day_prediction*100:.0f}% - Réorganiser les cas complexes',
+                'priority': 2,
+                'confidence': 0.75,
+                'action': 'reorganize_schedule',
+                'estimated_benefit': 'Éviter retards accumulation'
+            })
+        
+        return suggestions
+    
+    def generate_queue_optimization_suggestions(self, queue_state, doctor_state):
+        """Suggestions d'optimisation de queue"""
+        suggestions = []
+        
+        queue_length = queue_state.get('length', 0)
+        avg_complexity = queue_state.get('avg_complexity', 1.0)
+        predicted_delays = queue_state.get('predicted_delays', [])
+        
+        if queue_length > 5 and sum(predicted_delays) > 30:
+            # Recherche d'optimisations possibles
+            optimization_potential = self.calculate_queue_optimization_potential(queue_state)
+            
+            if optimization_potential > 10:  # Plus de 10 minutes d'économie possible
+                suggestions.append({
+                    'type': 'queue_optimization',
+                    'icon': '🔄',
+                    'title': 'Optimisation Queue Possible',
+                    'message': f'Réorganisation pourrait économiser {optimization_potential:.0f}min d\'attente globale',
+                    'priority': 1,
+                    'confidence': 0.80,
+                    'action': 'optimize_queue_order',
+                    'estimated_benefit': f'-{optimization_potential:.0f}min attente'
+                })
+        
+        return suggestions
+    
+    def generate_communication_suggestions(self, queue_state, temporal_context):
+        """Suggestions de communication proactive"""
+        suggestions = []
+        
+        # Détection de patients à risque de retard
+        risky_patients = queue_state.get('high_delay_risk_patients', [])
+        
+        for patient in risky_patients[:2]:  # Top 2 patients à risque
+            risk_factors = patient.get('risk_factors', [])
+            suggestions.append({
+                'type': 'communication_proactive',
+                'icon': '📱',
+                'title': f'Communication Préventive - {patient["name"]}',
+                'message': f'Risque retard élevé ({", ".join(risk_factors)}) - Message proactif recommandé',
+                'priority': 2,
+                'confidence': 0.70,
+                'action': 'send_proactive_message',
+                'patient_id': patient['id'],
+                'estimated_benefit': 'Réduction risque retard'
+            })
+        
+        return suggestions
+
+# ==================== END AI LEARNING ENGINE ====================
+
 # ==================== WHATSAPP HUB API ====================
 
 # WhatsApp Hub collections
