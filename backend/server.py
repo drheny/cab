@@ -5874,6 +5874,557 @@ class ProactiveSuggestionsEngine:
         
         return suggestions
 
+class PatientBehaviorCollector:
+    """Collecte des patterns comportementaux des patients"""
+    
+    def __init__(self):
+        self.collection = patient_behavior_patterns
+    
+    def record_patient_behavior(self, patient_id, consultation_data):
+        """Enregistre le comportement d'un patient lors d'une consultation"""
+        behavior_record = {
+            'patient_id': patient_id,
+            'consultation_id': consultation_data.get('id'),
+            'timestamp': datetime.now(),
+            'punctuality_data': {
+                'scheduled_time': consultation_data.get('heure_programmee'),
+                'arrival_time': consultation_data.get('heure_arrivee'),
+                'delay_minutes': self.calculate_arrival_delay(consultation_data),
+                'punctuality_score': self.calculate_punctuality_score(consultation_data)
+            },
+            'communication_data': {
+                'response_time_confirmation': consultation_data.get('temps_reponse_confirmation', 24),
+                'whatsapp_engagement': consultation_data.get('engagement_whatsapp', 0.5),
+                'preferred_communication_method': consultation_data.get('methode_com_preferee', 'whatsapp'),
+                'message_read_rate': consultation_data.get('taux_lecture_messages', 0.8)
+            },
+            'consultation_behavior': {
+                'preparation_level': consultation_data.get('niveau_preparation', 5),
+                'questions_asked': consultation_data.get('questions_posees', 2),
+                'compliance_previous_advice': consultation_data.get('compliance_conseils', 0.7),
+                'satisfaction_expressed': consultation_data.get('satisfaction_exprimee', 8)
+            },
+            'scheduling_preferences': {
+                'preferred_day_of_week': datetime.now().weekday(),
+                'preferred_time_slot': self.get_time_slot(consultation_data.get('heure_programmee')),
+                'flexibility_score': consultation_data.get('flexibilite', 0.6),
+                'reschedule_frequency': consultation_data.get('freq_reprogrammation', 0.1)
+            }
+        }
+        self.collection.insert_one(behavior_record)
+        return behavior_record
+    
+    def get_patient_behavioral_profile(self, patient_id, lookback_days=90):
+        """Analyse le profil comportemental d'un patient"""
+        cutoff_date = datetime.now() - timedelta(days=lookback_days)
+        
+        patient_records = list(self.collection.find({
+            'patient_id': patient_id,
+            'timestamp': {'$gte': cutoff_date}
+        }).sort('timestamp', -1))
+        
+        if not patient_records:
+            return self.get_default_behavioral_profile()
+        
+        # Calculs statistiques
+        punctuality_scores = [r['punctuality_data']['punctuality_score'] for r in patient_records]
+        response_times = [r['communication_data']['response_time_confirmation'] for r in patient_records]
+        satisfaction_scores = [r['consultation_behavior']['satisfaction_expressed'] for r in patient_records]
+        
+        return {
+            'patient_id': patient_id,
+            'punctuality_score': sum(punctuality_scores) / len(punctuality_scores),
+            'avg_response_time_hours': sum(response_times) / len(response_times),
+            'satisfaction_score': sum(satisfaction_scores) / len(satisfaction_scores),
+            'consultation_count': len(patient_records),
+            'preferred_time_slot': self.get_most_common_preference(patient_records, 'scheduling_preferences.preferred_time_slot'),
+            'communication_effectiveness': self.calculate_communication_effectiveness(patient_records),
+            'reliability_score': self.calculate_reliability_score(patient_records),
+            'behavioral_trend': self.analyze_behavioral_trend(patient_records),
+            'risk_factors': self.identify_risk_factors(patient_records),
+            'last_consultation': patient_records[0]['timestamp'] if patient_records else None
+        }
+    
+    def calculate_arrival_delay(self, consultation_data):
+        """Calcule le retard d'arrivée en minutes"""
+        try:
+            scheduled = datetime.strptime(consultation_data.get('heure_programmee', '09:00'), '%H:%M')
+            arrival = datetime.strptime(consultation_data.get('heure_arrivee', '09:00'), '%H:%M')
+            delay = (arrival - scheduled).total_seconds() / 60
+            return max(0, delay)
+        except:
+            return 0
+    
+    def calculate_punctuality_score(self, consultation_data):
+        """Calcule le score de ponctualité (0-10)"""
+        delay = self.calculate_arrival_delay(consultation_data)
+        if delay == 0:
+            return 10
+        elif delay <= 5:
+            return 9
+        elif delay <= 10:
+            return 7
+        elif delay <= 15:
+            return 5
+        elif delay <= 30:
+            return 3
+        else:
+            return 1
+    
+    def get_time_slot(self, time_str):
+        """Détermine le créneau horaire"""
+        try:
+            hour = int(time_str.split(':')[0])
+            if 8 <= hour < 10:
+                return 'morning_early'
+            elif 10 <= hour < 12:
+                return 'morning_late'
+            elif 14 <= hour < 16:
+                return 'afternoon_early'
+            elif 16 <= hour < 18:
+                return 'afternoon_late'
+            else:
+                return 'other'
+        except:
+            return 'other'
+    
+    def get_default_behavioral_profile(self):
+        """Profil comportemental par défaut pour nouveaux patients"""
+        return {
+            'punctuality_score': 7.0,
+            'avg_response_time_hours': 12.0,
+            'satisfaction_score': 8.0,
+            'consultation_count': 0,
+            'preferred_time_slot': 'morning_late',
+            'communication_effectiveness': 0.7,
+            'reliability_score': 0.8,
+            'behavioral_trend': 'stable',
+            'risk_factors': [],
+            'last_consultation': None
+        }
+    
+    def get_most_common_preference(self, patient_records, field_path):
+        """Trouve la préférence la plus commune dans les enregistrements"""
+        values = []
+        for record in patient_records:
+            # Navigate nested field path
+            current = record
+            for field in field_path.split('.'):
+                current = current.get(field, {})
+                if not isinstance(current, dict):
+                    break
+            if current and not isinstance(current, dict):
+                values.append(current)
+        
+        if not values:
+            return 'morning_late'  # default
+        
+        # Return most common value
+        from collections import Counter
+        return Counter(values).most_common(1)[0][0]
+    
+    def calculate_communication_effectiveness(self, patient_records):
+        """Calcule l'efficacité de communication"""
+        if not patient_records:
+            return 0.7
+        
+        engagement_scores = [r['communication_data']['whatsapp_engagement'] for r in patient_records]
+        read_rates = [r['communication_data']['message_read_rate'] for r in patient_records]
+        
+        avg_engagement = sum(engagement_scores) / len(engagement_scores)
+        avg_read_rate = sum(read_rates) / len(read_rates)
+        
+        return (avg_engagement + avg_read_rate) / 2
+    
+    def calculate_reliability_score(self, patient_records):
+        """Calcule le score de fiabilité du patient"""
+        if not patient_records:
+            return 0.8
+        
+        punctuality_scores = [r['punctuality_data']['punctuality_score'] for r in patient_records]
+        avg_punctuality = sum(punctuality_scores) / len(punctuality_scores)
+        
+        # Convert punctuality score (0-10) to reliability score (0-1)
+        return min(1.0, avg_punctuality / 10.0)
+    
+    def analyze_behavioral_trend(self, patient_records):
+        """Analyse la tendance comportementale"""
+        if len(patient_records) < 3:
+            return 'stable'
+        
+        # Analyze last 3 consultations vs previous ones
+        recent_records = patient_records[:3]
+        older_records = patient_records[3:]
+        
+        if not older_records:
+            return 'stable'
+        
+        recent_punctuality = sum(r['punctuality_data']['punctuality_score'] for r in recent_records) / len(recent_records)
+        older_punctuality = sum(r['punctuality_data']['punctuality_score'] for r in older_records) / len(older_records)
+        
+        diff = recent_punctuality - older_punctuality
+        
+        if diff > 1:
+            return 'improving'
+        elif diff < -1:
+            return 'declining'
+        else:
+            return 'stable'
+    
+    def identify_risk_factors(self, patient_records):
+        """Identifie les facteurs de risque"""
+        risk_factors = []
+        
+        if not patient_records:
+            return risk_factors
+        
+        # Check punctuality
+        avg_punctuality = sum(r['punctuality_data']['punctuality_score'] for r in patient_records) / len(patient_records)
+        if avg_punctuality < 5:
+            risk_factors.append('chronic_lateness')
+        
+        # Check communication responsiveness
+        avg_response_time = sum(r['communication_data']['response_time_confirmation'] for r in patient_records) / len(patient_records)
+        if avg_response_time > 48:
+            risk_factors.append('poor_communication')
+        
+        # Check satisfaction trend
+        if len(patient_records) >= 3:
+            recent_satisfaction = sum(r['consultation_behavior']['satisfaction_expressed'] for r in patient_records[:3]) / 3
+            if recent_satisfaction < 6:
+                risk_factors.append('low_satisfaction')
+        
+        return risk_factors
+
+class ExternalFactorsCollector:
+    """Collecte des facteurs externes influençant les consultations"""
+    
+    def __init__(self):
+        self.collection = external_factors_patterns
+    
+    def record_daily_external_factors(self, date_str, external_data=None):
+        """Enregistre les facteurs externes pour une journée"""
+        if external_data is None:
+            external_data = self.gather_external_data()
+        
+        external_record = {
+            'date': date_str,
+            'timestamp': datetime.now(),
+            'weather_data': {
+                'temperature': external_data.get('temperature', 22),
+                'precipitation': external_data.get('precipitation', 0),
+                'wind_speed': external_data.get('wind_speed', 10),
+                'weather_condition': external_data.get('weather_condition', 'clear'),
+                'impact_score': self.calculate_weather_impact(external_data)
+            },
+            'traffic_data': {
+                'morning_congestion': external_data.get('morning_traffic', 0.3),
+                'afternoon_congestion': external_data.get('afternoon_traffic', 0.4),
+                'road_works': external_data.get('road_works', False),
+                'public_transport_disruption': external_data.get('transport_disruption', False),
+                'impact_score': self.calculate_traffic_impact(external_data)
+            },
+            'calendar_events': {
+                'is_school_day': external_data.get('is_school_day', True),
+                'is_holiday': external_data.get('is_holiday', False),
+                'school_vacation': external_data.get('school_vacation', False),
+                'public_events': external_data.get('public_events', []),
+                'impact_score': self.calculate_calendar_impact(external_data)
+            },
+            'seasonal_factors': {
+                'season': self.get_current_season(),
+                'seasonal_illness_peak': external_data.get('illness_peak', False),
+                'seasonal_allergies': external_data.get('allergies_season', False),
+                'impact_score': self.calculate_seasonal_impact()
+            },
+            'regional_factors': {
+                'local_events': external_data.get('local_events', []),
+                'economic_indicators': external_data.get('economic_factors', {}),
+                'healthcare_system_load': external_data.get('system_load', 0.5),
+                'impact_score': self.calculate_regional_impact(external_data)
+            }
+        }
+        
+        # Upsert (insert or update)
+        self.collection.replace_one(
+            {'date': date_str}, 
+            external_record, 
+            upsert=True
+        )
+        return external_record
+    
+    def get_external_factors_for_date(self, date_str):
+        """Récupère les facteurs externes pour une date"""
+        record = self.collection.find_one({'date': date_str})
+        if record:
+            return record
+        else:
+            # Créer des données par défaut
+            return self.record_daily_external_factors(date_str)
+    
+    def calculate_total_external_impact(self, date_str):
+        """Calcule l'impact total des facteurs externes (-1 à +1)"""
+        factors = self.get_external_factors_for_date(date_str)
+        
+        weather_impact = factors['weather_data']['impact_score']
+        traffic_impact = factors['traffic_data']['impact_score']
+        calendar_impact = factors['calendar_events']['impact_score']
+        seasonal_impact = factors['seasonal_factors']['impact_score']
+        regional_impact = factors['regional_factors']['impact_score']
+        
+        # Pondération des différents facteurs
+        total_impact = (
+            weather_impact * 0.3 +
+            traffic_impact * 0.25 +
+            calendar_impact * 0.2 +
+            seasonal_impact * 0.15 +
+            regional_impact * 0.1
+        )
+        
+        return max(-1.0, min(1.0, total_impact))
+    
+    def gather_external_data(self):
+        """Rassemble les données externes (à connecter avec des APIs réelles)"""
+        # Pour l'instant, données simulées - À remplacer par de vraies APIs
+        return {
+            'temperature': 25,
+            'precipitation': 0,
+            'weather_condition': 'clear',
+            'morning_traffic': 0.3,
+            'afternoon_traffic': 0.4,
+            'is_school_day': datetime.now().weekday() < 5,
+            'is_holiday': False,
+            'public_events': [],
+            'local_events': [],
+            'system_load': 0.5
+        }
+    
+    def calculate_weather_impact(self, external_data):
+        """Calcule l'impact météo (-0.5 à +0.5)"""
+        temp = external_data.get('temperature', 22)
+        precipitation = external_data.get('precipitation', 0)
+        condition = external_data.get('weather_condition', 'clear')
+        
+        impact = 0
+        
+        # Impact température
+        if temp < 5 or temp > 35:
+            impact -= 0.2  # Températures extrêmes = plus de retards
+        elif 18 <= temp <= 25:
+            impact += 0.1  # Températures agréables = moins de retards
+        
+        # Impact précipitations
+        if precipitation > 10:
+            impact -= 0.3  # Pluie forte = retards
+        elif precipitation > 2:
+            impact -= 0.1  # Pluie légère = retards légers
+        
+        # Impact conditions spéciales
+        if condition in ['storm', 'snow', 'fog']:
+            impact -= 0.2
+        
+        return max(-0.5, min(0.5, impact))
+    
+    def calculate_traffic_impact(self, external_data):
+        """Calcule l'impact circulation (-0.3 à +0.3)"""
+        morning_congestion = external_data.get('morning_traffic', 0.3)
+        road_works = external_data.get('road_works', False)
+        transport_disruption = external_data.get('transport_disruption', False)
+        
+        impact = 0
+        
+        # Impact congestion
+        if morning_congestion > 0.7:
+            impact -= 0.2
+        elif morning_congestion < 0.2:
+            impact += 0.1
+        
+        # Impact travaux et perturbations
+        if road_works:
+            impact -= 0.1
+        if transport_disruption:
+            impact -= 0.15
+        
+        return max(-0.3, min(0.3, impact))
+    
+    def calculate_calendar_impact(self, external_data):
+        """Calcule l'impact calendaire (-0.2 à +0.2)"""
+        impact = 0
+        
+        if external_data.get('is_holiday', False):
+            impact -= 0.1  # Jours fériés = plus de retards
+        
+        if external_data.get('school_vacation', False):
+            impact += 0.1  # Vacances scolaires = moins de retards
+        
+        if external_data.get('public_events', []):
+            impact -= 0.1  # Événements publics = plus de retards
+        
+        return max(-0.2, min(0.2, impact))
+    
+    def calculate_seasonal_impact(self):
+        """Calcule l'impact saisonnier (-0.15 à +0.15)"""
+        season = self.get_current_season()
+        month = datetime.now().month
+        
+        impact = 0
+        
+        # Impact saisonnier général
+        if season == 'winter':
+            impact -= 0.1  # Hiver = plus de retards
+        elif season == 'summer':
+            impact += 0.05  # Été = légèrement moins de retards
+        
+        # Pics de maladie saisonnière
+        if month in [11, 12, 1, 2]:  # Saison grippe
+            impact -= 0.05
+        
+        return max(-0.15, min(0.15, impact))
+    
+    def calculate_regional_impact(self, external_data):
+        """Calcule l'impact régional (-0.1 à +0.1)"""
+        impact = 0
+        
+        system_load = external_data.get('system_load', 0.5)
+        if system_load > 0.8:
+            impact -= 0.1  # Système de santé surchargé
+        elif system_load < 0.3:
+            impact += 0.05  # Système de santé peu chargé
+        
+        local_events = external_data.get('local_events', [])
+        if local_events:
+            impact -= 0.05  # Événements locaux = légers retards
+        
+        return max(-0.1, min(0.1, impact))
+    
+    def get_current_season(self):
+        """Détermine la saison actuelle"""
+        month = datetime.now().month
+        if month in [12, 1, 2]:
+            return 'winter'
+        elif month in [3, 4, 5]:
+            return 'spring'
+        elif month in [6, 7, 8]:
+            return 'summer'
+        else:
+            return 'autumn'
+
+class DataEnrichmentEngine:
+    """Moteur principal d'enrichissement des données"""
+    
+    def __init__(self):
+        self.temporal_collector = TemporalDataCollector()
+        self.doctor_performance_collector = DoctorPerformanceCollector()
+        self.patient_behavior_collector = PatientBehaviorCollector()
+        self.external_factors_collector = ExternalFactorsCollector()
+        self.predictor = PredictiveEngine()
+        self.suggestions_engine = ProactiveSuggestionsEngine()
+    
+    def enrich_consultation_data(self, consultation_data, patient_id, doctor_id="default_doctor"):
+        """Enrichit toutes les données d'une consultation"""
+        enriched_data = consultation_data.copy()
+        
+        # Enrichissement temporel
+        temporal_data = self.temporal_collector.record_consultation_timing(consultation_data)
+        
+        # Enrichissement performance médecin
+        doctor_performance = self.doctor_performance_collector.record_performance_snapshot(doctor_id, consultation_data)
+        
+        # Enrichissement comportement patient
+        patient_behavior = self.patient_behavior_collector.record_patient_behavior(patient_id, consultation_data)
+        
+        # Enrichissement facteurs externes
+        date_str = consultation_data.get('date', datetime.now().strftime('%Y-%m-%d'))
+        external_factors = self.external_factors_collector.get_external_factors_for_date(date_str)
+        
+        # Ajout des données enrichies
+        enriched_data.update({
+            'ai_enrichment': {
+                'temporal_patterns': {
+                    'efficiency_moment': temporal_data.get('doctor_efficiency_moment'),
+                    'temporal_context': temporal_data.get('temporal_context'),
+                    'delay_pattern': temporal_data.get('delay_from_schedule')
+                },
+                'doctor_performance': {
+                    'current_efficiency': doctor_performance['performance_metrics']['consultation_efficiency'],
+                    'energy_level': doctor_performance['performance_metrics']['energy_level_estimated'],
+                    'stress_indicators': doctor_performance['performance_metrics']['stress_indicators']
+                },
+                'patient_behavior': {
+                    'punctuality_score': patient_behavior['punctuality_data']['punctuality_score'],
+                    'communication_effectiveness': patient_behavior['communication_data']['whatsapp_engagement'],
+                    'satisfaction_level': patient_behavior['consultation_behavior']['satisfaction_expressed']
+                },
+                'external_impact': {
+                    'weather_impact': external_factors['weather_data']['impact_score'],
+                    'traffic_impact': external_factors['traffic_data']['impact_score'],
+                    'total_external_score': self.external_factors_collector.calculate_total_external_impact(date_str)
+                },
+                'enrichment_timestamp': datetime.now().isoformat()
+            }
+        })
+        
+        return enriched_data
+    
+    def get_comprehensive_predictions(self, patient_id, consultation_type, date_str, doctor_id="default_doctor"):
+        """Génère des prédictions complètes avec tous les facteurs"""
+        
+        # État du médecin
+        doctor_state = self.doctor_performance_collector.get_doctor_current_state(doctor_id)
+        
+        # Profil comportemental patient
+        patient_profile = self.patient_behavior_collector.get_patient_behavioral_profile(patient_id)
+        
+        # Facteurs externes
+        external_impact = self.external_factors_collector.calculate_total_external_impact(date_str)
+        
+        # Contexte temporal
+        temporal_context = {
+            'hour': datetime.now().hour,
+            'day_of_week': datetime.now().weekday(),
+            'month': datetime.now().month,
+            'season': self.external_factors_collector.get_current_season()
+        }
+        
+        # Prédictions durée et attente
+        duration_prediction = self.predictor.predict_consultation_duration(
+            patient_id, consultation_type, doctor_state, temporal_context
+        )
+        
+        # Suggestions proactives
+        current_context = {
+            'doctor_state': doctor_state,
+            'patient_profile': patient_profile,
+            'external_factors': external_impact,
+            'temporal_context': temporal_context
+        }
+        
+        suggestions = self.suggestions_engine.generate_smart_suggestions(current_context)
+        
+        return {
+            'predictions': {
+                'consultation_duration': duration_prediction,
+                'no_show_probability': patient_profile.get('reliability_score', 0.8),
+                'patient_satisfaction_expected': patient_profile.get('satisfaction_score', 8.0),
+                'external_impact_factor': external_impact
+            },
+            'profiles': {
+                'doctor_state': doctor_state,
+                'patient_behavioral_profile': patient_profile
+            },
+            'suggestions': suggestions,
+            'enrichment_confidence': self.calculate_enrichment_confidence(patient_profile, doctor_state),
+            'generated_at': datetime.now().isoformat()
+        }
+    
+    def calculate_enrichment_confidence(self, patient_profile, doctor_state):
+        """Calcule la confiance dans l'enrichissement des données"""
+        patient_data_quality = min(1.0, patient_profile.get('consultation_count', 0) / 10)
+        doctor_data_quality = 0.9  # Supposé bon car données continues
+        
+        overall_confidence = (patient_data_quality + doctor_data_quality) / 2
+        return round(overall_confidence, 2)
+
 # ==================== END AI LEARNING ENGINE ====================
 
 # AI Learning API Endpoints
