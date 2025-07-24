@@ -55,6 +55,11 @@ const Calendar = ({ user }) => {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [showPatientModal, setShowPatientModal] = useState(false);
   
+  // WhatsApp modal states
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
+  const [whatsappPatient, setWhatsappPatient] = useState(null);
+  const [whatsappAppointment, setWhatsappAppointment] = useState(null);
+  
   // Modal consultation states - Support multi-instances
   const [consultationModals, setConsultationModals] = useState(new Map());
   
