@@ -6426,6 +6426,8 @@ class ExternalFactorsCollector:
             impact += 0.03  # Système peu chargé
         
         return max(-0.1, min(0.1, impact))
+    
+    def get_current_season(self):
         """Détermine la saison actuelle"""
         month = datetime.now().month
         if month in [12, 1, 2]:
