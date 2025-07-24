@@ -5247,6 +5247,172 @@ class DoctorPerformanceCollector:
             'optimal_break_suggestion': self.suggest_break_timing(recent_records),
             'predicted_end_day_efficiency': self.predict_end_day_performance(recent_records)
         }
+    
+    def calculate_efficiency(self, consultation_data):
+        """Calcule l'efficacité basée sur les données de consultation"""
+        scheduled_duration = consultation_data.get('duree_prevue', 15)
+        actual_duration = consultation_data.get('duree_reelle', scheduled_duration)
+        
+        if actual_duration > 0:
+            efficiency = scheduled_duration / actual_duration
+            return min(2.0, max(0.2, efficiency))  # Entre 0.2 et 2.0
+        return 1.0
+    
+    def estimate_energy_level(self, consultation_data):
+        """Estime le niveau d'énergie du médecin (0-10)"""
+        consultations_today = consultation_data.get('consultations_done_today', 0)
+        hour = datetime.now().hour
+        
+        # Base energy decreases with consultations
+        base_energy = max(3, 10 - (consultations_today * 0.3))
+        
+        # Time of day adjustment
+        if 8 <= hour <= 10:  # Morning peak
+            time_factor = 1.1
+        elif 11 <= hour <= 13:  # Pre-lunch
+            time_factor = 0.9
+        elif 14 <= hour <= 16:  # Post-lunch
+            time_factor = 1.0
+        else:  # Late day
+            time_factor = 0.8
+        
+        return min(10, max(1, base_energy * time_factor))
+    
+    def detect_stress_indicators(self, consultation_data):
+        """Détecte les indicateurs de stress (0-10)"""
+        stress_score = 0
+        
+        # Retard accumulé
+        if consultation_data.get('delay_from_schedule', 0) > 15:
+            stress_score += 2
+        
+        # Interruptions
+        interruptions = consultation_data.get('interruptions', 0)
+        stress_score += min(3, interruptions)
+        
+        # Durée dépassée
+        if consultation_data.get('duree_reelle', 15) > consultation_data.get('duree_prevue', 15) * 1.3:
+            stress_score += 2
+        
+        # Queue pressure
+        queue_length = consultation_data.get('queue_remaining', 0)
+        if queue_length > 5:
+            stress_score += 1
+        
+        return min(10, stress_score)
+    
+    def get_consultations_count_today(self, doctor_id):
+        """Nombre de consultations faites aujourd'hui"""
+        today = datetime.now().strftime("%Y-%m-%d")
+        return consultations_collection.count_documents({
+            "date": today,
+            "doctor_id": doctor_id
+        })
+    
+    def get_time_since_break(self, doctor_id):
+        """Temps depuis la dernière pause (en minutes)"""
+        # Logique simplifiée - à améliorer avec tracking réel des pauses
+        last_consultation = consultations_collection.find_one({
+            "doctor_id": doctor_id,
+            "date": datetime.now().strftime("%Y-%m-%d")
+        }, sort=[("heure_fin_reelle", -1)])
+        
+        if last_consultation:
+            # Simuler un temps depuis dernière pause
+            return min(180, datetime.now().hour * 30)  # Max 3h
+        return 0
+    
+    def get_current_queue_pressure(self):
+        """Pression actuelle de la queue (0-10)"""
+        today = datetime.now().strftime("%Y-%m-%d")
+        waiting_count = appointments_collection.count_documents({
+            "date": today,
+            "statut": "attente"
+        })
+        return min(10, waiting_count)
+    
+    def get_recent_complexity_avg(self, doctor_id):
+        """Complexité moyenne des cas récents"""
+        recent_consultations = list(consultations_collection.find({
+            "doctor_id": doctor_id,
+            "date": datetime.now().strftime("%Y-%m-%d")
+        }).limit(5))
+        
+        if recent_consultations:
+            total_complexity = sum(c.get('complexite_reelle', 1) for c in recent_consultations)
+            return total_complexity / len(recent_consultations)
+        return 1.0
+    
+    def calculate_prediction_error(self, consultation_data, prediction_type):
+        """Calcule l'erreur de prédiction"""
+        if prediction_type == 'duration':
+            predicted = consultation_data.get('duree_prevue', 15)
+            actual = consultation_data.get('duree_reelle', predicted)
+            return abs(predicted - actual) / max(predicted, 1)
+        elif prediction_type == 'complexity':
+            predicted = consultation_data.get('complexite_prevue', 1)
+            actual = consultation_data.get('complexite_reelle', predicted)
+            return abs(predicted - actual) / max(predicted, 1)
+        return 0
+    
+    def get_default_doctor_state(self):
+        """État par défaut du médecin"""
+        return {
+            'current_efficiency': 1.0,
+            'energy_level': 7.0,
+            'fatigue_level': 0.3,
+            'performance_trend': 'stable',
+            'optimal_break_suggestion': '14:30',
+            'predicted_end_day_efficiency': 0.8
+        }
+    
+    def calculate_trend(self, recent_records):
+        """Calcule la tendance de performance"""
+        if len(recent_records) < 3:
+            return 'stable'
+        
+        recent_efficiency = [r['performance_metrics']['consultation_efficiency'] for r in recent_records[:3]]
+        older_efficiency = [r['performance_metrics']['consultation_efficiency'] for r in recent_records[-3:]]
+        
+        recent_avg = sum(recent_efficiency) / len(recent_efficiency)
+        older_avg = sum(older_efficiency) / len(older_efficiency)
+        
+        if recent_avg > older_avg * 1.1:
+            return 'improving'
+        elif recent_avg < older_avg * 0.9:
+            return 'declining'
+        return 'stable'
+    
+    def suggest_break_timing(self, recent_records):
+        """Suggère le timing optimal pour une pause"""
+        current_hour = datetime.now().hour
+        energy_levels = [r['performance_metrics']['energy_level_estimated'] for r in recent_records[-3:]]
+        avg_energy = sum(energy_levels) / len(energy_levels) if energy_levels else 7
+        
+        if avg_energy < 5:
+            return f"{current_hour:02d}:{(datetime.now().minute + 15) % 60:02d}"  # Dans 15min
+        elif current_hour < 12:
+            return "12:00"  # Pause déjeuner
+        elif current_hour < 15:
+            return "15:30"  # Pause après-midi
+        else:
+            return "Fin de journée proche"
+    
+    def predict_end_day_performance(self, recent_records):
+        """Prédit la performance de fin de journée"""
+        if not recent_records:
+            return 0.8
+        
+        current_trend = self.calculate_trend(recent_records)
+        current_efficiency = recent_records[0]['performance_metrics']['consultation_efficiency']
+        fatigue_factor = len(recent_records) / 15  # Plus de consultations = plus de fatigue
+        
+        if current_trend == 'declining':
+            return max(0.4, current_efficiency * (0.8 - fatigue_factor))
+        elif current_trend == 'improving':
+            return min(1.2, current_efficiency * (1.0 - fatigue_factor * 0.5))
+        else:
+            return current_efficiency * (0.9 - fatigue_factor * 0.3)
 
 class PredictiveEngine:
     """Moteur de prédictions temporelles avancées"""
