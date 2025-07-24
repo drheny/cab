@@ -5095,6 +5095,8 @@ async def get_top_patients_report(
 ai_learning_data = db.ai_learning_data
 temporal_patterns = db.temporal_patterns  
 doctor_performance_patterns = db.doctor_performance_patterns
+patient_behavior_patterns = db.patient_behavior_patterns
+external_factors_patterns = db.external_factors_patterns
 prediction_accuracy = db.prediction_accuracy
 
 # AI Data Models
