@@ -31,6 +31,7 @@ import {
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import AppointmentModal from './AppointmentModal';
+import WhatsAppModal from './WhatsAppModal';
 
 import PaymentModal from './PaymentModal';
 
