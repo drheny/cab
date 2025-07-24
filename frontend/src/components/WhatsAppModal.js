@@ -30,6 +30,7 @@ const WhatsAppModal = ({
   const [aiSuggestions, setAiSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1); // 1: Select Template, 2: Edit Message, 3: Confirm Send
+  const [isEditing, setIsEditing] = useState(false);
 
   const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
