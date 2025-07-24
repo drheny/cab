@@ -5067,6 +5067,510 @@ async def get_top_patients_report(
 
 # ==================== END ADVANCED REPORTS API ====================
 
+# ==================== WHATSAPP HUB API ====================
+
+# WhatsApp Hub collections
+whatsapp_templates_collection = db.whatsapp_templates
+whatsapp_history_collection = db.whatsapp_history
+
+# WhatsApp Templates Models
+class WhatsAppTemplate(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    category: str  # confirmation, attente, ajustement, urgence
+    content: str
+    auto_send: bool = False
+    editable: bool = True
+    variables: List[str] = []
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
+
+class WhatsAppMessage(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    patient_id: str
+    patient_name: str
+    template_id: Optional[str] = None
+    template_name: Optional[str] = None
+    content: str
+    whatsapp_link: str
+    sent_by: str
+    sent_at: datetime = Field(default_factory=datetime.now)
+    status: str = "prepared"  # prepared, opened, sent
+
+class WhatsAppSendRequest(BaseModel):
+    patient_id: str
+    template_id: Optional[str] = None
+    custom_message: Optional[str] = None
+    auto_send: bool = False
+
+def create_default_whatsapp_templates():
+    """Create default WhatsApp templates if they don't exist"""
+    try:
+        if whatsapp_templates_collection.count_documents({}) == 0:
+            default_templates = [
+                {
+                    "id": "template_confirmation",
+                    "name": "Confirmation RDV",
+                    "category": "confirmation",
+                    "content": "Bonjour {nom} {prenom}, votre RDV est confirmé pour le {date} à {heure}. Merci d'arriver 10 minutes avant. Cabinet Dr Heni Dridi.",
+                    "auto_send": True,
+                    "editable": True,
+                    "variables": ["nom", "prenom", "date", "heure"],
+                    "created_at": datetime.now(),
+                    "updated_at": datetime.now()
+                },
+                {
+                    "id": "template_attente",
+                    "name": "Position Salle d'Attente",
+                    "category": "attente", 
+                    "content": "Bonjour {nom} {prenom}, vous êtes {position}° en salle d'attente. Temps d'attente estimé : {temps_attente} minutes.",
+                    "auto_send": False,
+                    "editable": True,
+                    "variables": ["nom", "prenom", "position", "temps_attente"],
+                    "created_at": datetime.now(),
+                    "updated_at": datetime.now()
+                },
+                {
+                    "id": "template_retard_medecin",
+                    "name": "Retard Médecin",
+                    "category": "ajustement",
+                    "content": "Bonjour {nom} {prenom}, le Dr a un retard de {retard_minutes} minutes. Votre nouveau créneau : {nouvelle_heure}. Merci de votre compréhension.",
+                    "auto_send": False,
+                    "editable": True,
+                    "variables": ["nom", "prenom", "retard_minutes", "nouvelle_heure"],
+                    "created_at": datetime.now(),
+                    "updated_at": datetime.now()
+                },
+                {
+                    "id": "template_urgence",
+                    "name": "Urgence - Décalage RDV", 
+                    "category": "urgence",
+                    "content": "Bonjour {nom} {prenom}, suite à une urgence, votre RDV est décalé de {retard_minutes} minutes. Nouveau créneau : {nouvelle_heure}. Ou préférez-vous reporter à {date_alternative} ?",
+                    "auto_send": False,
+                    "editable": True,
+                    "variables": ["nom", "prenom", "retard_minutes", "nouvelle_heure", "date_alternative"],
+                    "created_at": datetime.now(),
+                    "updated_at": datetime.now()
+                },
+                {
+                    "id": "template_rappel",
+                    "name": "Rappel RDV Demain",
+                    "category": "rappel",
+                    "content": "Bonjour {nom} {prenom}, rappel de votre RDV demain {date} à {heure}. N'oubliez pas d'apporter vos documents médicaux. À bientôt !",
+                    "auto_send": False,
+                    "editable": True,
+                    "variables": ["nom", "prenom", "date", "heure"],
+                    "created_at": datetime.now(),
+                    "updated_at": datetime.now()
+                },
+                {
+                    "id": "template_annulation",
+                    "name": "Annulation RDV",
+                    "category": "annulation",
+                    "content": "Bonjour {nom} {prenom}, votre RDV du {date} à {heure} a été annulé. Nouveaux créneaux disponibles : {alternatives}. Contactez-nous pour reprogrammer.",
+                    "auto_send": False,
+                    "editable": True,
+                    "variables": ["nom", "prenom", "date", "heure", "alternatives"],
+                    "created_at": datetime.now(),
+                    "updated_at": datetime.now()
+                }
+            ]
+            
+            whatsapp_templates_collection.insert_many(default_templates)
+            print("Default WhatsApp templates created successfully")
+            
+    except Exception as e:
+        print(f"Error creating default WhatsApp templates: {e}")
+
+def generate_whatsapp_variables(patient_data, appointment_data=None, context_data=None):
+    """Generate variables for WhatsApp template substitution"""
+    variables = {
+        "nom": patient_data.get("nom", ""),
+        "prenom": patient_data.get("prenom", ""),
+        "age": patient_data.get("age", ""),
+        "telephone": patient_data.get("numero_whatsapp", "")
+    }
+    
+    if appointment_data:
+        variables.update({
+            "date": appointment_data.get("date", ""),
+            "heure": appointment_data.get("heure", ""),
+            "type_rdv": appointment_data.get("type_rdv", ""),
+            "duree": appointment_data.get("duree", "15")
+        })
+    
+    if context_data:
+        variables.update({
+            "position": context_data.get("position", ""),
+            "temps_attente": context_data.get("temps_attente", ""),
+            "retard_minutes": context_data.get("retard_minutes", ""),
+            "nouvelle_heure": context_data.get("nouvelle_heure", ""),
+            "date_alternative": context_data.get("date_alternative", ""),
+            "alternatives": context_data.get("alternatives", "")
+        })
+    
+    return variables
+
+def substitute_template_variables(template_content, variables):
+    """Replace template variables with actual values"""
+    result = template_content
+    for key, value in variables.items():
+        placeholder = "{" + key + "}"
+        result = result.replace(placeholder, str(value))
+    return result
+
+def generate_whatsapp_link(phone_number, message):
+    """Generate WhatsApp link with pre-filled message"""
+    import urllib.parse
+    
+    # Clean phone number (remove spaces, special chars)
+    clean_phone = ''.join(filter(str.isdigit, phone_number))
+    
+    # Add Tunisia country code if not present
+    if not clean_phone.startswith('216'):
+        clean_phone = '216' + clean_phone
+    
+    # URL encode the message
+    encoded_message = urllib.parse.quote(message)
+    
+    # Generate WhatsApp link
+    whatsapp_link = f"https://wa.me/{clean_phone}?text={encoded_message}"
+    
+    return whatsapp_link
+
+def calculate_ai_context(patient_id, appointment_data=None):
+    """Calculate AI context for smarter templates"""
+    context = {}
+    
+    try:
+        # Get patient history
+        patient = patients_collection.find_one({"id": patient_id})
+        if not patient:
+            return context
+        
+        # Calculate punctuality score
+        appointments = list(appointments_collection.find({"patient_id": patient_id}))
+        if appointments:
+            on_time_count = sum(1 for apt in appointments if apt.get("statut") not in ["absent", "retard"])
+            punctuality_score = (on_time_count / len(appointments)) * 100
+            context["punctuality_score"] = round(punctuality_score, 1)
+        
+        # Calculate average consultation duration
+        consultations = list(consultations_collection.find({"patient_id": patient_id}))
+        if consultations:
+            avg_duration = sum(int(c.get("duree", 15)) for c in consultations) / len(consultations)
+            context["avg_consultation_duration"] = round(avg_duration, 1)
+        
+        # Doctor efficiency today
+        today = datetime.now().strftime("%Y-%m-%d")
+        today_consultations = list(consultations_collection.find({
+            "date": today
+        }))
+        
+        if today_consultations:
+            avg_today = sum(int(c.get("duree", 15)) for c in today_consultations) / len(today_consultations)
+            context["doctor_efficiency_today"] = "rapide" if avg_today < 20 else "normale"
+        
+        # Current queue position and wait time
+        if appointment_data:
+            today_appointments = list(appointments_collection.find({
+                "date": appointment_data.get("date", today),
+                "statut": {"$in": ["attente", "programme"]}
+            }))
+            
+            # Sort by appointment time
+            today_appointments.sort(key=lambda x: x.get("heure", "00:00"))
+            
+            # Find patient position
+            for i, apt in enumerate(today_appointments):
+                if apt.get("patient_id") == patient_id:
+                    context["position"] = i + 1
+                    context["queue_length"] = len(today_appointments)
+                    
+                    # Estimate wait time (simplified)
+                    estimated_wait = i * 20  # 20min per patient average
+                    context["temps_attente"] = max(5, estimated_wait)
+                    break
+        
+        return context
+        
+    except Exception as e:
+        print(f"Error calculating AI context: {e}")
+        return context
+
+# WhatsApp Hub API Endpoints
+
+@app.post("/api/whatsapp-hub/initialize")
+async def initialize_whatsapp_hub():
+    """Initialize WhatsApp Hub with default templates"""
+    try:
+        create_default_whatsapp_templates()
+        templates_count = whatsapp_templates_collection.count_documents({})
+        
+        return {
+            "message": "WhatsApp Hub initialized successfully",
+            "templates_created": templates_count
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error initializing WhatsApp Hub: {str(e)}")
+
+@app.get("/api/whatsapp-hub/templates")
+async def get_whatsapp_templates():
+    """Get all WhatsApp templates"""
+    try:
+        templates = list(whatsapp_templates_collection.find({}, {"_id": 0}))
+        
+        # Group by category
+        categorized = defaultdict(list)
+        for template in templates:
+            categorized[template["category"]].append(template)
+        
+        return {
+            "templates": templates,
+            "by_category": dict(categorized),
+            "total": len(templates)
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching templates: {str(e)}")
+
+@app.post("/api/whatsapp-hub/templates")
+async def create_whatsapp_template(template: WhatsAppTemplate):
+    """Create new WhatsApp template"""
+    try:
+        template_dict = template.dict()
+        template_dict["created_at"] = datetime.now()
+        template_dict["updated_at"] = datetime.now()
+        
+        whatsapp_templates_collection.insert_one(template_dict)
+        
+        return {
+            "message": "Template created successfully",
+            "template": template_dict
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating template: {str(e)}")
+
+@app.put("/api/whatsapp-hub/templates/{template_id}")
+async def update_whatsapp_template(template_id: str, template_update: dict):
+    """Update WhatsApp template"""
+    try:
+        template_update["updated_at"] = datetime.now()
+        
+        result = whatsapp_templates_collection.update_one(
+            {"id": template_id},
+            {"$set": template_update}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Template not found")
+        
+        updated_template = whatsapp_templates_collection.find_one({"id": template_id}, {"_id": 0})
+        
+        return {
+            "message": "Template updated successfully",
+            "template": updated_template
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating template: {str(e)}")
+
+@app.delete("/api/whatsapp-hub/templates/{template_id}")
+async def delete_whatsapp_template(template_id: str):
+    """Delete WhatsApp template"""
+    try:
+        result = whatsapp_templates_collection.delete_one({"id": template_id})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Template not found")
+        
+        return {"message": "Template deleted successfully"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting template: {str(e)}")
+
+@app.post("/api/whatsapp-hub/prepare-message")
+async def prepare_whatsapp_message(request: WhatsAppSendRequest):
+    """Prepare WhatsApp message with template and context"""
+    try:
+        # Get patient data
+        patient = patients_collection.find_one({"id": request.patient_id})
+        if not patient:
+            raise HTTPException(status_code=404, detail="Patient not found")
+        
+        # Check if patient has WhatsApp number
+        if not patient.get("numero_whatsapp"):
+            raise HTTPException(status_code=400, detail="Patient has no WhatsApp number")
+        
+        message_content = ""
+        template_used = None
+        
+        if request.template_id:
+            # Get template
+            template = whatsapp_templates_collection.find_one({"id": request.template_id})
+            if not template:
+                raise HTTPException(status_code=404, detail="Template not found")
+            
+            # Get appointment data if exists
+            appointment_data = None
+            today = datetime.now().strftime("%Y-%m-%d")
+            appointment = appointments_collection.find_one({
+                "patient_id": request.patient_id,
+                "date": {"$gte": today}
+            })
+            
+            # Generate AI context
+            ai_context = calculate_ai_context(request.patient_id, appointment)
+            
+            # Generate variables
+            variables = generate_whatsapp_variables(patient, appointment, ai_context)
+            
+            # Substitute template variables
+            message_content = substitute_template_variables(template["content"], variables)
+            template_used = template["name"]
+            
+        elif request.custom_message:
+            message_content = request.custom_message
+        else:
+            raise HTTPException(status_code=400, detail="Either template_id or custom_message is required")
+        
+        # Generate WhatsApp link
+        whatsapp_link = generate_whatsapp_link(patient["numero_whatsapp"], message_content)
+        
+        # Prepare response with AI suggestions
+        ai_suggestions = []
+        ai_context = calculate_ai_context(request.patient_id)
+        
+        if ai_context.get("punctuality_score", 100) < 70:
+            ai_suggestions.append("💡 Patient souvent en retard - Considérer mentionner importance ponctualité")
+        
+        if ai_context.get("avg_consultation_duration", 15) > 25:
+            ai_suggestions.append("💡 Consultations longues habituelles - Mentionner temps d'attente possible")
+        
+        current_hour = datetime.now().hour
+        if current_hour > 16:
+            ai_suggestions.append("💡 Fin de journée - Patient plus susceptible de reporter")
+        
+        return {
+            "patient": {
+                "id": patient["id"],
+                "nom": patient["nom"],
+                "prenom": patient["prenom"],
+                "numero_whatsapp": patient["numero_whatsapp"]
+            },
+            "message": {
+                "content": message_content,
+                "whatsapp_link": whatsapp_link,
+                "template_used": template_used,
+                "character_count": len(message_content)
+            },
+            "ai_context": ai_context,
+            "ai_suggestions": ai_suggestions,
+            "variables_used": generate_whatsapp_variables(patient, appointment, ai_context) if request.template_id else {}
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error preparing message: {str(e)}")
+
+@app.post("/api/whatsapp-hub/send-confirmation")
+async def send_auto_confirmation(appointment_data: dict):
+    """Auto-send confirmation message after appointment creation"""
+    try:
+        patient_id = appointment_data.get("patient_id")
+        appointment_id = appointment_data.get("appointment_id")
+        
+        # Get confirmation template
+        template = whatsapp_templates_collection.find_one({
+            "category": "confirmation",
+            "auto_send": True
+        })
+        
+        if not template:
+            raise HTTPException(status_code=404, detail="Auto-confirmation template not found")
+        
+        # Prepare message
+        request = WhatsAppSendRequest(
+            patient_id=patient_id,
+            template_id=template["id"],
+            auto_send=True
+        )
+        
+        prepared_message = await prepare_whatsapp_message(request)
+        
+        # Log the auto-confirmation (don't actually send, just prepare)
+        whatsapp_history_collection.insert_one({
+            "id": str(uuid.uuid4()),
+            "patient_id": patient_id,
+            "patient_name": f"{prepared_message['patient']['prenom']} {prepared_message['patient']['nom']}",
+            "template_id": template["id"],
+            "template_name": template["name"],
+            "content": prepared_message["message"]["content"],
+            "whatsapp_link": prepared_message["message"]["whatsapp_link"],
+            "sent_by": "System (Auto-confirmation)",
+            "sent_at": datetime.now(),
+            "status": "prepared",
+            "auto_send": True
+        })
+        
+        return {
+            "message": "Auto-confirmation prepared successfully",
+            "whatsapp_link": prepared_message["message"]["whatsapp_link"],
+            "should_open_whatsapp": True
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error sending auto-confirmation: {str(e)}")
+
+@app.get("/api/whatsapp-hub/queue")
+async def get_whatsapp_queue(date: str = Query(...)):
+    """Get patients queue for WhatsApp messaging"""
+    try:
+        # Get appointments for the date
+        appointments = list(appointments_collection.find({"date": date}))
+        queue = []
+        
+        for appointment in appointments:
+            patient_id = appointment.get("patient_id")
+            patient = patients_collection.find_one({"id": patient_id})
+            
+            if patient and patient.get("numero_whatsapp"):
+                # Calculate AI context
+                ai_context = calculate_ai_context(patient_id, appointment)
+                
+                queue_item = {
+                    "appointment_id": appointment.get("id"),
+                    "patient_id": patient_id,
+                    "patient_name": f"{patient.get('prenom', '')} {patient.get('nom', '')}",
+                    "appointment_time": appointment.get("heure", ""),
+                    "type_rdv": appointment.get("type_rdv", ""),
+                    "status": appointment.get("statut", "programme"),
+                    "numero_whatsapp": patient.get("numero_whatsapp", ""),
+                    "queue_position": ai_context.get("position", 0),
+                    "estimated_wait_time": ai_context.get("temps_attente", 0),
+                    "punctuality_score": ai_context.get("punctuality_score", 85),
+                    "avg_consultation_duration": ai_context.get("avg_consultation_duration", 15),
+                    "has_whatsapp": bool(patient.get("numero_whatsapp"))
+                }
+                
+                queue.append(queue_item)
+        
+        # Sort by appointment time
+        queue.sort(key=lambda x: x["appointment_time"])
+        
+        return {
+            "queue": queue,
+            "total_patients": len(queue),
+            "patients_with_whatsapp": len([p for p in queue if p["has_whatsapp"]]),
+            "date": date
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching queue: {str(e)}")
+
+# ==================== END WHATSAPP HUB API ====================
+
 # ==================== AI ROOM API ====================
 
 import numpy as np
