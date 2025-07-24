@@ -97,8 +97,27 @@ const WhatsAppModal = ({
   };
 
   const handleMessageEdit = () => {
+    setIsEditing(true);
     setCustomMessage(finalMessage);
-    prepareMessage(null, finalMessage);
+  };
+
+  const handleSaveEdit = () => {
+    setFinalMessage(customMessage);
+    setIsEditing(false);
+    
+    // Regenerate WhatsApp link with edited message
+    const patient_phone = patient.numero_whatsapp;
+    const cleanPhone = ''.join(filter(str.isdigit, patient_phone));
+    const formattedPhone = cleanPhone.startsWith('216') ? cleanPhone : '216' + cleanPhone;
+    const encodedMessage = encodeURIComponent(customMessage);
+    setWhatsappLink(`https://wa.me/${formattedPhone}?text=${encodedMessage}`);
+    
+    toast.success('Message modifié avec succès');
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setCustomMessage(finalMessage);
   };
 
   const handleConfirmSend = () => {
