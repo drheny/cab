@@ -6794,6 +6794,205 @@ async def initialize_ai_learning():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error initializing AI learning: {str(e)}")
 
+# Enhanced AI Learning Endpoints
+
+@app.post("/api/ai-learning/enrich-consultation")
+async def enrich_consultation_data_api(consultation_data: dict):
+    """Enrichit une consultation avec toutes les données IA"""
+    try:
+        enrichment_engine = DataEnrichmentEngine()
+        
+        patient_id = consultation_data.get('patient_id')
+        doctor_id = consultation_data.get('doctor_id', 'default_doctor')
+        
+        if not patient_id:
+            raise HTTPException(status_code=400, detail="patient_id is required")
+        
+        enriched_data = enrichment_engine.enrich_consultation_data(
+            consultation_data, patient_id, doctor_id
+        )
+        
+        return {
+            "message": "Consultation data enriched successfully",
+            "enriched_data": enriched_data,
+            "enrichment_timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error enriching consultation data: {str(e)}")
+
+@app.get("/api/ai-learning/comprehensive-predictions")
+async def get_comprehensive_predictions_api(
+    patient_id: str = Query(...),
+    consultation_type: str = Query(...),
+    date: str = Query(...),
+    doctor_id: str = Query(default="default_doctor")
+):
+    """Obtient des prédictions complètes avec tous les facteurs IA"""
+    try:
+        enrichment_engine = DataEnrichmentEngine()
+        
+        predictions = enrichment_engine.get_comprehensive_predictions(
+            patient_id, consultation_type, date, doctor_id
+        )
+        
+        return {
+            "patient_id": patient_id,
+            "consultation_type": consultation_type,
+            "date": date,
+            "comprehensive_predictions": predictions,
+            "generated_at": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating comprehensive predictions: {str(e)}")
+
+@app.get("/api/ai-learning/patient-behavioral-profile")
+async def get_patient_behavioral_profile_api(
+    patient_id: str = Query(...),
+    lookback_days: int = Query(default=90)
+):
+    """Obtient le profil comportemental détaillé d'un patient"""
+    try:
+        behavior_collector = PatientBehaviorCollector()
+        
+        profile = behavior_collector.get_patient_behavioral_profile(patient_id, lookback_days)
+        
+        return {
+            "patient_id": patient_id,
+            "lookback_days": lookback_days,
+            "behavioral_profile": profile,
+            "generated_at": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting patient behavioral profile: {str(e)}")
+
+@app.get("/api/ai-learning/external-factors")
+async def get_external_factors_api(date: str = Query(...)):
+    """Obtient les facteurs externes pour une date"""
+    try:
+        external_collector = ExternalFactorsCollector()
+        
+        factors = external_collector.get_external_factors_for_date(date)
+        total_impact = external_collector.calculate_total_external_impact(date)
+        
+        return {
+            "date": date,
+            "external_factors": factors,
+            "total_impact_score": total_impact,
+            "impact_explanation": "Score d'impact total des facteurs externes (-1 = très défavorable, +1 = très favorable)",
+            "generated_at": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting external factors: {str(e)}")
+
+@app.post("/api/ai-learning/record-patient-behavior") 
+async def record_patient_behavior_api(
+    patient_id: str,
+    consultation_data: dict
+):
+    """Enregistre le comportement d'un patient"""
+    try:
+        behavior_collector = PatientBehaviorCollector()
+        
+        behavior_record = behavior_collector.record_patient_behavior(patient_id, consultation_data)
+        
+        return {
+            "message": "Patient behavior recorded successfully",
+            "patient_id": patient_id,
+            "behavior_record_id": str(behavior_record.get('_id')),
+            "recorded_at": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error recording patient behavior: {str(e)}")
+
+@app.post("/api/ai-learning/update-external-factors")
+async def update_external_factors_api(
+    date: str,
+    external_data: dict = None
+):
+    """Met à jour les facteurs externes pour une date"""
+    try:
+        external_collector = ExternalFactorsCollector()
+        
+        updated_record = external_collector.record_daily_external_factors(date, external_data)
+        
+        return {
+            "message": "External factors updated successfully",
+            "date": date,
+            "updated_record": updated_record,
+            "updated_at": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating external factors: {str(e)}")
+
+@app.get("/api/ai-learning/dashboard-insights")
+async def get_dashboard_insights_api(
+    date: str = Query(default=None),
+    doctor_id: str = Query(default="default_doctor")
+):
+    """Obtient les insights IA pour le dashboard"""
+    try:
+        if not date:
+            date = datetime.now().strftime('%Y-%m-%d')
+        
+        enrichment_engine = DataEnrichmentEngine()
+        performance_collector = DoctorPerformanceCollector()
+        external_collector = ExternalFactorsCollector()
+        suggestions_engine = ProactiveSuggestionsEngine()
+        
+        # État du médecin
+        doctor_state = performance_collector.get_doctor_current_state(doctor_id)
+        
+        # Facteurs externes
+        external_impact = external_collector.calculate_total_external_impact(date)
+        external_factors = external_collector.get_external_factors_for_date(date)
+        
+        # Contexte pour suggestions
+        current_context = {
+            'doctor_state': doctor_state,
+            'queue_state': {'length': 0, 'avg_complexity': 1.0, 'predicted_delays': []},
+            'temporal_context': {
+                'hour': datetime.now().hour,
+                'day_of_week': datetime.now().weekday(),
+                'month': datetime.now().month
+            }
+        }
+        
+        # Suggestions intelligentes
+        suggestions = suggestions_engine.generate_smart_suggestions(current_context)
+        
+        return {
+            "date": date,
+            "dashboard_insights": {
+                "doctor_performance": {
+                    "current_efficiency": doctor_state.get('current_efficiency', 1.0),
+                    "energy_level": doctor_state.get('energy_level', 8.0),
+                    "fatigue_level": doctor_state.get('fatigue_level', 0.2),
+                    "performance_trend": doctor_state.get('performance_trend', 'stable'),
+                    "next_break_suggestion": doctor_state.get('optimal_break_suggestion', None)
+                },
+                "external_conditions": {
+                    "total_impact_score": external_impact,
+                    "weather_impact": external_factors.get('weather_data', {}).get('impact_score', 0),
+                    "traffic_impact": external_factors.get('traffic_data', {}).get('impact_score', 0),
+                    "seasonal_impact": external_factors.get('seasonal_factors', {}).get('impact_score', 0)
+                },
+                "ai_suggestions": suggestions[:3],  # Top 3 suggestions
+                "prediction_confidence": enrichment_engine.calculate_enrichment_confidence(
+                    {'consultation_count': 5}, doctor_state
+                )
+            },
+            "generated_at": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting dashboard insights: {str(e)}")
+
 # ==================== END AI LEARNING API ====================
 
 # ==================== WHATSAPP HUB API ====================
