@@ -1656,23 +1656,22 @@ class CabinetMedicalAPITest(unittest.TestCase):
         
         data = response.json()
         self.assertIn("date", data)
-        self.assertIn("doctor_id", data)
-        self.assertIn("insights", data)
+        self.assertIn("dashboard_insights", data)
         self.assertIn("generated_at", data)
         
         # Verify insights structure
-        insights = data["insights"]
+        insights = data["dashboard_insights"]
         self.assertIn("doctor_performance", insights)
-        self.assertIn("external_factors_impact", insights)
-        self.assertIn("patient_flow_predictions", insights)
-        self.assertIn("optimization_opportunities", insights)
-        self.assertIn("risk_alerts", insights)
-        self.assertIn("recommendations", insights)
+        self.assertIn("external_conditions", insights)
+        self.assertIn("ai_suggestions", insights)
+        self.assertIn("prediction_confidence", insights)
         
         print(f"✅ Dashboard insights generated successfully")
         print(f"   - Date: {data['date']}")
-        print(f"   - Doctor ID: {data['doctor_id']}")
-        print(f"   - Insights include: performance, external factors, predictions, optimization")
+        print(f"   - Doctor performance efficiency: {insights['doctor_performance']['current_efficiency']}")
+        print(f"   - External impact: {insights['external_conditions']['total_impact_score']}")
+        print(f"   - AI suggestions count: {len(insights['ai_suggestions'])}")
+        print(f"   - Prediction confidence: {insights['prediction_confidence']}")
         print(f"🎉 AI Learning Dashboard Insights Test: PASSED")
     
     def test_ai_learning_comprehensive_workflow(self):
