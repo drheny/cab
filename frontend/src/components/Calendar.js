@@ -1887,6 +1887,7 @@ const WorkflowSection = ({
               onViewPatient={onViewPatient}
               onPatientReorder={onPatientReorder}
               onOpenPaymentModal={onOpenPaymentModal}
+              onWhatsApp={onWhatsApp}
               isCompleted={isCompleted}
               user={user}
             />
