@@ -6219,7 +6219,7 @@ class ExternalFactorsCollector:
     
     def get_external_factors_for_date(self, date_str):
         """Récupère les facteurs externes pour une date"""
-        record = self.collection.find_one({'date': date_str})
+        record = self.collection.find_one({'date': date_str}, {"_id": 0})
         if record:
             return record
         else:
