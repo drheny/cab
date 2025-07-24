@@ -1689,7 +1689,7 @@ class CabinetMedicalAPITest(unittest.TestCase):
         doctor_response = requests.get(f"{self.base_url}/api/ai-learning/doctor-state")
         self.assertEqual(doctor_response.status_code, 200)
         doctor_data = doctor_response.json()
-        print(f"  ✅ Doctor state fetched (efficiency: {doctor_data['state']['efficiency_score']})")
+        print(f"  ✅ Doctor state fetched (efficiency: {doctor_data['state']['current_efficiency']})")
         
         # Step 3: Get temporal patterns
         print("  Step 3: Analyzing temporal patterns...")
