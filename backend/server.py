@@ -5097,6 +5097,45 @@ temporal_patterns = db.temporal_patterns
 doctor_performance_patterns = db.doctor_performance_patterns
 prediction_accuracy = db.prediction_accuracy
 
+# AI Data Models
+class PatientData(BaseModel):
+    """Données enrichies du patient pour l'IA"""
+    patient_id: str
+    punctuality_score: float = Field(default=7.0, description="Score de ponctualité (0-10)")
+    communication_responsiveness: float = Field(default=7.0, description="Réactivité communication (0-10)")
+    consultation_frequency: float = Field(default=1.0, description="Fréquence consultations par mois")
+    historical_duration_avg: float = Field(default=15.0, description="Durée moyenne consultations")
+    complexity_preference: float = Field(default=1.0, description="Préférence complexité (0.5-2.0)")
+    no_show_probability: float = Field(default=0.05, description="Probabilité absence (0-1)")
+    preferred_times: List[str] = Field(default=[], description="Créneaux préférés")
+    behavioral_patterns: Dict[str, Any] = Field(default_factory=dict)
+    last_updated: datetime = Field(default_factory=datetime.now)
+
+class DoctorData(BaseModel):
+    """Données enrichies du médecin pour l'IA"""
+    doctor_id: str
+    current_efficiency: float = Field(default=1.0, description="Efficacité actuelle (0.5-2.0)")
+    energy_level: float = Field(default=8.0, description="Niveau énergie (0-10)")
+    fatigue_level: float = Field(default=0.2, description="Niveau fatigue (0-1)")
+    performance_trend: str = Field(default="stable", description="Tendance: improving, stable, declining")
+    consultations_today: int = Field(default=0, description="Consultations réalisées aujourd'hui")
+    break_suggestion_time: Optional[str] = Field(default=None, description="Prochaine pause suggérée")
+    peak_performance_hours: List[int] = Field(default=[9, 10, 11], description="Heures de performance optimale")
+    stress_indicators: Dict[str, float] = Field(default_factory=dict)
+    speciality_efficiency: Dict[str, float] = Field(default_factory=dict)
+    last_updated: datetime = Field(default_factory=datetime.now)
+
+class ExternalData(BaseModel):
+    """Données externes influençant les prédictions"""
+    date: str
+    weather_impact: float = Field(default=0.0, description="Impact météo (-0.5 à +0.5)")
+    traffic_conditions: float = Field(default=0.0, description="Conditions circulation (-0.3 à +0.3)")
+    school_schedule_impact: float = Field(default=0.0, description="Impact période scolaire (-0.2 à +0.2)")
+    seasonal_factor: float = Field(default=0.0, description="Facteur saisonnier (-0.2 à +0.2)")
+    public_events: List[str] = Field(default=[], description="Événements publics du jour")
+    regional_factors: Dict[str, float] = Field(default_factory=dict)
+    last_updated: datetime = Field(default_factory=datetime.now)
+
 # Data enrichment classes
 class TemporalDataCollector:
     """Collecte automatique des patterns temporels"""
