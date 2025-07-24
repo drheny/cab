@@ -5520,6 +5520,187 @@ class PredictiveEngine:
             'contextual_factors': contextual_adjustments,
             'explanation': self.generate_wait_time_explanation(patients_ahead, contextual_adjustments)
         }
+    
+    def get_historical_patterns(self, patient_id, consultation_type, temporal_context):
+        """Récupère les patterns historiques pour un patient"""
+        # Rechercher les consultations similaires
+        similar_consultations = list(temporal_patterns.find({
+            "patient_id": patient_id,
+            "consultation_type": consultation_type,
+            "temporal_context.hour_of_day": {"$gte": temporal_context['hour'] - 2, "$lte": temporal_context['hour'] + 2}
+        }))
+        
+        if not similar_consultations:
+            # Fallback sur le type de consultation général
+            similar_consultations = list(temporal_patterns.find({
+                "consultation_type": consultation_type
+            }).limit(20))
+        
+        if similar_consultations:
+            avg_duration = sum(c.get('actual_duration', 15) for c in similar_consultations) / len(similar_consultations)
+            avg_complexity = sum(c.get('complexity_actual', 1) for c in similar_consultations) / len(similar_consultations)
+            return {
+                'avg_duration': avg_duration,
+                'avg_complexity': avg_complexity,
+                'sample_size': len(similar_consultations)
+            }
+        
+        # Valeurs par défaut si pas d'historique
+        return {
+            'avg_duration': 20 if consultation_type == 'visite' else 15,
+            'avg_complexity': 1.0,
+            'sample_size': 0
+        }
+    
+    def get_time_efficiency_factor(self, hour):
+        """Facteur d'efficacité selon l'heure"""
+        efficiency_by_hour = {
+            8: 0.9, 9: 1.0, 10: 1.1, 11: 1.0,
+            12: 0.8, 13: 0.7, 14: 0.9, 15: 1.0,
+            16: 0.9, 17: 0.8, 18: 0.7
+        }
+        return efficiency_by_hour.get(hour, 1.0)
+    
+    def get_consultation_type_factor(self, consultation_type):
+        """Facteur selon le type de consultation"""
+        type_factors = {
+            'visite': 1.2,
+            'controle': 0.8,
+            'urgence': 1.5,
+            'suivi': 0.9
+        }
+        return type_factors.get(consultation_type, 1.0)
+    
+    def get_day_efficiency_factor(self, day_of_week):
+        """Facteur d'efficacité selon le jour de la semaine"""
+        day_factors = {
+            0: 1.0,  # Lundi
+            1: 1.1,  # Mardi
+            2: 1.0,  # Mercredi
+            3: 0.9,  # Jeudi
+            4: 0.8,  # Vendredi
+            5: 0.7,  # Samedi
+            6: 0.6   # Dimanche
+        }
+        return day_factors.get(day_of_week, 1.0)
+    
+    def calculate_prediction_confidence(self, historical_data, adjustments):
+        """Calcule la confiance de la prédiction"""
+        base_confidence = 0.5
+        
+        # Plus d'historique = plus de confiance
+        sample_size = historical_data.get('sample_size', 0)
+        if sample_size > 10:
+            base_confidence += 0.3
+        elif sample_size > 5:
+            base_confidence += 0.2
+        elif sample_size > 0:
+            base_confidence += 0.1
+        
+        # Moins d'ajustements extrêmes = plus de confiance
+        extreme_adjustments = sum(1 for adj in adjustments.values() if abs(adj - 1.0) > 0.3)
+        confidence_penalty = extreme_adjustments * 0.1
+        
+        return max(0.1, min(0.95, base_confidence - confidence_penalty))
+    
+    def generate_prediction_explanation(self, adjustments):
+        """Génère une explication de la prédiction"""
+        explanations = []
+        
+        if adjustments['doctor_efficiency'] > 1.1:
+            explanations.append("Dr très efficace actuellement")
+        elif adjustments['doctor_efficiency'] < 0.9:
+            explanations.append("Dr moins efficace que d'habitude")
+        
+        if adjustments['time_of_day'] > 1.0:
+            explanations.append("Heure optimale pour le médecin")
+        elif adjustments['time_of_day'] < 0.9:
+            explanations.append("Heure moins favorable")
+        
+        if adjustments['doctor_fatigue'] < 0.9:
+            explanations.append("Fatigue médecin détectée")
+        
+        if adjustments['patient_complexity'] > 1.2:
+            explanations.append("Patient à cas complexe")
+        
+        return " • ".join(explanations) if explanations else "Prédiction basée sur patterns standard"
+    
+    def get_transition_time(self, position, temporal_context):
+        """Temps de transition entre patients"""
+        base_transition = 3  # 3 minutes de base
+        
+        # Plus de temps en fin de journée (nettoyage, etc.)
+        if temporal_context.get('hour', 12) > 17:
+            base_transition += 2
+        
+        # Premier patient de la journée
+        if position == 0:
+            base_transition += 2
+        
+        return base_transition
+    
+    def calculate_urgent_insertion_probability(self):
+        """Probabilité d'insertion d'un patient urgent"""
+        current_hour = datetime.now().hour
+        
+        # Plus probable en journée
+        if 9 <= current_hour <= 17:
+            return 0.15  # 15% de chance
+        else:
+            return 0.05  # 5% de chance
+    
+    def calculate_break_probability(self, doctor_state, temporal_context):
+        """Probabilité que le médecin prenne une pause"""
+        energy_level = doctor_state.get('energy_level', 7)
+        current_hour = temporal_context.get('hour', 12)
+        
+        # Pause déjeuner probable
+        if 12 <= current_hour <= 13:
+            return 0.8
+        
+        # Pause selon niveau d'énergie
+        if energy_level < 5:
+            return 0.4
+        elif energy_level < 3:
+            return 0.7
+        
+        return 0.1
+    
+    def calculate_no_show_impact(self, patients_ahead):
+        """Impact des no-shows sur le temps d'attente"""
+        if not patients_ahead:
+            return 0
+        
+        # Estimation simple: 10% de no-show moyen
+        no_show_rate = 0.1
+        return -no_show_rate  # Réduction du temps d'attente
+    
+    def estimate_external_delays(self, temporal_context):
+        """Estime les retards externes (appels, urgences, etc.)"""
+        current_hour = temporal_context.get('hour', 12)
+        
+        # Plus de retards en journée (appels, interruptions)
+        if 9 <= current_hour <= 17:
+            return 0.1  # 10% de temps supplémentaire
+        else:
+            return 0.05  # 5% de temps supplémentaire
+    
+    def generate_wait_time_explanation(self, patients_ahead, contextual_factors):
+        """Génère une explication du temps d'attente"""
+        explanations = []
+        
+        explanations.append(f"{len(patients_ahead)} patients devant vous")
+        
+        if contextual_factors.get('urgent_insertion_risk', 0) > 0.1:
+            explanations.append("Possibilité d'urgence")
+        
+        if contextual_factors.get('doctor_break_probability', 0) > 0.3:
+            explanations.append("Pause médecin probable")
+        
+        if contextual_factors.get('no_show_adjustments', 0) < -0.05:
+            explanations.append("Ajustement pour absences probables")
+        
+        return " • ".join(explanations)
 
 class ProactiveSuggestionsEngine:
     """Générateur de suggestions proactives intelligentes"""
