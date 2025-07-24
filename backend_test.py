@@ -1210,6 +1210,651 @@ class CabinetMedicalAPITest(unittest.TestCase):
         print(f"   - End-to-end workflow validated")
         print(f"   - AI-powered features working correctly")
 
+    # ========== WHATSAPP HUB COMPREHENSIVE TESTING ==========
+    
+    def test_whatsapp_hub_initialize(self):
+        """Test POST /api/whatsapp-hub/initialize - Initialize WhatsApp Hub with default templates"""
+        print("\n🔍 Testing WhatsApp Hub Initialize Endpoint")
+        
+        response = requests.post(f"{self.base_url}/api/whatsapp-hub/initialize")
+        self.assertEqual(response.status_code, 200, f"WhatsApp Hub initialization failed: {response.text}")
+        
+        data = response.json()
+        self.assertIn("message", data)
+        self.assertIn("templates_created", data)
+        self.assertIsInstance(data["templates_created"], int)
+        self.assertGreaterEqual(data["templates_created"], 6)  # Should create 6 default templates
+        
+        print(f"✅ WhatsApp Hub initialized successfully - {data['templates_created']} templates created")
+        print(f"🎉 WhatsApp Hub Initialize Test: PASSED")
+    
+    def test_whatsapp_hub_get_templates(self):
+        """Test GET /api/whatsapp-hub/templates - Get all templates with categories"""
+        print("\n🔍 Testing WhatsApp Hub Get Templates Endpoint")
+        
+        # Initialize first to ensure templates exist
+        init_response = requests.post(f"{self.base_url}/api/whatsapp-hub/initialize")
+        self.assertEqual(init_response.status_code, 200)
+        
+        response = requests.get(f"{self.base_url}/api/whatsapp-hub/templates")
+        self.assertEqual(response.status_code, 200, f"Get templates failed: {response.text}")
+        
+        data = response.json()
+        self.assertIn("templates", data)
+        self.assertIn("by_category", data)
+        self.assertIn("total", data)
+        
+        # Verify templates structure
+        templates = data["templates"]
+        self.assertIsInstance(templates, list)
+        self.assertGreaterEqual(len(templates), 6)  # Should have at least 6 default templates
+        
+        # Verify template structure
+        if len(templates) > 0:
+            template = templates[0]
+            self.assertIn("id", template)
+            self.assertIn("name", template)
+            self.assertIn("category", template)
+            self.assertIn("content", template)
+            self.assertIn("auto_send", template)
+            self.assertIn("editable", template)
+            self.assertIn("variables", template)
+            
+        # Verify categories
+        by_category = data["by_category"]
+        expected_categories = ["confirmation", "attente", "ajustement", "urgence", "rappel", "annulation"]
+        for category in expected_categories:
+            self.assertIn(category, by_category, f"Missing category: {category}")
+        
+        # Verify confirmation template has auto_send: true
+        confirmation_templates = by_category.get("confirmation", [])
+        self.assertTrue(len(confirmation_templates) > 0, "No confirmation templates found")
+        confirmation_template = confirmation_templates[0]
+        self.assertTrue(confirmation_template.get("auto_send", False), "Confirmation template should have auto_send: true")
+        
+        # Verify attente template has position and temps_attente variables
+        attente_templates = by_category.get("attente", [])
+        self.assertTrue(len(attente_templates) > 0, "No attente templates found")
+        attente_template = attente_templates[0]
+        variables = attente_template.get("variables", [])
+        self.assertIn("position", variables, "Attente template should have position variable")
+        self.assertIn("temps_attente", variables, "Attente template should have temps_attente variable")
+        
+        print(f"✅ Templates retrieved successfully - {data['total']} templates found")
+        print(f"   - Categories: {list(by_category.keys())}")
+        print(f"   - Confirmation template auto_send: {confirmation_template.get('auto_send')}")
+        print(f"   - Attente template variables: {variables}")
+        print(f"🎉 WhatsApp Hub Get Templates Test: PASSED")
+    
+    def test_whatsapp_hub_create_template(self):
+        """Test POST /api/whatsapp-hub/templates - Create new template"""
+        print("\n🔍 Testing WhatsApp Hub Create Template Endpoint")
+        
+        # Create a custom template
+        new_template = {
+            "name": "Test Custom Template",
+            "category": "custom",
+            "content": "Bonjour {nom} {prenom}, ceci est un message de test pour le {date} à {heure}.",
+            "auto_send": False,
+            "editable": True,
+            "variables": ["nom", "prenom", "date", "heure"]
+        }
+        
+        response = requests.post(f"{self.base_url}/api/whatsapp-hub/templates", json=new_template)
+        self.assertEqual(response.status_code, 200, f"Create template failed: {response.text}")
+        
+        data = response.json()
+        self.assertIn("message", data)
+        self.assertIn("template", data)
+        
+        created_template = data["template"]
+        self.assertIn("id", created_template)
+        self.assertEqual(created_template["name"], "Test Custom Template")
+        self.assertEqual(created_template["category"], "custom")
+        self.assertEqual(created_template["content"], "Bonjour {nom} {prenom}, ceci est un message de test pour le {date} à {heure}.")
+        self.assertEqual(created_template["auto_send"], False)
+        self.assertEqual(created_template["editable"], True)
+        self.assertEqual(created_template["variables"], ["nom", "prenom", "date", "heure"])
+        
+        template_id = created_template["id"]
+        
+        print(f"✅ Custom template created successfully: {template_id}")
+        print(f"   - Name: {created_template['name']}")
+        print(f"   - Category: {created_template['category']}")
+        print(f"   - Variables: {created_template['variables']}")
+        
+        # Clean up - delete the created template
+        delete_response = requests.delete(f"{self.base_url}/api/whatsapp-hub/templates/{template_id}")
+        self.assertEqual(delete_response.status_code, 200)
+        
+        print(f"🎉 WhatsApp Hub Create Template Test: PASSED")
+    
+    def test_whatsapp_hub_update_template(self):
+        """Test PUT /api/whatsapp-hub/templates/{template_id} - Update existing template"""
+        print("\n🔍 Testing WhatsApp Hub Update Template Endpoint")
+        
+        # First create a template to update
+        new_template = {
+            "name": "Template to Update",
+            "category": "test",
+            "content": "Original content {nom}",
+            "auto_send": False,
+            "editable": True,
+            "variables": ["nom"]
+        }
+        
+        create_response = requests.post(f"{self.base_url}/api/whatsapp-hub/templates", json=new_template)
+        self.assertEqual(create_response.status_code, 200)
+        template_id = create_response.json()["template"]["id"]
+        
+        # Update the template
+        update_data = {
+            "name": "Updated Template Name",
+            "content": "Updated content {nom} {prenom}",
+            "variables": ["nom", "prenom"],
+            "auto_send": True
+        }
+        
+        response = requests.put(f"{self.base_url}/api/whatsapp-hub/templates/{template_id}", json=update_data)
+        self.assertEqual(response.status_code, 200, f"Update template failed: {response.text}")
+        
+        data = response.json()
+        self.assertIn("message", data)
+        self.assertIn("template", data)
+        
+        updated_template = data["template"]
+        self.assertEqual(updated_template["name"], "Updated Template Name")
+        self.assertEqual(updated_template["content"], "Updated content {nom} {prenom}")
+        self.assertEqual(updated_template["variables"], ["nom", "prenom"])
+        self.assertEqual(updated_template["auto_send"], True)
+        self.assertIn("updated_at", updated_template)
+        
+        print(f"✅ Template updated successfully: {template_id}")
+        print(f"   - New name: {updated_template['name']}")
+        print(f"   - New content: {updated_template['content']}")
+        print(f"   - New variables: {updated_template['variables']}")
+        print(f"   - Auto send: {updated_template['auto_send']}")
+        
+        # Clean up
+        requests.delete(f"{self.base_url}/api/whatsapp-hub/templates/{template_id}")
+        
+        print(f"🎉 WhatsApp Hub Update Template Test: PASSED")
+    
+    def test_whatsapp_hub_delete_template(self):
+        """Test DELETE /api/whatsapp-hub/templates/{template_id} - Delete template"""
+        print("\n🔍 Testing WhatsApp Hub Delete Template Endpoint")
+        
+        # First create a template to delete
+        new_template = {
+            "name": "Template to Delete",
+            "category": "test",
+            "content": "This template will be deleted {nom}",
+            "auto_send": False,
+            "editable": True,
+            "variables": ["nom"]
+        }
+        
+        create_response = requests.post(f"{self.base_url}/api/whatsapp-hub/templates", json=new_template)
+        self.assertEqual(create_response.status_code, 200)
+        template_id = create_response.json()["template"]["id"]
+        
+        # Delete the template
+        response = requests.delete(f"{self.base_url}/api/whatsapp-hub/templates/{template_id}")
+        self.assertEqual(response.status_code, 200, f"Delete template failed: {response.text}")
+        
+        data = response.json()
+        self.assertIn("message", data)
+        self.assertEqual(data["message"], "Template deleted successfully")
+        
+        # Verify template is deleted by trying to update it
+        update_response = requests.put(f"{self.base_url}/api/whatsapp-hub/templates/{template_id}", json={"name": "Should fail"})
+        self.assertEqual(update_response.status_code, 404, "Template should be deleted")
+        
+        print(f"✅ Template deleted successfully: {template_id}")
+        print(f"   - Deletion confirmed with 404 on subsequent update attempt")
+        print(f"🎉 WhatsApp Hub Delete Template Test: PASSED")
+    
+    def test_whatsapp_hub_prepare_message_with_template(self):
+        """Test POST /api/whatsapp-hub/prepare-message - Prepare message with template and AI context"""
+        print("\n🔍 Testing WhatsApp Hub Prepare Message with Template")
+        
+        # Initialize templates first
+        init_response = requests.post(f"{self.base_url}/api/whatsapp-hub/initialize")
+        self.assertEqual(init_response.status_code, 200)
+        
+        # Get a patient with WhatsApp number
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        
+        # Find a patient with WhatsApp number
+        patient_with_whatsapp = None
+        for patient in patients:
+            if patient.get("numero_whatsapp"):
+                patient_with_whatsapp = patient
+                break
+        
+        if not patient_with_whatsapp:
+            self.skipTest("No patients with WhatsApp numbers found for testing")
+        
+        # Get confirmation template
+        templates_response = requests.get(f"{self.base_url}/api/whatsapp-hub/templates")
+        self.assertEqual(templates_response.status_code, 200)
+        templates_data = templates_response.json()
+        
+        confirmation_template = None
+        for template in templates_data["templates"]:
+            if template["category"] == "confirmation":
+                confirmation_template = template
+                break
+        
+        self.assertIsNotNone(confirmation_template, "No confirmation template found")
+        
+        # Prepare message with template
+        prepare_request = {
+            "patient_id": patient_with_whatsapp["id"],
+            "template_id": confirmation_template["id"]
+        }
+        
+        response = requests.post(f"{self.base_url}/api/whatsapp-hub/prepare-message", json=prepare_request)
+        self.assertEqual(response.status_code, 200, f"Prepare message failed: {response.text}")
+        
+        data = response.json()
+        
+        # Verify response structure
+        self.assertIn("patient", data)
+        self.assertIn("message", data)
+        self.assertIn("ai_context", data)
+        self.assertIn("ai_suggestions", data)
+        self.assertIn("variables_used", data)
+        
+        # Verify patient data
+        patient_data = data["patient"]
+        self.assertEqual(patient_data["id"], patient_with_whatsapp["id"])
+        self.assertEqual(patient_data["nom"], patient_with_whatsapp["nom"])
+        self.assertEqual(patient_data["prenom"], patient_with_whatsapp["prenom"])
+        self.assertEqual(patient_data["numero_whatsapp"], patient_with_whatsapp["numero_whatsapp"])
+        
+        # Verify message data
+        message_data = data["message"]
+        self.assertIn("content", message_data)
+        self.assertIn("whatsapp_link", message_data)
+        self.assertIn("template_used", message_data)
+        self.assertIn("character_count", message_data)
+        
+        # Verify WhatsApp link format
+        whatsapp_link = message_data["whatsapp_link"]
+        self.assertTrue(whatsapp_link.startswith("https://wa.me/216"), f"Invalid WhatsApp link format: {whatsapp_link}")
+        self.assertIn("text=", whatsapp_link, "WhatsApp link should contain encoded message")
+        
+        # Verify variable substitution
+        message_content = message_data["content"]
+        self.assertIn(patient_with_whatsapp["nom"], message_content, "Patient nom should be substituted in message")
+        self.assertIn(patient_with_whatsapp["prenom"], message_content, "Patient prenom should be substituted in message")
+        
+        # Verify AI context
+        ai_context = data["ai_context"]
+        self.assertIsInstance(ai_context, dict)
+        
+        # Verify AI suggestions
+        ai_suggestions = data["ai_suggestions"]
+        self.assertIsInstance(ai_suggestions, list)
+        
+        print(f"✅ Message prepared successfully with template")
+        print(f"   - Patient: {patient_data['prenom']} {patient_data['nom']}")
+        print(f"   - Template used: {message_data['template_used']}")
+        print(f"   - Message length: {message_data['character_count']} characters")
+        print(f"   - WhatsApp link: {whatsapp_link[:50]}...")
+        print(f"   - AI suggestions: {len(ai_suggestions)}")
+        print(f"🎉 WhatsApp Hub Prepare Message Test: PASSED")
+    
+    def test_whatsapp_hub_prepare_message_custom(self):
+        """Test POST /api/whatsapp-hub/prepare-message - Prepare message with custom content"""
+        print("\n🔍 Testing WhatsApp Hub Prepare Message with Custom Content")
+        
+        # Get a patient with WhatsApp number
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        
+        # Find a patient with WhatsApp number
+        patient_with_whatsapp = None
+        for patient in patients:
+            if patient.get("numero_whatsapp"):
+                patient_with_whatsapp = patient
+                break
+        
+        if not patient_with_whatsapp:
+            self.skipTest("No patients with WhatsApp numbers found for testing")
+        
+        # Prepare message with custom content
+        custom_message = "Bonjour, ceci est un message personnalisé pour votre rendez-vous. Merci de confirmer votre présence."
+        prepare_request = {
+            "patient_id": patient_with_whatsapp["id"],
+            "custom_message": custom_message
+        }
+        
+        response = requests.post(f"{self.base_url}/api/whatsapp-hub/prepare-message", json=prepare_request)
+        self.assertEqual(response.status_code, 200, f"Prepare custom message failed: {response.text}")
+        
+        data = response.json()
+        
+        # Verify message content is custom message
+        message_data = data["message"]
+        self.assertEqual(message_data["content"], custom_message)
+        self.assertIsNone(message_data["template_used"])
+        
+        # Verify WhatsApp link contains custom message
+        whatsapp_link = message_data["whatsapp_link"]
+        self.assertTrue(whatsapp_link.startswith("https://wa.me/216"))
+        
+        print(f"✅ Custom message prepared successfully")
+        print(f"   - Custom content: {custom_message[:50]}...")
+        print(f"   - WhatsApp link generated: {whatsapp_link[:50]}...")
+        print(f"🎉 WhatsApp Hub Custom Message Test: PASSED")
+    
+    def test_whatsapp_hub_send_confirmation(self):
+        """Test POST /api/whatsapp-hub/send-confirmation - Auto-confirmation after RDV creation"""
+        print("\n🔍 Testing WhatsApp Hub Auto-Confirmation")
+        
+        # Initialize templates first
+        init_response = requests.post(f"{self.base_url}/api/whatsapp-hub/initialize")
+        self.assertEqual(init_response.status_code, 200)
+        
+        # Get a patient with WhatsApp number
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        
+        # Find a patient with WhatsApp number
+        patient_with_whatsapp = None
+        for patient in patients:
+            if patient.get("numero_whatsapp"):
+                patient_with_whatsapp = patient
+                break
+        
+        if not patient_with_whatsapp:
+            self.skipTest("No patients with WhatsApp numbers found for testing")
+        
+        # Create an appointment first
+        today = datetime.now().strftime("%Y-%m-%d")
+        appointment_data = {
+            "patient_id": patient_with_whatsapp["id"],
+            "date": today,
+            "heure": "15:00",
+            "type_rdv": "visite",
+            "motif": "Test auto-confirmation"
+        }
+        
+        create_response = requests.post(f"{self.base_url}/api/appointments", json=appointment_data)
+        self.assertEqual(create_response.status_code, 200)
+        appointment_id = create_response.json()["appointment_id"]
+        
+        # Test auto-confirmation
+        confirmation_data = {
+            "patient_id": patient_with_whatsapp["id"],
+            "appointment_id": appointment_id
+        }
+        
+        response = requests.post(f"{self.base_url}/api/whatsapp-hub/send-confirmation", json=confirmation_data)
+        self.assertEqual(response.status_code, 200, f"Auto-confirmation failed: {response.text}")
+        
+        data = response.json()
+        
+        # Verify response structure
+        self.assertIn("message", data)
+        self.assertIn("whatsapp_link", data)
+        self.assertIn("should_open_whatsapp", data)
+        
+        # Verify WhatsApp link
+        whatsapp_link = data["whatsapp_link"]
+        self.assertTrue(whatsapp_link.startswith("https://wa.me/216"))
+        self.assertTrue(data["should_open_whatsapp"])
+        
+        print(f"✅ Auto-confirmation prepared successfully")
+        print(f"   - Patient: {patient_with_whatsapp['prenom']} {patient_with_whatsapp['nom']}")
+        print(f"   - WhatsApp link: {whatsapp_link[:50]}...")
+        print(f"   - Should open WhatsApp: {data['should_open_whatsapp']}")
+        
+        # Clean up
+        requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+        
+        print(f"🎉 WhatsApp Hub Auto-Confirmation Test: PASSED")
+    
+    def test_whatsapp_hub_queue(self):
+        """Test GET /api/whatsapp-hub/queue?date=2025-07-24 - Get patient queue with WhatsApp data"""
+        print("\n🔍 Testing WhatsApp Hub Queue Endpoint")
+        
+        # Use today's date for testing
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        response = requests.get(f"{self.base_url}/api/whatsapp-hub/queue?date={today}")
+        self.assertEqual(response.status_code, 200, f"WhatsApp queue failed: {response.text}")
+        
+        data = response.json()
+        
+        # Verify response structure
+        self.assertIn("queue", data)
+        self.assertIn("total_patients", data)
+        self.assertIn("patients_with_whatsapp", data)
+        self.assertIn("date", data)
+        
+        # Verify data types
+        self.assertIsInstance(data["queue"], list)
+        self.assertIsInstance(data["total_patients"], int)
+        self.assertIsInstance(data["patients_with_whatsapp"], int)
+        self.assertEqual(data["date"], today)
+        
+        # Verify queue structure if patients exist
+        queue = data["queue"]
+        if len(queue) > 0:
+            patient_item = queue[0]
+            
+            # Verify required fields
+            self.assertIn("appointment_id", patient_item)
+            self.assertIn("patient_id", patient_item)
+            self.assertIn("patient_name", patient_item)
+            self.assertIn("appointment_time", patient_item)
+            self.assertIn("type_rdv", patient_item)
+            self.assertIn("status", patient_item)
+            self.assertIn("numero_whatsapp", patient_item)
+            self.assertIn("queue_position", patient_item)
+            self.assertIn("estimated_wait_time", patient_item)
+            self.assertIn("punctuality_score", patient_item)
+            self.assertIn("avg_consultation_duration", patient_item)
+            self.assertIn("has_whatsapp", patient_item)
+            
+            # Verify data types
+            self.assertIsInstance(patient_item["queue_position"], int)
+            self.assertIsInstance(patient_item["estimated_wait_time"], int)
+            self.assertIsInstance(patient_item["punctuality_score"], (int, float))
+            self.assertIsInstance(patient_item["avg_consultation_duration"], (int, float))
+            self.assertIsInstance(patient_item["has_whatsapp"], bool)
+            
+            print(f"✅ Queue contains {len(queue)} patients")
+            print(f"   - First patient: {patient_item['patient_name']}")
+            print(f"   - Appointment time: {patient_item['appointment_time']}")
+            print(f"   - Queue position: {patient_item['queue_position']}")
+            print(f"   - Estimated wait: {patient_item['estimated_wait_time']} minutes")
+            print(f"   - Punctuality score: {patient_item['punctuality_score']}")
+        else:
+            print(f"✅ Queue endpoint working (no patients for {today})")
+        
+        print(f"   - Total patients: {data['total_patients']}")
+        print(f"   - Patients with WhatsApp: {data['patients_with_whatsapp']}")
+        print(f"🎉 WhatsApp Hub Queue Test: PASSED")
+    
+    def test_whatsapp_hub_error_handling(self):
+        """Test WhatsApp Hub error handling scenarios"""
+        print("\n🔍 Testing WhatsApp Hub Error Handling")
+        
+        # Test prepare message with non-existent patient
+        prepare_request = {
+            "patient_id": "non_existent_patient",
+            "template_id": "some_template"
+        }
+        
+        response = requests.post(f"{self.base_url}/api/whatsapp-hub/prepare-message", json=prepare_request)
+        self.assertEqual(response.status_code, 404, "Should return 404 for non-existent patient")
+        
+        # Test prepare message with non-existent template
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        
+        if len(patients) > 0:
+            prepare_request = {
+                "patient_id": patients[0]["id"],
+                "template_id": "non_existent_template"
+            }
+            
+            response = requests.post(f"{self.base_url}/api/whatsapp-hub/prepare-message", json=prepare_request)
+            self.assertEqual(response.status_code, 404, "Should return 404 for non-existent template")
+        
+        # Test prepare message without template_id or custom_message
+        if len(patients) > 0:
+            prepare_request = {
+                "patient_id": patients[0]["id"]
+            }
+            
+            response = requests.post(f"{self.base_url}/api/whatsapp-hub/prepare-message", json=prepare_request)
+            self.assertEqual(response.status_code, 400, "Should return 400 when neither template_id nor custom_message provided")
+        
+        # Test update non-existent template
+        response = requests.put(f"{self.base_url}/api/whatsapp-hub/templates/non_existent", json={"name": "Test"})
+        self.assertEqual(response.status_code, 404, "Should return 404 for non-existent template update")
+        
+        # Test delete non-existent template
+        response = requests.delete(f"{self.base_url}/api/whatsapp-hub/templates/non_existent")
+        self.assertEqual(response.status_code, 404, "Should return 404 for non-existent template deletion")
+        
+        print(f"✅ Error handling working correctly")
+        print(f"   - Non-existent patient: 404 ✅")
+        print(f"   - Non-existent template: 404 ✅")
+        print(f"   - Missing required fields: 400 ✅")
+        print(f"   - Template operations on non-existent: 404 ✅")
+        print(f"🎉 WhatsApp Hub Error Handling Test: PASSED")
+    
+    def test_whatsapp_hub_comprehensive_workflow(self):
+        """Test comprehensive WhatsApp Hub workflow - End-to-end testing"""
+        print("\n🔍 Testing WhatsApp Hub Comprehensive Workflow")
+        
+        # Step 1: Initialize WhatsApp Hub
+        print("  Step 1: Initializing WhatsApp Hub...")
+        init_response = requests.post(f"{self.base_url}/api/whatsapp-hub/initialize")
+        self.assertEqual(init_response.status_code, 200)
+        init_data = init_response.json()
+        print(f"  ✅ WhatsApp Hub initialized ({init_data['templates_created']} templates)")
+        
+        # Step 2: Get all templates
+        print("  Step 2: Fetching templates...")
+        templates_response = requests.get(f"{self.base_url}/api/whatsapp-hub/templates")
+        self.assertEqual(templates_response.status_code, 200)
+        templates_data = templates_response.json()
+        print(f"  ✅ Templates fetched ({templates_data['total']} templates)")
+        
+        # Step 3: Create custom template
+        print("  Step 3: Creating custom template...")
+        custom_template = {
+            "name": "Workflow Test Template",
+            "category": "test",
+            "content": "Test workflow message for {nom} {prenom}",
+            "auto_send": False,
+            "editable": True,
+            "variables": ["nom", "prenom"]
+        }
+        
+        create_response = requests.post(f"{self.base_url}/api/whatsapp-hub/templates", json=custom_template)
+        self.assertEqual(create_response.status_code, 200)
+        created_template_id = create_response.json()["template"]["id"]
+        print(f"  ✅ Custom template created ({created_template_id})")
+        
+        # Step 4: Update the template
+        print("  Step 4: Updating template...")
+        update_data = {"name": "Updated Workflow Template", "content": "Updated content for {nom} {prenom}"}
+        update_response = requests.put(f"{self.base_url}/api/whatsapp-hub/templates/{created_template_id}", json=update_data)
+        self.assertEqual(update_response.status_code, 200)
+        print("  ✅ Template updated")
+        
+        # Step 5: Prepare message with template
+        print("  Step 5: Preparing message with template...")
+        patients_response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(patients_response.status_code, 200)
+        patients = patients_response.json()["patients"]
+        
+        if len(patients) > 0:
+            patient_with_whatsapp = None
+            for patient in patients:
+                if patient.get("numero_whatsapp"):
+                    patient_with_whatsapp = patient
+                    break
+            
+            if patient_with_whatsapp:
+                prepare_request = {
+                    "patient_id": patient_with_whatsapp["id"],
+                    "template_id": created_template_id
+                }
+                
+                prepare_response = requests.post(f"{self.base_url}/api/whatsapp-hub/prepare-message", json=prepare_request)
+                self.assertEqual(prepare_response.status_code, 200)
+                prepare_data = prepare_response.json()
+                print(f"  ✅ Message prepared for {prepare_data['patient']['prenom']} {prepare_data['patient']['nom']}")
+            else:
+                print("  ⚠️ No patients with WhatsApp numbers for message preparation")
+        
+        # Step 6: Get WhatsApp queue
+        print("  Step 6: Fetching WhatsApp queue...")
+        today = datetime.now().strftime("%Y-%m-%d")
+        queue_response = requests.get(f"{self.base_url}/api/whatsapp-hub/queue?date={today}")
+        self.assertEqual(queue_response.status_code, 200)
+        queue_data = queue_response.json()
+        print(f"  ✅ Queue fetched ({queue_data['total_patients']} patients, {queue_data['patients_with_whatsapp']} with WhatsApp)")
+        
+        # Step 7: Test auto-confirmation (if patient with WhatsApp exists)
+        if len(patients) > 0 and patient_with_whatsapp:
+            print("  Step 7: Testing auto-confirmation...")
+            appointment_data = {
+                "patient_id": patient_with_whatsapp["id"],
+                "date": today,
+                "heure": "16:00",
+                "type_rdv": "visite",
+                "motif": "Workflow test appointment"
+            }
+            
+            appointment_response = requests.post(f"{self.base_url}/api/appointments", json=appointment_data)
+            if appointment_response.status_code == 200:
+                appointment_id = appointment_response.json()["appointment_id"]
+                
+                confirmation_data = {
+                    "patient_id": patient_with_whatsapp["id"],
+                    "appointment_id": appointment_id
+                }
+                
+                confirmation_response = requests.post(f"{self.base_url}/api/whatsapp-hub/send-confirmation", json=confirmation_data)
+                self.assertEqual(confirmation_response.status_code, 200)
+                print("  ✅ Auto-confirmation prepared")
+                
+                # Clean up appointment
+                requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+        
+        # Step 8: Delete the custom template
+        print("  Step 8: Cleaning up custom template...")
+        delete_response = requests.delete(f"{self.base_url}/api/whatsapp-hub/templates/{created_template_id}")
+        self.assertEqual(delete_response.status_code, 200)
+        print("  ✅ Custom template deleted")
+        
+        print(f"🎉 WhatsApp Hub Comprehensive Workflow Test: PASSED")
+        print(f"   - All 8 WhatsApp Hub endpoints tested successfully")
+        print(f"   - End-to-end workflow validated")
+        print(f"   - Template CRUD operations working")
+        print(f"   - Message preparation with AI context working")
+        print(f"   - Auto-confirmation system working")
+        print(f"   - Queue management with WhatsApp data working")
+
     # ========== CONSULTATION SAVING FUNCTIONALITY TESTS ==========
     
     def test_consultation_saving_complete_data(self):
