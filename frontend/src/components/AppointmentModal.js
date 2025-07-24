@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
+import axios from 'axios';
 
 const AppointmentModal = ({ 
   isOpen, 
