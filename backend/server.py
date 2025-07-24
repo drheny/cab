@@ -5873,6 +5873,70 @@ class ProactiveSuggestionsEngine:
             })
         
         return suggestions
+    
+    def generate_performance_suggestions(self, doctor_state, temporal_context):
+        """Suggestions d'amélioration des performances"""
+        suggestions = []
+        
+        current_efficiency = doctor_state.get('current_efficiency', 1.0)
+        energy_level = doctor_state.get('energy_level', 8.0)
+        stress_indicators = doctor_state.get('stress_indicators', {})
+        
+        # Suggestion d'optimisation du workflow
+        if current_efficiency < 0.8:
+            suggestions.append({
+                'type': 'workflow_optimization',
+                'icon': '⚙️',
+                'title': 'Optimisation Workflow',
+                'message': f'Efficacité à {current_efficiency*100:.0f}% - Révision du processus recommandée',
+                'priority': 1,
+                'confidence': 0.75,
+                'action': 'optimize_workflow',
+                'estimated_benefit': 'Gain +15% efficacité'
+            })
+        
+        # Suggestion de gestion d'énergie
+        if energy_level < 5:
+            suggestions.append({
+                'type': 'energy_management',
+                'icon': '🔋',
+                'title': 'Gestion Énergie Critique',
+                'message': f'Niveau énergie bas ({energy_level}/10) - Pause ou réorganisation urgente',
+                'priority': 1,
+                'confidence': 0.90,
+                'action': 'energy_recovery',
+                'estimated_benefit': 'Récupération énergie'
+            })
+        
+        # Suggestion de gestion du stress
+        total_stress = sum(stress_indicators.values()) if stress_indicators else 0
+        if total_stress > 6:
+            suggestions.append({
+                'type': 'stress_management',
+                'icon': '🧘',
+                'title': 'Gestion du Stress',
+                'message': f'Niveau stress élevé ({total_stress}/10) - Techniques de relaxation recommandées',
+                'priority': 2,
+                'confidence': 0.70,
+                'action': 'stress_reduction',
+                'estimated_benefit': 'Réduction stress'
+            })
+        
+        return suggestions
+    
+    def calculate_queue_optimization_potential(self, queue_state):
+        """Calcule le potentiel d'optimisation de la queue"""
+        queue_length = queue_state.get('length', 0)
+        predicted_delays = queue_state.get('predicted_delays', [])
+        
+        if not predicted_delays or queue_length == 0:
+            return 0
+        
+        # Estimation simple du gain possible par réorganisation
+        total_delay = sum(predicted_delays)
+        optimization_factor = 0.15  # 15% d'amélioration possible
+        
+        return total_delay * optimization_factor
 
 class PatientBehaviorCollector:
     """Collecte des patterns comportementaux des patients"""
