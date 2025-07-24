@@ -785,6 +785,24 @@ const Calendar = ({ user }) => {
     return `https://wa.me/212${cleanPhone.startsWith('0') ? cleanPhone.substring(1) : cleanPhone}`;
   }, []);
 
+  // WhatsApp Modal Functions
+  const openWhatsAppModal = useCallback((patient, appointment = null) => {
+    if (!patient.numero_whatsapp) {
+      toast.error('Patient n\'a pas de numéro WhatsApp');
+      return;
+    }
+    
+    setWhatsappPatient(patient);
+    setWhatsappAppointment(appointment);
+    setShowWhatsAppModal(true);
+  }, []);
+
+  const closeWhatsAppModal = useCallback(() => {
+    setShowWhatsAppModal(false);
+    setWhatsappPatient(null);
+    setWhatsappAppointment(null);
+  }, []);
+
   const formatDate = useCallback((dateString) => {
     return new Date(dateString).toLocaleDateString('fr-FR', {
       weekday: 'long',
