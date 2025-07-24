@@ -1418,17 +1418,28 @@ class CabinetMedicalAPITest(unittest.TestCase):
             
             # Verify predictions structure
             predictions = data["comprehensive_predictions"]
-            self.assertIn("duration_prediction", predictions)
-            self.assertIn("wait_time_prediction", predictions)
-            self.assertIn("behavioral_insights", predictions)
-            self.assertIn("external_factors_impact", predictions)
-            self.assertIn("confidence_score", predictions)
+            self.assertIn("predictions", predictions)
+            self.assertIn("profiles", predictions)
+            self.assertIn("suggestions", predictions)
+            self.assertIn("enrichment_confidence", predictions)
+            
+            # Verify predictions details
+            pred_details = predictions["predictions"]
+            self.assertIn("consultation_duration", pred_details)
+            self.assertIn("no_show_probability", pred_details)
+            self.assertIn("patient_satisfaction_expected", pred_details)
+            
+            # Verify profiles
+            profiles = predictions["profiles"]
+            self.assertIn("doctor_state", profiles)
+            self.assertIn("patient_behavioral_profile", profiles)
             
             print(f"✅ Comprehensive predictions generated successfully")
             print(f"   - Patient ID: {patient_id}")
             print(f"   - Consultation type: {consultation_type}")
             print(f"   - Date: {test_date}")
-            print(f"   - Confidence score: {predictions.get('confidence_score', 'N/A')}")
+            print(f"   - Enrichment confidence: {predictions.get('enrichment_confidence', 'N/A')}")
+            print(f"   - Duration prediction: {pred_details['consultation_duration']['predicted_minutes']} min")
             print(f"🎉 AI Learning Comprehensive Predictions Test: PASSED")
         else:
             print(f"⚠️ No patients available for comprehensive predictions testing")
