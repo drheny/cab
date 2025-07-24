@@ -1089,6 +1089,7 @@ const Calendar = ({ user }) => {
             onDelete={handleDeleteAppointment}
             onViewPatient={viewPatientDetails}
             onOpenPaymentModal={handleOpenPaymentModal}
+            onWhatsApp={openWhatsAppModal}
             isCompleted={true}
             user={user}
           />
