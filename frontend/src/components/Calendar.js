@@ -1022,6 +1022,7 @@ const Calendar = ({ user }) => {
             onViewPatient={viewPatientDetails}
             onPatientReorder={handlePatientReorder}
             onOpenPaymentModal={handleOpenPaymentModal}
+            onWhatsApp={openWhatsAppModal}
             user={user}
           />
           
