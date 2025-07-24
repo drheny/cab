@@ -5363,7 +5363,10 @@ async def create_whatsapp_template(template: WhatsAppTemplate):
         template_dict["created_at"] = datetime.now()
         template_dict["updated_at"] = datetime.now()
         
-        whatsapp_templates_collection.insert_one(template_dict)
+        result = whatsapp_templates_collection.insert_one(template_dict)
+        
+        # Remove MongoDB ObjectId and return clean template
+        template_dict.pop("_id", None)
         
         return {
             "message": "Template created successfully",
