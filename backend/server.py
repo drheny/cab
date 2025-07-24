@@ -5420,6 +5420,8 @@ async def delete_whatsapp_template(template_id: str):
         
         return {"message": "Template deleted successfully"}
         
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error deleting template: {str(e)}")
 
