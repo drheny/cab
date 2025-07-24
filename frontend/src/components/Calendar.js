@@ -1916,6 +1916,7 @@ const WorkflowCard = React.memo(({
   onViewPatient,
   onPatientReorder,
   onOpenPaymentModal,
+  onWhatsApp,
   isCompleted,
   user
 }) => {
