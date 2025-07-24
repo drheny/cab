@@ -41,6 +41,7 @@ const WhatsAppModal = ({
       setSelectedTemplate(null);
       setCustomMessage('');
       setFinalMessage('');
+      setIsEditing(false);
     }
   }, [isOpen]);
 
