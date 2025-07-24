@@ -1248,15 +1248,16 @@ class CabinetMedicalAPITest(unittest.TestCase):
         
         # Verify state structure
         state = data["state"]
-        self.assertIn("efficiency_score", state)
+        self.assertIn("current_efficiency", state)
         self.assertIn("energy_level", state)
-        self.assertIn("consultation_pace", state)
-        self.assertIn("stress_indicators", state)
+        self.assertIn("fatigue_level", state)
+        self.assertIn("performance_trend", state)
         
         print(f"✅ Doctor state retrieved successfully")
         print(f"   - Doctor ID: {data['doctor_id']}")
-        print(f"   - Efficiency score: {state['efficiency_score']}")
+        print(f"   - Current efficiency: {state['current_efficiency']}")
         print(f"   - Energy level: {state['energy_level']}")
+        print(f"   - Performance trend: {state['performance_trend']}")
         print(f"🎉 AI Learning Doctor State Test: PASSED")
     
     def test_ai_learning_suggestions_proactive(self):
