@@ -1468,6 +1468,7 @@ async def get_rdv_jour(date: str):
         patient = patients_collection.find_one({"id": appointment["patient_id"]}, {"_id": 0})
         if patient:
             appointment["patient"] = {
+                "id": patient.get("id", ""),
                 "nom": patient.get("nom", ""),
                 "prenom": patient.get("prenom", ""),
                 "numero_whatsapp": patient.get("numero_whatsapp", ""),
