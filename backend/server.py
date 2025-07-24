@@ -28,6 +28,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Application startup event
+@app.on_event("startup")
+async def startup_event():
+    """Initialize application on startup"""
+    # Check if demo data should be initialized
+    should_init_demo = os.getenv("INIT_DEMO_DATA", "false").lower() == "true"
+    
+    # Initialize demo data if needed
+    if should_init_demo:
+        await init_demo_data()
+    
+    # Create default WhatsApp templates
+    create_default_whatsapp_templates()
+    
+    return {"message": "Application initialized successfully"}
+
 # MongoDB connection
 MONGO_URL = os.getenv("MONGO_URL", "mongodb://localhost:27017/cabinet_medical")
 client = MongoClient(MONGO_URL)
