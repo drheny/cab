@@ -5167,6 +5167,28 @@ class TemporalDataCollector:
         ]
         
         return list(self.collection.aggregate(pipeline))
+    
+    def calculate_moment_efficiency(self, consultation_data):
+        """Calcule l'efficacité du médecin à ce moment"""
+        scheduled_duration = consultation_data.get('duree_prevue', 15)
+        actual_duration = consultation_data.get('duree_reelle', scheduled_duration)
+        
+        if actual_duration > 0:
+            return min(2.0, scheduled_duration / actual_duration)
+        return 1.0
+    
+    def get_week_of_month(self):
+        """Obtient la semaine du mois (1-4)"""
+        today = datetime.now()
+        first_day = today.replace(day=1)
+        dom = today.day
+        adjusted_dom = dom + first_day.weekday()
+        return int(adjusted_dom / 7) + 1
+    
+    def get_season(self):
+        """Obtient la saison (0-3)"""
+        month = datetime.now().month
+        return (month % 12) // 3  # 0=winter, 1=spring, 2=summer, 3=autumn
 
 class DoctorPerformanceCollector:
     """Collecte des patterns de performance médecin"""
