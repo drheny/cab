@@ -644,6 +644,210 @@ const Dashboard = ({ user }) => {
         />
       </div>
 
+      {/* AI Insights Panel */}
+      {showAiInsights && (
+        <div className="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 rounded-xl shadow-sm border border-indigo-200 p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-2">
+              <div className="p-2 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Insights IA</h3>
+                <p className="text-sm text-gray-600">Analyse intelligente de votre journée</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowAiInsights(false)}
+              className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-white/50 transition-colors"
+              title="Masquer les insights IA"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {aiLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+              <span className="ml-3 text-indigo-600">Analyse IA en cours...</span>
+            </div>
+          ) : aiInsights ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Doctor Performance */}
+              <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                <div className="flex items-center space-x-2 mb-3">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <h4 className="font-medium text-gray-900">Performance</h4>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Efficacité</span>
+                    <span className={`text-sm font-semibold ${
+                      aiInsights.doctor_performance.current_efficiency >= 1.0 
+                        ? 'text-green-600' 
+                        : aiInsights.doctor_performance.current_efficiency >= 0.8 
+                        ? 'text-yellow-600' 
+                        : 'text-red-600'
+                    }`}>
+                      {(aiInsights.doctor_performance.current_efficiency * 100).toFixed(0)}%
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Énergie</span>
+                    <span className={`text-sm font-semibold ${
+                      aiInsights.doctor_performance.energy_level >= 7 
+                        ? 'text-green-600' 
+                        : aiInsights.doctor_performance.energy_level >= 5 
+                        ? 'text-yellow-600' 
+                        : 'text-red-600'
+                    }`}>
+                      {aiInsights.doctor_performance.energy_level.toFixed(1)}/10
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Tendance</span>
+                    <div className="flex items-center space-x-1">
+                      {aiInsights.doctor_performance.performance_trend === 'improving' && (
+                        <span className="text-green-600">📈</span>
+                      )}
+                      {aiInsights.doctor_performance.performance_trend === 'declining' && (
+                        <span className="text-red-600">📉</span>
+                      )}
+                      {aiInsights.doctor_performance.performance_trend === 'stable' && (
+                        <span className="text-blue-600">➡️</span>
+                      )}
+                      <span className="text-xs text-gray-600 capitalize">
+                        {aiInsights.doctor_performance.performance_trend}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* External Conditions */}
+              <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                <div className="flex items-center space-x-2 mb-3">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                  <h4 className="font-medium text-gray-900">Conditions</h4>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Impact global</span>
+                    <span className={`text-sm font-semibold ${
+                      aiInsights.external_conditions.total_impact_score >= 0 
+                        ? 'text-green-600' 
+                        : 'text-red-600'
+                    }`}>
+                      {aiInsights.external_conditions.total_impact_score >= 0 ? '+' : ''}
+                      {(aiInsights.external_conditions.total_impact_score * 100).toFixed(0)}%
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Météo</span>
+                    <span className="text-xs text-gray-500">
+                      {aiInsights.external_conditions.weather_impact >= 0 ? '☀️' : '🌧️'}
+                      {(aiInsights.external_conditions.weather_impact * 100).toFixed(0)}%
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Circulation</span>
+                    <span className="text-xs text-gray-500">
+                      {aiInsights.external_conditions.traffic_impact >= 0 ? '🟢' : '🔴'}
+                      {(aiInsights.external_conditions.traffic_impact * 100).toFixed(0)}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* AI Suggestions */}
+              <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                <div className="flex items-center space-x-2 mb-3">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
+                  <h4 className="font-medium text-gray-900">Suggestions IA</h4>
+                </div>
+                <div className="space-y-2">
+                  {aiInsights.ai_suggestions && aiInsights.ai_suggestions.length > 0 ? (
+                    aiInsights.ai_suggestions.map((suggestion, index) => (
+                      <div key={index} className="p-2 bg-white/50 rounded border-l-2 border-purple-300">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <span className="text-sm">{suggestion.icon}</span>
+                          <span className="text-xs font-medium text-gray-700">{suggestion.title}</span>
+                        </div>
+                        <p className="text-xs text-gray-600 leading-tight">
+                          {suggestion.message}
+                        </p>
+                        <div className="flex justify-between items-center mt-1">
+                          <span className={`text-xs px-2 py-1 rounded-full ${
+                            suggestion.priority === 1 
+                              ? 'bg-red-100 text-red-600' 
+                              : suggestion.priority === 2 
+                              ? 'bg-yellow-100 text-yellow-600' 
+                              : 'bg-blue-100 text-blue-600'
+                          }`}>
+                            P{suggestion.priority}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {(suggestion.confidence * 100).toFixed(0)}% confiance
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-gray-500 italic">Aucune suggestion pour le moment</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <div className="text-gray-400 mb-2">🤖</div>
+              <p className="text-sm text-gray-600">Insights IA non disponibles</p>
+              <button
+                onClick={fetchAIInsights}
+                className="text-xs text-indigo-600 hover:text-indigo-800 mt-2 underline"
+              >
+                Réessayer
+              </button>
+            </div>
+          )}
+
+          {/* Refresh button */}
+          {aiInsights && (
+            <div className="flex justify-center mt-4">
+              <button
+                onClick={fetchAIInsights}
+                className="text-xs text-indigo-600 hover:text-indigo-800 px-3 py-1 rounded-full bg-white/50 hover:bg-white/70 transition-colors"
+                disabled={aiLoading}
+              >
+                {aiLoading ? 'Actualisation...' : '🔄 Actualiser'}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Show AI Insights button when hidden */}
+      {!showAiInsights && (
+        <div className="mb-6">
+          <button
+            onClick={() => {
+              setShowAiInsights(true);
+              fetchAIInsights();
+            }}
+            className="w-full p-3 bg-gradient-to-r from-indigo-50 to-purple-50 hover:from-indigo-100 hover:to-purple-100 border-2 border-dashed border-indigo-200 rounded-xl text-center transition-colors group"
+          >
+            <div className="flex items-center justify-center space-x-2">
+              <svg className="w-5 h-5 text-indigo-500 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+              <span className="text-sm font-medium text-indigo-700">Afficher les Insights IA</span>
+            </div>
+          </button>
+        </div>
+      )}
+
       {/* Messages and Quick Actions - Responsive */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
         {/* Rappels et alertes */}
