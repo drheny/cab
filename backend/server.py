@@ -5392,11 +5392,20 @@ async def update_whatsapp_template(template_id: str, template_update: dict):
         
         updated_template = whatsapp_templates_collection.find_one({"id": template_id}, {"_id": 0})
         
+        # Convert datetime objects to strings for JSON serialization
+        if updated_template:
+            if "created_at" in updated_template:
+                updated_template["created_at"] = updated_template["created_at"].isoformat() if isinstance(updated_template["created_at"], datetime) else updated_template["created_at"]
+            if "updated_at" in updated_template:
+                updated_template["updated_at"] = updated_template["updated_at"].isoformat() if isinstance(updated_template["updated_at"], datetime) else updated_template["updated_at"]
+        
         return {
             "message": "Template updated successfully",
             "template": updated_template
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating template: {str(e)}")
 
