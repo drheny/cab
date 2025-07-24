@@ -1029,8 +1029,8 @@ const Calendar = ({ user }) => {
           {/* 2. RDV Programmés */}
           <WorkflowSection
             title="📅 RDV Programmés"
-            appointments={groupedAppointments.absent}
-            sectionType="absent"
+            appointments={groupedAppointments.programme}
+            sectionType="programme"
             onStatusUpdate={handleStatusUpdate}
             onTypeToggle={handleTypeToggle}
             onPaymentUpdate={handlePaymentUpdate}
