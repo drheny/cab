@@ -5466,6 +5466,247 @@ class ProactiveSuggestionsEngine:
 
 # ==================== END AI LEARNING ENGINE ====================
 
+# AI Learning API Endpoints
+
+@app.post("/api/ai-learning/record-consultation")
+async def record_consultation_data(consultation_data: dict):
+    """Enregistre les données d'une consultation pour l'apprentissage"""
+    try:
+        temporal_collector = TemporalDataCollector()
+        performance_collector = DoctorPerformanceCollector()
+        
+        # Enregistrer les patterns temporels
+        temporal_record = temporal_collector.record_consultation_timing(consultation_data)
+        
+        # Enregistrer la performance du médecin
+        doctor_id = consultation_data.get('doctor_id', 'default_doctor')
+        performance_record = performance_collector.record_performance_snapshot(doctor_id, consultation_data)
+        
+        return {
+            "message": "Consultation data recorded for AI learning",
+            "temporal_record_id": str(temporal_record.get('_id')),
+            "performance_record_id": str(performance_record.get('_id'))
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error recording consultation data: {str(e)}")
+
+@app.get("/api/ai-learning/predictions/consultation-duration")
+async def predict_consultation_duration_api(
+    patient_id: str = Query(...),
+    consultation_type: str = Query(...),
+    doctor_id: str = Query(default="default_doctor")
+):
+    """Prédiction intelligente de durée de consultation"""
+    try:
+        predictor = PredictiveEngine()
+        performance_collector = DoctorPerformanceCollector()
+        
+        # Obtenir l'état actuel du médecin
+        doctor_state = performance_collector.get_doctor_current_state(doctor_id)
+        
+        # Contexte temporal actuel
+        temporal_context = {
+            'hour': datetime.now().hour,
+            'day_of_week': datetime.now().weekday(),
+            'month': datetime.now().month,
+            'season': (datetime.now().month % 12) // 3  # 0=winter, 1=spring, etc.
+        }
+        
+        # Prédiction
+        prediction = predictor.predict_consultation_duration(
+            patient_id, consultation_type, doctor_state, temporal_context
+        )
+        
+        return {
+            "patient_id": patient_id,
+            "consultation_type": consultation_type,
+            "prediction": prediction,
+            "doctor_state": doctor_state,
+            "temporal_context": temporal_context,
+            "generated_at": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error predicting consultation duration: {str(e)}")
+
+@app.get("/api/ai-learning/predictions/wait-time")
+async def predict_wait_time_api(
+    patient_position: int = Query(...),
+    date: str = Query(...)
+):
+    """Prédiction intelligente de temps d'attente"""
+    try:
+        predictor = PredictiveEngine()
+        performance_collector = DoctorPerformanceCollector()
+        
+        # Obtenir la queue actuelle
+        appointments = list(appointments_collection.find({
+            "date": date,
+            "statut": {"$in": ["attente", "programme"]}
+        }))
+        
+        # Construire la queue avec données enrichies
+        current_queue = []
+        for apt in appointments:
+            patient = patients_collection.find_one({"id": apt.get("patient_id")})
+            if patient:
+                current_queue.append({
+                    'patient_id': apt.get('patient_id'),
+                    'consultation_type': apt.get('type_rdv', 'visite'),
+                    'scheduled_time': apt.get('heure'),
+                    'patient_name': f"{patient.get('prenom', '')} {patient.get('nom', '')}"
+                })
+        
+        # Trier par heure
+        current_queue.sort(key=lambda x: x['scheduled_time'])
+        
+        # État médecin
+        doctor_state = performance_collector.get_doctor_current_state("default_doctor")
+        
+        # Contexte temporal
+        temporal_context = {
+            'hour': datetime.now().hour,
+            'day_of_week': datetime.now().weekday(),
+            'month': datetime.now().month
+        }
+        
+        # Prédiction
+        prediction = predictor.predict_wait_time(
+            patient_position, current_queue, doctor_state, temporal_context
+        )
+        
+        return {
+            "patient_position": patient_position,
+            "queue_length": len(current_queue),
+            "prediction": prediction,
+            "queue_summary": current_queue[:patient_position],
+            "doctor_state": doctor_state,
+            "generated_at": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error predicting wait time: {str(e)}")
+
+@app.get("/api/ai-learning/suggestions/proactive")
+async def get_proactive_suggestions():
+    """Obtient des suggestions proactives intelligentes"""
+    try:
+        suggestions_engine = ProactiveSuggestionsEngine()
+        performance_collector = DoctorPerformanceCollector()
+        
+        # Contexte actuel
+        doctor_state = performance_collector.get_doctor_current_state("default_doctor")
+        
+        # État de la queue
+        today = datetime.now().strftime("%Y-%m-%d")
+        appointments = list(appointments_collection.find({
+            "date": today, 
+            "statut": {"$in": ["attente", "programme"]}
+        }))
+        
+        queue_state = {
+            'length': len(appointments),
+            'avg_complexity': 1.0,  # À calculer selon historique
+            'predicted_delays': [15, 20, 10],  # Exemple
+            'high_delay_risk_patients': []  # À implémenter
+        }
+        
+        temporal_context = {
+            'hour': datetime.now().hour,
+            'day_of_week': datetime.now().weekday(),
+            'month': datetime.now().month
+        }
+        
+        current_context = {
+            'doctor_state': doctor_state,
+            'queue_state': queue_state,
+            'temporal_context': temporal_context
+        }
+        
+        # Génération des suggestions
+        suggestions = suggestions_engine.generate_smart_suggestions(current_context)
+        
+        return {
+            "suggestions": suggestions,
+            "context": current_context,
+            "generated_at": datetime.now().isoformat(),
+            "total_suggestions": len(suggestions)
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating proactive suggestions: {str(e)}")
+
+@app.get("/api/ai-learning/doctor-state")
+async def get_doctor_current_state_api(doctor_id: str = Query(default="default_doctor")):
+    """Obtient l'état actuel du médecin"""
+    try:
+        performance_collector = DoctorPerformanceCollector()
+        doctor_state = performance_collector.get_doctor_current_state(doctor_id)
+        
+        return {
+            "doctor_id": doctor_id,
+            "state": doctor_state,
+            "retrieved_at": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting doctor state: {str(e)}")
+
+@app.get("/api/ai-learning/temporal-patterns")
+async def get_temporal_patterns_api(lookback_days: int = Query(default=30)):
+    """Analyse des patterns temporels"""
+    try:
+        temporal_collector = TemporalDataCollector()
+        patterns = temporal_collector.get_temporal_patterns(lookback_days)
+        
+        return {
+            "patterns": patterns,
+            "lookback_days": lookback_days,
+            "analysis_date": datetime.now().isoformat(),
+            "total_patterns": len(patterns)
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting temporal patterns: {str(e)}")
+
+@app.post("/api/ai-learning/initialize")
+async def initialize_ai_learning():
+    """Initialise le système d'apprentissage IA"""
+    try:
+        # Créer les collections si elles n'existent pas
+        collections_created = []
+        
+        # Vérifier et créer les index nécessaires
+        if ai_learning_data.count_documents({}) == 0:
+            ai_learning_data.create_index([("timestamp", -1)])
+            collections_created.append("ai_learning_data")
+        
+        if temporal_patterns.count_documents({}) == 0:
+            temporal_patterns.create_index([("recorded_at", -1)])
+            temporal_patterns.create_index([("patient_id", 1)])
+            temporal_patterns.create_index([("temporal_context.hour_of_day", 1)])
+            collections_created.append("temporal_patterns")
+        
+        if doctor_performance_patterns.count_documents({}) == 0:
+            doctor_performance_patterns.create_index([("doctor_id", 1), ("timestamp", -1)])
+            collections_created.append("doctor_performance_patterns")
+        
+        if prediction_accuracy.count_documents({}) == 0:
+            prediction_accuracy.create_index([("prediction_type", 1), ("date", -1)])
+            collections_created.append("prediction_accuracy")
+        
+        return {
+            "message": "AI Learning system initialized successfully",
+            "collections_created": collections_created,
+            "status": "ready_for_learning"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error initializing AI learning: {str(e)}")
+
+# ==================== END AI LEARNING API ====================
+
 # ==================== WHATSAPP HUB API ====================
 
 # WhatsApp Hub collections
