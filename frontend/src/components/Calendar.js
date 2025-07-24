@@ -2316,7 +2316,7 @@ const WorkflowCard = React.memo(({
           )}
 
           {/* Bouton WhatsApp Intelligent */}
-          {appointment.patient?.numero_whatsapp && (
+          {appointment.patient?.numero_whatsapp && onWhatsApp && (
             <button
               onClick={() => onWhatsApp(appointment.patient, appointment)}
               className="p-1 text-green-600 hover:bg-green-100 rounded transition-colors"
