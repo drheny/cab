@@ -401,16 +401,35 @@ const WhatsAppModal = ({
                 <button
                   onClick={() => setStep(1)}
                   className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                  disabled={isEditing}
                 >
                   Retour
                 </button>
-                <button
-                  onClick={handleConfirmSend}
-                  className="flex-1 bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center space-x-2"
-                >
-                  <MessageCircle className="w-4 h-4" />
-                  <span>Préparer l'envoi WhatsApp</span>
-                </button>
+                {isEditing ? (
+                  <div className="flex-1 flex items-center space-x-2">
+                    <button
+                      onClick={handleSaveEdit}
+                      className="flex-1 bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center space-x-2"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      <span>Sauvegarder les modifications</span>
+                    </button>
+                    <button
+                      onClick={handleCancelEdit}
+                      className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleConfirmSend}
+                    className="flex-1 bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center space-x-2"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    <span>Préparer l'envoi WhatsApp</span>
+                  </button>
+                )}
               </div>
             </div>
           )}
