@@ -155,7 +155,17 @@ const AppointmentModal = ({
         toast.error('Veuillez sélectionner un patient');
         return;
       }
+      
       const result = await onSave(formData);
+      
+      // Send auto-confirmation for existing patients
+      if (result && result.success) {
+        const selectedPatient = patients.find(p => p.id === formData.patient_id);
+        if (selectedPatient) {
+          await sendAutoConfirmation(result.appointment || formData, selectedPatient);
+        }
+      }
+      
       // Le modal se ferme automatiquement en cas de succès dans handleCreateAppointment
     }
   };
