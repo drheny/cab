@@ -1835,6 +1835,7 @@ const WorkflowSection = ({
   onViewPatient,
   onPatientReorder,
   onOpenPaymentModal,
+  onWhatsApp,
   isCompleted = false,
   user
 }) => {
