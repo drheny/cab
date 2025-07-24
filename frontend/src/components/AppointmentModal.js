@@ -21,6 +21,45 @@ const AppointmentModal = ({
     telephone: ''
   });
 
+  const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+
+  // Auto-confirmation WhatsApp function
+  const sendAutoConfirmation = async (appointmentData, patient) => {
+    // Only send auto-confirmation if patient has WhatsApp number
+    if (!patient?.numero_whatsapp) {
+      console.log('Patient has no WhatsApp number, skipping auto-confirmation');
+      return;
+    }
+
+    try {
+      const response = await axios.post(`${API_BASE_URL}/api/whatsapp-hub/send-confirmation`, {
+        patient_id: patient.id || appointmentData.patient_id,
+        appointment_id: appointmentData.id,
+        appointment_data: appointmentData
+      });
+
+      if (response.data.whatsapp_link) {
+        // Show success message with option to open WhatsApp
+        toast.success(
+          <div>
+            <p>RDV créé avec succès !</p>
+            <button
+              onClick={() => window.open(response.data.whatsapp_link, '_blank')}
+              className="mt-2 text-green-600 underline hover:text-green-700"
+            >
+              📱 Ouvrir WhatsApp pour confirmer
+            </button>
+          </div>,
+          { duration: 5000 }
+        );
+      }
+    } catch (error) {
+      console.error('Error sending auto-confirmation:', error);
+      // Don't show error to user for auto-confirmation failure
+      console.log('Auto-confirmation failed, but appointment was created successfully');
+    }
+  };
+
   // Pre-fill patient when modal opens from patient list (formData has patient_id)
   useEffect(() => {
     if (isOpen && formData.patient_id && patients.length > 0) {
