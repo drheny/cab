@@ -246,6 +246,20 @@ const Dashboard = ({ user }) => {
     }
   };
 
+  const fetchAIInsights = async () => {
+    try {
+      setAiLoading(true);
+      const today = new Date().toISOString().split('T')[0];
+      const response = await axios.get(`${API_BASE_URL}/api/ai-learning/dashboard-insights?date=${today}`);
+      setAiInsights(response.data.dashboard_insights);
+    } catch (error) {
+      console.error('Error fetching AI insights:', error);
+      // Don't show error toast to avoid cluttering - AI insights are optional
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   const viewPatientDetails = async (patientId) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/api/patients/${patientId}`);
