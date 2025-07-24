@@ -2305,16 +2305,16 @@ const WorkflowCard = React.memo(({
             </button>
           )}
 
-          {/* Bouton WhatsApp */}
-          <a
-            href={getWhatsAppLink(appointment.patient?.numero_whatsapp || appointment.patient?.telephone)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-1 text-green-600 hover:bg-green-100 rounded transition-colors"
-            title="Envoyer WhatsApp"
-          >
-            <MessageCircle className="w-4 h-4" />
-          </a>
+          {/* Bouton WhatsApp Intelligent */}
+          {appointment.patient?.numero_whatsapp && (
+            <button
+              onClick={() => onWhatsApp(appointment.patient, appointment)}
+              className="p-1 text-green-600 hover:bg-green-100 rounded transition-colors"
+              title="Envoyer WhatsApp avec templates"
+            >
+              <MessageCircle className="w-4 h-4" />
+            </button>
+          )}
 
           {/* Bouton Edit */}
           <button
