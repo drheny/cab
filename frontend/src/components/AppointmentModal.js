@@ -136,6 +136,9 @@ const AppointmentModal = ({
             setShowPatientForm(false);
             setNewPatientData({ nom: '', prenom: '', telephone: '' });
             toast.success('Patient créé et rendez-vous programmé avec succès');
+            
+            // Send auto-confirmation WhatsApp
+            await sendAutoConfirmation(result.appointment || appointmentData, newPatient);
           } else {
             toast.error('Erreur lors de la création du rendez-vous: ' + (result?.error || 'Erreur inconnue'));
           }
