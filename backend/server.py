@@ -531,7 +531,11 @@ def update_patient_computed_fields(patient_dict: dict) -> dict:
     
     # Generate WhatsApp link
     if patient_dict.get('numero_whatsapp'):
-        patient_dict['lien_whatsapp'] = generate_whatsapp_link(patient_dict['numero_whatsapp'])
+        # For demo data, generate a simple WhatsApp link without pre-filled message
+        clean_phone = ''.join(filter(str.isdigit, patient_dict['numero_whatsapp']))
+        if not clean_phone.startswith('216'):
+            clean_phone = '216' + clean_phone
+        patient_dict['lien_whatsapp'] = f"https://wa.me/{clean_phone}"
     
     # Update consultation dates
     if patient_dict.get('consultations'):
