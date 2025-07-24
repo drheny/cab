@@ -9,7 +9,8 @@ import {
   Settings,
   X,
   MessageSquare,
-  Brain
+  Brain,
+  MessageCircle
 } from 'lucide-react';
 
 const Sidebar = ({ user, isOpen, onClose, phoneMessagesCount = 0 }) => {
