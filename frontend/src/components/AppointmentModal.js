@@ -102,7 +102,6 @@ const AppointmentModal = ({
       
       try {
         // Créer le nouveau patient
-        const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
         const response = await fetch(`${API_BASE_URL}/api/patients`, {
           method: 'POST',
           headers: {
