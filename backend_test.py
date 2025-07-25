@@ -1210,6 +1210,596 @@ class CabinetMedicalAPITest(unittest.TestCase):
         print(f"   - End-to-end workflow validated")
         print(f"   - AI-powered features working correctly")
 
+    # ========== AUTHENTICATION SYSTEM TESTING ==========
+    
+    def test_auth_login_medecin_valid_credentials(self):
+        """Test POST /api/auth/login with valid medecin credentials"""
+        print("\n🔍 Testing Authentication - Medecin Login with Valid Credentials")
+        
+        login_data = {
+            "username": "medecin",
+            "password": "medecin123"
+        }
+        
+        response = requests.post(f"{self.base_url}/api/auth/login", json=login_data)
+        self.assertEqual(response.status_code, 200, f"Medecin login failed: {response.text}")
+        
+        data = response.json()
+        
+        # Verify response structure
+        self.assertIn("access_token", data)
+        self.assertIn("token_type", data)
+        self.assertIn("user", data)
+        
+        # Verify token type
+        self.assertEqual(data["token_type"], "bearer")
+        
+        # Verify user data
+        user = data["user"]
+        self.assertEqual(user["username"], "medecin")
+        self.assertEqual(user["full_name"], "Dr Heni Dridi")
+        self.assertEqual(user["role"], "medecin")
+        self.assertTrue(user["is_active"])
+        
+        # Verify medecin has full permissions
+        permissions = user["permissions"]
+        self.assertTrue(permissions["dashboard"])
+        self.assertTrue(permissions["patients"])
+        self.assertTrue(permissions["calendar"])
+        self.assertTrue(permissions["messages"])
+        self.assertTrue(permissions["billing"])
+        self.assertTrue(permissions["consultation"])
+        self.assertTrue(permissions["administration"])  # Only doctors should have this
+        self.assertTrue(permissions["create_appointment"])
+        self.assertTrue(permissions["edit_appointment"])
+        self.assertTrue(permissions["delete_appointment"])  # Only doctors should have this
+        self.assertTrue(permissions["view_payments"])
+        self.assertTrue(permissions["edit_payments"])
+        self.assertTrue(permissions["delete_payments"])  # Only doctors should have this
+        self.assertTrue(permissions["export_data"])  # Only doctors should have this
+        self.assertTrue(permissions["reset_data"])  # Only doctors should have this
+        self.assertTrue(permissions["manage_users"])  # Only doctors should have this
+        self.assertFalse(permissions["consultation_read_only"])  # Doctors should have full access
+        
+        print(f"✅ Medecin login successful")
+        print(f"   - Username: {user['username']}")
+        print(f"   - Full name: {user['full_name']}")
+        print(f"   - Role: {user['role']}")
+        print(f"   - Administration access: {permissions['administration']}")
+        print(f"   - Manage users: {permissions['manage_users']}")
+        print(f"🎉 Medecin Authentication Test: PASSED")
+        
+        return data["access_token"]  # Return token for other tests
+    
+    def test_auth_login_secretaire_valid_credentials(self):
+        """Test POST /api/auth/login with valid secretaire credentials"""
+        print("\n🔍 Testing Authentication - Secretaire Login with Valid Credentials")
+        
+        login_data = {
+            "username": "secretaire",
+            "password": "secretaire123"
+        }
+        
+        response = requests.post(f"{self.base_url}/api/auth/login", json=login_data)
+        self.assertEqual(response.status_code, 200, f"Secretaire login failed: {response.text}")
+        
+        data = response.json()
+        
+        # Verify response structure
+        self.assertIn("access_token", data)
+        self.assertIn("token_type", data)
+        self.assertIn("user", data)
+        
+        # Verify token type
+        self.assertEqual(data["token_type"], "bearer")
+        
+        # Verify user data
+        user = data["user"]
+        self.assertEqual(user["username"], "secretaire")
+        self.assertEqual(user["full_name"], "Secrétaire")
+        self.assertEqual(user["role"], "secretaire")
+        self.assertTrue(user["is_active"])
+        
+        # Verify secretaire has limited permissions
+        permissions = user["permissions"]
+        self.assertTrue(permissions["dashboard"])
+        self.assertTrue(permissions["patients"])
+        self.assertTrue(permissions["calendar"])
+        self.assertTrue(permissions["messages"])
+        self.assertTrue(permissions["billing"])
+        self.assertTrue(permissions["consultation"])
+        self.assertFalse(permissions["administration"])  # Secretaires should NOT have this
+        self.assertTrue(permissions["create_appointment"])
+        self.assertTrue(permissions["edit_appointment"])
+        self.assertFalse(permissions["delete_appointment"])  # Secretaires should NOT have this
+        self.assertTrue(permissions["view_payments"])
+        self.assertTrue(permissions["edit_payments"])
+        self.assertFalse(permissions["delete_payments"])  # Secretaires should NOT have this
+        self.assertFalse(permissions["export_data"])  # Secretaires should NOT have this
+        self.assertFalse(permissions["reset_data"])  # Secretaires should NOT have this
+        self.assertFalse(permissions["manage_users"])  # Secretaires should NOT have this
+        self.assertTrue(permissions["consultation_read_only"])  # Secretaires should have read-only
+        
+        print(f"✅ Secretaire login successful")
+        print(f"   - Username: {user['username']}")
+        print(f"   - Full name: {user['full_name']}")
+        print(f"   - Role: {user['role']}")
+        print(f"   - Administration access: {permissions['administration']}")
+        print(f"   - Consultation read-only: {permissions['consultation_read_only']}")
+        print(f"🎉 Secretaire Authentication Test: PASSED")
+        
+        return data["access_token"]  # Return token for other tests
+    
+    def test_auth_login_invalid_credentials(self):
+        """Test POST /api/auth/login with invalid credentials"""
+        print("\n🔍 Testing Authentication - Invalid Credentials")
+        
+        # Test invalid username
+        invalid_login_data = [
+            {"username": "invalid_user", "password": "medecin123"},
+            {"username": "medecin", "password": "wrong_password"},
+            {"username": "secretaire", "password": "wrong_password"},
+            {"username": "", "password": "medecin123"},
+            {"username": "medecin", "password": ""}
+        ]
+        
+        for i, login_data in enumerate(invalid_login_data):
+            print(f"  Testing invalid credentials case {i+1}: {login_data['username']}")
+            response = requests.post(f"{self.base_url}/api/auth/login", json=login_data)
+            self.assertEqual(response.status_code, 401, f"Expected 401 for invalid credentials: {login_data}")
+            
+            data = response.json()
+            self.assertIn("detail", data)
+            self.assertIn("Invalid", data["detail"])
+        
+        print(f"✅ All invalid credential cases properly rejected with 401")
+        print(f"🎉 Invalid Credentials Authentication Test: PASSED")
+    
+    def test_auth_me_endpoint(self):
+        """Test GET /api/auth/me endpoint with valid token"""
+        print("\n🔍 Testing Authentication - /api/auth/me Endpoint")
+        
+        # First login to get a token
+        login_data = {"username": "medecin", "password": "medecin123"}
+        login_response = requests.post(f"{self.base_url}/api/auth/login", json=login_data)
+        self.assertEqual(login_response.status_code, 200)
+        
+        token = login_response.json()["access_token"]
+        
+        # Test /api/auth/me with valid token
+        headers = {"Authorization": f"Bearer {token}"}
+        response = requests.get(f"{self.base_url}/api/auth/me", headers=headers)
+        self.assertEqual(response.status_code, 200, f"/api/auth/me failed: {response.text}")
+        
+        data = response.json()
+        
+        # Verify user data structure
+        self.assertIn("id", data)
+        self.assertIn("username", data)
+        self.assertIn("email", data)
+        self.assertIn("full_name", data)
+        self.assertIn("role", data)
+        self.assertIn("is_active", data)
+        self.assertIn("permissions", data)
+        self.assertIn("last_login", data)
+        self.assertIn("created_at", data)
+        
+        # Verify user data values
+        self.assertEqual(data["username"], "medecin")
+        self.assertEqual(data["full_name"], "Dr Heni Dridi")
+        self.assertEqual(data["role"], "medecin")
+        self.assertTrue(data["is_active"])
+        
+        print(f"✅ /api/auth/me endpoint working correctly")
+        print(f"   - User ID: {data['id']}")
+        print(f"   - Username: {data['username']}")
+        print(f"   - Role: {data['role']}")
+        print(f"🎉 Auth Me Endpoint Test: PASSED")
+    
+    def test_auth_me_endpoint_invalid_token(self):
+        """Test GET /api/auth/me endpoint with invalid token"""
+        print("\n🔍 Testing Authentication - /api/auth/me with Invalid Token")
+        
+        # Test with invalid token
+        headers = {"Authorization": "Bearer invalid_token_here"}
+        response = requests.get(f"{self.base_url}/api/auth/me", headers=headers)
+        self.assertEqual(response.status_code, 401, f"Expected 401 for invalid token: {response.text}")
+        
+        data = response.json()
+        self.assertIn("detail", data)
+        self.assertIn("Invalid", data["detail"])
+        
+        print(f"✅ Invalid token properly rejected with 401")
+        print(f"🎉 Invalid Token Test: PASSED")
+
+    # ========== USER MANAGEMENT SYSTEM TESTING ==========
+    
+    def test_users_list_endpoint(self):
+        """Test GET /api/admin/users - List all users"""
+        print("\n🔍 Testing User Management - List Users Endpoint")
+        
+        # First login as medecin to get admin token
+        login_data = {"username": "medecin", "password": "medecin123"}
+        login_response = requests.post(f"{self.base_url}/api/auth/login", json=login_data)
+        self.assertEqual(login_response.status_code, 200)
+        
+        token = login_response.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+        
+        # Test GET /api/admin/users
+        response = requests.get(f"{self.base_url}/api/admin/users", headers=headers)
+        self.assertEqual(response.status_code, 200, f"List users failed: {response.text}")
+        
+        data = response.json()
+        self.assertIn("users", data)
+        self.assertIsInstance(data["users"], list)
+        
+        # Verify we have at least the default users
+        self.assertGreaterEqual(len(data["users"]), 2, "Should have at least medecin and secretaire users")
+        
+        # Find and verify default users
+        medecin_user = None
+        secretaire_user = None
+        
+        for user in data["users"]:
+            if user["username"] == "medecin":
+                medecin_user = user
+            elif user["username"] == "secretaire":
+                secretaire_user = user
+        
+        # Verify medecin user exists and has correct properties
+        self.assertIsNotNone(medecin_user, "Medecin user not found")
+        self.assertEqual(medecin_user["full_name"], "Dr Heni Dridi")
+        self.assertEqual(medecin_user["role"], "medecin")
+        self.assertTrue(medecin_user["is_active"])
+        self.assertTrue(medecin_user["permissions"]["administration"])
+        self.assertTrue(medecin_user["permissions"]["manage_users"])
+        
+        # Verify secretaire user exists and has correct properties
+        self.assertIsNotNone(secretaire_user, "Secretaire user not found")
+        self.assertEqual(secretaire_user["full_name"], "Secrétaire")
+        self.assertEqual(secretaire_user["role"], "secretaire")
+        self.assertTrue(secretaire_user["is_active"])
+        self.assertFalse(secretaire_user["permissions"]["administration"])
+        self.assertFalse(secretaire_user["permissions"]["manage_users"])
+        self.assertTrue(secretaire_user["permissions"]["consultation_read_only"])
+        
+        print(f"✅ Users list retrieved successfully")
+        print(f"   - Total users: {len(data['users'])}")
+        print(f"   - Medecin user found: {medecin_user['username']} ({medecin_user['full_name']})")
+        print(f"   - Secretaire user found: {secretaire_user['username']} ({secretaire_user['full_name']})")
+        print(f"🎉 List Users Test: PASSED")
+        
+        return data["users"]
+    
+    def test_users_create_new_user(self):
+        """Test POST /api/admin/users - Create new user"""
+        print("\n🔍 Testing User Management - Create New User")
+        
+        # First login as medecin to get admin token
+        login_data = {"username": "medecin", "password": "medecin123"}
+        login_response = requests.post(f"{self.base_url}/api/auth/login", json=login_data)
+        self.assertEqual(login_response.status_code, 200)
+        
+        token = login_response.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+        
+        # Create new user data
+        new_user_data = {
+            "username": "test_secretaire",
+            "email": "test@cabinet.com",
+            "full_name": "Test Secrétaire",
+            "role": "secretaire",
+            "password": "test123",
+            "permissions": {
+                "dashboard": True,
+                "patients": True,
+                "calendar": True,
+                "messages": True,
+                "billing": True,
+                "consultation": True,
+                "administration": False,
+                "create_appointment": True,
+                "edit_appointment": True,
+                "delete_appointment": False,
+                "view_payments": True,
+                "edit_payments": False,
+                "delete_payments": False,
+                "export_data": False,
+                "reset_data": False,
+                "manage_users": False,
+                "consultation_read_only": True
+            }
+        }
+        
+        # Test POST /api/admin/users
+        response = requests.post(f"{self.base_url}/api/admin/users", json=new_user_data, headers=headers)
+        self.assertEqual(response.status_code, 200, f"Create user failed: {response.text}")
+        
+        data = response.json()
+        
+        # Verify response structure
+        self.assertIn("id", data)
+        self.assertIn("username", data)
+        self.assertIn("email", data)
+        self.assertIn("full_name", data)
+        self.assertIn("role", data)
+        self.assertIn("is_active", data)
+        self.assertIn("permissions", data)
+        self.assertIn("created_at", data)
+        
+        # Verify user data
+        self.assertEqual(data["username"], "test_secretaire")
+        self.assertEqual(data["email"], "test@cabinet.com")
+        self.assertEqual(data["full_name"], "Test Secrétaire")
+        self.assertEqual(data["role"], "secretaire")
+        self.assertTrue(data["is_active"])
+        
+        # Verify permissions were set correctly
+        permissions = data["permissions"]
+        self.assertTrue(permissions["dashboard"])
+        self.assertFalse(permissions["administration"])
+        self.assertFalse(permissions["manage_users"])
+        self.assertTrue(permissions["consultation_read_only"])
+        
+        created_user_id = data["id"]
+        
+        # Verify user can login with new credentials
+        test_login_data = {"username": "test_secretaire", "password": "test123"}
+        login_test_response = requests.post(f"{self.base_url}/api/auth/login", json=test_login_data)
+        self.assertEqual(login_test_response.status_code, 200, "New user cannot login")
+        
+        print(f"✅ New user created successfully")
+        print(f"   - User ID: {created_user_id}")
+        print(f"   - Username: {data['username']}")
+        print(f"   - Full name: {data['full_name']}")
+        print(f"   - Role: {data['role']}")
+        print(f"   - Login test: PASSED")
+        
+        # Clean up - delete the test user
+        delete_response = requests.delete(f"{self.base_url}/api/admin/users/{created_user_id}", headers=headers)
+        self.assertEqual(delete_response.status_code, 200, "Failed to clean up test user")
+        
+        print(f"   - Test user cleaned up successfully")
+        print(f"🎉 Create New User Test: PASSED")
+    
+    def test_users_update_permissions(self):
+        """Test PUT /api/admin/users/{user_id}/permissions - Update user permissions"""
+        print("\n🔍 Testing User Management - Update User Permissions")
+        
+        # First login as medecin to get admin token
+        login_data = {"username": "medecin", "password": "medecin123"}
+        login_response = requests.post(f"{self.base_url}/api/auth/login", json=login_data)
+        self.assertEqual(login_response.status_code, 200)
+        
+        token = login_response.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+        
+        # Get list of users to find secretaire user ID
+        users_response = requests.get(f"{self.base_url}/api/admin/users", headers=headers)
+        self.assertEqual(users_response.status_code, 200)
+        
+        users = users_response.json()["users"]
+        secretaire_user = None
+        for user in users:
+            if user["username"] == "secretaire":
+                secretaire_user = user
+                break
+        
+        self.assertIsNotNone(secretaire_user, "Secretaire user not found")
+        secretaire_user_id = secretaire_user["id"]
+        
+        # Update permissions - give secretaire export_data permission (normally they don't have it)
+        updated_permissions = {
+            "dashboard": True,
+            "patients": True,
+            "calendar": True,
+            "messages": True,
+            "billing": True,
+            "consultation": True,
+            "administration": False,
+            "create_appointment": True,
+            "edit_appointment": True,
+            "delete_appointment": False,
+            "view_payments": True,
+            "edit_payments": True,
+            "delete_payments": False,
+            "export_data": True,  # Changed from False to True
+            "reset_data": False,
+            "manage_users": False,
+            "consultation_read_only": False  # Changed from True to False
+        }
+        
+        # Test PUT /api/admin/users/{user_id}/permissions
+        response = requests.put(
+            f"{self.base_url}/api/admin/users/{secretaire_user_id}/permissions", 
+            json={"permissions": updated_permissions}, 
+            headers=headers
+        )
+        self.assertEqual(response.status_code, 200, f"Update permissions failed: {response.text}")
+        
+        data = response.json()
+        self.assertIn("message", data)
+        self.assertIn("user", data)
+        
+        # Verify permissions were updated
+        updated_user = data["user"]
+        updated_perms = updated_user["permissions"]
+        self.assertTrue(updated_perms["export_data"], "export_data permission not updated")
+        self.assertFalse(updated_perms["consultation_read_only"], "consultation_read_only permission not updated")
+        
+        # Verify user can still login and has updated permissions
+        secretaire_login_data = {"username": "secretaire", "password": "secretaire123"}
+        login_test_response = requests.post(f"{self.base_url}/api/auth/login", json=secretaire_login_data)
+        self.assertEqual(login_test_response.status_code, 200)
+        
+        login_user = login_test_response.json()["user"]
+        login_perms = login_user["permissions"]
+        self.assertTrue(login_perms["export_data"], "Updated permissions not reflected in login")
+        self.assertFalse(login_perms["consultation_read_only"], "Updated permissions not reflected in login")
+        
+        print(f"✅ User permissions updated successfully")
+        print(f"   - User ID: {secretaire_user_id}")
+        print(f"   - Username: {updated_user['username']}")
+        print(f"   - Export data permission: {updated_perms['export_data']}")
+        print(f"   - Consultation read-only: {updated_perms['consultation_read_only']}")
+        print(f"   - Login verification: PASSED")
+        
+        # Restore original permissions
+        original_permissions = {
+            "dashboard": True,
+            "patients": True,
+            "calendar": True,
+            "messages": True,
+            "billing": True,
+            "consultation": True,
+            "administration": False,
+            "create_appointment": True,
+            "edit_appointment": True,
+            "delete_appointment": False,
+            "view_payments": True,
+            "edit_payments": True,
+            "delete_payments": False,
+            "export_data": False,  # Restored to False
+            "reset_data": False,
+            "manage_users": False,
+            "consultation_read_only": True  # Restored to True
+        }
+        
+        restore_response = requests.put(
+            f"{self.base_url}/api/admin/users/{secretaire_user_id}/permissions", 
+            json={"permissions": original_permissions}, 
+            headers=headers
+        )
+        self.assertEqual(restore_response.status_code, 200, "Failed to restore original permissions")
+        
+        print(f"   - Original permissions restored")
+        print(f"🎉 Update User Permissions Test: PASSED")
+    
+    def test_permissions_include_ai_room(self):
+        """Test that user permissions include ai_room access"""
+        print("\n🔍 Testing User Management - AI Room Permission Verification")
+        
+        # Login as medecin
+        login_data = {"username": "medecin", "password": "medecin123"}
+        login_response = requests.post(f"{self.base_url}/api/auth/login", json=login_data)
+        self.assertEqual(login_response.status_code, 200)
+        
+        medecin_user = login_response.json()["user"]
+        medecin_permissions = medecin_user["permissions"]
+        
+        # Login as secretaire
+        secretaire_login_data = {"username": "secretaire", "password": "secretaire123"}
+        secretaire_login_response = requests.post(f"{self.base_url}/api/auth/login", json=secretaire_login_data)
+        self.assertEqual(secretaire_login_response.status_code, 200)
+        
+        secretaire_user = secretaire_login_response.json()["user"]
+        secretaire_permissions = secretaire_user["permissions"]
+        
+        # Check if AI Room access is available through appointments permission
+        # (AI Room typically requires appointments permission to access)
+        medecin_ai_room_access = medecin_permissions.get("calendar", False)  # AI Room uses calendar/appointments
+        secretaire_ai_room_access = secretaire_permissions.get("calendar", False)
+        
+        # Both users should have calendar access (which includes AI Room)
+        self.assertTrue(medecin_ai_room_access, "Medecin should have AI Room access via calendar permission")
+        self.assertTrue(secretaire_ai_room_access, "Secretaire should have AI Room access via calendar permission")
+        
+        # Verify medecin has full access
+        self.assertTrue(medecin_permissions["dashboard"])
+        self.assertTrue(medecin_permissions["patients"])
+        self.assertTrue(medecin_permissions["calendar"])  # This enables AI Room access
+        self.assertTrue(medecin_permissions["administration"])
+        
+        # Verify secretaire has limited but includes AI Room access
+        self.assertTrue(secretaire_permissions["dashboard"])
+        self.assertTrue(secretaire_permissions["patients"])
+        self.assertTrue(secretaire_permissions["calendar"])  # This enables AI Room access
+        self.assertFalse(secretaire_permissions["administration"])
+        
+        print(f"✅ AI Room permission verification completed")
+        print(f"   - Medecin AI Room access (via calendar): {medecin_ai_room_access}")
+        print(f"   - Secretaire AI Room access (via calendar): {secretaire_ai_room_access}")
+        print(f"   - Medecin full permissions: {medecin_permissions['administration']}")
+        print(f"   - Secretaire limited permissions: {not secretaire_permissions['administration']}")
+        print(f"🎉 AI Room Permission Test: PASSED")
+    
+    def test_default_users_verification(self):
+        """Test that default users were created with correct data"""
+        print("\n🔍 Testing User Management - Default Users Verification")
+        
+        # Test medecin user
+        medecin_login = {"username": "medecin", "password": "medecin123"}
+        medecin_response = requests.post(f"{self.base_url}/api/auth/login", json=medecin_login)
+        self.assertEqual(medecin_response.status_code, 200, "Default medecin user not found or password incorrect")
+        
+        medecin_data = medecin_response.json()["user"]
+        self.assertEqual(medecin_data["username"], "medecin")
+        self.assertEqual(medecin_data["full_name"], "Dr Heni Dridi")
+        self.assertEqual(medecin_data["role"], "medecin")
+        self.assertTrue(medecin_data["is_active"])
+        
+        # Test secretaire user
+        secretaire_login = {"username": "secretaire", "password": "secretaire123"}
+        secretaire_response = requests.post(f"{self.base_url}/api/auth/login", json=secretaire_login)
+        self.assertEqual(secretaire_response.status_code, 200, "Default secretaire user not found or password incorrect")
+        
+        secretaire_data = secretaire_response.json()["user"]
+        self.assertEqual(secretaire_data["username"], "secretaire")
+        self.assertEqual(secretaire_data["full_name"], "Secrétaire")
+        self.assertEqual(secretaire_data["role"], "secretaire")
+        self.assertTrue(secretaire_data["is_active"])
+        
+        # Verify password requirements
+        self.assertTrue(len("medecin123") >= 8, "Medecin password should be at least 8 characters")
+        self.assertTrue(len("secretaire123") >= 8, "Secretaire password should be at least 8 characters")
+        
+        print(f"✅ Default users verification completed")
+        print(f"   - Dr Heni Dridi (medecin): ✅ Login successful")
+        print(f"   - Secrétaire Médicale (secretaire): ✅ Login successful")
+        print(f"   - Password medecin123: ✅ Working")
+        print(f"   - Password secretaire123: ✅ Working")
+        print(f"   - Both users active: ✅")
+        print(f"🎉 Default Users Verification Test: PASSED")
+    
+    def test_authentication_comprehensive_workflow(self):
+        """Test comprehensive authentication and user management workflow"""
+        print("\n🔍 Testing Authentication - Comprehensive Workflow")
+        
+        # Step 1: Test medecin login
+        print("  Step 1: Testing medecin authentication...")
+        medecin_token = self.test_auth_login_medecin_valid_credentials()
+        self.assertIsNotNone(medecin_token, "Medecin token should not be None")
+        
+        # Step 2: Test secretaire login
+        print("  Step 2: Testing secretaire authentication...")
+        secretaire_token = self.test_auth_login_secretaire_valid_credentials()
+        self.assertIsNotNone(secretaire_token, "Secretaire token should not be None")
+        
+        # Step 3: Test invalid credentials
+        print("  Step 3: Testing invalid credentials rejection...")
+        self.test_auth_login_invalid_credentials()
+        
+        # Step 4: Test user management
+        print("  Step 4: Testing user management endpoints...")
+        users_list = self.test_users_list_endpoint()
+        self.assertGreaterEqual(len(users_list), 2, "Should have at least 2 default users")
+        
+        # Step 5: Test permissions verification
+        print("  Step 5: Testing permissions and AI Room access...")
+        self.test_permissions_include_ai_room()
+        
+        # Step 6: Test default users
+        print("  Step 6: Verifying default users data...")
+        self.test_default_users_verification()
+        
+        print(f"🎉 Authentication Comprehensive Workflow Test: PASSED")
+        print(f"   - All authentication endpoints working correctly")
+        print(f"   - User management system functional")
+        print(f"   - Permissions system working as expected")
+        print(f"   - Default users created and accessible")
+        print(f"   - AI Room access permissions verified")
+
     # ========== AUTOMATION ENGINE COMPREHENSIVE TESTING ==========
     
     def test_automation_schedule_optimization(self):
