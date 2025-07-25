@@ -5176,16 +5176,103 @@ class ExternalData(BaseModel):
 # Gemini AI Service for Enhanced Medical Recommendations
 class GeminiAIService:
     def __init__(self):
-        self.llm_chat = LlmChat()
+        api_key = os.environ.get('EMERGENT_LLM_KEY')
+        if not api_key:
+            raise ValueError("EMERGENT_LLM_KEY not found in environment variables")
+        
+        self.chat = LlmChat(
+            api_key=api_key,
+            session_id=f"medical_session_{uuid.uuid4()}",
+            system_message="You are an AI assistant specialized in medical practice management. Provide intelligent recommendations for patient scheduling, treatment optimization, and workflow improvements."
+        ).with_model("gemini", "gemini-2.0-flash")
     
-    def get_medical_recommendation(self, patient_data, symptoms):
+    async def get_medical_recommendation(self, context: str, data: Dict[str, Any]) -> str:
         """Get AI-powered medical recommendations"""
         try:
-            message = UserMessage(f"Patient data: {patient_data}, Symptoms: {symptoms}")
-            response = self.llm_chat.send_message(message)
+            prompt = f"""
+            Medical Practice Context: {context}
+            
+            Patient/Practice Data: {json.dumps(data, indent=2)}
+            
+            Please provide intelligent recommendations focusing on:
+            1. Schedule optimization
+            2. Patient care improvements  
+            3. Workflow efficiency
+            4. Risk assessment
+            
+            Provide practical, actionable advice in French.
+            """
+            
+            user_message = UserMessage(text=prompt)
+            response = await self.chat.send_message(user_message)
             return response
         except Exception as e:
-            return f"Error getting recommendation: {str(e)}"
+            return f"Erreur lors de la génération de recommandations: {str(e)}"
+    
+    async def enhance_patient_insights(self, patient_data: Dict[str, Any], behavioral_data: Dict[str, Any]) -> str:
+        """Generate enhanced patient behavioral insights"""
+        try:
+            prompt = f"""
+            Analysez les données comportementales du patient suivant:
+            
+            Données Patient: {json.dumps(patient_data, indent=2)}
+            Données Comportementales: {json.dumps(behavioral_data, indent=2)}
+            
+            Fournissez une analyse détaillée incluant:
+            1. Profil de ponctualité et tendances
+            2. Patterns de communication
+            3. Recommandations pour optimiser les rendez-vous
+            4. Stratégies d'engagement patient
+            
+            Répondez en français avec des insights pratiques.
+            """
+            
+            user_message = UserMessage(text=prompt)
+            response = await self.chat.send_message(user_message)
+            return response
+        except Exception as e:
+            return f"Erreur lors de l'analyse comportementale: {str(e)}"
+
+    async def generate_proactive_recommendations(self, schedule_data: Dict[str, Any], doctor_analytics: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Generate proactive workflow recommendations"""
+        try:
+            prompt = f"""
+            Analysez les données de planning et performance médicale:
+            
+            Données Planning: {json.dumps(schedule_data, indent=2)}
+            Analytics Médecin: {json.dumps(doctor_analytics, indent=2)}
+            
+            Générez 3-5 recommandations proactives pour:
+            1. Optimisation du planning quotidien
+            2. Amélioration de l'efficacité médicale
+            3. Réduction des temps d'attente
+            4. Prévention des retards
+            
+            Format de réponse: JSON array avec des objets contenant 'recommendation', 'priority', 'impact', 'implementation'
+            """
+            
+            user_message = UserMessage(text=prompt)
+            response = await self.chat.send_message(user_message)
+            
+            # Parse the JSON response
+            try:
+                recommendations = json.loads(response)
+                return recommendations
+            except:
+                # Fallback if JSON parsing fails
+                return [{
+                    "recommendation": response[:200] + "..." if len(response) > 200 else response,
+                    "priority": "medium",
+                    "impact": "positive",
+                    "implementation": "À évaluer"
+                }]
+        except Exception as e:
+            return [{
+                "recommendation": f"Erreur lors de la génération de recommandations: {str(e)}",
+                "priority": "low",
+                "impact": "none",
+                "implementation": "N/A"
+            }]
 
 # Data enrichment classes
 class TemporalDataCollector:
