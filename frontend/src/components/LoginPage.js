@@ -1,42 +1,57 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Stethoscope, UserCog } from 'lucide-react';
+import { Stethoscope, Eye, EyeOff, User, Lock } from 'lucide-react';
+import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const LoginPage = ({ onLogin }) => {
   const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    username: '',
+    password: ''
+  });
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  const handleRoleLogin = async (role) => {
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setIsLoading(true);
     
     try {
-      // Simple role-based authentication without password
-      const userData = {
-        id: role === 'medecin' ? 'doc001' : 'sec001',
-        nom: role === 'medecin' ? 'Dr. Médecin' : 'Secrétaire',
-        prenom: role === 'medecin' ? 'Principal' : 'Médicale',
-        role: role,
-        permissions: role === 'medecin' 
-          ? ['appointments', 'consultations', 'patients', 'reports', 'ai_room', 'administration']
-          : ['appointments', 'patients', 'messages', 'ai_room']
-      };
+      // Call backend authentication
+      const response = await axios.post('/api/auth/login', {
+        username: formData.username,
+        password: formData.password
+      });
 
-      const token = 'auto-login-token';
+      const { access_token, user } = response.data;
 
       // Store user data in localStorage
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(userData));
-      localStorage.setItem('userRole', role);
+      localStorage.setItem('token', access_token);
+      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('userRole', user.role);
 
       // Call the onLogin function to update App.js state
       if (onLogin) {
-        onLogin(userData, token);
+        onLogin(user, access_token);
       }
 
+      toast.success('Connexion réussie !');
+      
       // Navigate to dashboard
       navigate('/dashboard');
+      
     } catch (error) {
       console.error('Login error:', error);
+      const errorMessage = error.response?.data?.detail || 'Erreur de connexion. Vérifiez vos identifiants.';
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -51,49 +66,93 @@ const LoginPage = ({ onLogin }) => {
             <Stethoscope className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-gray-800 mb-2">Cabinet Médical</h1>
-          <p className="text-gray-600">Choisissez votre rôle pour continuer</p>
+          <p className="text-gray-600">Connectez-vous à votre compte</p>
         </div>
 
-        {/* Role Selection */}
-        <div className="space-y-4">
-          {/* Médecin Button */}
-          <button
-            onClick={() => handleRoleLogin('medecin')}
-            disabled={isLoading}
-            className="w-full flex items-center justify-center gap-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-xl transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <User className="w-5 h-5" />
-            <span>Connexion Médecin</span>
-          </button>
-
-          {/* Secrétaire Button */}
-          <button
-            onClick={() => handleRoleLogin('secretaire')}
-            disabled={isLoading}
-            className="w-full flex items-center justify-center gap-3 bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-6 rounded-xl transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <UserCog className="w-5 h-5" />
-            <span>Connexion Secrétaire</span>
-          </button>
-        </div>
-
-        {/* Loading State */}
-        {isLoading && (
-          <div className="mt-4 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-            <span className="ml-2 text-gray-600">Connexion en cours...</span>
+        {/* Login Form */}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Username Field */}
+          <div>
+            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+              Nom d'utilisateur
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <User className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                id="username"
+                name="username"
+                type="text"
+                required
+                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Entrez votre nom d'utilisateur"
+                value={formData.username}
+                onChange={handleChange}
+              />
+            </div>
           </div>
-        )}
+
+          {/* Password Field */}
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              Mot de passe
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Lock className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                required
+                className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Entrez votre mot de passe"
+                value={formData.password}
+                onChange={handleChange}
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                ) : (
+                  <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Login Button */}
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                <span>Connexion...</span>
+              </>
+            ) : (
+              <span>Se connecter</span>
+            )}
+          </button>
+        </form>
 
         {/* Info */}
         <div className="mt-8 text-center">
           <p className="text-xs text-gray-500">
-            Cliquez sur votre rôle pour accéder au système
+            Contactez l'administrateur si vous avez oublié vos identifiants
           </p>
         </div>
       </div>
     </div>
   );
+};
 };
 
 export default LoginPage;
