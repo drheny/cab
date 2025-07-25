@@ -8879,3 +8879,74 @@ async def get_automation_status():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
+
+# Initialize default users on startup
+async def create_default_users():
+    """Create default users if they don't exist"""
+    try:
+        # Check if users already exist
+        existing_users = users_collection.count_documents({})
+        if existing_users > 0:
+            print("✅ Users already exist, skipping default user creation")
+            return
+
+        # Default permissions for roles
+        medecin_permissions = UserPermissions(
+            dashboard=True,
+            patients=True,
+            calendar=True,
+            messages=True,
+            billing=True,
+            consultation=True,
+            administration=True,
+            ai_room=True
+        )
+        
+        secretaire_permissions = UserPermissions(
+            dashboard=True,
+            patients=True,
+            calendar=True,
+            messages=True,
+            billing=False,
+            consultation=False,
+            administration=False,
+            ai_room=True
+        )
+
+        # Create default doctor user
+        doctor_user = User(
+            username="medecin",
+            email="medecin@cabinet.tn",
+            full_name="Dr. Heni Dridi", 
+            role="medecin",
+            hashed_password=hash_password("medecin123"),
+            permissions=medecin_permissions,
+            is_active=True
+        )
+
+        # Create default secretary user  
+        secretary_user = User(
+            username="secretaire",
+            email="secretaire@cabinet.tn",
+            full_name="Secrétaire Médicale",
+            role="secretaire", 
+            hashed_password=hash_password("secretaire123"),
+            permissions=secretaire_permissions,
+            is_active=True
+        )
+
+        # Insert users
+        users_collection.insert_one(doctor_user.dict())
+        users_collection.insert_one(secretary_user.dict())
+        
+        print("✅ Default users created successfully:")
+        print("   👨‍⚕️ Médecin: username=medecin, password=medecin123")
+        print("   👩‍💼 Secrétaire: username=secretaire, password=secretaire123")
+        
+    except Exception as e:
+        print(f"❌ Error creating default users: {e}")
+
+# Run default user creation on startup
+@app.on_event("startup")
+async def startup_event():
+    await create_default_users()
