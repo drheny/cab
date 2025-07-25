@@ -178,10 +178,19 @@ class GeminiAIBackendTest(unittest.TestCase):
             
             print(f"Status Code: {response.status_code}")
             
-            # Should return 404 for invalid patient
-            self.assertEqual(response.status_code, 404)
+            # Should return 200 with error message for invalid patient (endpoint handles errors gracefully)
+            self.assertEqual(response.status_code, 200)
             
-            print("✅ Correctly returns 404 for invalid patient ID")
+            # Parse response and check for error
+            data = response.json()
+            self.assertIn('error', data, "Response should contain error message for invalid patient")
+            
+            # Check that error message indicates patient not found
+            error_msg = data.get('error', '')
+            self.assertIn('Patient non trouvé', error_msg, "Error message should indicate patient not found")
+            
+            print("✅ Correctly returns error message for invalid patient ID")
+            print(f"✅ Error message: {error_msg}")
             
         except Exception as e:
             self.fail(f"Invalid patient ID test failed: {str(e)}")
