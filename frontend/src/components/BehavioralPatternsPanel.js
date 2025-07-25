@@ -10,7 +10,8 @@ import {
   RefreshCw,
   BarChart3,
   PieChart,
-  Activity
+  Activity,
+  Brain
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
