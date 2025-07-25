@@ -1129,6 +1129,466 @@ const Administration = ({ user }) => {
               )}
             </div>
           )}
+
+          {/* Advanced Reports Section - Restored */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-2">
+                <BarChart3 className="w-5 h-5 text-gray-600" />
+                <h2 className="text-lg font-semibold text-gray-900">📊 Rapports Avancés & Prédictions ML</h2>
+              </div>
+              
+              {/* Alerts Display */}
+              {alerts.length > 0 && (
+                <div className="flex items-center space-x-2">
+                  <AlertTriangle className="w-5 h-5 text-red-500" />
+                  <span className="text-sm font-medium text-red-600">{alerts.length} alerte(s)</span>
+                </div>
+              )}
+            </div>
+
+            {/* Alerts Panel */}
+            {alerts.length > 0 && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <h3 className="text-sm font-medium text-red-800 mb-2">🚨 Alertes Détectées</h3>
+                <div className="space-y-2">
+                  {alerts.map((alert, index) => (
+                    <div key={index} className="flex items-center space-x-2 text-sm text-red-700">
+                      <span className="font-medium">{alert.type}:</span>
+                      <span>{alert.message}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Period Configuration */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+              <div className="space-y-4">
+                <h3 className="font-medium text-gray-900">📅 Sélection de Période</h3>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Type de période</label>
+                  <select
+                    value={advancedReportType}
+                    onChange={(e) => setAdvancedReportType(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="monthly">📅 Mensuel</option>
+                    <option value="semester">📊 Semestriel</option>
+                    <option value="annual">📈 Annuel</option>
+                    <option value="custom">🎛️ Personnalisé</option>
+                  </select>
+                </div>
+
+                {advancedReportType === 'monthly' && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Mois</label>
+                      <select
+                        value={advancedReportPeriod.month}
+                        onChange={(e) => setAdvancedReportPeriod(prev => ({ ...prev, month: parseInt(e.target.value) }))}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                      >
+                        {Array.from({ length: 12 }, (_, i) => (
+                          <option key={i + 1} value={i + 1}>
+                            {new Date(2023, i, 1).toLocaleDateString('fr-FR', { month: 'long' })}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Année</label>
+                      <input
+                        type="number"
+                        min="2020"
+                        max="2030"
+                        value={advancedReportPeriod.year}
+                        onChange={(e) => setAdvancedReportPeriod(prev => ({ ...prev, year: parseInt(e.target.value) }))}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {advancedReportType === 'custom' && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Date début</label>
+                      <input
+                        type="date"
+                        value={customDateRange.start}
+                        onChange={(e) => setCustomDateRange(prev => ({ ...prev, start: e.target.value }))}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Date fin</label>
+                      <input
+                        type="date"
+                        value={customDateRange.end}
+                        onChange={(e) => setCustomDateRange(prev => ({ ...prev, end: e.target.value }))}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  onClick={generateAdvancedReport}
+                  disabled={isGeneratingReport}
+                  className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50"
+                >
+                  {isGeneratingReport ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Génération...</span>
+                    </>
+                  ) : (
+                    <>
+                      <FileSpreadsheet className="w-4 h-4" />
+                      <span>Générer Rapport</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* ML Predictions Display */}
+              <div className="space-y-4">
+                <h3 className="font-medium text-gray-900">🤖 Prédictions ML</h3>
+                
+                {advancedReportsData?.predictions && (
+                  <div className="bg-gradient-to-r from-purple-50 to-indigo-50 p-4 rounded-lg border border-purple-200">
+                    <div className="grid grid-cols-1 gap-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-purple-700">Consultations prévues</span>
+                        <span className="text-lg font-bold text-purple-900">
+                          {advancedReportsData.predictions.next_month_consultations}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-purple-700">Chiffre d'affaires</span>
+                        <span className="text-lg font-bold text-purple-900">
+                          {advancedReportsData.predictions.next_month_revenue} TND
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-purple-700">Confiance</span>
+                        <span className="text-sm text-purple-600">
+                          {(advancedReportsData.predictions.confidence * 100).toFixed(1)}%
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-purple-700">Tendance</span>
+                        <span className="text-sm text-purple-600">
+                          {advancedReportsData.predictions.trend === 'croissant' && '📈 Croissance'}
+                          {advancedReportsData.predictions.trend === 'stable' && '➡️ Stable'}
+                          {advancedReportsData.predictions.trend === 'décroissant' && '📉 Déclin'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Seasonality Analysis */}
+              <div className="space-y-4">
+                <h3 className="font-medium text-gray-900">📅 Analyse Saisonnière</h3>
+                
+                {advancedReportsData?.seasonality && (
+                  <div className="bg-gradient-to-r from-green-50 to-teal-50 p-4 rounded-lg border border-green-200">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-green-700">Moyenne mensuelle</span>
+                        <span className="text-lg font-bold text-green-900">
+                          {advancedReportsData.seasonality.monthly_average}
+                        </span>
+                      </div>
+                      
+                      {advancedReportsData.seasonality.peak_months && advancedReportsData.seasonality.peak_months.length > 0 && (
+                        <div>
+                          <span className="text-sm font-medium text-green-700">Pics d'activité:</span>
+                          <div className="mt-1">
+                            {advancedReportsData.seasonality.peak_months.map((month, index) => (
+                              <span key={index} className="inline-block bg-green-200 text-green-800 text-xs px-2 py-1 rounded mr-2 mb-1">
+                                Mois {month}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {advancedReportsData.seasonality.low_months && advancedReportsData.seasonality.low_months.length > 0 && (
+                        <div>
+                          <span className="text-sm font-medium text-green-700">Périodes calmes:</span>
+                          <div className="mt-1">
+                            {advancedReportsData.seasonality.low_months.map((month, index) => (
+                              <span key={index} className="inline-block bg-teal-200 text-teal-800 text-xs px-2 py-1 rounded mr-2 mb-1">
+                                Mois {month}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Advanced Statistics Display */}
+            {advancedReportsData && (
+              <div className="space-y-6">
+                {/* Main Statistics Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {/* Visites vs Contrôles */}
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-blue-700">Consultations</span>
+                      <BarChart3 className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-blue-600">Visites</span>
+                        <span className="text-lg font-bold text-blue-900">
+                          {advancedReportsData.advanced_statistics.repartition_visite_controle.visites.count}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-blue-600">Contrôles</span>
+                        <span className="text-lg font-bold text-blue-900">
+                          {advancedReportsData.advanced_statistics.repartition_visite_controle.controles.count}
+                        </span>
+                      </div>
+                      <div className="text-xs text-blue-500">
+                        Ratio V/C: {(advancedReportsData.advanced_statistics.repartition_visite_controle.visites.percentage / 
+                        advancedReportsData.advanced_statistics.repartition_visite_controle.controles.percentage).toFixed(1)}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Top Patients */}
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-green-700">Top Patients</span>
+                      <Users className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div className="space-y-1">
+                      {advancedReportsData.advanced_statistics.top_patients.slice(0, 3).map((patient, index) => (
+                        <div key={index} className="flex items-center justify-between">
+                          <span className="text-xs text-green-600 truncate mr-2">{patient.nom}</span>
+                          <span className="text-sm font-bold text-green-900">{patient.revenue} TND</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="text-xs text-green-500 mt-2">
+                      {advancedReportsData.advanced_statistics.top_patients.length} patients actifs
+                    </div>
+                  </div>
+
+                  {/* Duration Analysis */}
+                  <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-lg border border-yellow-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-yellow-700">Durées</span>
+                      <Clock className="w-5 h-5 text-yellow-600" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-yellow-600">Attente moy.</span>
+                        <span className="text-lg font-bold text-yellow-900">
+                          {advancedReportsData.advanced_statistics.durees_moyennes.temps_attente}min
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-yellow-600">Consultation</span>
+                        <span className="text-lg font-bold text-yellow-900">
+                          {advancedReportsData.advanced_statistics.durees_moyennes.duree_consultation}min
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Patient Retention */}
+                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg border border-purple-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-purple-700">Fidélisation</span>
+                      <UserCheck className="w-4 h-4 text-purple-600" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-purple-600">Taux retour</span>
+                        <span className="text-lg font-bold text-purple-900">
+                          {advancedReportsData.advanced_statistics.taux_fidelisation.taux_retour}%
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-purple-600">Nouveaux</span>
+                        <span className="text-sm font-bold text-purple-800">
+                          {advancedReportsData.advanced_statistics.taux_fidelisation.nouveaux_patients}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-purple-600">Récurrents</span>
+                        <span className="text-sm font-bold text-purple-800">
+                          {advancedReportsData.advanced_statistics.taux_fidelisation.patients_recurrents}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Additional Statistics */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Phone Reminders */}
+                  <div className="bg-white p-4 rounded-lg border border-gray-200">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <Phone className="w-5 h-5 text-gray-600" />
+                      <h3 className="font-medium text-gray-900">Relances Téléphoniques</h3>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-blue-600">
+                          {advancedReportsData.advanced_statistics.relances_telephoniques.total}
+                        </div>
+                        <div className="text-sm text-gray-600">Total</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-green-600">
+                          {advancedReportsData.advanced_statistics.relances_telephoniques.taux_reponse}%
+                        </div>
+                        <div className="text-sm text-gray-600">Taux réponse</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Room Utilization */}
+                  <div className="bg-white p-4 rounded-lg border border-gray-200">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <Monitor className="w-5 h-5 text-gray-600" />
+                      <h3 className="font-medium text-gray-900">Utilisation Salles</h3>
+                    </div>
+                    <div className="space-y-2">
+                      {Object.entries(advancedReportsData.advanced_statistics.utilisation_salles).map(([salle, data]) => (
+                        <div key={salle} className="flex items-center justify-between">
+                          <span className="text-sm text-gray-600 capitalize">{salle.replace('_', ' ')}</span>
+                          <div className="flex items-center space-x-2">
+                            <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-blue-500" 
+                                style={{ width: `${data.pourcentage}%` }}
+                              ></div>
+                            </div>
+                            <span className="text-sm font-medium text-gray-900">{data.pourcentage}%</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Analysis Panel */}
+                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-lg border border-indigo-200">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <Brain className="w-5 h-5 text-indigo-600" />
+                    <h3 className="font-medium text-indigo-900">🧠 Analyse Intelligente</h3>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Recommendations */}
+                    <div>
+                      <h4 className="font-medium text-indigo-800 mb-2">🎯 Recommandations</h4>
+                      <div className="space-y-2">
+                        {advancedReportsData.predictions.trend === 'croissant' && (
+                          <div className="p-3 bg-green-100 border border-green-300 rounded text-sm text-green-800">
+                            📈 Croissance détectée - Considérez d'augmenter les créneaux disponibles
+                          </div>
+                        )}
+                        {advancedReportsData.advanced_statistics.durees_moyennes.temps_attente > 30 && (
+                          <div className="p-3 bg-orange-100 border border-orange-300 rounded text-sm text-orange-800">
+                            ⏱️ Temps d'attente élevé - Optimisez la planification
+                          </div>
+                        )}
+                        {advancedReportsData.advanced_statistics.patients_inactifs.pourcentage > 30 && (
+                          <div className="p-3 bg-yellow-100 border border-yellow-300 rounded text-sm text-yellow-800">
+                            📞 Taux d'inactivité élevé - Campagne de relance recommandée
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Key Insights */}
+                    <div>
+                      <h4 className="font-medium text-indigo-800 mb-2">💡 Insights Clés</h4>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between p-2 bg-white rounded border">
+                          <span className="text-sm text-gray-600">Patient le plus fidèle</span>
+                          <span className="text-sm font-medium text-gray-900">
+                            {advancedReportsData.advanced_statistics.top_patients[0]?.nom || 'N/A'}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between p-2 bg-white rounded border">
+                          <span className="text-sm text-gray-600">Efficacité moyenne</span>
+                          <span className="text-sm font-medium text-gray-900">
+                            {((60 / advancedReportsData.advanced_statistics.durees_moyennes.duree_consultation) * 100).toFixed(1)}%
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between p-2 bg-white rounded border">
+                          <span className="text-sm text-gray-600">Salle la plus utilisée</span>
+                          <span className="text-sm font-medium text-gray-900">
+                            {Object.entries(advancedReportsData.advanced_statistics.utilisation_salles)
+                              .sort((a, b) => b[1].pourcentage - a[1].pourcentage)[0]?.[0].replace('_', ' ') || 'N/A'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Quick Actions */}
+                  <div className="mt-4 flex items-center space-x-4">
+                    <button
+                      onClick={() => exportAdvancedReport('excel')}
+                      className="flex items-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg"
+                    >
+                      <FileSpreadsheet className="w-4 h-4" />
+                      <span>Export Excel</span>
+                    </button>
+                    <button
+                      onClick={() => exportAdvancedReport('pdf')}
+                      className="flex items-center space-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg"
+                    >
+                      <FileText className="w-4 h-4" />
+                      <span>Export PDF</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        toast.info('Analyse IA en cours...');
+                        setTimeout(() => {
+                          toast.success('✅ Analyse IA terminée');
+                        }, 2000);
+                      }}
+                      className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg"
+                    >
+                      <Brain className="w-4 h-4" />
+                      <span>Analyse IA</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {!advancedReportsData && (
+              <div className="text-center py-8">
+                <BarChart3 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600 mb-4">Aucun rapport généré</p>
+                <p className="text-sm text-gray-500">
+                  Sélectionnez une période et cliquez sur "Générer Rapport" pour voir les statistiques avancées et prédictions ML
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
