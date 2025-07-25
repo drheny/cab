@@ -5172,8 +5172,6 @@ class ExternalData(BaseModel):
     last_updated: datetime = Field(default_factory=datetime.now)
 
 # Test if we can add Gemini integration
-import os
-from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 # Gemini AI Service for Enhanced Medical Recommendations
 class GeminiAIService:
