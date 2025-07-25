@@ -94,7 +94,9 @@ function App() {
   const handleLogout = () => {
     // Clear token and user data
     localStorage.removeItem('auth_token');
+    localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('userRole');
     delete axios.defaults.headers.common['Authorization'];
     setUser(null);
   };
