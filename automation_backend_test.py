@@ -185,20 +185,25 @@ def test_automation_endpoints():
     # Test 7: POST /api/automation/apply-optimization
     print("\n7. Testing Optimization Application...")
     try:
-        # First get available optimizations
-        opt_response = requests.get(f"{BACKEND_URL}/api/automation/schedule-optimization", headers=headers)
+        # First get available optimizations with date parameter
+        today_date = datetime.now().strftime('%Y-%m-%d')
+        opt_response = requests.get(f"{BACKEND_URL}/api/automation/schedule-optimization?date={today_date}", headers=headers)
         
         if opt_response.status_code == 200:
             opt_data = opt_response.json()
             optimizations = opt_data.get("optimizations", [])
             
             if optimizations:
-                # Apply first optimization
+                # Apply first optimization with all required fields
                 test_optimization = optimizations[0]
                 apply_data = {
-                    "optimization_id": test_optimization.get("id", "test_opt_1"),
                     "appointment_id": test_optimization.get("appointment_id", "test_appt"),
-                    "new_time": test_optimization.get("suggested_time", "10:30")
+                    "current_time": test_optimization.get("current_time", "09:00"),
+                    "suggested_time": test_optimization.get("suggested_time", "10:30"),
+                    "optimization_type": test_optimization.get("type", "efficiency"),
+                    "confidence_score": test_optimization.get("confidence", 0.8),
+                    "potential_time_saved": test_optimization.get("time_saved", 15),
+                    "reason": test_optimization.get("reason", "Schedule optimization")
                 }
                 
                 response = requests.post(f"{BACKEND_URL}/api/automation/apply-optimization", 
@@ -214,9 +219,13 @@ def test_automation_endpoints():
             else:
                 # Test with mock data if no optimizations available
                 mock_data = {
-                    "optimization_id": "mock_opt_1",
-                    "appointment_id": "mock_appt",
-                    "new_time": "11:00"
+                    "appointment_id": "appt1",  # Use existing appointment ID
+                    "current_time": "09:00",
+                    "suggested_time": "11:00",
+                    "optimization_type": "efficiency",
+                    "confidence_score": 0.75,
+                    "potential_time_saved": 20,
+                    "reason": "Mock optimization test"
                 }
                 
                 response = requests.post(f"{BACKEND_URL}/api/automation/apply-optimization", 
