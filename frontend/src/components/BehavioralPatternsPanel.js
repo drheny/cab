@@ -247,26 +247,33 @@ const BehavioralPatternsPanel = () => {
             </h4>
             <div className="space-y-2">
               {behavioralData
-                .sort((a, b) => b.profile.reliability_score - a.profile.reliability_score)
+                .sort((a, b) => {
+                  const patientA = getPatientData(a);
+                  const patientB = getPatientData(b);
+                  return patientB.reliability_score - patientA.reliability_score;
+                })
                 .slice(0, 3)
-                .map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 bg-green-50 rounded">
-                    <span className="text-sm font-medium text-gray-900">
-                      {item.patient.prenom} {item.patient.nom}
-                    </span>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-16 bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-green-500 h-2 rounded-full" 
-                          style={{ width: `${item.profile.reliability_score * 100}%` }}
-                        ></div>
-                      </div>
-                      <span className="text-xs text-gray-600">
-                        {(item.profile.reliability_score * 100).toFixed(0)}%
+                .map((item, index) => {
+                  const patient = getPatientData(item);
+                  return (
+                    <div key={index} className="flex items-center justify-between p-2 bg-green-50 rounded">
+                      <span className="text-sm font-medium text-gray-900">
+                        {patient.prenom} {patient.nom}
                       </span>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-16 bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-green-500 h-2 rounded-full" 
+                            style={{ width: `${patient.reliability_score * 100}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-xs text-gray-600">
+                          {(patient.reliability_score * 100).toFixed(0)}%
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}}
             </div>
           </div>
 
