@@ -111,6 +111,7 @@ const Administration = ({ user }) => {
     confirmPassword: ''
   });
   const [editingPermissions, setEditingPermissions] = useState(null);
+  const [tempPermissions, setTempPermissions] = useState({});
   const [systemInfo, setSystemInfo] = useState({
     version: '2.0',
     uptime: '0 jours',
