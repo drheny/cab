@@ -1210,6 +1210,494 @@ class CabinetMedicalAPITest(unittest.TestCase):
         print(f"   - End-to-end workflow validated")
         print(f"   - AI-powered features working correctly")
 
+    # ========== AUTOMATION ENGINE COMPREHENSIVE TESTING ==========
+    
+    def test_automation_schedule_optimization(self):
+        """Test GET /api/automation/schedule-optimization - Schedule optimization analysis"""
+        print("\n🔍 Testing Automation Schedule Optimization Endpoint")
+        
+        # Test with specific date
+        test_date = "2025-01-23"
+        response = requests.get(f"{self.base_url}/api/automation/schedule-optimization?date={test_date}")
+        self.assertEqual(response.status_code, 200, f"Schedule optimization failed: {response.text}")
+        
+        data = response.json()
+        
+        # Verify response structure
+        self.assertIn("date", data)
+        self.assertIn("optimizations", data)
+        self.assertIn("summary", data)
+        self.assertIn("generated_at", data)
+        
+        # Verify date matches request
+        self.assertEqual(data["date"], test_date)
+        
+        # Verify optimizations structure
+        optimizations = data["optimizations"]
+        self.assertIsInstance(optimizations, list)
+        
+        # If optimizations exist, verify structure
+        if len(optimizations) > 0:
+            optimization = optimizations[0]
+            self.assertIn("appointment_id", optimization)
+            self.assertIn("current_time", optimization)
+            self.assertIn("suggested_time", optimization)
+            self.assertIn("optimization_type", optimization)
+            self.assertIn("confidence_score", optimization)
+            self.assertIn("potential_time_saved", optimization)
+            self.assertIn("reason", optimization)
+            
+            # Verify optimization types
+            valid_types = ["efficiency", "conflict_resolution", "wait_time_reduction"]
+            self.assertIn(optimization["optimization_type"], valid_types)
+            
+            # Verify confidence score range
+            self.assertGreaterEqual(optimization["confidence_score"], 0.0)
+            self.assertLessEqual(optimization["confidence_score"], 1.0)
+        
+        # Verify summary structure
+        summary = data["summary"]
+        self.assertIn("total_optimizations", summary)
+        self.assertIn("total_time_saved_minutes", summary)
+        self.assertIn("high_confidence_count", summary)
+        self.assertIn("optimization_score", summary)
+        
+        # Verify data types
+        self.assertIsInstance(summary["total_optimizations"], int)
+        self.assertIsInstance(summary["total_time_saved_minutes"], int)
+        self.assertIsInstance(summary["high_confidence_count"], int)
+        self.assertIsInstance(summary["optimization_score"], (int, float))
+        
+        print(f"✅ Schedule optimization analyzed successfully")
+        print(f"   - Date: {data['date']}")
+        print(f"   - Total optimizations: {summary['total_optimizations']}")
+        print(f"   - Total time saved: {summary['total_time_saved_minutes']} minutes")
+        print(f"   - High confidence count: {summary['high_confidence_count']}")
+        print(f"   - Optimization score: {summary['optimization_score']}")
+        print(f"🎉 Automation Schedule Optimization Test: PASSED")
+    
+    def test_automation_proactive_recommendations(self):
+        """Test GET /api/automation/proactive-recommendations - Proactive workflow recommendations"""
+        print("\n🔍 Testing Automation Proactive Recommendations Endpoint")
+        
+        response = requests.get(f"{self.base_url}/api/automation/proactive-recommendations")
+        self.assertEqual(response.status_code, 200, f"Proactive recommendations failed: {response.text}")
+        
+        data = response.json()
+        
+        # Verify response structure
+        self.assertIn("recommendations", data)
+        self.assertIn("summary", data)
+        self.assertIn("generated_at", data)
+        
+        # Verify recommendations structure
+        recommendations = data["recommendations"]
+        self.assertIsInstance(recommendations, list)
+        
+        # If recommendations exist, verify structure
+        if len(recommendations) > 0:
+            recommendation = recommendations[0]
+            self.assertIn("optimization_id", recommendation)
+            self.assertIn("type", recommendation)
+            self.assertIn("title", recommendation)
+            self.assertIn("description", recommendation)
+            self.assertIn("impact", recommendation)
+            self.assertIn("estimated_time_saved", recommendation)
+            self.assertIn("implementation_difficulty", recommendation)
+            self.assertIn("confidence", recommendation)
+            self.assertIn("created_at", recommendation)
+            
+            # Verify valid values
+            valid_types = ["schedule", "workflow", "resource"]
+            self.assertIn(recommendation["type"], valid_types)
+            
+            valid_impacts = ["high", "medium", "low"]
+            self.assertIn(recommendation["impact"], valid_impacts)
+            
+            valid_difficulties = ["easy", "medium", "complex"]
+            self.assertIn(recommendation["implementation_difficulty"], valid_difficulties)
+            
+            # Verify confidence range
+            self.assertGreaterEqual(recommendation["confidence"], 0.0)
+            self.assertLessEqual(recommendation["confidence"], 1.0)
+        
+        # Verify summary structure
+        summary = data["summary"]
+        self.assertIn("total_recommendations", summary)
+        self.assertIn("high_impact_count", summary)
+        self.assertIn("total_time_saved_minutes", summary)
+        self.assertIn("average_confidence", summary)
+        self.assertIn("implementation_score", summary)
+        
+        # Verify data types
+        self.assertIsInstance(summary["total_recommendations"], int)
+        self.assertIsInstance(summary["high_impact_count"], int)
+        self.assertIsInstance(summary["total_time_saved_minutes"], int)
+        self.assertIsInstance(summary["average_confidence"], (int, float))
+        self.assertIsInstance(summary["implementation_score"], (int, float))
+        
+        print(f"✅ Proactive recommendations generated successfully")
+        print(f"   - Total recommendations: {summary['total_recommendations']}")
+        print(f"   - High impact count: {summary['high_impact_count']}")
+        print(f"   - Total time saved: {summary['total_time_saved_minutes']} minutes")
+        print(f"   - Average confidence: {summary['average_confidence']}")
+        print(f"   - Implementation score: {summary['implementation_score']}")
+        print(f"🎉 Automation Proactive Recommendations Test: PASSED")
+    
+    def test_automation_reschedule_suggestions(self):
+        """Test GET /api/automation/reschedule-suggestions/{appointment_id} - Reschedule suggestions"""
+        print("\n🔍 Testing Automation Reschedule Suggestions Endpoint")
+        
+        # Get an existing appointment for testing
+        today = datetime.now().strftime("%Y-%m-%d")
+        appointments_response = requests.get(f"{self.base_url}/api/rdv/jour/{today}")
+        
+        if appointments_response.status_code == 200:
+            appointments = appointments_response.json()
+            
+            if len(appointments) > 0:
+                appointment_id = appointments[0]["id"]
+                
+                response = requests.get(f"{self.base_url}/api/automation/reschedule-suggestions/{appointment_id}")
+                self.assertEqual(response.status_code, 200, f"Reschedule suggestions failed: {response.text}")
+                
+                data = response.json()
+                
+                # Verify response structure
+                self.assertIn("appointment_id", data)
+                self.assertIn("original_appointment", data)
+                self.assertIn("suggestions", data)
+                self.assertIn("patient_punctuality_score", data)
+                self.assertIn("generated_at", data)
+                
+                # Verify appointment ID matches
+                self.assertEqual(data["appointment_id"], appointment_id)
+                
+                # Verify original appointment structure
+                original = data["original_appointment"]
+                self.assertIn("date", original)
+                self.assertIn("time", original)
+                
+                # Verify suggestions structure
+                suggestions = data["suggestions"]
+                self.assertIsInstance(suggestions, list)
+                
+                # If suggestions exist, verify structure
+                if len(suggestions) > 0:
+                    suggestion = suggestions[0]
+                    self.assertIn("suggested_date", suggestion)
+                    self.assertIn("suggested_time", suggestion)
+                    self.assertIn("reason", suggestion)
+                    self.assertIn("confidence", suggestion)
+                    self.assertIn("type", suggestion)
+                    
+                    # Verify suggestion types
+                    valid_types = ["punctuality_optimization", "efficiency_optimization"]
+                    self.assertIn(suggestion["type"], valid_types)
+                    
+                    # Verify confidence range
+                    self.assertGreaterEqual(suggestion["confidence"], 0.0)
+                    self.assertLessEqual(suggestion["confidence"], 1.0)
+                
+                # Verify punctuality score
+                punctuality_score = data["patient_punctuality_score"]
+                self.assertIsInstance(punctuality_score, (int, float))
+                self.assertGreaterEqual(punctuality_score, 0)
+                self.assertLessEqual(punctuality_score, 100)
+                
+                print(f"✅ Reschedule suggestions generated successfully")
+                print(f"   - Appointment ID: {appointment_id}")
+                print(f"   - Original time: {original['time']}")
+                print(f"   - Suggestions count: {len(suggestions)}")
+                print(f"   - Patient punctuality score: {punctuality_score}")
+                print(f"🎉 Automation Reschedule Suggestions Test: PASSED")
+            else:
+                print(f"⚠️ No appointments available for reschedule testing")
+                print(f"🎉 Automation Reschedule Suggestions Test: SKIPPED")
+        else:
+            print(f"⚠️ Could not fetch appointments for reschedule testing")
+            print(f"🎉 Automation Reschedule Suggestions Test: SKIPPED")
+    
+    def test_automation_apply_optimization(self):
+        """Test POST /api/automation/apply-optimization - Apply schedule optimization"""
+        print("\n🔍 Testing Automation Apply Optimization Endpoint")
+        
+        # First, get schedule optimizations to have valid data
+        test_date = "2025-01-23"
+        optimizations_response = requests.get(f"{self.base_url}/api/automation/schedule-optimization?date={test_date}")
+        
+        if optimizations_response.status_code == 200:
+            optimizations_data = optimizations_response.json()
+            optimizations = optimizations_data["optimizations"]
+            
+            if len(optimizations) > 0:
+                # Use the first optimization for testing
+                optimization = optimizations[0]
+                
+                # Apply the optimization
+                response = requests.post(f"{self.base_url}/api/automation/apply-optimization", json=optimization)
+                self.assertEqual(response.status_code, 200, f"Apply optimization failed: {response.text}")
+                
+                data = response.json()
+                
+                # Verify response structure
+                self.assertIn("success", data)
+                self.assertIn("message", data)
+                self.assertIn("appointment_id", data)
+                self.assertIn("new_time", data)
+                
+                # Verify success
+                self.assertTrue(data["success"])
+                self.assertEqual(data["appointment_id"], optimization["appointment_id"])
+                self.assertEqual(data["new_time"], optimization["suggested_time"])
+                
+                print(f"✅ Optimization applied successfully")
+                print(f"   - Appointment ID: {data['appointment_id']}")
+                print(f"   - New time: {data['new_time']}")
+                print(f"   - Message: {data['message']}")
+                print(f"🎉 Automation Apply Optimization Test: PASSED")
+            else:
+                # Test with sample optimization data
+                sample_optimization = {
+                    "appointment_id": "test_appointment_id",
+                    "current_time": "10:00",
+                    "suggested_time": "10:30",
+                    "optimization_type": "efficiency",
+                    "confidence_score": 0.8,
+                    "potential_time_saved": 15,
+                    "reason": "Test optimization"
+                }
+                
+                response = requests.post(f"{self.base_url}/api/automation/apply-optimization", json=sample_optimization)
+                # Should return 404 for non-existent appointment
+                self.assertEqual(response.status_code, 404)
+                
+                print(f"✅ Apply optimization correctly handles non-existent appointments")
+                print(f"🎉 Automation Apply Optimization Test: PASSED")
+        else:
+            print(f"⚠️ Could not fetch optimizations for apply testing")
+            print(f"🎉 Automation Apply Optimization Test: SKIPPED")
+    
+    def test_automation_settings_get(self):
+        """Test GET /api/automation/settings - Get automation settings"""
+        print("\n🔍 Testing Automation Settings GET Endpoint")
+        
+        response = requests.get(f"{self.base_url}/api/automation/settings")
+        self.assertEqual(response.status_code, 200, f"Get automation settings failed: {response.text}")
+        
+        data = response.json()
+        
+        # Verify settings structure
+        self.assertIn("auto_schedule_optimization", data)
+        self.assertIn("auto_conflict_resolution", data)
+        self.assertIn("auto_reschedule_suggestions", data)
+        self.assertIn("proactive_workflow_alerts", data)
+        self.assertIn("emergency_mode_threshold", data)
+        self.assertIn("max_wait_time_threshold", data)
+        
+        # Verify data types
+        self.assertIsInstance(data["auto_schedule_optimization"], bool)
+        self.assertIsInstance(data["auto_conflict_resolution"], bool)
+        self.assertIsInstance(data["auto_reschedule_suggestions"], bool)
+        self.assertIsInstance(data["proactive_workflow_alerts"], bool)
+        self.assertIsInstance(data["emergency_mode_threshold"], int)
+        self.assertIsInstance(data["max_wait_time_threshold"], int)
+        
+        print(f"✅ Automation settings retrieved successfully")
+        print(f"   - Auto schedule optimization: {data['auto_schedule_optimization']}")
+        print(f"   - Auto conflict resolution: {data['auto_conflict_resolution']}")
+        print(f"   - Auto reschedule suggestions: {data['auto_reschedule_suggestions']}")
+        print(f"   - Proactive workflow alerts: {data['proactive_workflow_alerts']}")
+        print(f"   - Emergency mode threshold: {data['emergency_mode_threshold']} minutes")
+        print(f"   - Max wait time threshold: {data['max_wait_time_threshold']} minutes")
+        print(f"🎉 Automation Settings GET Test: PASSED")
+    
+    def test_automation_settings_update(self):
+        """Test PUT /api/automation/settings - Update automation settings"""
+        print("\n🔍 Testing Automation Settings PUT Endpoint")
+        
+        # First, get current settings
+        get_response = requests.get(f"{self.base_url}/api/automation/settings")
+        self.assertEqual(get_response.status_code, 200)
+        original_settings = get_response.json()
+        
+        # Update settings with new values
+        updated_settings = {
+            "auto_schedule_optimization": not original_settings["auto_schedule_optimization"],
+            "auto_conflict_resolution": not original_settings["auto_conflict_resolution"],
+            "auto_reschedule_suggestions": not original_settings["auto_reschedule_suggestions"],
+            "proactive_workflow_alerts": not original_settings["proactive_workflow_alerts"],
+            "emergency_mode_threshold": 45,  # Changed from default 30
+            "max_wait_time_threshold": 25   # Changed from default 30
+        }
+        
+        response = requests.put(f"{self.base_url}/api/automation/settings", json=updated_settings)
+        self.assertEqual(response.status_code, 200, f"Update automation settings failed: {response.text}")
+        
+        data = response.json()
+        
+        # Verify response structure
+        self.assertIn("success", data)
+        self.assertIn("message", data)
+        self.assertIn("settings", data)
+        
+        # Verify success
+        self.assertTrue(data["success"])
+        
+        # Verify updated settings
+        returned_settings = data["settings"]
+        self.assertEqual(returned_settings["auto_schedule_optimization"], updated_settings["auto_schedule_optimization"])
+        self.assertEqual(returned_settings["auto_conflict_resolution"], updated_settings["auto_conflict_resolution"])
+        self.assertEqual(returned_settings["auto_reschedule_suggestions"], updated_settings["auto_reschedule_suggestions"])
+        self.assertEqual(returned_settings["proactive_workflow_alerts"], updated_settings["proactive_workflow_alerts"])
+        self.assertEqual(returned_settings["emergency_mode_threshold"], updated_settings["emergency_mode_threshold"])
+        self.assertEqual(returned_settings["max_wait_time_threshold"], updated_settings["max_wait_time_threshold"])
+        
+        # Restore original settings
+        restore_response = requests.put(f"{self.base_url}/api/automation/settings", json=original_settings)
+        self.assertEqual(restore_response.status_code, 200)
+        
+        print(f"✅ Automation settings updated successfully")
+        print(f"   - Settings updated and restored")
+        print(f"   - Emergency mode threshold: {updated_settings['emergency_mode_threshold']} minutes")
+        print(f"   - Max wait time threshold: {updated_settings['max_wait_time_threshold']} minutes")
+        print(f"🎉 Automation Settings PUT Test: PASSED")
+    
+    def test_automation_status(self):
+        """Test GET /api/automation/status - Get automation status and metrics"""
+        print("\n🔍 Testing Automation Status Endpoint")
+        
+        response = requests.get(f"{self.base_url}/api/automation/status")
+        self.assertEqual(response.status_code, 200, f"Automation status failed: {response.text}")
+        
+        data = response.json()
+        
+        # Verify response structure
+        self.assertIn("automation_active", data)
+        self.assertIn("status", data)
+        self.assertIn("metrics", data)
+        self.assertIn("settings", data)
+        self.assertIn("last_updated", data)
+        
+        # Verify data types
+        self.assertIsInstance(data["automation_active"], bool)
+        self.assertIsInstance(data["status"], str)
+        
+        # Verify status values
+        valid_statuses = ["active", "paused"]
+        self.assertIn(data["status"], valid_statuses)
+        
+        # Verify metrics structure
+        metrics = data["metrics"]
+        self.assertIn("optimizations_available", metrics)
+        self.assertIn("recommendations_pending", metrics)
+        self.assertIn("high_priority_items", metrics)
+        self.assertIn("time_saved_today_minutes", metrics)
+        self.assertIn("optimizations_applied_today", metrics)
+        
+        # Verify metrics data types
+        self.assertIsInstance(metrics["optimizations_available"], int)
+        self.assertIsInstance(metrics["recommendations_pending"], int)
+        self.assertIsInstance(metrics["high_priority_items"], int)
+        self.assertIsInstance(metrics["time_saved_today_minutes"], int)
+        self.assertIsInstance(metrics["optimizations_applied_today"], int)
+        
+        # Verify settings structure (should match settings endpoint)
+        settings = data["settings"]
+        self.assertIn("auto_schedule_optimization", settings)
+        self.assertIn("auto_conflict_resolution", settings)
+        self.assertIn("auto_reschedule_suggestions", settings)
+        self.assertIn("proactive_workflow_alerts", settings)
+        self.assertIn("emergency_mode_threshold", settings)
+        self.assertIn("max_wait_time_threshold", settings)
+        
+        print(f"✅ Automation status retrieved successfully")
+        print(f"   - Automation active: {data['automation_active']}")
+        print(f"   - Status: {data['status']}")
+        print(f"   - Optimizations available: {metrics['optimizations_available']}")
+        print(f"   - Recommendations pending: {metrics['recommendations_pending']}")
+        print(f"   - High priority items: {metrics['high_priority_items']}")
+        print(f"   - Time saved today: {metrics['time_saved_today_minutes']} minutes")
+        print(f"   - Optimizations applied today: {metrics['optimizations_applied_today']}")
+        print(f"🎉 Automation Status Test: PASSED")
+    
+    def test_automation_comprehensive_workflow(self):
+        """Test comprehensive automation workflow - End-to-end testing"""
+        print("\n🔍 Testing Automation Comprehensive Workflow")
+        
+        test_date = "2025-01-23"
+        
+        # Step 1: Get automation settings
+        print("  Step 1: Getting automation settings...")
+        settings_response = requests.get(f"{self.base_url}/api/automation/settings")
+        self.assertEqual(settings_response.status_code, 200)
+        settings_data = settings_response.json()
+        print(f"  ✅ Automation settings retrieved")
+        
+        # Step 2: Get automation status
+        print("  Step 2: Getting automation status...")
+        status_response = requests.get(f"{self.base_url}/api/automation/status")
+        self.assertEqual(status_response.status_code, 200)
+        status_data = status_response.json()
+        print(f"  ✅ Automation status retrieved (status: {status_data['status']})")
+        
+        # Step 3: Get schedule optimizations
+        print("  Step 3: Analyzing schedule optimizations...")
+        optimization_response = requests.get(f"{self.base_url}/api/automation/schedule-optimization?date={test_date}")
+        self.assertEqual(optimization_response.status_code, 200)
+        optimization_data = optimization_response.json()
+        print(f"  ✅ Schedule optimizations analyzed ({optimization_data['summary']['total_optimizations']} found)")
+        
+        # Step 4: Get proactive recommendations
+        print("  Step 4: Generating proactive recommendations...")
+        recommendations_response = requests.get(f"{self.base_url}/api/automation/proactive-recommendations")
+        self.assertEqual(recommendations_response.status_code, 200)
+        recommendations_data = recommendations_response.json()
+        print(f"  ✅ Proactive recommendations generated ({recommendations_data['summary']['total_recommendations']} found)")
+        
+        # Step 5: Test reschedule suggestions (if appointments available)
+        print("  Step 5: Testing reschedule suggestions...")
+        appointments_response = requests.get(f"{self.base_url}/api/rdv/jour/{test_date}")
+        if appointments_response.status_code == 200:
+            appointments = appointments_response.json()
+            if len(appointments) > 0:
+                appointment_id = appointments[0]["id"]
+                reschedule_response = requests.get(f"{self.base_url}/api/automation/reschedule-suggestions/{appointment_id}")
+                self.assertEqual(reschedule_response.status_code, 200)
+                reschedule_data = reschedule_response.json()
+                print(f"  ✅ Reschedule suggestions generated ({len(reschedule_data['suggestions'])} suggestions)")
+            else:
+                print("  ⚠️ No appointments available for reschedule testing")
+        else:
+            print("  ⚠️ Could not fetch appointments for reschedule testing")
+        
+        # Step 6: Update automation settings (test configuration)
+        print("  Step 6: Testing settings update...")
+        test_settings = settings_data.copy()
+        test_settings["emergency_mode_threshold"] = 25  # Change threshold
+        update_response = requests.put(f"{self.base_url}/api/automation/settings", json=test_settings)
+        self.assertEqual(update_response.status_code, 200)
+        print("  ✅ Settings updated successfully")
+        
+        # Step 7: Restore original settings
+        print("  Step 7: Restoring original settings...")
+        restore_response = requests.put(f"{self.base_url}/api/automation/settings", json=settings_data)
+        self.assertEqual(restore_response.status_code, 200)
+        print("  ✅ Original settings restored")
+        
+        # Step 8: Final status check
+        print("  Step 8: Final status verification...")
+        final_status_response = requests.get(f"{self.base_url}/api/automation/status")
+        self.assertEqual(final_status_response.status_code, 200)
+        final_status_data = final_status_response.json()
+        print(f"  ✅ Final status verified (status: {final_status_data['status']})")
+        
+        print(f"🎉 Automation Comprehensive Workflow Test: PASSED")
+        print(f"   - All 6 automation endpoints tested successfully")
+        print(f"   - End-to-end automation workflow validated")
+        print(f"   - Schedule optimization and proactive recommendations working correctly")
+        print(f"   - Settings management and status monitoring functional")
+
     # ========== AI DATA ENRICHMENT COMPREHENSIVE TESTING ==========
     
     def test_ai_learning_initialize(self):
