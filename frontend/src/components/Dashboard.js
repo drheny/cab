@@ -1271,6 +1271,15 @@ const Dashboard = ({ user }) => {
         </div>
       </div>
 
+      {/* Enhanced Dashboard Panels - Phase 3 */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+        {/* Automation Panel */}
+        <AutomationPanel />
+
+        {/* Behavioral Patterns Panel */}
+        <BehavioralPatternsPanel />
+      </div>
+
       {/* Consultation Details Modal */}
       {showConsultationModal && selectedConsultation && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
