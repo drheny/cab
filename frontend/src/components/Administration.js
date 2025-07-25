@@ -152,6 +152,7 @@ const Administration = ({ user }) => {
     start: '',
     end: ''
   });
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [selectedMetrics, setSelectedMetrics] = useState({
     overview: true,
     financial: true,
