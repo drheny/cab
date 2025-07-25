@@ -522,11 +522,11 @@ const BehavioralPatternsPanel = () => {
                   <div className="flex-1 bg-gray-200 rounded-full h-3">
                     <div 
                       className="bg-blue-500 h-3 rounded-full" 
-                      style={{ width: `${selectedPatient.profile.reliability_score * 100}%` }}
+                      style={{ width: `${selectedPatient.reliability_score * 100}%` }}
                     ></div>
                   </div>
                   <span className="text-sm font-medium text-gray-900">
-                    {(selectedPatient.profile.reliability_score * 100).toFixed(0)}%
+                    {(selectedPatient.reliability_score * 100).toFixed(0)}%
                   </span>
                 </div>
               </div>
@@ -534,7 +534,7 @@ const BehavioralPatternsPanel = () => {
               <div>
                 <span className="text-sm text-gray-600">Créneaux préférés</span>
                 <div className="mt-1 flex flex-wrap gap-2">
-                  {selectedPatient.profile.preferred_time_slots.map((slot, index) => (
+                  {selectedPatient.preferred_time_slots.map((slot, index) => (
                     <span key={index} className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
                       {slot}
                     </span>
@@ -545,9 +545,9 @@ const BehavioralPatternsPanel = () => {
               <div>
                 <span className="text-sm text-gray-600">Tendance comportementale</span>
                 <div className="mt-1 flex items-center space-x-2">
-                  {getTrendIcon(selectedPatient.profile.behavioral_trend)}
+                  {getTrendIcon(selectedPatient.behavioral_trend)}
                   <span className="text-sm text-gray-900 capitalize">
-                    {selectedPatient.profile.behavioral_trend}
+                    {selectedPatient.behavioral_trend}
                   </span>
                 </div>
               </div>
