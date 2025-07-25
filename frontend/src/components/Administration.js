@@ -733,10 +733,24 @@ const Administration = ({ user }) => {
       const response = await axios.get(`/api/admin/advanced-reports?${params}`);
       const reportData = response.data;
       
-      setAdvancedReportData(reportData);
+      // Traiter les données avec enrichissement Gemini
+      setAdvancedReportsData({
+        ...reportData,
+        // Garder la structure existante + ajouter Gemini
+        gemini_enrichment: reportData.gemini_enrichment || null
+      });
       setAlerts(reportData.alerts || []);
       
-      toast.success('Rapport avancé généré avec succès');
+      // Log pour debug
+      console.log("🤖 Gemini enrichment status:", reportData.gemini_enrichment?.status);
+      if (reportData.gemini_enrichment?.status === "success") {
+        console.log("✅ Gemini insights loaded successfully");
+      } else if (reportData.gemini_enrichment?.status === "fallback") {
+        console.warn("⚠️ Gemini enrichment failed, using fallback:", reportData.gemini_enrichment?.error);
+      }
+      
+      toast.success('Rapport avancé généré avec succès' + 
+        (reportData.gemini_enrichment?.status === "success" ? " (enrichi par IA)" : ""));
     } catch (error) {
       console.error('Error generating advanced report:', error);
       toast.error('Erreur lors de la génération du rapport avancé');
