@@ -313,6 +313,12 @@ const AutomationPanel = () => {
           <div className="flex items-center space-x-2 mb-3">
             <TrendingUp className="w-4 h-4 text-green-600" />
             <h4 className="font-medium text-gray-900">Recommandations Proactives</h4>
+            {aiPowered && (
+              <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full flex items-center space-x-1">
+                <Zap className="w-3 h-3" />
+                <span>IA</span>
+              </span>
+            )}
             <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
               {proactiveRecommendations.recommendations.length}
             </span>
