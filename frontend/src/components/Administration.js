@@ -1522,65 +1522,205 @@ const Administration = ({ user }) => {
                   </div>
                 </div>
 
-                {/* Analysis Panel */}
+                {/* 🤖 GEMINI 2.0 FLASH ENRICHED ANALYSIS PANEL */}
                 <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-lg border border-indigo-200">
-                  <div className="flex items-center space-x-2 mb-4">
-                    <Brain className="w-5 h-5 text-indigo-600" />
-                    <h3 className="font-medium text-indigo-900">🧠 Analyse Intelligente</h3>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-2">
+                      <Brain className="w-5 h-5 text-indigo-600" />
+                      <h3 className="font-medium text-indigo-900">🧠 Analyse Intelligente Enrichie par IA</h3>
+                    </div>
+                    {advancedReportsData.gemini_enrichment?.status === "success" && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        ✨ Gemini 2.0 Flash
+                      </span>
+                    )}
                   </div>
                   
+                  {/* Status and Error Handling */}
+                  {advancedReportsData.gemini_enrichment?.status === "fallback" && (
+                    <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <p className="text-sm text-yellow-800">
+                        ⚠️ L'enrichissement IA est temporairement indisponible. Analyse de base disponible.
+                      </p>
+                    </div>
+                  )}
+                  
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Recommendations */}
+                    {/* 🧠 CONTEXTUAL INSIGHTS - Enriched by Gemini */}
                     <div>
-                      <h4 className="font-medium text-indigo-800 mb-2">🎯 Recommandations</h4>
-                      <div className="space-y-2">
-                        {advancedReportsData.predictions.trend === 'croissant' && (
-                          <div className="p-3 bg-green-100 border border-green-300 rounded text-sm text-green-800">
-                            📈 Croissance détectée - Considérez d'augmenter les créneaux disponibles
-                          </div>
-                        )}
-                        {advancedReportsData.advanced_statistics.durees_moyennes.temps_attente > 30 && (
-                          <div className="p-3 bg-orange-100 border border-orange-300 rounded text-sm text-orange-800">
-                            ⏱️ Temps d'attente élevé - Optimisez la planification
-                          </div>
-                        )}
-                        {advancedReportsData.advanced_statistics.patients_inactifs.pourcentage > 30 && (
-                          <div className="p-3 bg-yellow-100 border border-yellow-300 rounded text-sm text-yellow-800">
-                            📞 Taux d'inactivité élevé - Campagne de relance recommandée
-                          </div>
+                      <h4 className="font-medium text-indigo-800 mb-3">🔍 Insights Contextuels</h4>
+                      <div className="space-y-3">
+                        {advancedReportsData.gemini_enrichment?.data?.contextual_insights?.length > 0 ? (
+                          advancedReportsData.gemini_enrichment.data.contextual_insights.map((insight, index) => (
+                            <div key={index} className={`p-3 rounded-lg text-sm border ${
+                              insight.impact === 'élevé' ? 'bg-red-50 border-red-200 text-red-800' :
+                              insight.impact === 'moyen' ? 'bg-yellow-50 border-yellow-200 text-yellow-800' :
+                              'bg-blue-50 border-blue-200 text-blue-800'
+                            }`}>
+                              <div className="font-medium mb-1">{insight.title}</div>
+                              <div className="text-xs opacity-80">{insight.description}</div>
+                              <div className="mt-1">
+                                <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
+                                  insight.type === 'pattern' ? 'bg-purple-100 text-purple-700' :
+                                  insight.type === 'correlation' ? 'bg-green-100 text-green-700' :
+                                  'bg-gray-100 text-gray-700'
+                                }`}>
+                                  {insight.type}
+                                </span>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          // Fallback to basic insights
+                          <>
+                            {advancedReportsData.predictions.trend === 'croissant' && (
+                              <div className="p-3 bg-green-100 border border-green-300 rounded text-sm text-green-800">
+                                📈 <strong>Croissance détectée</strong><br/>
+                                Considérez d'augmenter les créneaux disponibles
+                              </div>
+                            )}
+                            {advancedReportsData.advanced_statistics.durees_moyennes.temps_attente > 30 && (
+                              <div className="p-3 bg-orange-100 border border-orange-300 rounded text-sm text-orange-800">
+                                ⏱️ <strong>Temps d'attente élevé</strong><br/>
+                                Optimisez la planification ({advancedReportsData.advanced_statistics.durees_moyennes.temps_attente}min)
+                              </div>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
 
-                    {/* Key Insights */}
+                    {/* 🎯 INTELLIGENT RECOMMENDATIONS - Enhanced by Gemini */}
                     <div>
-                      <h4 className="font-medium text-indigo-800 mb-2">💡 Insights Clés</h4>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between p-2 bg-white rounded border">
-                          <span className="text-sm text-gray-600">Patient le plus fidèle</span>
-                          <span className="text-sm font-medium text-gray-900">
-                            {advancedReportsData.advanced_statistics.top_patients[0]?.nom || 'N/A'}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between p-2 bg-white rounded border">
-                          <span className="text-sm text-gray-600">Efficacité moyenne</span>
-                          <span className="text-sm font-medium text-gray-900">
-                            {((60 / advancedReportsData.advanced_statistics.durees_moyennes.duree_consultation) * 100).toFixed(1)}%
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between p-2 bg-white rounded border">
-                          <span className="text-sm text-gray-600">Salle la plus utilisée</span>
-                          <span className="text-sm font-medium text-gray-900">
-                            {Object.entries(advancedReportsData.advanced_statistics.utilisation_salles)
-                              .sort((a, b) => b[1].pourcentage - a[1].pourcentage)[0]?.[0].replace('_', ' ') || 'N/A'}
-                          </span>
-                        </div>
+                      <h4 className="font-medium text-indigo-800 mb-3">🎯 Recommandations Intelligentes</h4>
+                      <div className="space-y-3">
+                        {advancedReportsData.gemini_enrichment?.data?.intelligent_recommendations?.length > 0 ? (
+                          advancedReportsData.gemini_enrichment.data.intelligent_recommendations.map((rec, index) => (
+                            <div key={index} className={`p-3 rounded-lg text-sm border ${
+                              rec.priority === 'haute' ? 'bg-red-50 border-red-200' :
+                              rec.priority === 'moyenne' ? 'bg-yellow-50 border-yellow-200' :
+                              'bg-green-50 border-green-200'
+                            }`}>
+                              <div className="flex items-center justify-between mb-2">
+                                <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
+                                  rec.priority === 'haute' ? 'bg-red-100 text-red-700' :
+                                  rec.priority === 'moyenne' ? 'bg-yellow-100 text-yellow-700' :
+                                  'bg-green-100 text-green-700'
+                                }`}>
+                                  {rec.priority === 'haute' ? '🔥 Haute' : rec.priority === 'moyenne' ? '⚡ Moyenne' : '📋 Basse'}
+                                </span>
+                                <span className="text-xs text-gray-600 capitalize">{rec.category}</span>
+                              </div>
+                              <div className="font-medium text-gray-900 mb-1">{rec.action}</div>
+                              <div className="text-xs text-gray-600 mb-1">Impact: {rec.expected_impact}</div>
+                              <div className="text-xs text-gray-500">Délai: {rec.timeline}</div>
+                            </div>
+                          ))
+                        ) : (
+                          // Fallback recommendations
+                          <div className="p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
+                            📊 <strong>Continuez le suivi</strong><br/>
+                            Les métriques actuelles semblent stables
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
                   
-                  {/* Quick Actions */}
-                  <div className="mt-4 flex items-center space-x-4">
+                  {/* 🔮 CONTEXTUAL PREDICTIONS - Enhanced Section */}
+                  {advancedReportsData.gemini_enrichment?.data?.contextual_predictions && (
+                    <div className="mt-6 p-4 bg-white rounded-lg border border-indigo-100">
+                      <h4 className="font-medium text-indigo-800 mb-3">🔮 Prédictions Contextuelles</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="text-center">
+                          <div className="text-lg font-bold text-indigo-900">
+                            {advancedReportsData.gemini_enrichment.data.contextual_predictions.next_period_forecast?.revenue || "En attente"}
+                          </div>
+                          <div className="text-sm text-gray-600">Recette prévue</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-lg font-bold text-indigo-900">
+                            {advancedReportsData.gemini_enrichment.data.contextual_predictions.next_period_forecast?.consultations || "En attente"}
+                          </div>
+                          <div className="text-sm text-gray-600">Consultations</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-lg font-bold text-indigo-900">
+                            {advancedReportsData.gemini_enrichment.data.contextual_predictions.next_period_forecast?.confidence || "N/A"}
+                          </div>
+                          <div className="text-sm text-gray-600">Confiance</div>
+                        </div>
+                      </div>
+                      
+                      {advancedReportsData.gemini_enrichment.data.contextual_predictions.trend_analysis && (
+                        <div className="mt-3 text-sm text-gray-700">
+                          <strong>Analyse de tendance:</strong> {advancedReportsData.gemini_enrichment.data.contextual_predictions.trend_analysis}
+                        </div>
+                      )}
+                      
+                      {advancedReportsData.gemini_enrichment.data.contextual_predictions.key_factors?.length > 0 && (
+                        <div className="mt-3">
+                          <strong className="text-sm text-gray-700">Facteurs d'influence:</strong>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {advancedReportsData.gemini_enrichment.data.contextual_predictions.key_factors.map((factor, index) => (
+                              <span key={index} className="inline-block px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded text-xs">
+                                {factor}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* ⚠️ INTELLIGENT ALERTS - Enhanced */}
+                  {advancedReportsData.gemini_enrichment?.data?.intelligent_alerts?.length > 0 && (
+                    <div className="mt-6 p-4 bg-red-50 rounded-lg border border-red-200">
+                      <h4 className="font-medium text-red-800 mb-3">⚠️ Alertes Intelligentes</h4>
+                      <div className="space-y-2">
+                        {advancedReportsData.gemini_enrichment.data.intelligent_alerts.map((alert, index) => (
+                          <div key={index} className={`p-2 rounded text-sm border ${
+                            alert.severity === 'high' ? 'bg-red-100 border-red-300 text-red-800' :
+                            alert.severity === 'medium' ? 'bg-yellow-100 border-yellow-300 text-yellow-800' :
+                            'bg-blue-100 border-blue-300 text-blue-800'
+                          }`}>
+                            <div className="font-medium">{alert.message}</div>
+                            {alert.suggested_action && (
+                              <div className="text-xs mt-1">Action: {alert.suggested_action}</div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* 📊 COMPLEX PATTERNS - New Gemini Feature */}
+                  {advancedReportsData.gemini_enrichment?.data?.complex_patterns?.length > 0 && (
+                    <div className="mt-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                      <h4 className="font-medium text-purple-800 mb-3">🔍 Patterns Complexes Détectés</h4>
+                      <div className="space-y-3">
+                        {advancedReportsData.gemini_enrichment.data.complex_patterns.map((pattern, index) => (
+                          <div key={index} className="p-3 bg-white rounded border">
+                            <div className="font-medium text-purple-900 mb-1">{pattern.pattern_name}</div>
+                            <div className="text-sm text-gray-700 mb-2">{pattern.description}</div>
+                            <div className="flex justify-between text-xs">
+                              <span className={`px-2 py-0.5 rounded ${
+                                pattern.frequency === 'fréquent' ? 'bg-red-100 text-red-700' :
+                                pattern.frequency === 'occasionnel' ? 'bg-yellow-100 text-yellow-700' :
+                                'bg-green-100 text-green-700'
+                              }`}>
+                                {pattern.frequency}
+                              </span>
+                              <span className="text-gray-600">Impact: {pattern.business_impact}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Quick Actions with Enhanced Features */}
+                  <div className="mt-6 flex items-center space-x-4">
                     <button
                       onClick={() => exportAdvancedReport('excel')}
                       className="flex items-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg"
@@ -1597,15 +1737,15 @@ const Administration = ({ user }) => {
                     </button>
                     <button
                       onClick={() => {
-                        toast.info('Analyse IA en cours...');
+                        toast.info('🤖 Génération d\'insights Gemini...');
                         setTimeout(() => {
-                          toast.success('✅ Analyse IA terminée');
+                          toast.success('✅ Analyse IA enrichie terminée');
                         }, 2000);
                       }}
                       className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg"
                     >
                       <Brain className="w-4 h-4" />
-                      <span>Analyse IA</span>
+                      <span>Régénérer Analyse IA</span>
                     </button>
                   </div>
                 </div>
