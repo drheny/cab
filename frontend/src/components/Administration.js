@@ -777,6 +777,19 @@ const Administration = ({ user }) => {
     }
   };
 
+  const exportAdvancedReport = (format) => {
+    if (!advancedReportsData) {
+      toast.error('Aucun rapport à exporter');
+      return;
+    }
+    
+    if (format === 'excel') {
+      exportAdvancedReportToExcel();
+    } else if (format === 'pdf') {
+      toast.info('Export PDF en cours de développement');
+    }
+  };
+
   const exportAdvancedReportToExcel = () => {
     if (!advancedReportData) {
       toast.error('Aucun rapport à exporter');
