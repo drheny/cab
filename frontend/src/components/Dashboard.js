@@ -16,6 +16,9 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import AutomationPanel from './AutomationPanel';
+import BehavioralPatternsPanel from './BehavioralPatternsPanel';
+import { DashboardWidget, StatGrid, QuickActionButton } from './DashboardWidgets';
 
 const Dashboard = ({ user }) => {
   const navigate = useNavigate();
