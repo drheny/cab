@@ -1477,6 +1477,7 @@ const Administration = ({ user }) => {
                           { key: 'view_messages', label: '💬 Messages Tel', desc: 'Accès aux messages' },
                           { key: 'view_billing', label: '💰 Facturation', desc: 'Voir la facturation' },
                           { key: 'modify_payments', label: '💳 Modifier Paiements', desc: 'Modifier les paiements' },
+                          { key: 'view_ai_room', label: '🤖 IA Room', desc: 'Accès aux fonctionnalités d\'IA' },
                           { key: 'view_administration', label: '⚙️ Administration', desc: 'Accès à l\'administration' }
                         ].map((permission) => (
                           <tr key={permission.key}>
