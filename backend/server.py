@@ -5274,6 +5274,14 @@ class GeminiAIService:
                 "implementation": "N/A"
             }]
 
+# Initialize AI services
+try:
+    gemini_service = GeminiAIService()
+    print("✅ Gemini AI Service initialized successfully")
+except Exception as e:
+    print(f"⚠️ Gemini AI Service initialization failed: {e}")
+    gemini_service = None
+
 # Data enrichment classes
 class TemporalDataCollector:
     """Collecte automatique des patterns temporels"""
