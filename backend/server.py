@@ -4949,6 +4949,72 @@ async def get_advanced_reports(
             "alerts": alerts
         }
         
+        # 🚀 ENRICHISSEMENT GEMINI 2.0 FLASH
+        try:
+            gemini_service = GeminiAIService()
+            period_info = {
+                "period_type": period_type,
+                "year": year,
+                "month": month,
+                "semester": semester,
+                "start_date": start_date,
+                "end_date": end_date,
+                "periode_label": periode_label
+            }
+            
+            # Préparer les données pour Gemini
+            gemini_input = {
+                "basic_stats": {
+                    "period": periode_label,
+                    "total_consultations": len(appointments),
+                    "revenue": predictions.get("next_month_revenue", 0),
+                    "trend": predictions.get("trend", "stable"),
+                    "confidence": predictions.get("confidence", 0.8),
+                    "top_patients": advanced_stats.get("top_patients", [])[:3],
+                    "waiting_time": advanced_stats.get("durees_moyennes", {}).get("temps_attente", 0),
+                    "consultation_duration": advanced_stats.get("durees_moyennes", {}).get("duree_consultation", 0),
+                    "retention_rate": advanced_stats.get("taux_fidelisation", {}).get("taux_retour", 0),
+                    "new_patients": advanced_stats.get("taux_fidelisation", {}).get("nouveaux_patients", 0),
+                    "recurring_patients": advanced_stats.get("taux_fidelisation", {}).get("patients_recurrents", 0),
+                    "visit_control_ratio": advanced_stats.get("repartition_visite_controle", {}),
+                    "seasonality_peaks": seasonality.get("peak_months", []),
+                    "seasonality_lows": seasonality.get("low_months", []),
+                    "alerts_detected": len(alerts)
+                },
+                "context": {
+                    "is_summer": month in [6, 7, 8] if month else False,
+                    "is_winter": month in [12, 1, 2] if month else False,
+                    "is_school_period": month in [9, 10, 11, 1, 2, 3, 4, 5] if month else False,
+                    "current_month": current_month,
+                    "current_year": current_year
+                }
+            }
+            
+            # Obtenir l'enrichissement Gemini
+            gemini_enrichment = await gemini_service.enrich_advanced_report(gemini_input, period_info)
+            
+            # Ajouter l'enrichissement au rapport
+            report["gemini_enrichment"] = {
+                "status": "success",
+                "generated_at": datetime.now().isoformat(),
+                "data": gemini_enrichment
+            }
+            
+        except Exception as e:
+            print(f"⚠️ Gemini enrichment failed: {e}")
+            # Fallback sans enrichissement 
+            report["gemini_enrichment"] = {
+                "status": "fallback", 
+                "error": str(e),
+                "data": {
+                    "contextual_insights": [{"type": "system", "title": "Analyse de base disponible", "description": "L'enrichissement IA est temporairement indisponible, les statistiques de base sont affichées.", "impact": "faible"}],
+                    "intelligent_recommendations": [{"priority": "moyenne", "category": "système", "action": "Réessayer l'analyse enrichie plus tard", "expected_impact": "Analyse complète", "timeline": "court_terme"}],
+                    "contextual_predictions": {"next_period_forecast": {"revenue": "En attente", "consultations": "En attente", "confidence": "N/A"}, "key_factors": [], "trend_analysis": "Analyse en attente", "risk_assessment": "Aucun risque détecté"},
+                    "intelligent_alerts": [],
+                    "complex_patterns": []
+                }
+            }
+        
         return report
         
     except HTTPException:
