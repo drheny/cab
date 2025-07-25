@@ -153,6 +153,5 @@ const LoginPage = ({ onLogin }) => {
     </div>
   );
 };
-};
 
 export default LoginPage;
