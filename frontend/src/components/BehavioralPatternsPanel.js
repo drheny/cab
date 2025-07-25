@@ -285,22 +285,28 @@ const BehavioralPatternsPanel = () => {
             </h4>
             <div className="space-y-2">
               {behavioralData
-                .filter(item => item.profile.risk_factors && item.profile.risk_factors.length > 0)
+                .filter(item => {
+                  const patient = getPatientData(item);
+                  return patient.risk_factors.length > 0;
+                })
                 .slice(0, 3)
-                .map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 bg-red-50 rounded">
-                    <span className="text-sm font-medium text-gray-900">
-                      {item.patient.prenom} {item.patient.nom}
-                    </span>
-                    <div className="flex flex-wrap gap-1">
-                      {item.profile.risk_factors.slice(0, 2).map((risk, riskIndex) => (
-                        <span key={riskIndex} className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">
-                          {risk.replace('_', ' ')}
-                        </span>
-                      ))}
+                .map((item, index) => {
+                  const patient = getPatientData(item);
+                  return (
+                    <div key={index} className="flex items-center justify-between p-2 bg-red-50 rounded">
+                      <span className="text-sm font-medium text-gray-900">
+                        {patient.prenom} {patient.nom}
+                      </span>
+                      <div className="flex flex-wrap gap-1">
+                        {patient.risk_factors.slice(0, 2).map((risk, riskIndex) => (
+                          <span key={riskIndex} className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">
+                            {risk.replace('_', ' ')}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
             </div>
           </div>
         </div>
