@@ -8585,6 +8585,134 @@ async def get_schedule_optimization(date: str = Query(..., description="Date in 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error analyzing schedule optimization: {str(e)}")
 
+# AI-Enhanced Automation Endpoints (Gemini Integration)
+@app.get("/api/automation/ai-enhanced-recommendations")
+async def get_ai_enhanced_recommendations():
+    """Get AI-enhanced proactive recommendations using Gemini"""
+    try:
+        if not gemini_service:
+            # Fallback to existing rule-based recommendations
+            return await get_proactive_recommendations()
+        
+        # Get current schedule and doctor analytics
+        today = datetime.now().strftime('%Y-%m-%d')
+        appointments = list(appointments_collection.find({"date": today}))
+        
+        # Get doctor analytics data
+        doctor_analytics = {
+            "total_appointments": len(appointments),
+            "current_time": datetime.now().strftime('%H:%M'),
+            "schedule_status": "normal" if len(appointments) < 10 else "busy"
+        }
+        
+        # Get patient behavioral data
+        patients_data = []
+        for apt in appointments[:5]:  # Sample first 5
+            patient = patients_collection.find_one({"id": apt.get("patient_id")})
+            if patient:
+                patients_data.append({
+                    "nom": patient.get("nom", ""),
+                    "type_rdv": apt.get("type_rdv", ""),
+                    "heure": apt.get("heure", "")
+                })
+        
+        schedule_data = {
+            "appointments_today": len(appointments),
+            "sample_patients": patients_data,
+            "date": today
+        }
+        
+        # Get AI-powered recommendations
+        ai_recommendations = await gemini_service.generate_proactive_recommendations(
+            schedule_data, doctor_analytics
+        )
+        
+        return {
+            "recommendations": ai_recommendations,
+            "ai_powered": True,
+            "generated_at": datetime.now().isoformat(),
+            "total_recommendations": len(ai_recommendations)
+        }
+        
+    except Exception as e:
+        return {"error": f"Erreur lors de la génération de recommandations IA: {str(e)}"}
+
+@app.get("/api/automation/ai-patient-insights/{patient_id}")
+async def get_ai_patient_insights(patient_id: str):
+    """Get AI-enhanced patient behavioral insights"""
+    try:
+        if not gemini_service:
+            return {"error": "Service IA non disponible"}
+        
+        # Get patient data
+        patient = patients_collection.find_one({"id": patient_id})
+        if not patient:
+            raise HTTPException(status_code=404, detail="Patient non trouvé")
+        
+        # Get behavioral data
+        appointments = list(appointments_collection.find({"patient_id": patient_id}))
+        behavioral_data = {
+            "total_appointments": len(appointments),
+            "recent_appointments": appointments[-3:] if appointments else [],
+            "punctuality_pattern": "Données historiques disponibles" if appointments else "Nouveau patient"
+        }
+        
+        # Remove MongoDB _id fields
+        patient_clean = {k: v for k, v in patient.items() if k != "_id"}
+        
+        # Get AI insights
+        ai_insights = await gemini_service.enhance_patient_insights(
+            patient_clean, behavioral_data
+        )
+        
+        return {
+            "patient_id": patient_id,
+            "ai_insights": ai_insights,
+            "generated_at": datetime.now().isoformat(),
+            "data_source": "gemini_ai"
+        }
+        
+    except Exception as e:
+        return {"error": f"Erreur lors de l'analyse patient IA: {str(e)}"}
+
+@app.post("/api/automation/ai-schedule-optimization")
+async def ai_schedule_optimization(request_data: dict):
+    """AI-powered schedule optimization recommendations"""
+    try:
+        if not gemini_service:
+            return {"error": "Service IA non disponible"}
+        
+        date = request_data.get("date", datetime.now().strftime('%Y-%m-%d'))
+        
+        # Get schedule data
+        appointments = list(appointments_collection.find({"date": date}))
+        
+        context = f"Optimisation du planning médical pour le {date}"
+        data = {
+            "appointments_count": len(appointments),
+            "appointments": [
+                {
+                    "heure": apt.get("heure", ""),
+                    "type_rdv": apt.get("type_rdv", ""),
+                    "duree_prevue": apt.get("duree", 15)
+                } for apt in appointments[:10]  # Limit to first 10
+            ],
+            "optimization_goals": ["reduce_wait_times", "improve_efficiency", "patient_satisfaction"]
+        }
+        
+        # Get AI recommendations
+        ai_recommendation = await gemini_service.get_medical_recommendation(context, data)
+        
+        return {
+            "ai_optimization": ai_recommendation,
+            "date": date,
+            "appointments_analyzed": len(appointments),
+            "generated_at": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        return {"error": f"Erreur lors de l'optimisation IA: {str(e)}"}
+
 @app.get("/api/automation/proactive-recommendations")
 async def get_proactive_recommendations():
     """Get proactive workflow optimization recommendations"""
