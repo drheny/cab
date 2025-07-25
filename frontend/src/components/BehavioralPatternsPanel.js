@@ -121,6 +121,25 @@ const BehavioralPatternsPanel = () => {
     return 'bg-red-500';
   };
 
+  // Helper function to safely access patient data with backward compatibility
+  const getPatientData = (item) => {
+    return {
+      id: item.patient_id || (item.patient && item.patient.id),
+      nom: item.nom || (item.patient && item.patient.nom) || '',
+      prenom: item.prenom || (item.patient && item.patient.prenom) || '',
+      punctuality_score: item.punctuality_score || (item.profile && item.profile.punctuality_score) || 0,
+      communication_score: item.communication_score || (item.profile && item.profile.communication_effectiveness) || 0,
+      satisfaction_score: item.satisfaction_score || (item.profile && item.profile.satisfaction_score) || 0,
+      reliability_score: item.reliability_score || (item.profile && item.profile.reliability_score) || 0,
+      risk_factors: item.risk_factors || (item.profile && item.profile.risk_factors) || [],
+      behavioral_trend: item.behavioral_trend || (item.profile && item.profile.behavioral_trend) || 'stable',
+      consultation_count: item.consultation_count || (item.profile && item.profile.consultation_count) || 0,
+      preferred_time_slots: item.preferred_time_slots || (item.profile && item.profile.preferred_time_slots) || [],
+      ai_insights: item.ai_insights || null,
+      ai_powered: item.ai_powered || false
+    };
+  };
+
   const calculateOverviewStats = () => {
     if (!behavioralData || behavioralData.length === 0) return null;
     
