@@ -119,7 +119,7 @@ function App() {
         <Toaster position="top-right" />
         
         {!user ? (
-          <LoginPage onLogin={handleLogin} />
+          <LoginPageNew onLogin={handleLogin} />
         ) : (
           <>
             {/* Sidebar */}
