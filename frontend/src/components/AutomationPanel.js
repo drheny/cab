@@ -41,18 +41,37 @@ const AutomationPanel = () => {
       setLoading(true);
       const today = new Date().toISOString().split('T')[0];
       
-      // Fetch automation status, settings, optimizations, and recommendations in parallel
-      const [statusRes, settingsRes, optimizationsRes, recommendationsRes] = await Promise.all([
+      // Fetch automation status, settings, and optimizations in parallel
+      const [statusRes, settingsRes, optimizationsRes] = await Promise.all([
         axios.get(`${API_BASE_URL}/api/automation/status`),
         axios.get(`${API_BASE_URL}/api/automation/settings`),
-        axios.get(`${API_BASE_URL}/api/automation/schedule-optimization?date=${today}`),
-        axios.get(`${API_BASE_URL}/api/automation/proactive-recommendations`)
+        axios.get(`${API_BASE_URL}/api/automation/schedule-optimization?date=${today}`)
       ]);
       
       setAutomationStatus(statusRes.data);
       setAutomationSettings(settingsRes.data);
       setScheduleOptimizations(optimizationsRes.data);
-      setProactiveRecommendations(recommendationsRes.data);
+      
+      // Try to fetch AI-enhanced recommendations first, fallback to regular ones
+      try {
+        const enhancedRecsRes = await axios.get(`${API_BASE_URL}/api/automation/ai-enhanced-recommendations`);
+        
+        if (enhancedRecsRes.data && !enhancedRecsRes.data.error) {
+          setProactiveRecommendations(enhancedRecsRes.data);
+          setAiPowered(enhancedRecsRes.data.ai_powered || false);
+        } else {
+          // Fallback to regular recommendations
+          const regularRecsRes = await axios.get(`${API_BASE_URL}/api/automation/proactive-recommendations`);
+          setProactiveRecommendations(regularRecsRes.data);
+          setAiPowered(false);
+        }
+      } catch (error) {
+        console.error('Error fetching AI-enhanced recommendations, falling back to regular:', error);
+        // Fallback to regular recommendations
+        const regularRecsRes = await axios.get(`${API_BASE_URL}/api/automation/proactive-recommendations`);
+        setProactiveRecommendations(regularRecsRes.data);
+        setAiPowered(false);
+      }
       
     } catch (error) {
       console.error('Error fetching automation data:', error);
