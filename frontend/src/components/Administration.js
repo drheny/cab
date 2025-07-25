@@ -2062,6 +2062,110 @@ const Administration = ({ user }) => {
         </div>
       )}
 
+      {/* Permissions Modal */}
+      {editingPermissions && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-2xl w-full p-6 max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                🛡️ Gérer les permissions - {editingPermissions.full_name || editingPermissions.username}
+              </h3>
+              <button
+                onClick={() => {
+                  setEditingPermissions(null);
+                  setTempPermissions({});
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${
+                editingPermissions.role === 'medecin' 
+                  ? 'bg-blue-100 text-blue-800' 
+                  : 'bg-green-100 text-green-800'
+              }`}>
+                {editingPermissions.role === 'medecin' ? '👨‍⚕️ Médecin' : '👩‍💼 Secrétaire'}
+              </span>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <h4 className="font-medium text-gray-900">Permissions d'accès :</h4>
+              
+              {[
+                { key: 'dashboard', label: '🏠 Dashboard', desc: 'Accès à la page d\'accueil' },
+                { key: 'patients', label: '👥 Fiches Patients', desc: 'Voir et gérer les patients' },
+                { key: 'calendar', label: '📅 Gestion RDV', desc: 'Voir et gérer les rendez-vous' },
+                { key: 'messages', label: '💬 Messages Tel', desc: 'Accès aux messages téléphoniques' },
+                { key: 'consultation', label: '🩺 Historique Consultations', desc: 'Voir les consultations' },
+                { key: 'billing', label: '💰 Facturation', desc: 'Accès à la facturation' },
+                { key: 'ai_room', label: '🤖 IA Room', desc: 'Accès aux fonctionnalités d\'IA' },
+                { key: 'administration', label: '⚙️ Administration', desc: 'Accès à l\'administration' }
+              ].map((permission) => {
+                const currentValue = tempPermissions[permission.key] !== undefined 
+                  ? tempPermissions[permission.key] 
+                  : editingPermissions.permissions?.[permission.key] || false;
+                  
+                return (
+                  <div key={permission.key} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <div className="font-medium text-gray-900">{permission.label}</div>
+                      <div className="text-sm text-gray-500">{permission.desc}</div>
+                    </div>
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={currentValue}
+                        onChange={(e) => setTempPermissions(prev => ({
+                          ...prev,
+                          [permission.key]: e.target.checked
+                        }))}
+                        className="sr-only"
+                      />
+                      <div className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${
+                        currentValue ? 'bg-blue-600' : 'bg-gray-300'
+                      }`}>
+                        <span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${
+                          currentValue ? 'translate-x-6' : 'translate-x-1'
+                        }`} />
+                      </div>
+                    </label>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setEditingPermissions(null);
+                  setTempPermissions({});
+                }}
+                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => {
+                  // Merge current permissions with temp permissions
+                  const updatedPermissions = {
+                    ...editingPermissions.permissions,
+                    ...tempPermissions
+                  };
+                  handleUpdatePermissions(editingPermissions.id, updatedPermissions);
+                  setTempPermissions({});
+                }}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+              >
+                Sauvegarder
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Reset Database Modal */}
       {showResetModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
