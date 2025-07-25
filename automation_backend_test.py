@@ -48,7 +48,9 @@ def test_automation_endpoints():
     # Test 1: GET /api/automation/schedule-optimization
     print("\n1. Testing Schedule Optimization Analysis...")
     try:
-        response = requests.get(f"{BACKEND_URL}/api/automation/schedule-optimization", headers=headers)
+        # Add required date parameter
+        today_date = datetime.now().strftime('%Y-%m-%d')
+        response = requests.get(f"{BACKEND_URL}/api/automation/schedule-optimization?date={today_date}", headers=headers)
         success = response.status_code == 200
         data = response.json() if response.status_code == 200 else None
         
