@@ -8175,6 +8175,445 @@ async def ai_room_websocket_endpoint(websocket: WebSocket):
 
 # ==================== END AI ROOM API ====================
 
+# ==================== AUTOMATION ENGINE API ====================
+
+class ScheduleOptimization(BaseModel):
+    appointment_id: str
+    current_time: str
+    suggested_time: str
+    optimization_type: str  # "efficiency", "conflict_resolution", "wait_time_reduction"
+    confidence_score: float
+    potential_time_saved: int  # in minutes
+    reason: str
+
+class AutomationSettings(BaseModel):
+    auto_schedule_optimization: bool = True
+    auto_conflict_resolution: bool = True
+    auto_reschedule_suggestions: bool = True
+    proactive_workflow_alerts: bool = True
+    emergency_mode_threshold: int = 30  # minutes before end of day
+    max_wait_time_threshold: int = 30  # minutes
+
+class WorkflowOptimization(BaseModel):
+    optimization_id: str
+    type: str  # "schedule", "workflow", "resource"
+    title: str
+    description: str
+    impact: str  # "high", "medium", "low"
+    estimated_time_saved: int
+    implementation_difficulty: str  # "easy", "medium", "complex"
+    confidence: float
+    created_at: str
+
+class AutomationEngine:
+    def __init__(self):
+        self.settings = AutomationSettings()
+        self.optimization_history = []
+    
+    def analyze_schedule_optimization(self, date: str) -> List[ScheduleOptimization]:
+        """Analyze current schedule and suggest optimizations"""
+        optimizations = []
+        
+        # Get appointments for the date
+        appointments = list(appointments_collection.find({
+            "date": date
+        }, {"_id": 0}))
+        
+        if not appointments:
+            return optimizations
+        
+        # Sort appointments by time
+        appointments.sort(key=lambda x: x.get("heure", "09:00"))
+        
+        # Detect conflicts and suggest resolutions
+        for i, appointment in enumerate(appointments):
+            current_time = appointment.get("heure", "09:00")
+            
+            # Check for time conflicts
+            conflicts = [a for j, a in enumerate(appointments) 
+                        if j != i and a.get("heure") == current_time]
+            
+            if conflicts:
+                # Suggest rescheduling one of the conflicting appointments
+                suggested_times = self._find_available_slots(appointments, current_time)
+                if suggested_times:
+                    optimizations.append(ScheduleOptimization(
+                        appointment_id=appointment["id"],
+                        current_time=current_time,
+                        suggested_time=suggested_times[0],
+                        optimization_type="conflict_resolution",
+                        confidence_score=0.9,
+                        potential_time_saved=15,
+                        reason=f"Résolution conflit horaire à {current_time}"
+                    ))
+            
+            # Analyze wait time optimization
+            if i > 0:
+                prev_appointment = appointments[i-1]
+                prev_duration = self._predict_consultation_duration(prev_appointment["patient_id"])
+                current_appointment_time = self._time_to_minutes(current_time)
+                prev_appointment_time = self._time_to_minutes(prev_appointment.get("heure", "09:00"))
+                
+                gap = current_appointment_time - prev_appointment_time
+                if gap < prev_duration:
+                    # Suggest rescheduling to reduce wait time
+                    suggested_time = self._minutes_to_time(prev_appointment_time + prev_duration + 5)
+                    optimizations.append(ScheduleOptimization(
+                        appointment_id=appointment["id"],
+                        current_time=current_time,
+                        suggested_time=suggested_time,
+                        optimization_type="wait_time_reduction",
+                        confidence_score=0.8,
+                        potential_time_saved=max(0, prev_duration - gap),
+                        reason="Réduction temps d'attente basée sur durée consultation précédente"
+                    ))
+        
+        return optimizations
+    
+    def generate_proactive_recommendations(self) -> List[WorkflowOptimization]:
+        """Generate proactive workflow optimization recommendations"""
+        recommendations = []
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Get current appointments
+        appointments = list(appointments_collection.find({"date": today}))
+        waiting_appointments = [a for a in appointments if a.get("statut") == "attente"]
+        
+        # Recommendation 1: Queue optimization
+        if len(waiting_appointments) > 3:
+            recommendations.append(WorkflowOptimization(
+                optimization_id=str(uuid.uuid4()),
+                type="workflow",
+                title="Optimisation de la file d'attente",
+                description=f"{len(waiting_appointments)} patients en attente. Réorganisation suggérée par complexité.",
+                impact="high",
+                estimated_time_saved=15,
+                implementation_difficulty="easy",
+                confidence=0.85,
+                created_at=datetime.now().isoformat()
+            ))
+        
+        # Recommendation 2: Break scheduling
+        current_hour = datetime.now().hour
+        if 11 <= current_hour <= 12 and len(waiting_appointments) == 0:
+            recommendations.append(WorkflowOptimization(
+                optimization_id=str(uuid.uuid4()),
+                type="schedule",
+                title="Pause optimisée suggérée",
+                description="Moment idéal pour une pause - aucun patient en attente.",
+                impact="medium",
+                estimated_time_saved=10,
+                implementation_difficulty="easy",
+                confidence=0.9,
+                created_at=datetime.now().isoformat()
+            ))
+        
+        # Recommendation 3: Late day optimization
+        if current_hour >= 16:
+            remaining_appointments = [a for a in appointments 
+                                   if a.get("statut") in ["programme", "attente"]]
+            if len(remaining_appointments) > 2:
+                recommendations.append(WorkflowOptimization(
+                    optimization_id=str(uuid.uuid4()),
+                    type="schedule",
+                    title="Compression de fin de journée",
+                    description=f"{len(remaining_appointments)} RDV restants. Réduction des créneaux suggérée.",
+                    impact="high",
+                    estimated_time_saved=20,
+                    implementation_difficulty="medium",
+                    confidence=0.75,
+                    created_at=datetime.now().isoformat()
+                ))
+        
+        return recommendations
+    
+    def auto_reschedule_suggestions(self, appointment_id: str) -> Dict[str, Any]:
+        """Generate automatic rescheduling suggestions for an appointment"""
+        appointment = appointments_collection.find_one({"id": appointment_id}, {"_id": 0})
+        if not appointment:
+            return {"suggestions": [], "reason": "Appointment not found"}
+        
+        current_date = appointment.get("date")
+        current_time = appointment.get("heure")
+        
+        # Get patient behavioral data
+        patient_id = appointment["patient_id"]
+        punctuality_score = calculate_punctuality_score(patient_id)
+        
+        suggestions = []
+        
+        # If patient has low punctuality, suggest later time slots
+        if punctuality_score < 70:
+            later_times = self._find_available_slots_after(current_date, current_time)
+            for time_slot in later_times[:2]:
+                suggestions.append({
+                    "suggested_date": current_date,
+                    "suggested_time": time_slot,
+                    "reason": "Patient historiquement en retard - créneau plus tardif suggéré",
+                    "confidence": 0.8,
+                    "type": "punctuality_optimization"
+                })
+        
+        # If patient has high punctuality, suggest earlier slots for efficiency
+        if punctuality_score > 90:
+            earlier_times = self._find_available_slots_before(current_date, current_time)
+            for time_slot in earlier_times[:2]:
+                suggestions.append({
+                    "suggested_date": current_date,
+                    "suggested_time": time_slot,
+                    "reason": "Patient ponctuel - créneau plus tôt pour optimiser la journée",
+                    "confidence": 0.85,
+                    "type": "efficiency_optimization"
+                })
+        
+        return {
+            "original_appointment": {
+                "date": current_date,
+                "time": current_time
+            },
+            "suggestions": suggestions,
+            "patient_punctuality_score": punctuality_score
+        }
+    
+    def _find_available_slots(self, appointments: List[Dict], avoid_time: str) -> List[str]:
+        """Find available time slots"""
+        occupied_times = set(a.get("heure", "09:00") for a in appointments)
+        
+        # Generate potential time slots (every 15 minutes from 8:00 to 17:00)
+        available_slots = []
+        for hour in range(8, 17):
+            for minute in [0, 15, 30, 45]:
+                time_slot = f"{hour:02d}:{minute:02d}"
+                if time_slot not in occupied_times and time_slot != avoid_time:
+                    available_slots.append(time_slot)
+        
+        return available_slots[:5]  # Return first 5 available slots
+    
+    def _find_available_slots_after(self, date: str, after_time: str) -> List[str]:
+        """Find available slots after a specific time"""
+        appointments = list(appointments_collection.find({"date": date}))
+        occupied_times = set(a.get("heure", "09:00") for a in appointments)
+        
+        after_minutes = self._time_to_minutes(after_time)
+        available_slots = []
+        
+        for hour in range(8, 17):
+            for minute in [0, 15, 30, 45]:
+                time_slot = f"{hour:02d}:{minute:02d}"
+                if (self._time_to_minutes(time_slot) > after_minutes and 
+                    time_slot not in occupied_times):
+                    available_slots.append(time_slot)
+        
+        return available_slots[:3]
+    
+    def _find_available_slots_before(self, date: str, before_time: str) -> List[str]:
+        """Find available slots before a specific time"""
+        appointments = list(appointments_collection.find({"date": date}))
+        occupied_times = set(a.get("heure", "09:00") for a in appointments)
+        
+        before_minutes = self._time_to_minutes(before_time)
+        available_slots = []
+        
+        for hour in range(8, 17):
+            for minute in [0, 15, 30, 45]:
+                time_slot = f"{hour:02d}:{minute:02d}"
+                if (self._time_to_minutes(time_slot) < before_minutes and 
+                    time_slot not in occupied_times):
+                    available_slots.append(time_slot)
+        
+        return available_slots[-3:] if available_slots else []  # Return last 3 (closest to target time)
+    
+    def _predict_consultation_duration(self, patient_id: str) -> int:
+        """Predict consultation duration for a patient"""
+        consultations = list(consultations_collection.find({"patient_id": patient_id}))
+        if not consultations:
+            return 20  # Default 20 minutes
+        
+        durations = [c.get("duree", 20) for c in consultations]
+        return int(sum(durations) / len(durations))
+    
+    def _time_to_minutes(self, time_str: str) -> int:
+        """Convert time string to minutes since midnight"""
+        try:
+            hour, minute = map(int, time_str.split(':'))
+            return hour * 60 + minute
+        except:
+            return 540  # Default to 9:00 AM (540 minutes)
+    
+    def _minutes_to_time(self, minutes: int) -> str:
+        """Convert minutes since midnight to time string"""
+        hour = minutes // 60
+        minute = minutes % 60
+        return f"{hour:02d}:{minute:02d}"
+
+# Initialize automation engine
+automation_engine = AutomationEngine()
+
+@app.get("/api/automation/schedule-optimization")
+async def get_schedule_optimization(date: str = Query(..., description="Date in YYYY-MM-DD format")):
+    """Get schedule optimization suggestions for a specific date"""
+    try:
+        optimizations = automation_engine.analyze_schedule_optimization(date)
+        
+        total_time_saved = sum(opt.potential_time_saved for opt in optimizations)
+        high_confidence_count = len([opt for opt in optimizations if opt.confidence_score > 0.8])
+        
+        return {
+            "date": date,
+            "optimizations": [opt.dict() for opt in optimizations],
+            "summary": {
+                "total_optimizations": len(optimizations),
+                "total_time_saved_minutes": total_time_saved,
+                "high_confidence_count": high_confidence_count,
+                "optimization_score": min(100, (high_confidence_count / max(1, len(optimizations))) * 100)
+            },
+            "generated_at": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error analyzing schedule optimization: {str(e)}")
+
+@app.get("/api/automation/proactive-recommendations")
+async def get_proactive_recommendations():
+    """Get proactive workflow optimization recommendations"""
+    try:
+        recommendations = automation_engine.generate_proactive_recommendations()
+        
+        # Calculate summary statistics
+        high_impact_count = len([r for r in recommendations if r.impact == "high"])
+        total_time_saved = sum(r.estimated_time_saved for r in recommendations)
+        avg_confidence = sum(r.confidence for r in recommendations) / max(1, len(recommendations))
+        
+        return {
+            "recommendations": [rec.dict() for rec in recommendations],
+            "summary": {
+                "total_recommendations": len(recommendations),
+                "high_impact_count": high_impact_count,
+                "total_time_saved_minutes": total_time_saved,
+                "average_confidence": round(avg_confidence, 2),
+                "implementation_score": min(100, high_impact_count * 25)
+            },
+            "generated_at": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating proactive recommendations: {str(e)}")
+
+@app.get("/api/automation/reschedule-suggestions/{appointment_id}")
+async def get_reschedule_suggestions(appointment_id: str):
+    """Get automatic rescheduling suggestions for a specific appointment"""
+    try:
+        suggestions = automation_engine.auto_reschedule_suggestions(appointment_id)
+        
+        return {
+            "appointment_id": appointment_id,
+            **suggestions,
+            "generated_at": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating reschedule suggestions: {str(e)}")
+
+@app.post("/api/automation/apply-optimization")
+async def apply_schedule_optimization(optimization: ScheduleOptimization):
+    """Apply a schedule optimization"""
+    try:
+        # Update the appointment with the new time
+        result = appointments_collection.update_one(
+            {"id": optimization.appointment_id},
+            {
+                "$set": {
+                    "heure": optimization.suggested_time,
+                    "updated_at": datetime.now(),
+                    "optimization_applied": True,
+                    "optimization_type": optimization.optimization_type
+                }
+            }
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Appointment not found or no changes made")
+        
+        # Log the optimization
+        automation_engine.optimization_history.append({
+            "appointment_id": optimization.appointment_id,
+            "optimization_type": optimization.optimization_type,
+            "time_saved": optimization.potential_time_saved,
+            "applied_at": datetime.now().isoformat()
+        })
+        
+        return {
+            "success": True,
+            "message": f"Optimization applied successfully. Time saved: {optimization.potential_time_saved} minutes",
+            "appointment_id": optimization.appointment_id,
+            "new_time": optimization.suggested_time
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error applying optimization: {str(e)}")
+
+@app.get("/api/automation/settings")
+async def get_automation_settings():
+    """Get current automation settings"""
+    return automation_engine.settings.dict()
+
+@app.put("/api/automation/settings")
+async def update_automation_settings(settings: AutomationSettings):
+    """Update automation settings"""
+    try:
+        automation_engine.settings = settings
+        
+        return {
+            "success": True,
+            "message": "Automation settings updated successfully",
+            "settings": settings.dict()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating automation settings: {str(e)}")
+
+@app.get("/api/automation/status")
+async def get_automation_status():
+    """Get real-time automation status and metrics"""
+    try:
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Get current schedule optimizations
+        optimizations = automation_engine.analyze_schedule_optimization(today)
+        recommendations = automation_engine.generate_proactive_recommendations()
+        
+        # Calculate status metrics
+        total_optimizations_available = len(optimizations)
+        total_recommendations = len(recommendations)
+        high_priority_items = len([r for r in recommendations if r.impact == "high"])
+        
+        # Get recent automation history
+        recent_optimizations = automation_engine.optimization_history[-10:]  # Last 10
+        total_time_saved_today = sum(opt.get("time_saved", 0) for opt in recent_optimizations 
+                                   if opt.get("applied_at", "").startswith(today))
+        
+        return {
+            "automation_active": automation_engine.settings.auto_schedule_optimization,
+            "status": "active" if automation_engine.settings.auto_schedule_optimization else "paused",
+            "metrics": {
+                "optimizations_available": total_optimizations_available,
+                "recommendations_pending": total_recommendations,
+                "high_priority_items": high_priority_items,
+                "time_saved_today_minutes": total_time_saved_today,
+                "optimizations_applied_today": len([opt for opt in recent_optimizations 
+                                                  if opt.get("applied_at", "").startswith(today)])
+            },
+            "settings": automation_engine.settings.dict(),
+            "last_updated": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting automation status: {str(e)}")
+
+# ==================== END AUTOMATION ENGINE API ====================
+
 # ==================== END ADMINISTRATION API ====================
 
 # ==================== End Cash Movements API ====================
