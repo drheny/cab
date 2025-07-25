@@ -883,7 +883,6 @@ const Administration = ({ user }) => {
         <nav className="-mb-px flex space-x-8">
           {[
             { id: 'statistiques', label: '📊 Statistiques', icon: BarChart3 },
-            { id: 'rapports', label: '📈 Rapports Avancés', icon: TrendingUp },
             { id: 'donnees', label: '💾 Gestion Données', icon: Database },
             { id: 'utilisateurs', label: '👥 Gestion Utilisateurs & Droits', icon: Users },
             { id: 'systeme', label: '⚙️ Info Système', icon: Settings }
