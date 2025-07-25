@@ -317,96 +317,112 @@ const BehavioralPatternsPanel = () => {
   const renderDetailedView = () => {
     return (
       <div className="space-y-4">
-        {behavioralData.map((item, index) => (
-          <div key={index} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center space-x-3">
-                <div>
-                  <h4 className="font-medium text-gray-900">
-                    {item.patient.prenom} {item.patient.nom}
-                  </h4>
-                  <p className="text-sm text-gray-600">
-                    {item.profile.consultation_count} consultations
+        {behavioralData.map((item, index) => {
+          const patient = getPatientData(item);
+          return (
+            <div key={index} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-3">
+                  <div>
+                    <h4 className="font-medium text-gray-900">
+                      {patient.prenom} {patient.nom}
+                    </h4>
+                    <p className="text-sm text-gray-600">
+                      {patient.consultation_count} consultations
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  {getTrendIcon(patient.behavioral_trend)}
+                  {patient.ai_powered && (
+                    <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full flex items-center space-x-1">
+                      <Brain className="w-3 h-3" />
+                      <span>IA</span>
+                    </span>
+                  )}
+                  <button
+                    onClick={() => setSelectedPatient(patient)}
+                    className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                    title="Voir détails"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {patient.ai_insights ? (
+                // Display AI-generated insights
+                <div className="bg-purple-50 rounded-lg p-3 border-l-4 border-purple-500">
+                  <h5 className="font-medium text-gray-800 mb-2">Analyse IA Comportementale</h5>
+                  <p className="text-sm text-gray-700 whitespace-pre-wrap line-clamp-3">
+                    {patient.ai_insights}
                   </p>
                 </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                {getTrendIcon(item.profile.behavioral_trend)}
-                <button
-                  onClick={() => setSelectedPatient(item)}
-                  className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                  title="Voir détails"
-                >
-                  <Eye className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
+              ) : (
+                // Display traditional metrics
+                <div className="grid grid-cols-3 gap-4">
+                  {/* Punctuality */}
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-600">Ponctualité</span>
+                      <span className={`text-xs px-2 py-1 rounded ${getScoreColor(patient.punctuality_score)}`}>
+                        {patient.punctuality_score.toFixed(1)}/10
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className={`h-2 rounded-full ${getScoreBarColor(patient.punctuality_score)}`}
+                        style={{ width: `${(patient.punctuality_score / 10) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
 
-            <div className="grid grid-cols-3 gap-4">
-              {/* Punctuality */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-600">Ponctualité</span>
-                  <span className={`text-xs px-2 py-1 rounded ${getScoreColor(item.profile.punctuality_score)}`}>
-                    {item.profile.punctuality_score.toFixed(1)}/10
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className={`h-2 rounded-full ${getScoreBarColor(item.profile.punctuality_score)}`}
-                    style={{ width: `${(item.profile.punctuality_score / 10) * 100}%` }}
-                  ></div>
-                </div>
-              </div>
+                  {/* Communication */}
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-600">Communication</span>
+                      <span className={`text-xs px-2 py-1 rounded ${getScoreColor(patient.communication_score)}`}>
+                        {patient.communication_score.toFixed(1)}/10
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className={`h-2 rounded-full ${getScoreBarColor(patient.communication_score)}`}
+                        style={{ width: `${(patient.communication_score / 10) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
 
-              {/* Communication */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-600">Communication</span>
-                  <span className={`text-xs px-2 py-1 rounded ${getScoreColor(item.profile.communication_effectiveness)}`}>
-                    {item.profile.communication_effectiveness.toFixed(1)}/10
-                  </span>
+                  {/* Satisfaction */}
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-600">Satisfaction</span>
+                      <span className={`text-xs px-2 py-1 rounded ${getScoreColor(patient.satisfaction_score)}`}>
+                        {patient.satisfaction_score.toFixed(1)}/10
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className={`h-2 rounded-full ${getScoreBarColor(patient.satisfaction_score)}`}
+                        style={{ width: `${(patient.satisfaction_score / 10) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className={`h-2 rounded-full ${getScoreBarColor(item.profile.communication_effectiveness)}`}
-                    style={{ width: `${(item.profile.communication_effectiveness / 10) * 100}%` }}
-                  ></div>
-                </div>
-              </div>
+              )}
 
-              {/* Satisfaction */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-600">Satisfaction</span>
-                  <span className={`text-xs px-2 py-1 rounded ${getScoreColor(item.profile.satisfaction_score)}`}>
-                    {item.profile.satisfaction_score.toFixed(1)}/10
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className={`h-2 rounded-full ${getScoreBarColor(item.profile.satisfaction_score)}`}
-                    style={{ width: `${(item.profile.satisfaction_score / 10) * 100}%` }}
-                  ></div>
-                </div>
-              </div>
-            </div>
-
-            {/* Risk Factors */}
-            {item.profile.risk_factors && item.profile.risk_factors.length > 0 && (
-              <div className="mt-3 pt-3 border-t border-gray-100">
-                <div className="flex flex-wrap gap-2">
-                  <span className="text-xs text-gray-600">Facteurs de risque:</span>
-                  {item.profile.risk_factors.map((risk, riskIndex) => (
+              {patient.risk_factors.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-1">
+                  {patient.risk_factors.map((risk, riskIndex) => (
                     <span key={riskIndex} className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">
                       {risk.replace('_', ' ')}
                     </span>
                   ))}
                 </div>
-              </div>
-            )}
-          </div>
-        ))}
+              )}
+            </div>
+          );
+        })}
       </div>
     );
   };
