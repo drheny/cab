@@ -5171,6 +5171,24 @@ class ExternalData(BaseModel):
     regional_factors: Dict[str, float] = Field(default_factory=dict)
     last_updated: datetime = Field(default_factory=datetime.now)
 
+# Test if we can add Gemini integration
+import os
+from emergentintegrations.llm.chat import LlmChat, UserMessage
+
+# Gemini AI Service for Enhanced Medical Recommendations
+class GeminiAIService:
+    def __init__(self):
+        self.llm_chat = LlmChat()
+    
+    def get_medical_recommendation(self, patient_data, symptoms):
+        """Get AI-powered medical recommendations"""
+        try:
+            message = UserMessage(f"Patient data: {patient_data}, Symptoms: {symptoms}")
+            response = self.llm_chat.send_message(message)
+            return response
+        except Exception as e:
+            return f"Error getting recommendation: {str(e)}"
+
 # Data enrichment classes
 class TemporalDataCollector:
     """Collecte automatique des patterns temporels"""
