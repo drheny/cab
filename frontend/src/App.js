@@ -4,7 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import axios from 'axios';
 
 // Components
-import LoginPage from './components/LoginPage';
+import LoginPageNew from './components/LoginPageNew';
 import Dashboard from './components/Dashboard';
 import PatientsList from './components/PatientsList';
 import Calendar from './components/Calendar';
