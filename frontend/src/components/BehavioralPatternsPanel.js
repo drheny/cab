@@ -33,7 +33,7 @@ const BehavioralPatternsPanel = () => {
       
       // Get demo patients and their behavioral profiles
       const patientsRes = await axios.get(`${API_BASE_URL}/api/patients`);
-      const patients = patientsRes.data;
+      const patients = patientsRes.data.patients || [];
       
       // Fetch behavioral profiles for each patient
       const behavioralProfiles = await Promise.all(
