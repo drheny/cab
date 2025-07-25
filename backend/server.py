@@ -8650,15 +8650,33 @@ async def get_ai_patient_insights(patient_id: str):
             raise HTTPException(status_code=404, detail="Patient non trouvé")
         
         # Get behavioral data
-        appointments = list(appointments_collection.find({"patient_id": patient_id}))
+        appointments = list(appointments_collection.find({"patient_id": patient_id}, {"_id": 0}))
+        
+        # Clean appointments data for JSON serialization
+        clean_appointments = []
+        for apt in appointments[-3:] if appointments else []:
+            clean_apt = {}
+            for k, v in apt.items():
+                if isinstance(v, datetime):
+                    clean_apt[k] = v.isoformat()
+                else:
+                    clean_apt[k] = v
+            clean_appointments.append(clean_apt)
+        
         behavioral_data = {
             "total_appointments": len(appointments),
-            "recent_appointments": appointments[-3:] if appointments else [],
+            "recent_appointments": clean_appointments,
             "punctuality_pattern": "Données historiques disponibles" if appointments else "Nouveau patient"
         }
         
-        # Remove MongoDB _id fields
-        patient_clean = {k: v for k, v in patient.items() if k != "_id"}
+        # Remove MongoDB _id fields and clean datetime objects
+        patient_clean = {}
+        for k, v in patient.items():
+            if k != "_id":
+                if isinstance(v, datetime):
+                    patient_clean[k] = v.isoformat()
+                else:
+                    patient_clean[k] = v
         
         # Get AI insights
         ai_insights = await gemini_service.enhance_patient_insights(
