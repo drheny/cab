@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Stethoscope, UserCog } from 'lucide-react';
 
-const LoginPage = () => {
+const LoginPage = ({ onLogin }) => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -21,10 +21,17 @@ const LoginPage = () => {
           : ['appointments', 'patients', 'messages', 'ai_room']
       };
 
+      const token = 'auto-login-token';
+
       // Store user data in localStorage
-      localStorage.setItem('token', 'auto-login-token');
+      localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(userData));
       localStorage.setItem('userRole', role);
+
+      // Call the onLogin function to update App.js state
+      if (onLogin) {
+        onLogin(userData, token);
+      }
 
       // Navigate to dashboard
       navigate('/dashboard');
