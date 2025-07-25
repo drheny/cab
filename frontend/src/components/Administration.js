@@ -148,6 +148,10 @@ const Administration = ({ user }) => {
     startDate: '',
     endDate: ''
   });
+  const [customDateRange, setCustomDateRange] = useState({
+    start: '',
+    end: ''
+  });
   const [selectedMetrics, setSelectedMetrics] = useState({
     overview: true,
     financial: true,
