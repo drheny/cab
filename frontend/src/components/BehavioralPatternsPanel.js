@@ -274,7 +274,6 @@ const BehavioralPatternsPanel = () => {
                     </div>
                   );
                 })}
-            </div>}
             </div>
           </div>
 
