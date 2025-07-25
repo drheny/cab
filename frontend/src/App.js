@@ -113,45 +113,48 @@ function App() {
     );
   }
 
-  if (!user) {
-    return <LoginPage onLogin={handleLogin} />;
-  }
-
   return (
     <Router>
       <div className="min-h-screen bg-gray-50">
         <Toaster position="top-right" />
         
-        {/* Sidebar */}
-        <Sidebar 
-          user={user} 
-          isOpen={sidebarOpen} 
-          onClose={() => setSidebarOpen(false)}
-          phoneMessagesCount={phoneMessagesCount}
-        />
-        
-        {/* Main Content */}
-        <div className="responsive-main-content">
-          <Header 
-            user={user} 
-            onLogout={handleLogout} 
-            onToggleSidebar={toggleSidebar}
-          />
-          
-          <main className="responsive-padding max-w-7xl mx-auto">
-            <Routes>
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/dashboard" element={<Dashboard user={user} />} />
-              <Route path="/patients" element={<PatientsList user={user} />} />
-              <Route path="/calendar" element={<Calendar user={user} />} />
-              <Route path="/ai-room" element={<AIRoom user={user} />} />
-              <Route path="/messages" element={<Messages user={user} />} />
-              <Route path="/consultation" element={<Consultation user={user} />} />
-              <Route path="/billing" element={<Billing user={user} />} />
-              <Route path="/administration" element={<Administration user={user} />} />
-            </Routes>
-          </main>
-        </div>
+        {!user ? (
+          <LoginPage onLogin={handleLogin} />
+        ) : (
+          <>
+            {/* Sidebar */}
+            <Sidebar 
+              user={user} 
+              isOpen={sidebarOpen} 
+              onClose={() => setSidebarOpen(false)}
+              phoneMessagesCount={phoneMessagesCount}
+            />
+            
+            {/* Main Content */}
+            <div className="responsive-main-content">
+              <Header 
+                user={user} 
+                onLogout={handleLogout} 
+                onToggleSidebar={toggleSidebar}
+              />
+              
+              <main className="responsive-padding max-w-7xl mx-auto">
+                <Routes>
+                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                  <Route path="/login" element={<Navigate to="/dashboard" replace />} />
+                  <Route path="/dashboard" element={<Dashboard user={user} />} />
+                  <Route path="/patients" element={<PatientsList user={user} />} />
+                  <Route path="/calendar" element={<Calendar user={user} />} />
+                  <Route path="/ai-room" element={<AIRoom user={user} />} />
+                  <Route path="/messages" element={<Messages user={user} />} />
+                  <Route path="/consultation" element={<Consultation user={user} />} />
+                  <Route path="/billing" element={<Billing user={user} />} />
+                  <Route path="/administration" element={<Administration user={user} />} />
+                </Routes>
+              </main>
+            </div>
+          </>
+        )}
       </div>
     </Router>
   );
