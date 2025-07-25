@@ -4906,6 +4906,11 @@ async def get_advanced_reports(
         else:
             raise HTTPException(status_code=400, detail="Invalid period_type. Use: monthly, semester, annual, custom")
         
+        # Get appointments for the period (needed for Gemini enrichment)
+        appointments = list(appointments_collection.find({
+            "date": {"$gte": start_date, "$lte": end_date}
+        }))
+        
         # Calculate advanced statistics
         advanced_stats = await calculate_advanced_statistics(start_date, end_date)
         
