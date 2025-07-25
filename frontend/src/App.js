@@ -27,48 +27,8 @@ function App() {
   const [phoneMessagesCount, setPhoneMessagesCount] = useState(0);
 
   useEffect(() => {
-    // AUTO-LOGIN AS DOCTOR - BYPASS AUTHENTICATION
-    const autoLoginAsDoctor = () => {
-      const doctorUser = {
-        id: 'auto-doctor-id',
-        username: 'medecin',
-        email: '',
-        full_name: 'Dr Heni Dridi',
-        role: 'medecin',
-        permissions: {
-          dashboard: true,
-          patients: true,
-          calendar: true,
-          messages: true,
-          billing: true,
-          consultation: true,
-          administration: true,
-          create_appointment: true,
-          edit_appointment: true,
-          delete_appointment: true,
-          view_payments: true,
-          edit_payments: true,
-          delete_payments: true,
-          export_data: true,
-          reset_data: true,
-          manage_users: true,
-          consultation_read_only: false
-        },
-        last_login: new Date().toISOString()
-      };
-      
-      // Set mock token for API calls
-      const mockToken = 'auto-login-token';
-      localStorage.setItem('auth_token', mockToken);
-      localStorage.setItem('user', JSON.stringify(doctorUser));
-      axios.defaults.headers.common['Authorization'] = `Bearer ${mockToken}`;
-      
-      setUser(doctorUser);
-      console.log('🚀 AUTO-LOGIN: Logged in as doctor');
-    };
-
-    // Check if user is already logged in or auto-login
-    const token = localStorage.getItem('auth_token');
+    // Check if user is already logged in (restore session)
+    const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
     const savedUser = localStorage.getItem('user');
     
     if (token && savedUser) {
@@ -79,11 +39,12 @@ function App() {
         console.log('🔄 RESTORED: Previous login session');
       } catch (error) {
         console.error('Error parsing saved user data:', error);
-        autoLoginAsDoctor();
+        // Clear invalid data
+        localStorage.removeItem('token');
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('userRole');
       }
-    } else {
-      // Auto-login as doctor
-      autoLoginAsDoctor();
     }
     
     setLoading(false);
