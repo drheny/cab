@@ -1317,9 +1317,9 @@ const Administration = ({ user }) => {
                               >
                                 <Shield className="w-4 h-4" />
                               </button>
-                              {user.id !== user?.id && ( // Don't allow deleting self
+                              {user.username !== user?.username && ( // Don't allow deleting current user
                                 <button
-                                  onClick={() => handleDeleteUser(user.id)}
+                                  onClick={() => handleDeleteUser(user.id, user.full_name || user.username)}
                                   className="text-red-600 hover:text-red-900 p-1 rounded"
                                   title="Supprimer l'utilisateur"
                                 >
