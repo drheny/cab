@@ -12,6 +12,7 @@ import json
 import asyncio
 import bcrypt
 import jwt
+from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 # Load environment variables
 load_dotenv()
