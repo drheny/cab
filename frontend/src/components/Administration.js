@@ -1130,8 +1130,6 @@ const Administration = ({ user }) => {
           )}
 
       {activeTab === 'donnees' && (
-
-      {activeTab === 'donnees' && (
         <div className="space-y-6">
           {/* Data Management */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
