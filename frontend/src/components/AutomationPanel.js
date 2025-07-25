@@ -24,6 +24,7 @@ const AutomationPanel = () => {
   const [proactiveRecommendations, setProactiveRecommendations] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
+  const [aiPowered, setAiPowered] = useState(false);
   
   const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
