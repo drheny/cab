@@ -145,30 +145,29 @@ const BehavioralPatternsPanel = () => {
     
     const totalPatients = behavioralData.length;
     
-    // Handle both old and new data structures
     const avgPunctuality = behavioralData.reduce((sum, item) => {
-      const score = item.punctuality_score || (item.profile && item.profile.punctuality_score) || 0;
-      return sum + score;
+      const patient = getPatientData(item);
+      return sum + patient.punctuality_score;
     }, 0) / totalPatients;
     
     const avgCommunication = behavioralData.reduce((sum, item) => {
-      const score = item.communication_score || (item.profile && item.profile.communication_effectiveness) || 0;
-      return sum + score;
+      const patient = getPatientData(item);
+      return sum + patient.communication_score;
     }, 0) / totalPatients;
     
     const avgSatisfaction = behavioralData.reduce((sum, item) => {
-      const score = item.satisfaction_score || (item.profile && item.profile.satisfaction_score) || 0;
-      return sum + score;
+      const patient = getPatientData(item);
+      return sum + patient.satisfaction_score;
     }, 0) / totalPatients;
     
     const reliablePatients = behavioralData.filter(item => {
-      const reliability = item.reliability_score || (item.profile && item.profile.reliability_score) || 0;
-      return reliability >= 0.8;
+      const patient = getPatientData(item);
+      return patient.reliability_score >= 0.8;
     }).length;
     
     const atRiskPatients = behavioralData.filter(item => {
-      const riskFactors = item.risk_factors || (item.profile && item.profile.risk_factors) || [];
-      return riskFactors.length > 0;
+      const patient = getPatientData(item);
+      return patient.risk_factors.length > 0;
     }).length;
     
     return {
