@@ -799,7 +799,10 @@ const Messages = ({ user }) => {
                           <div className="flex items-center mb-2">
                             <FileText className="w-4 h-4 text-blue-600 mr-2" />
                             <span className="font-medium text-blue-800">
-                              Votre réponse à la secrétaire:
+                              {message.direction === 'secretary_to_doctor' 
+                                ? 'Votre réponse à la secrétaire:'
+                                : 'Votre réponse au médecin:'
+                              }
                             </span>
                           </div>
                           <textarea
