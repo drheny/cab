@@ -24728,6 +24728,366 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
         self.assertIn("patients", data)
         self.assertEqual(len(data["patients"]), 0)
     
+    # ========== BIDIRECTIONAL PHONE MESSAGES TESTS ==========
+    
+    def test_bidirectional_phone_messages_get_filtering(self):
+        """Test GET /api/phone-messages with new bidirectional filtering parameters (direction, recipient_role)"""
+        # Test direction filter - secretary_to_doctor
+        response = requests.get(f"{self.base_url}/api/phone-messages?direction=secretary_to_doctor")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("phone_messages", data)
+        self.assertIn("total", data)
+        
+        # Verify all messages have correct direction
+        for message in data["phone_messages"]:
+            self.assertEqual(message["direction"], "secretary_to_doctor")
+        
+        # Test direction filter - doctor_to_secretary
+        response = requests.get(f"{self.base_url}/api/phone-messages?direction=doctor_to_secretary")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("phone_messages", data)
+        
+        # Test recipient_role filter - medecin
+        response = requests.get(f"{self.base_url}/api/phone-messages?recipient_role=medecin")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("phone_messages", data)
+        
+        # Verify all messages have correct recipient_role
+        for message in data["phone_messages"]:
+            self.assertEqual(message["recipient_role"], "medecin")
+        
+        # Test recipient_role filter - secretaire
+        response = requests.get(f"{self.base_url}/api/phone-messages?recipient_role=secretaire")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("phone_messages", data)
+        
+        # Test combined filters
+        response = requests.get(f"{self.base_url}/api/phone-messages?direction=secretary_to_doctor&recipient_role=medecin")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("phone_messages", data)
+        
+        # Verify combined filter results
+        for message in data["phone_messages"]:
+            self.assertEqual(message["direction"], "secretary_to_doctor")
+            self.assertEqual(message["recipient_role"], "medecin")
+    
+    def test_bidirectional_phone_messages_create_secretary_to_doctor(self):
+        """Test POST /api/phone-messages for secretary-to-doctor messages (requires patient_id)"""
+        # Get a patient for testing
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for testing")
+        
+        patient_id = patients[0]["id"]
+        today = datetime.now().strftime("%Y-%m-%d")
+        current_time = datetime.now().strftime("%H:%M")
+        
+        # Test secretary-to-doctor message creation
+        message_data = {
+            "patient_id": patient_id,
+            "message_content": "Patient demande des informations sur les résultats d'analyse",
+            "priority": "urgent",
+            "call_date": today,
+            "call_time": current_time,
+            "direction": "secretary_to_doctor",
+            "recipient_role": "medecin"
+        }
+        
+        response = requests.post(f"{self.base_url}/api/phone-messages", json=message_data)
+        self.assertEqual(response.status_code, 200)
+        create_data = response.json()
+        self.assertIn("message", create_data)
+        self.assertIn("message_id", create_data)
+        message_id = create_data["message_id"]
+        
+        # Verify the message was created with correct fields
+        response = requests.get(f"{self.base_url}/api/phone-messages")
+        self.assertEqual(response.status_code, 200)
+        messages_data = response.json()
+        messages = messages_data["phone_messages"]
+        
+        # Find our created message
+        created_message = None
+        for msg in messages:
+            if msg["id"] == message_id:
+                created_message = msg
+                break
+        
+        self.assertIsNotNone(created_message, "Created phone message not found")
+        self.assertEqual(created_message["patient_id"], patient_id)
+        self.assertEqual(created_message["direction"], "secretary_to_doctor")
+        self.assertEqual(created_message["recipient_role"], "medecin")
+        self.assertEqual(created_message["created_by"], "Secrétaire")
+        self.assertEqual(created_message["priority"], "urgent")
+        self.assertEqual(created_message["status"], "nouveau")
+        self.assertIn("patient_name", created_message)
+        self.assertTrue(len(created_message["patient_name"]) > 0)
+        
+        # Clean up
+        requests.delete(f"{self.base_url}/api/phone-messages/{message_id}")
+        
+        return message_id
+    
+    def test_bidirectional_phone_messages_create_doctor_to_secretary(self):
+        """Test POST /api/phone-messages for doctor-to-secretary messages (patient_id optional)"""
+        today = datetime.now().strftime("%Y-%m-%d")
+        current_time = datetime.now().strftime("%H:%M")
+        
+        # Test doctor-to-secretary message creation without patient_id
+        message_data = {
+            "message_content": "Rappeler le laboratoire pour les résultats de Mme Dupont",
+            "priority": "normal",
+            "call_date": today,
+            "call_time": current_time,
+            "direction": "doctor_to_secretary",
+            "recipient_role": "secretaire"
+        }
+        
+        response = requests.post(f"{self.base_url}/api/phone-messages", json=message_data)
+        self.assertEqual(response.status_code, 200)
+        create_data = response.json()
+        self.assertIn("message", create_data)
+        self.assertIn("message_id", create_data)
+        message_id = create_data["message_id"]
+        
+        # Verify the message was created with correct fields
+        response = requests.get(f"{self.base_url}/api/phone-messages")
+        self.assertEqual(response.status_code, 200)
+        messages_data = response.json()
+        messages = messages_data["phone_messages"]
+        
+        # Find our created message
+        created_message = None
+        for msg in messages:
+            if msg["id"] == message_id:
+                created_message = msg
+                break
+        
+        self.assertIsNotNone(created_message, "Created phone message not found")
+        self.assertEqual(created_message["patient_id"], "")  # Should be empty for doctor-to-secretary
+        self.assertEqual(created_message["patient_name"], "")  # Should be empty for doctor-to-secretary
+        self.assertEqual(created_message["direction"], "doctor_to_secretary")
+        self.assertEqual(created_message["recipient_role"], "secretaire")
+        self.assertEqual(created_message["created_by"], "Dr Heni Dridi")
+        self.assertEqual(created_message["priority"], "normal")
+        self.assertEqual(created_message["status"], "nouveau")
+        
+        # Clean up
+        requests.delete(f"{self.base_url}/api/phone-messages/{message_id}")
+        
+        return message_id
+    
+    def test_bidirectional_phone_messages_create_validation(self):
+        """Test direction field validation and missing patient_id for secretary-to-doctor messages"""
+        today = datetime.now().strftime("%Y-%m-%d")
+        current_time = datetime.now().strftime("%H:%M")
+        
+        # Test invalid direction
+        message_data = {
+            "message_content": "Test message",
+            "priority": "normal",
+            "call_date": today,
+            "call_time": current_time,
+            "direction": "invalid_direction",
+            "recipient_role": "medecin"
+        }
+        
+        response = requests.post(f"{self.base_url}/api/phone-messages", json=message_data)
+        self.assertEqual(response.status_code, 400)
+        error_data = response.json()
+        self.assertIn("detail", error_data)
+        self.assertIn("Invalid direction", error_data["detail"])
+        
+        # Test missing patient_id for secretary-to-doctor message
+        message_data = {
+            "message_content": "Test message without patient_id",
+            "priority": "normal",
+            "call_date": today,
+            "call_time": current_time,
+            "direction": "secretary_to_doctor",
+            "recipient_role": "medecin"
+            # patient_id is missing
+        }
+        
+        response = requests.post(f"{self.base_url}/api/phone-messages", json=message_data)
+        self.assertEqual(response.status_code, 400)
+        error_data = response.json()
+        self.assertIn("detail", error_data)
+        self.assertIn("Patient ID is required for secretary-to-doctor messages", error_data["detail"])
+    
+    def test_bidirectional_phone_messages_response_handling(self):
+        """Test PUT /api/phone-messages/{message_id}/response for both directions"""
+        # Get a patient for secretary-to-doctor message
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for testing")
+        
+        patient_id = patients[0]["id"]
+        today = datetime.now().strftime("%Y-%m-%d")
+        current_time = datetime.now().strftime("%H:%M")
+        
+        created_message_ids = []
+        
+        try:
+            # Test 1: Secretary-to-doctor message response (doctor responds)
+            message_data = {
+                "patient_id": patient_id,
+                "message_content": "Patient demande des informations sur les résultats",
+                "priority": "urgent",
+                "call_date": today,
+                "call_time": current_time,
+                "direction": "secretary_to_doctor",
+                "recipient_role": "medecin"
+            }
+            
+            response = requests.post(f"{self.base_url}/api/phone-messages", json=message_data)
+            self.assertEqual(response.status_code, 200)
+            message_id_1 = response.json()["message_id"]
+            created_message_ids.append(message_id_1)
+            
+            # Doctor responds to secretary's message
+            response_data = {
+                "response_content": "Les résultats sont normaux. Informer le patient qu'il peut venir récupérer l'ordonnance."
+            }
+            
+            response = requests.put(f"{self.base_url}/api/phone-messages/{message_id_1}/response", json=response_data)
+            self.assertEqual(response.status_code, 200)
+            
+            # Verify response was added and status changed
+            response = requests.get(f"{self.base_url}/api/phone-messages")
+            self.assertEqual(response.status_code, 200)
+            messages = response.json()["phone_messages"]
+            
+            responded_message = None
+            for msg in messages:
+                if msg["id"] == message_id_1:
+                    responded_message = msg
+                    break
+            
+            self.assertIsNotNone(responded_message)
+            self.assertEqual(responded_message["status"], "traité")
+            self.assertEqual(responded_message["response_content"], "Les résultats sont normaux. Informer le patient qu'il peut venir récupérer l'ordonnance.")
+            self.assertEqual(responded_message["responded_by"], "Dr Heni Dridi")
+            
+            # Test 2: Doctor-to-secretary message response (secretary responds)
+            message_data = {
+                "message_content": "Rappeler le laboratoire pour les résultats de Mme Martin",
+                "priority": "normal",
+                "call_date": today,
+                "call_time": current_time,
+                "direction": "doctor_to_secretary",
+                "recipient_role": "secretaire"
+            }
+            
+            response = requests.post(f"{self.base_url}/api/phone-messages", json=message_data)
+            self.assertEqual(response.status_code, 200)
+            message_id_2 = response.json()["message_id"]
+            created_message_ids.append(message_id_2)
+            
+            # Secretary responds to doctor's message
+            response_data = {
+                "response_content": "Laboratoire contacté. Les résultats seront prêts demain matin. J'ai pris rendez-vous pour Mme Martin."
+            }
+            
+            response = requests.put(f"{self.base_url}/api/phone-messages/{message_id_2}/response", json=response_data)
+            self.assertEqual(response.status_code, 200)
+            
+            # Verify response was added and status changed
+            response = requests.get(f"{self.base_url}/api/phone-messages")
+            self.assertEqual(response.status_code, 200)
+            messages = response.json()["phone_messages"]
+            
+            responded_message = None
+            for msg in messages:
+                if msg["id"] == message_id_2:
+                    responded_message = msg
+                    break
+            
+            self.assertIsNotNone(responded_message)
+            self.assertEqual(responded_message["status"], "traité")
+            self.assertEqual(responded_message["response_content"], "Laboratoire contacté. Les résultats seront prêts demain matin. J'ai pris rendez-vous pour Mme Martin.")
+            self.assertEqual(responded_message["responded_by"], "Secrétaire")
+            
+        finally:
+            # Clean up all created messages
+            for message_id in created_message_ids:
+                requests.delete(f"{self.base_url}/api/phone-messages/{message_id}")
+    
+    def test_bidirectional_phone_messages_websocket_notifications(self):
+        """Test WebSocket notifications for bidirectional messages"""
+        # Note: This is a basic test structure for WebSocket functionality
+        # In a real implementation, you would need to establish WebSocket connections
+        # and verify that notifications are sent correctly for both directions
+        
+        # Get a patient for testing
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for testing")
+        
+        patient_id = patients[0]["id"]
+        today = datetime.now().strftime("%Y-%m-%d")
+        current_time = datetime.now().strftime("%H:%M")
+        
+        created_message_ids = []
+        
+        try:
+            # Test secretary-to-doctor message creation (should trigger WebSocket notification)
+            message_data = {
+                "patient_id": patient_id,
+                "message_content": "Message urgent du patient",
+                "priority": "urgent",
+                "call_date": today,
+                "call_time": current_time,
+                "direction": "secretary_to_doctor",
+                "recipient_role": "medecin"
+            }
+            
+            response = requests.post(f"{self.base_url}/api/phone-messages", json=message_data)
+            self.assertEqual(response.status_code, 200)
+            message_id_1 = response.json()["message_id"]
+            created_message_ids.append(message_id_1)
+            
+            # Test doctor-to-secretary message creation (should trigger WebSocket notification)
+            message_data = {
+                "message_content": "Tâche administrative urgente",
+                "priority": "urgent",
+                "call_date": today,
+                "call_time": current_time,
+                "direction": "doctor_to_secretary",
+                "recipient_role": "secretaire"
+            }
+            
+            response = requests.post(f"{self.base_url}/api/phone-messages", json=message_data)
+            self.assertEqual(response.status_code, 200)
+            message_id_2 = response.json()["message_id"]
+            created_message_ids.append(message_id_2)
+            
+            # Verify messages were created successfully (WebSocket notifications would be tested separately)
+            response = requests.get(f"{self.base_url}/api/phone-messages")
+            self.assertEqual(response.status_code, 200)
+            messages = response.json()["phone_messages"]
+            
+            # Verify both messages exist
+            message_ids_found = [msg["id"] for msg in messages]
+            self.assertIn(message_id_1, message_ids_found)
+            self.assertIn(message_id_2, message_ids_found)
+            
+        finally:
+            # Clean up all created messages
+            for message_id in created_message_ids:
+                requests.delete(f"{self.base_url}/api/phone-messages/{message_id}")
+    
     def test_phone_messages_workflow_complete(self):
         """Test complete phone messages workflow: create → view → respond → statistics → delete"""
         # Get a patient for testing
