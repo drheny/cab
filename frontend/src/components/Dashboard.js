@@ -769,16 +769,7 @@ const Dashboard = ({ user }) => {
               <div className="text-secondary-600">→</div>
             </button>
             
-            <button 
-              onClick={handlePhoneReminders}
-              className="w-full flex items-center justify-between p-2 sm:p-3 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
-            >
-              <div className="flex items-center space-x-2 sm:space-x-3">
-                <Phone className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
-                <span className="font-medium text-green-900 responsive-text">Rappels téléphoniques</span>
-              </div>
-              <div className="text-green-600">→</div>
-            </button>
+
           </div>
         </div>
       </div>
