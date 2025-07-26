@@ -474,13 +474,15 @@ const PatientsListComponent = ({ user }) => {
                 href={patient.lien_whatsapp}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 bg-green-500 hover:bg-green-600 text-white text-sm py-2 px-3 rounded-lg flex items-center justify-center space-x-1 transition-colors"
+                className="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors"
+                title="WhatsApp"
               >
                 <MessageCircle className="w-4 h-4" />
-                <span>WhatsApp</span>
               </a>
             ) : (
-              <span className="flex-1 text-center text-sm text-gray-400 py-2">Pas de WhatsApp</span>
+              <span className="p-2 text-gray-400">
+                <MessageCircle className="w-4 h-4" />
+              </span>
             )}
           </div>
         </div>
