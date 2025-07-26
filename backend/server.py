@@ -163,12 +163,21 @@ class Consultation(BaseModel):
     taille: Optional[float] = None
     pc: Optional[float] = None  # périmètre crânien
     temperature: Optional[float] = None
-    observation_medicale: Optional[str] = ""  # Changed from observations
-    traitement: Optional[str] = ""
-    bilans: Optional[str] = ""  # Changed from bilan
+    # Nouveaux champs simplifiés
+    diagnostic: Optional[str] = ""
+    observation_clinique: Optional[str] = ""
+    # Anciens champs pour compatibilité
+    observation_medicale: Optional[str] = ""  # Deprecated, use observation_clinique
+    traitement: Optional[str] = ""  # Deprecated, use diagnostic
+    bilans: Optional[str] = ""  # Kept for compatibility
     notes: Optional[str] = ""
     relance_telephonique: Optional[bool] = False
-    date_relance: Optional[str] = None  # Changed from relance_date
+    date_relance: Optional[str] = None
+    # Rappel vaccin
+    rappel_vaccin: Optional[bool] = False
+    nom_vaccin: Optional[str] = ""
+    date_vaccin: Optional[str] = ""
+    rappel_whatsapp_vaccin: Optional[bool] = False
     created_at: datetime = Field(default_factory=datetime.now)
 
 class Payment(BaseModel):
