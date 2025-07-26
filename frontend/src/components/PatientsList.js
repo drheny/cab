@@ -152,11 +152,15 @@ const PatientsListComponent = ({ user }) => {
   const fetchPatients = useCallback(async (page = 1, search = '') => {
     try {
       setSearchLoading(Boolean(search));
+      
+      // Format date search if needed
+      const formattedSearch = formatDateForSearch(search);
+      
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/patients`, {
         params: {
           page,
           limit: 10,
-          search: search || undefined
+          search: formattedSearch || undefined
         }
       });
       
