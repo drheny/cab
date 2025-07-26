@@ -511,7 +511,7 @@ const Messages = ({ user }) => {
         </div>
 
         {/* Right Column - Messages List */}
-        <div className={user.role === 'secretaire' ? 'lg:col-span-2' : 'lg:col-span-3'}>
+        <div className="lg:col-span-2">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200">
             {/* Messages Header with Filters */}
             <div className="px-6 py-4 border-b border-gray-200">
@@ -521,6 +521,17 @@ const Messages = ({ user }) => {
                 </h2>
                 
                 <div className="flex space-x-3">
+                  {/* Direction Filter */}
+                  <select
+                    value={directionFilter}
+                    onChange={(e) => setDirectionFilter(e.target.value)}
+                    className="px-3 py-1 border border-gray-300 rounded-lg text-sm"
+                  >
+                    <option value="">Toutes directions</option>
+                    <option value="secretary_to_doctor">Secrétaire → Médecin</option>
+                    <option value="doctor_to_secretary">Médecin → Secrétaire</option>
+                  </select>
+                  
                   {/* Status Filter */}
                   <select
                     value={statusFilter}
