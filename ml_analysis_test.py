@@ -364,13 +364,14 @@ class MLAnalysisTest(unittest.TestCase):
         data = response.json()
         
         # Step 1: Verify all main sections exist
-        required_sections = ["top_patients", "predictions", "seasonality", "gemini_enrichment"]
+        required_sections = ["advanced_statistics", "predictions", "seasonality", "gemini_enrichment"]
         for section in required_sections:
             self.assertIn(section, data, f"Required section '{section}' missing from response")
             print(f"✅ Section '{section}' present")
         
         # Step 2: Test data flow coherence
-        top_patients = data["top_patients"]
+        advanced_stats = data["advanced_statistics"]
+        top_patients = advanced_stats["top_patients"]
         predictions = data["predictions"]
         seasonality = data["seasonality"]
         gemini_enrichment = data["gemini_enrichment"]
