@@ -56,6 +56,7 @@ const Messages = ({ user }) => {
       const params = new URLSearchParams();
       if (statusFilter) params.append('status', statusFilter);
       if (priorityFilter) params.append('priority', priorityFilter);
+      if (directionFilter) params.append('direction', directionFilter);
       
       const response = await axios.get(`/api/phone-messages?${params}`);
       setPhoneMessages(response.data.phone_messages || []);
