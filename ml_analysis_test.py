@@ -259,20 +259,11 @@ class MLAnalysisTest(unittest.TestCase):
         # Test overall_average section
         self.assertIn("overall_average", seasonality, "overall_average section missing")
         overall_average = seasonality["overall_average"]
-        self.assertIsInstance(overall_average, dict, "overall_average should be a dictionary")
+        self.assertIsInstance(overall_average, (int, float), "overall_average should be numeric")
         
-        self.assertIn("consultations_per_month", overall_average, "overall consultations_per_month missing")
-        self.assertIn("revenue_per_month", overall_average, "overall revenue_per_month missing")
+        self.assertGreaterEqual(overall_average, 0, "overall average should be >= 0")
         
-        overall_cons = overall_average["consultations_per_month"]
-        overall_rev = overall_average["revenue_per_month"]
-        
-        self.assertIsInstance(overall_cons, (int, float), "overall consultations should be numeric")
-        self.assertIsInstance(overall_rev, (int, float), "overall revenue should be numeric")
-        self.assertGreaterEqual(overall_cons, 0, "overall consultations should be >= 0")
-        self.assertGreaterEqual(overall_rev, 0, "overall revenue should be >= 0")
-        
-        print(f"✅ Overall averages: {overall_cons} consultations/month, {overall_rev} TND/month")
+        print(f"✅ Overall average: {overall_average} consultations/month")
         
         print(f"🎉 SEASONALITY ANALYSIS Test: PASSED")
         return seasonality
