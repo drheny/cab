@@ -704,7 +704,10 @@ const Messages = ({ user }) => {
                               <div className="flex items-center mb-1">
                                 <User className="w-4 h-4 text-green-600 mr-1" />
                                 <span className="text-sm font-medium text-green-800">
-                                  Réponse du médecin:
+                                  {message.direction === 'secretary_to_doctor' 
+                                    ? 'Réponse du médecin:'
+                                    : 'Réponse de la secrétaire:'
+                                  }
                                 </span>
                               </div>
                               <p className="text-sm text-green-700">
@@ -715,7 +718,7 @@ const Messages = ({ user }) => {
 
                           {/* Time and Date */}
                           <div className="mt-2 text-xs text-gray-500">
-                            Appel le {new Date(message.call_date).toLocaleDateString('fr-FR')} à {message.call_time}
+                            {message.direction === 'secretary_to_doctor' ? 'Appel' : 'Message'} le {new Date(message.call_date).toLocaleDateString('fr-FR')} à {message.call_time}
                             {message.responded_by && (
                               <span className="ml-2">
                                 • Répondu par {message.responded_by}
