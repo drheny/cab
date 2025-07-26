@@ -369,12 +369,21 @@ const Calendar = ({ user }) => {
           taille: '',
           pc: '',
           temperature: '',
+          // Nouveaux champs simplifiés
+          diagnostic: '',
+          observation_clinique: '',
+          // Anciens champs pour compatibilité
           observation_medicale: '',
           traitement: '',
           bilans: '',
           type_rdv: appointment.type_rdv || 'visite',
           motif: appointment.motif || '',
-          notes: appointment.notes || ''
+          notes: appointment.notes || '',
+          // Rappel vaccin
+          rappel_vaccin: false,
+          nom_vaccin: '',
+          date_vaccin: '',
+          rappel_whatsapp_vaccin: false
         };
         setConsultationDataMap(prev => new Map(prev).set(appointmentId, initialData));
       }
