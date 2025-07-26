@@ -812,18 +812,18 @@ const Dashboard = ({ user }) => {
                   >
                     {/* Reply indicator */}
                     {message.reply_to && (
-                      <div className={`text-xs mb-2 p-2 rounded border-l-2 ${
+                      <div className={`text-xs mb-3 p-3 rounded-xl border-l-3 ${
                         message.sender_type === user.role 
-                          ? 'bg-white bg-opacity-10 border-white border-opacity-30 text-white text-opacity-80'
-                          : 'bg-gray-50 border-gray-300 text-gray-600'
+                          ? 'bg-white bg-opacity-60 border-indigo-300 text-slate-600'
+                          : 'bg-white bg-opacity-80 border-rose-300 text-slate-600'
                       }`}>
-                        <div className="font-medium">↳ Réponse à</div>
-                        <div className="italic">{message.reply_content.substring(0, 40)}...</div>
+                        <div className="font-medium text-xs text-slate-500">↳ Réponse à</div>
+                        <div className="italic text-xs text-slate-600 mt-1">{message.reply_content.substring(0, 40)}...</div>
                       </div>
                     )}
                     
                     {/* Message content */}
-                    <div className="text-sm leading-relaxed">{message.content}</div>
+                    <div className="text-sm leading-relaxed font-medium">{message.content}</div>
                     
                     {/* Message footer */}
                     <div className="flex items-center justify-between mt-2 text-xs">
