@@ -749,26 +749,46 @@ const Messages = ({ user }) => {
                             </button>
                           )}
 
-                          {/* View Patient Consultations */}
-                          <button
-                            onClick={() => viewPatientConsultations(message.patient_id, message.patient_name)}
-                            className="text-indigo-600 hover:text-indigo-700 p-1"
-                            title="Voir les consultations du patient"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-
-                          {/* Respond Button (médecin only) */}
-                          {user.role === 'medecin' && message.status === 'nouveau' && !editingMessage && (
+                          {/* View Patient Consultations - only for messages with patients */}
+                          {message.patient_id && (
                             <button
-                              onClick={() => {
-                                setRespondingTo(message);
-                                setResponseContent('');
-                              }}
-                              className="px-3 py-1 bg-primary-500 text-white rounded-lg hover:bg-primary-600 text-xs font-medium"
+                              onClick={() => viewPatientConsultations(message.patient_id, message.patient_name)}
+                              className="text-indigo-600 hover:text-indigo-700 p-1"
+                              title="Voir les consultations du patient"
                             >
-                              Répondre
+                              <Eye className="w-4 h-4" />
                             </button>
+                          )}
+
+                          {/* Respond Button */}
+                          {message.status === 'nouveau' && !editingMessage && (
+                            <>
+                              {/* Doctor responds to secretary messages */}
+                              {user.role === 'medecin' && message.direction === 'secretary_to_doctor' && (
+                                <button
+                                  onClick={() => {
+                                    setRespondingTo(message);
+                                    setResponseContent('');
+                                  }}
+                                  className="px-3 py-1 bg-primary-500 text-white rounded-lg hover:bg-primary-600 text-xs font-medium"
+                                >
+                                  Répondre
+                                </button>
+                              )}
+                              
+                              {/* Secretary responds to doctor messages */}
+                              {user.role === 'secretaire' && message.direction === 'doctor_to_secretary' && (
+                                <button
+                                  onClick={() => {
+                                    setRespondingTo(message);
+                                    setResponseContent('');
+                                  }}
+                                  className="px-3 py-1 bg-primary-500 text-white rounded-lg hover:bg-primary-600 text-xs font-medium"
+                                >
+                                  Répondre
+                                </button>
+                              )}
+                            </>
                           )}
                         </div>
                       </div>
