@@ -530,12 +530,21 @@ const Calendar = ({ user }) => {
         taille: safeNumber(consultationData.taille),
         pc: safeNumber(consultationData.pc),
         temperature: safeNumber(consultationData.temperature),
+        // Nouveaux champs simplifiés
+        diagnostic: safeString(consultationData.diagnostic),
+        observation_clinique: safeString(consultationData.observation_clinique),
+        // Anciens champs pour compatibilité
         observation_medicale: safeString(consultationData.observation_medicale),
         traitement: safeString(consultationData.traitement),
         bilans: safeString(consultationData.bilans),
         notes: safeString(consultationData.notes),
         relance_telephonique: Boolean(consultationData.relance_telephonique),
-        date_relance: consultationData.date_relance || null
+        date_relance: consultationData.date_relance || null,
+        // Rappel vaccin
+        rappel_vaccin: Boolean(consultationData.rappel_vaccin),
+        nom_vaccin: consultationData.rappel_vaccin ? safeString(consultationData.nom_vaccin) : "",
+        date_vaccin: consultationData.rappel_vaccin ? (consultationData.date_vaccin || "") : "",
+        rappel_whatsapp_vaccin: consultationData.rappel_vaccin ? Boolean(consultationData.rappel_whatsapp_vaccin) : false
       };
 
       console.log('Saving consultation with payload:', consultationPayload);
