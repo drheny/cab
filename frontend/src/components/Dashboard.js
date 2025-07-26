@@ -767,26 +767,35 @@ const Dashboard = ({ user }) => {
         </div>
       </div>
 
-      {/* Recent Activity - Responsive */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 responsive-padding">
-        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center justify-between">
-          <div className="flex items-center">
-            <MessageCircle className="w-5 h-5 mr-2 text-primary-500" />
-            Messagerie Interne
+      {/* Messagerie Interne - Design Moderne et Minimaliste */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        {/* Header */}
+        <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center">
+                <MessageCircle className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Messagerie Interne</h3>
+                <p className="text-sm text-gray-500">Communication équipe</p>
+              </div>
+            </div>
+            <button
+              onClick={handleClearMessages}
+              className="px-4 py-2 bg-red-50 text-red-600 rounded-full hover:bg-red-100 transition-colors text-sm font-medium flex items-center space-x-2"
+              title="Vider la conversation"
+            >
+              <span>🗑️</span>
+              <span>Vider</span>
+            </button>
           </div>
-          <button
-            onClick={handleClearMessages}
-            className="text-xs px-3 py-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors font-medium border-2 border-red-500 hover:border-red-600 shadow-sm"
-            title="Cliquer pour vider tout le chat (avec confirmation)"
-          >
-            🗑️ VIDER LE CHAT
-          </button>
-        </h3>
+        </div>
         
         {/* Messages Container */}
-        <div className="flex flex-col h-96">
+        <div className="flex flex-col h-80">
           {/* Messages List */}
-          <div className="flex-1 overflow-y-auto mb-4 space-y-3 bg-gradient-to-b from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-100">
+          <div className="flex-1 overflow-y-auto p-6 space-y-4">
             {messages.length > 0 ? (
               messages.map((message) => (
                 <div
@@ -796,46 +805,40 @@ const Dashboard = ({ user }) => {
                   }`}
                 >
                   <div
-                    className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl shadow-sm relative ${
+                    className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl relative ${
                       message.sender_type === user.role
-                        ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-primary-200'
-                        : message.sender_type === 'medecin'
-                        ? 'bg-gradient-to-r from-green-100 to-green-50 text-green-900 border border-green-200 shadow-green-100'
-                        : 'bg-gradient-to-r from-blue-100 to-blue-50 text-blue-900 border border-blue-200 shadow-blue-100'
+                        ? 'bg-primary-500 text-white'
+                        : 'bg-gray-100 text-gray-800'
                     }`}
                   >
                     {/* Reply indicator */}
                     {message.reply_to && (
-                      <div className={`text-xs mb-2 p-2 rounded-lg border-l-3 ${
+                      <div className={`text-xs mb-2 p-2 rounded-lg opacity-80 ${
                         message.sender_type === user.role 
-                          ? 'bg-white bg-opacity-20 border-white border-opacity-50 text-white text-opacity-90'
-                          : 'bg-white bg-opacity-70 border-gray-400 text-gray-600'
+                          ? 'bg-white bg-opacity-20 text-white'
+                          : 'bg-gray-200 text-gray-600'
                       }`}>
-                        <div className="font-medium text-xs opacity-75">↳ Réponse à</div>
-                        <div className="text-xs italic">{message.reply_content.substring(0, 40)}...</div>
+                        <div className="font-medium">↳ Réponse à</div>
+                        <div className="italic">{message.reply_content.substring(0, 40)}...</div>
                       </div>
                     )}
                     
                     {/* Message content */}
-                    <div className="text-sm font-medium leading-relaxed">{message.content}</div>
+                    <div className="text-sm leading-relaxed">{message.content}</div>
                     
                     {/* Message footer */}
-                    <div className="flex justify-between items-end mt-3 text-xs">
+                    <div className="flex items-center justify-between mt-2 text-xs">
                       <div className="flex items-center space-x-2">
-                        <div className={`flex items-center space-x-1 ${
-                          message.sender_type === user.role ? 'text-white text-opacity-80' : 'text-gray-600'
-                        }`}>
-                          <span className="text-sm">
-                            {message.sender_type === 'medecin' ? '👨‍⚕️' : '👩‍💼'}
-                          </span>
-                          <span className="font-medium text-xs">
-                            {getShortSenderName(message.sender_name, message.sender_type)}
-                          </span>
-                        </div>
+                        <span className="text-xs">
+                          {message.sender_type === 'medecin' ? '👨‍⚕️' : '👩‍💼'}
+                        </span>
+                        <span className="font-medium">
+                          {getShortSenderName(message.sender_name, message.sender_type)}
+                        </span>
                         {message.is_edited && (
-                          <span className={`text-xs italic px-1.5 py-0.5 rounded-full ${
+                          <span className={`px-2 py-1 rounded-full text-xs ${
                             message.sender_type === user.role 
-                              ? 'bg-white bg-opacity-20 text-white text-opacity-80'
+                              ? 'bg-white bg-opacity-20 text-white'
                               : 'bg-gray-200 text-gray-600'
                           }`}>
                             modifié
@@ -853,81 +856,55 @@ const Dashboard = ({ user }) => {
                           })}
                         </span>
                         
-                        {/* Action buttons for own messages */}
-                        {message.sender_type === user.role && (
-                          <div className="flex space-x-1 ml-2">
+                        {/* Action buttons */}
+                        <div className="flex items-center space-x-1">
+                          {message.sender_type === user.role && (
+                            <>
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleEditMessage(message);
+                                }}
+                                className="p-1 rounded-full hover:bg-white hover:bg-opacity-20 transition-colors"
+                                title="Modifier"
+                              >
+                                <span className="text-xs">✏️</span>
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleDeleteMessage(message.id);
+                                }}
+                                className="p-1 rounded-full hover:bg-red-500 hover:bg-opacity-20 transition-colors"
+                                title="Supprimer"
+                              >
+                                <span className="text-xs">🗑️</span>
+                              </button>
+                            </>
+                          )}
+                          
+                          {message.sender_type !== user.role && (
                             <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                console.log(`🖱️ EDIT BUTTON CLICKED - Message ID: ${message.id}`);
-                                handleEditMessage(message);
-                              }}
-                              className="p-1 rounded-full hover:bg-white hover:bg-opacity-20 transition-colors"
-                              title="Modifier"
+                              onClick={() => handleReplyToMessage(message)}
+                              className="p-1 rounded-full hover:bg-gray-200 transition-colors"
+                              title="Répondre"
                             >
-                              <span className="text-xs">✏️</span>
+                              <span className="text-xs">↩️</span>
                             </button>
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                console.log(`🗑️ DELETE BUTTON CLICKED - Message ID: ${message.id}`);
-                                handleDeleteMessage(message.id);
-                              }}
-                              className="p-1 rounded-full hover:bg-red-500 hover:bg-opacity-20 transition-colors"
-                              title="Supprimer"
-                              style={{ pointerEvents: 'auto', zIndex: 10 }}
-                            >
-                              <span className="text-xs">🗑️</span>
-                            </button>
-                          </div>
-                        )}
-                        
-                        {/* Reply button for others' messages */}
-                        {message.sender_type !== user.role && (
-                          <button
-                            onClick={() => handleReplyToMessage(message)}
-                            className="p-1 rounded-full hover:bg-gray-200 transition-colors"
-                            title="Répondre"
-                          >
-                            <span className="text-xs">↩️</span>
-                          </button>
-                        )}
-                        
-                        {/* Read receipt indicator */}
-                        {message.sender_type === user.role && (
-                          <div className="flex items-center space-x-1">
-                            {message.is_read ? (
-                              <div className="flex items-center space-x-1 bg-green-100 bg-opacity-80 px-2 py-1 rounded-full" title="Message lu">
-                                <div className="text-xs font-semibold text-green-600">VU</div>
-                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                              </div>
-                            ) : (
-                              <div className="flex items-center space-x-1 bg-white bg-opacity-60 px-2 py-1 rounded-full" title="Message envoyé">
-                                <div className="text-xs font-medium text-white text-opacity-90">✓</div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                        
-                        {/* Unread indicator for received messages */}
-                        {message.sender_type !== user.role && !message.is_read && (
-                          <div className="flex items-center space-x-1 bg-red-100 bg-opacity-80 px-2 py-1 rounded-full animate-pulse" title="Non lu">
-                            <div className="text-xs font-semibold text-red-600">NOUVEAU</div>
-                            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="text-center text-gray-500 py-12">
-                <MessageCircle className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                <p className="text-sm font-medium">Aucun message aujourd'hui</p>
-                <p className="text-xs text-gray-400 mt-1">Commencez une conversation</p>
+              <div className="text-center text-gray-400 py-12">
+                <MessageCircle className="w-16 h-16 mx-auto mb-4 opacity-30" />
+                <p className="text-sm font-medium">Aucun message</p>
+                <p className="text-xs mt-1">Commencez une conversation</p>
               </div>
             )}
             <div ref={messagesEndRef} />
@@ -935,7 +912,7 @@ const Dashboard = ({ user }) => {
 
           {/* Reply indicator */}
           {replyingTo && (
-            <div className="mb-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-400 rounded-lg">
+            <div className="mx-6 mb-3 p-3 bg-blue-50 border-l-4 border-blue-400 rounded-lg">
               <div className="flex justify-between items-center">
                 <div>
                   <div className="text-xs font-medium text-blue-700 mb-1">
@@ -956,18 +933,15 @@ const Dashboard = ({ user }) => {
           )}
 
           {/* Message Input */}
-          <div className="border-t border-gray-200 pt-3">
+          <div className="border-t border-gray-100 p-4">
             {editingMessage ? (
-              <div className="flex space-x-2">
+              <div className="flex space-x-3">
                 <input
                   type="text"
                   value={editingContent}
                   onChange={(e) => setEditingContent(e.target.value)}
-                  className="input-stylus flex-1 rounded-full shadow-sm"
-                  placeholder="Modifier le message - Écriture manuscrite supportée"
-                  inputMode="text"
-                  autoCapitalize="sentences"
-                  autoComplete="off"
+                  className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  placeholder="Modifier le message..."
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
                       handleSaveEdit();
@@ -976,20 +950,20 @@ const Dashboard = ({ user }) => {
                 />
                 <button
                   onClick={handleSaveEdit}
-                  className="px-4 py-3 bg-green-500 text-white rounded-full hover:bg-green-600 shadow-sm transition-colors"
+                  className="px-4 py-3 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors"
                   title="Sauvegarder"
                 >
-                  <span className="text-sm">✓</span>
+                  ✓
                 </button>
                 <button
                   onClick={() => {
                     setEditingMessage(null);
                     setEditingContent('');
                   }}
-                  className="px-4 py-3 bg-gray-500 text-white rounded-full hover:bg-gray-600 shadow-sm transition-colors"
+                  className="px-4 py-3 bg-gray-500 text-white rounded-full hover:bg-gray-600 transition-colors"
                   title="Annuler"
                 >
-                  <span className="text-sm">✕</span>
+                  ✕
                 </button>
               </div>
             ) : (
@@ -998,15 +972,12 @@ const Dashboard = ({ user }) => {
                   type="text"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  className="input-stylus flex-1 rounded-full shadow-sm placeholder-gray-400"
+                  className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder={
                     replyingTo
-                      ? `Répondre à ${getShortSenderName(replyingTo.sender_name, replyingTo.sender_type)} - Écriture manuscrite supportée`
-                      : "Tapez votre message - Écriture manuscrite supportée"
+                      ? `Répondre à ${getShortSenderName(replyingTo.sender_name, replyingTo.sender_type)}...`
+                      : "Tapez votre message..."
                   }
-                  inputMode="text"
-                  autoCapitalize="sentences"
-                  autoComplete="off"
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
                       handleSendMessage();
@@ -1016,9 +987,9 @@ const Dashboard = ({ user }) => {
                 <button
                   onClick={handleSendMessage}
                   disabled={!newMessage.trim()}
-                  className={`px-5 py-3 rounded-full shadow-sm transition-all duration-200 ${
+                  className={`px-6 py-3 rounded-full transition-all duration-200 ${
                     newMessage.trim()
-                      ? 'bg-primary-500 text-white hover:bg-primary-600 transform hover:scale-105'
+                      ? 'bg-primary-500 text-white hover:bg-primary-600 shadow-sm'
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   }`}
                   title="Envoyer message"
