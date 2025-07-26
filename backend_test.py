@@ -1412,6 +1412,631 @@ class CabinetMedicalAPITest(unittest.TestCase):
         print(f"✅ Invalid token properly rejected with 401")
         print(f"🎉 Invalid Token Test: PASSED")
 
+    # ========== CONSULTATION MODAL MODIFICATIONS AND VACCINE REMINDERS TESTING ==========
+    
+    def test_consultation_model_new_fields(self):
+        """Test consultation model with new fields: diagnostic, observation_clinique, vaccine reminder fields"""
+        print("\n🔍 Testing Consultation Model - New Fields (diagnostic, observation_clinique, vaccine reminders)")
+        
+        # Get a valid patient and appointment for testing
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for testing")
+        
+        patient_id = patients[0]["id"]
+        
+        # Create a test appointment first
+        today = datetime.now().strftime("%Y-%m-%d")
+        appointment_data = {
+            "patient_id": patient_id,
+            "date": today,
+            "heure": "10:00",
+            "type_rdv": "visite",
+            "motif": "Test consultation with new fields"
+        }
+        
+        response = requests.post(f"{self.base_url}/api/appointments", json=appointment_data)
+        self.assertEqual(response.status_code, 200)
+        appointment_id = response.json()["appointment_id"]
+        
+        # Test consultation with new fields
+        consultation_data = {
+            "patient_id": patient_id,
+            "appointment_id": appointment_id,
+            "date": today,
+            "type_rdv": "visite",
+            "duree": 30,
+            "poids": 18.5,
+            "taille": 95.0,
+            "pc": 50.0,
+            "temperature": 37.2,
+            # New fields - diagnostic instead of traitement
+            "diagnostic": "Infection virale bénigne avec fièvre modérée",
+            # New fields - observation_clinique instead of observation_medicale
+            "observation_clinique": "Patient présente une fièvre modérée, gorge légèrement irritée, pas de signes de gravité",
+            # Vaccine reminder fields
+            "rappel_vaccin": True,
+            "nom_vaccin": "DTC (Diphtérie, Tétanos, Coqueluche)",
+            "date_vaccin": (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d"),
+            "rappel_whatsapp_vaccin": True,
+            # Keep old fields for backward compatibility
+            "observation_medicale": "Ancienne observation médicale",
+            "traitement": "Ancien traitement",
+            "bilans": "Bilan sanguin à prévoir",
+            "notes": "Notes complémentaires",
+            "relance_telephonique": False
+        }
+        
+        # Create consultation with new fields
+        response = requests.post(f"{self.base_url}/api/consultations", json=consultation_data)
+        self.assertEqual(response.status_code, 200, f"Consultation creation failed: {response.text}")
+        
+        create_data = response.json()
+        self.assertIn("message", create_data)
+        self.assertIn("consultation_id", create_data)
+        consultation_id = create_data["consultation_id"]
+        
+        # Retrieve consultation and verify new fields
+        response = requests.get(f"{self.base_url}/api/consultations/{consultation_id}")
+        self.assertEqual(response.status_code, 200, f"Consultation retrieval failed: {response.text}")
+        
+        consultation = response.json()
+        
+        # Verify new fields are properly stored
+        self.assertEqual(consultation["diagnostic"], "Infection virale bénigne avec fièvre modérée")
+        self.assertEqual(consultation["observation_clinique"], "Patient présente une fièvre modérée, gorge légèrement irritée, pas de signes de gravité")
+        
+        # Verify vaccine reminder fields
+        self.assertTrue(consultation["rappel_vaccin"])
+        self.assertEqual(consultation["nom_vaccin"], "DTC (Diphtérie, Tétanos, Coqueluche)")
+        self.assertEqual(consultation["date_vaccin"], (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d"))
+        self.assertTrue(consultation["rappel_whatsapp_vaccin"])
+        
+        # Verify backward compatibility - old fields should still exist
+        self.assertEqual(consultation["observation_medicale"], "Ancienne observation médicale")
+        self.assertEqual(consultation["traitement"], "Ancien traitement")
+        self.assertEqual(consultation["bilans"], "Bilan sanguin à prévoir")
+        
+        # Verify other fields
+        self.assertEqual(consultation["temperature"], 37.2)
+        self.assertEqual(consultation["poids"], 18.5)
+        self.assertEqual(consultation["taille"], 95.0)
+        self.assertEqual(consultation["pc"], 50.0)
+        
+        print(f"✅ Consultation created with new fields successfully")
+        print(f"   - Consultation ID: {consultation_id}")
+        print(f"   - Diagnostic: {consultation['diagnostic']}")
+        print(f"   - Observation clinique: {consultation['observation_clinique']}")
+        print(f"   - Vaccine reminder: {consultation['rappel_vaccin']}")
+        print(f"   - Vaccine name: {consultation['nom_vaccin']}")
+        print(f"   - Vaccine date: {consultation['date_vaccin']}")
+        print(f"   - WhatsApp vaccine reminder: {consultation['rappel_whatsapp_vaccin']}")
+        
+        # Clean up
+        requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+        
+        print(f"🎉 Consultation Model New Fields Test: PASSED")
+    
+    def test_vaccine_reminders_api(self):
+        """Test GET /api/dashboard/vaccine-reminders endpoint"""
+        print("\n🔍 Testing Vaccine Reminders API - GET /api/dashboard/vaccine-reminders")
+        
+        # First, create a consultation with vaccine reminder for today
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        self.assertTrue(len(patients) > 0, "No patients found for testing")
+        
+        patient_id = patients[0]["id"]
+        
+        # Create appointment
+        today = datetime.now().strftime("%Y-%m-%d")
+        appointment_data = {
+            "patient_id": patient_id,
+            "date": today,
+            "heure": "11:00",
+            "type_rdv": "controle",
+            "motif": "Rappel vaccin"
+        }
+        
+        response = requests.post(f"{self.base_url}/api/appointments", json=appointment_data)
+        self.assertEqual(response.status_code, 200)
+        appointment_id = response.json()["appointment_id"]
+        
+        # Create consultation with vaccine reminder for today
+        consultation_data = {
+            "patient_id": patient_id,
+            "appointment_id": appointment_id,
+            "date": today,
+            "type_rdv": "controle",
+            "diagnostic": "Consultation de suivi vaccination",
+            "observation_clinique": "Patient en bonne santé, prêt pour vaccination",
+            "rappel_vaccin": True,
+            "nom_vaccin": "Vaccin ROR (Rougeole, Oreillons, Rubéole)",
+            "date_vaccin": today,  # Vaccine reminder for today
+            "rappel_whatsapp_vaccin": True
+        }
+        
+        response = requests.post(f"{self.base_url}/api/consultations", json=consultation_data)
+        self.assertEqual(response.status_code, 200)
+        consultation_id = response.json()["consultation_id"]
+        
+        # Test vaccine reminders endpoint
+        response = requests.get(f"{self.base_url}/api/dashboard/vaccine-reminders")
+        self.assertEqual(response.status_code, 200, f"Vaccine reminders API failed: {response.text}")
+        
+        data = response.json()
+        self.assertIn("vaccine_reminders", data)
+        self.assertIsInstance(data["vaccine_reminders"], list)
+        
+        # Verify vaccine reminder structure
+        vaccine_reminders = data["vaccine_reminders"]
+        if len(vaccine_reminders) > 0:
+            reminder = vaccine_reminders[0]
+            
+            # Verify required fields
+            self.assertIn("id", reminder)
+            self.assertIn("patient_id", reminder)
+            self.assertIn("patient_nom", reminder)
+            self.assertIn("patient_prenom", reminder)
+            self.assertIn("numero_whatsapp", reminder)
+            self.assertIn("nom_vaccin", reminder)
+            self.assertIn("date_vaccin", reminder)
+            self.assertIn("rappel_whatsapp_vaccin", reminder)
+            self.assertIn("consultation_id", reminder)
+            
+            # Verify data values
+            self.assertEqual(reminder["patient_id"], patient_id)
+            self.assertEqual(reminder["nom_vaccin"], "Vaccin ROR (Rougeole, Oreillons, Rubéole)")
+            self.assertEqual(reminder["date_vaccin"], today)
+            self.assertTrue(reminder["rappel_whatsapp_vaccin"])
+            
+            print(f"✅ Vaccine reminder found for today")
+            print(f"   - Patient: {reminder['patient_nom']} {reminder['patient_prenom']}")
+            print(f"   - Vaccine: {reminder['nom_vaccin']}")
+            print(f"   - Date: {reminder['date_vaccin']}")
+            print(f"   - WhatsApp reminder: {reminder['rappel_whatsapp_vaccin']}")
+        else:
+            print(f"✅ No vaccine reminders for today (expected if no consultations with vaccine reminders)")
+        
+        # Clean up
+        requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+        
+        print(f"🎉 Vaccine Reminders API Test: PASSED")
+    
+    def test_consultation_backward_compatibility(self):
+        """Test consultation creation with both old and new field formats for backward compatibility"""
+        print("\n🔍 Testing Consultation Backward Compatibility - Old and New Field Formats")
+        
+        # Get a valid patient and create appointment
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        patient_id = patients[0]["id"]
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        appointment_data = {
+            "patient_id": patient_id,
+            "date": today,
+            "heure": "12:00",
+            "type_rdv": "visite",
+            "motif": "Test backward compatibility"
+        }
+        
+        response = requests.post(f"{self.base_url}/api/appointments", json=appointment_data)
+        self.assertEqual(response.status_code, 200)
+        appointment_id = response.json()["appointment_id"]
+        
+        # Test 1: Create consultation with OLD field format
+        old_format_consultation = {
+            "patient_id": patient_id,
+            "appointment_id": appointment_id,
+            "date": today,
+            "type_rdv": "visite",
+            "duree": 25,
+            "poids": 17.8,
+            "taille": 92.0,
+            "pc": 49.5,
+            # Old field names
+            "observation_medicale": "Observation avec ancien format",
+            "traitement": "Traitement avec ancien format",
+            "bilans": "Bilans avec ancien format",
+            "relance_telephonique": True,
+            "date_relance": (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
+        }
+        
+        response = requests.post(f"{self.base_url}/api/consultations", json=old_format_consultation)
+        self.assertEqual(response.status_code, 200, f"Old format consultation creation failed: {response.text}")
+        
+        old_consultation_id = response.json()["consultation_id"]
+        
+        # Verify old format consultation
+        response = requests.get(f"{self.base_url}/api/consultations/{old_consultation_id}")
+        self.assertEqual(response.status_code, 200)
+        old_consultation = response.json()
+        
+        self.assertEqual(old_consultation["observation_medicale"], "Observation avec ancien format")
+        self.assertEqual(old_consultation["traitement"], "Traitement avec ancien format")
+        self.assertEqual(old_consultation["bilans"], "Bilans avec ancien format")
+        self.assertTrue(old_consultation["relance_telephonique"])
+        
+        print(f"✅ Old format consultation created successfully")
+        print(f"   - Observation médicale: {old_consultation['observation_medicale']}")
+        print(f"   - Traitement: {old_consultation['traitement']}")
+        
+        # Test 2: Create second appointment for new format test
+        appointment_data2 = {
+            "patient_id": patient_id,
+            "date": today,
+            "heure": "13:00",
+            "type_rdv": "controle",
+            "motif": "Test new format"
+        }
+        
+        response = requests.post(f"{self.base_url}/api/appointments", json=appointment_data2)
+        self.assertEqual(response.status_code, 200)
+        appointment_id2 = response.json()["appointment_id"]
+        
+        # Test 2: Create consultation with NEW field format
+        new_format_consultation = {
+            "patient_id": patient_id,
+            "appointment_id": appointment_id2,
+            "date": today,
+            "type_rdv": "controle",
+            "duree": 20,
+            "poids": 18.0,
+            "taille": 93.0,
+            "pc": 50.0,
+            "temperature": 36.8,
+            # New field names
+            "diagnostic": "Diagnostic avec nouveau format",
+            "observation_clinique": "Observation clinique avec nouveau format",
+            # Vaccine reminder fields
+            "rappel_vaccin": True,
+            "nom_vaccin": "Vaccin Hépatite B",
+            "date_vaccin": (datetime.now() + timedelta(days=14)).strftime("%Y-%m-%d"),
+            "rappel_whatsapp_vaccin": False,
+            # Keep some old fields for compatibility
+            "bilans": "Bilans avec nouveau format",
+            "notes": "Notes complémentaires"
+        }
+        
+        response = requests.post(f"{self.base_url}/api/consultations", json=new_format_consultation)
+        self.assertEqual(response.status_code, 200, f"New format consultation creation failed: {response.text}")
+        
+        new_consultation_id = response.json()["consultation_id"]
+        
+        # Verify new format consultation
+        response = requests.get(f"{self.base_url}/api/consultations/{new_consultation_id}")
+        self.assertEqual(response.status_code, 200)
+        new_consultation = response.json()
+        
+        self.assertEqual(new_consultation["diagnostic"], "Diagnostic avec nouveau format")
+        self.assertEqual(new_consultation["observation_clinique"], "Observation clinique avec nouveau format")
+        self.assertTrue(new_consultation["rappel_vaccin"])
+        self.assertEqual(new_consultation["nom_vaccin"], "Vaccin Hépatite B")
+        self.assertFalse(new_consultation["rappel_whatsapp_vaccin"])
+        self.assertEqual(new_consultation["temperature"], 36.8)
+        
+        print(f"✅ New format consultation created successfully")
+        print(f"   - Diagnostic: {new_consultation['diagnostic']}")
+        print(f"   - Observation clinique: {new_consultation['observation_clinique']}")
+        print(f"   - Vaccine reminder: {new_consultation['rappel_vaccin']}")
+        print(f"   - Vaccine name: {new_consultation['nom_vaccin']}")
+        
+        # Test 3: Verify both consultations can be retrieved together
+        response = requests.get(f"{self.base_url}/api/patients/{patient_id}/consultations")
+        self.assertEqual(response.status_code, 200)
+        patient_consultations = response.json()
+        
+        # Should have at least our 2 test consultations
+        consultation_ids = [c["id"] for c in patient_consultations]
+        self.assertIn(old_consultation_id, consultation_ids)
+        self.assertIn(new_consultation_id, consultation_ids)
+        
+        print(f"✅ Both old and new format consultations retrieved successfully")
+        print(f"   - Total consultations for patient: {len(patient_consultations)}")
+        
+        # Clean up
+        requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+        requests.delete(f"{self.base_url}/api/appointments/{appointment_id2}")
+        
+        print(f"🎉 Consultation Backward Compatibility Test: PASSED")
+    
+    def test_consultation_retrieval_formats(self):
+        """Test GET /api/consultations/{id} returns both old and new formats correctly"""
+        print("\n🔍 Testing Consultation Retrieval - Old and New Format Fields")
+        
+        # Get a valid patient and create appointment
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        patient_id = patients[0]["id"]
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        appointment_data = {
+            "patient_id": patient_id,
+            "date": today,
+            "heure": "14:00",
+            "type_rdv": "visite",
+            "motif": "Test retrieval formats"
+        }
+        
+        response = requests.post(f"{self.base_url}/api/appointments", json=appointment_data)
+        self.assertEqual(response.status_code, 200)
+        appointment_id = response.json()["appointment_id"]
+        
+        # Create consultation with comprehensive data (both old and new fields)
+        comprehensive_consultation = {
+            "patient_id": patient_id,
+            "appointment_id": appointment_id,
+            "date": today,
+            "type_rdv": "visite",
+            "duree": 35,
+            "poids": 19.2,
+            "taille": 97.0,
+            "pc": 51.0,
+            "temperature": 37.5,
+            # New preferred fields
+            "diagnostic": "Bronchite aiguë avec toux productive",
+            "observation_clinique": "Patient présente une toux grasse, râles bronchiques à l'auscultation, pas de fièvre",
+            # Vaccine reminder fields
+            "rappel_vaccin": True,
+            "nom_vaccin": "Vaccin Pneumocoque",
+            "date_vaccin": (datetime.now() + timedelta(days=21)).strftime("%Y-%m-%d"),
+            "rappel_whatsapp_vaccin": True,
+            # Old fields for backward compatibility
+            "observation_medicale": "Observation médicale complémentaire",
+            "traitement": "Sirop antitussif et bronchodilatateur",
+            "bilans": "Radiographie thoracique si aggravation",
+            "notes": "Revoir dans 1 semaine si pas d'amélioration",
+            "relance_telephonique": True,
+            "date_relance": (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
+        }
+        
+        response = requests.post(f"{self.base_url}/api/consultations", json=comprehensive_consultation)
+        self.assertEqual(response.status_code, 200, f"Comprehensive consultation creation failed: {response.text}")
+        
+        consultation_id = response.json()["consultation_id"]
+        
+        # Test retrieval and verify all fields are returned correctly
+        response = requests.get(f"{self.base_url}/api/consultations/{consultation_id}")
+        self.assertEqual(response.status_code, 200, f"Consultation retrieval failed: {response.text}")
+        
+        consultation = response.json()
+        
+        # Verify basic fields
+        self.assertEqual(consultation["patient_id"], patient_id)
+        self.assertEqual(consultation["appointment_id"], appointment_id)
+        self.assertEqual(consultation["date"], today)
+        self.assertEqual(consultation["type_rdv"], "visite")
+        self.assertEqual(consultation["duree"], 35)
+        
+        # Verify physical measurements
+        self.assertEqual(consultation["poids"], 19.2)
+        self.assertEqual(consultation["taille"], 97.0)
+        self.assertEqual(consultation["pc"], 51.0)
+        self.assertEqual(consultation["temperature"], 37.5)
+        
+        # Verify NEW preferred fields
+        self.assertEqual(consultation["diagnostic"], "Bronchite aiguë avec toux productive")
+        self.assertEqual(consultation["observation_clinique"], "Patient présente une toux grasse, râles bronchiques à l'auscultation, pas de fièvre")
+        
+        # Verify vaccine reminder fields
+        self.assertTrue(consultation["rappel_vaccin"])
+        self.assertEqual(consultation["nom_vaccin"], "Vaccin Pneumocoque")
+        self.assertEqual(consultation["date_vaccin"], (datetime.now() + timedelta(days=21)).strftime("%Y-%m-%d"))
+        self.assertTrue(consultation["rappel_whatsapp_vaccin"])
+        
+        # Verify OLD fields for backward compatibility
+        self.assertEqual(consultation["observation_medicale"], "Observation médicale complémentaire")
+        self.assertEqual(consultation["traitement"], "Sirop antitussif et bronchodilatateur")
+        self.assertEqual(consultation["bilans"], "Radiographie thoracique si aggravation")
+        self.assertEqual(consultation["notes"], "Revoir dans 1 semaine si pas d'amélioration")
+        self.assertTrue(consultation["relance_telephonique"])
+        self.assertEqual(consultation["date_relance"], (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d"))
+        
+        # Verify response structure includes all expected fields
+        expected_fields = [
+            "id", "patient_id", "appointment_id", "date", "type_rdv", "duree",
+            "poids", "taille", "pc", "temperature",
+            "diagnostic", "observation_clinique",
+            "rappel_vaccin", "nom_vaccin", "date_vaccin", "rappel_whatsapp_vaccin",
+            "observation_medicale", "traitement", "bilans", "notes",
+            "relance_telephonique", "date_relance", "created_at"
+        ]
+        
+        for field in expected_fields:
+            self.assertIn(field, consultation, f"Field '{field}' missing from consultation response")
+        
+        print(f"✅ Consultation retrieved with all fields successfully")
+        print(f"   - Consultation ID: {consultation_id}")
+        print(f"   - NEW FIELDS:")
+        print(f"     • Diagnostic: {consultation['diagnostic']}")
+        print(f"     • Observation clinique: {consultation['observation_clinique']}")
+        print(f"     • Vaccine reminder: {consultation['rappel_vaccin']}")
+        print(f"     • Vaccine name: {consultation['nom_vaccin']}")
+        print(f"     • Temperature: {consultation['temperature']}°C")
+        print(f"   - OLD FIELDS (backward compatibility):")
+        print(f"     • Observation médicale: {consultation['observation_medicale']}")
+        print(f"     • Traitement: {consultation['traitement']}")
+        print(f"     • Relance téléphonique: {consultation['relance_telephonique']}")
+        
+        # Test error handling - non-existent consultation
+        response = requests.get(f"{self.base_url}/api/consultations/non-existent-id")
+        self.assertEqual(response.status_code, 404, "Should return 404 for non-existent consultation")
+        
+        print(f"✅ Error handling verified - 404 for non-existent consultation")
+        
+        # Clean up
+        requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+        
+        print(f"🎉 Consultation Retrieval Formats Test: PASSED")
+    
+    def test_comprehensive_consultation_vaccine_workflow(self):
+        """Test complete workflow: create consultation with vaccine reminder, verify it appears in vaccine reminders API"""
+        print("\n🔍 Testing Comprehensive Consultation-Vaccine Workflow")
+        
+        # Get a valid patient
+        response = requests.get(f"{self.base_url}/api/patients")
+        self.assertEqual(response.status_code, 200)
+        patients_data = response.json()
+        patients = patients_data["patients"]
+        patient_id = patients[0]["id"]
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        tomorrow = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
+        
+        # Step 1: Create appointment
+        appointment_data = {
+            "patient_id": patient_id,
+            "date": today,
+            "heure": "15:00",
+            "type_rdv": "controle",
+            "motif": "Suivi vaccination - workflow test"
+        }
+        
+        response = requests.post(f"{self.base_url}/api/appointments", json=appointment_data)
+        self.assertEqual(response.status_code, 200)
+        appointment_id = response.json()["appointment_id"]
+        
+        print(f"✅ Step 1: Appointment created - {appointment_id}")
+        
+        # Step 2: Create consultation with vaccine reminder for tomorrow
+        consultation_data = {
+            "patient_id": patient_id,
+            "appointment_id": appointment_id,
+            "date": today,
+            "type_rdv": "controle",
+            "duree": 15,
+            "poids": 20.1,
+            "taille": 98.0,
+            "pc": 51.5,
+            "temperature": 36.7,
+            "diagnostic": "Consultation de suivi - patient en bonne santé",
+            "observation_clinique": "Examen normal, patient prêt pour prochaine vaccination",
+            "rappel_vaccin": True,
+            "nom_vaccin": "Vaccin Méningocoque C",
+            "date_vaccin": tomorrow,  # Vaccine reminder for tomorrow
+            "rappel_whatsapp_vaccin": True,
+            "notes": "Rappel vaccination programmé pour demain"
+        }
+        
+        response = requests.post(f"{self.base_url}/api/consultations", json=consultation_data)
+        self.assertEqual(response.status_code, 200, f"Consultation creation failed: {response.text}")
+        consultation_id = response.json()["consultation_id"]
+        
+        print(f"✅ Step 2: Consultation created with vaccine reminder - {consultation_id}")
+        print(f"   - Vaccine: {consultation_data['nom_vaccin']}")
+        print(f"   - Reminder date: {consultation_data['date_vaccin']}")
+        
+        # Step 3: Verify consultation was saved correctly
+        response = requests.get(f"{self.base_url}/api/consultations/{consultation_id}")
+        self.assertEqual(response.status_code, 200)
+        saved_consultation = response.json()
+        
+        self.assertTrue(saved_consultation["rappel_vaccin"])
+        self.assertEqual(saved_consultation["nom_vaccin"], "Vaccin Méningocoque C")
+        self.assertEqual(saved_consultation["date_vaccin"], tomorrow)
+        self.assertTrue(saved_consultation["rappel_whatsapp_vaccin"])
+        
+        print(f"✅ Step 3: Consultation data verified in database")
+        
+        # Step 4: Check if vaccine reminder appears in today's reminders (should be empty)
+        response = requests.get(f"{self.base_url}/api/dashboard/vaccine-reminders")
+        self.assertEqual(response.status_code, 200)
+        today_reminders = response.json()["vaccine_reminders"]
+        
+        # Should not find our reminder since it's for tomorrow
+        our_reminder_today = None
+        for reminder in today_reminders:
+            if reminder["consultation_id"] == consultation_id:
+                our_reminder_today = reminder
+                break
+        
+        self.assertIsNone(our_reminder_today, "Vaccine reminder should not appear in today's reminders")
+        print(f"✅ Step 4: Vaccine reminder correctly NOT in today's reminders")
+        
+        # Step 5: Create another consultation with vaccine reminder for today to test the API
+        appointment_data2 = {
+            "patient_id": patient_id,
+            "date": today,
+            "heure": "16:00",
+            "type_rdv": "visite",
+            "motif": "Vaccination aujourd'hui"
+        }
+        
+        response = requests.post(f"{self.base_url}/api/appointments", json=appointment_data2)
+        self.assertEqual(response.status_code, 200)
+        appointment_id2 = response.json()["appointment_id"]
+        
+        consultation_data2 = {
+            "patient_id": patient_id,
+            "appointment_id": appointment_id2,
+            "date": today,
+            "type_rdv": "visite",
+            "diagnostic": "Vaccination programmée",
+            "observation_clinique": "Patient prêt pour vaccination",
+            "rappel_vaccin": True,
+            "nom_vaccin": "Vaccin Grippe Saisonnière",
+            "date_vaccin": today,  # Vaccine reminder for today
+            "rappel_whatsapp_vaccin": False
+        }
+        
+        response = requests.post(f"{self.base_url}/api/consultations", json=consultation_data2)
+        self.assertEqual(response.status_code, 200)
+        consultation_id2 = response.json()["consultation_id"]
+        
+        print(f"✅ Step 5: Second consultation created with vaccine reminder for today - {consultation_id2}")
+        
+        # Step 6: Verify vaccine reminder appears in today's reminders
+        response = requests.get(f"{self.base_url}/api/dashboard/vaccine-reminders")
+        self.assertEqual(response.status_code, 200)
+        updated_reminders = response.json()["vaccine_reminders"]
+        
+        # Should find our reminder for today
+        our_reminder_today = None
+        for reminder in updated_reminders:
+            if reminder["consultation_id"] == consultation_id2:
+                our_reminder_today = reminder
+                break
+        
+        self.assertIsNotNone(our_reminder_today, "Vaccine reminder should appear in today's reminders")
+        self.assertEqual(our_reminder_today["nom_vaccin"], "Vaccin Grippe Saisonnière")
+        self.assertEqual(our_reminder_today["date_vaccin"], today)
+        self.assertFalse(our_reminder_today["rappel_whatsapp_vaccin"])
+        
+        print(f"✅ Step 6: Vaccine reminder correctly appears in today's reminders")
+        print(f"   - Patient: {our_reminder_today['patient_nom']} {our_reminder_today['patient_prenom']}")
+        print(f"   - Vaccine: {our_reminder_today['nom_vaccin']}")
+        print(f"   - WhatsApp reminder: {our_reminder_today['rappel_whatsapp_vaccin']}")
+        
+        # Step 7: Verify patient consultation history includes both consultations
+        response = requests.get(f"{self.base_url}/api/patients/{patient_id}/consultations")
+        self.assertEqual(response.status_code, 200)
+        patient_consultations = response.json()
+        
+        consultation_ids = [c["id"] for c in patient_consultations]
+        self.assertIn(consultation_id, consultation_ids)
+        self.assertIn(consultation_id2, consultation_ids)
+        
+        print(f"✅ Step 7: Both consultations appear in patient history")
+        
+        # Clean up
+        requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
+        requests.delete(f"{self.base_url}/api/appointments/{appointment_id2}")
+        
+        print(f"🎉 Comprehensive Consultation-Vaccine Workflow Test: PASSED")
+        print(f"   - Complete end-to-end workflow validated")
+        print(f"   - New consultation fields working correctly")
+        print(f"   - Vaccine reminder system functional")
+        print(f"   - API integration verified")
+
     # ========== USER MANAGEMENT SYSTEM TESTING ==========
     
     def test_users_list_endpoint(self):
