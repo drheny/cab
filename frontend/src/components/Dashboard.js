@@ -70,13 +70,6 @@ const Dashboard = ({ user }) => {
     navigate('/calendar?action=add');
   };
 
-  const handlePhoneReminders = () => {
-    // Afficher une notification avec les rappels téléphoniques
-    toast.success('Rappels téléphoniques : 2 patients à contacter aujourd\'hui');
-    // Optionnel: naviguer vers une page spécifique
-    // navigate('/patients?filter=reminders');
-  };
-
   useEffect(() => {
     fetchDashboardData();
     fetchBirthdays();
