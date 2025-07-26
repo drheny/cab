@@ -11,7 +11,7 @@ load_dotenv('/app/frontend/.env')
 class AdminAPITest(unittest.TestCase):
     def setUp(self):
         # Use the correct backend URL from environment
-        backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://8b45b722-0b82-461c-8cd4-01b1cb4950c0.preview.emergentagent.com')
+        backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://381e9303-1801-425b-be63-08a7cd034392.preview.emergentagent.com')
         self.base_url = backend_url
         print(f"Testing admin endpoints at: {self.base_url}")
 
