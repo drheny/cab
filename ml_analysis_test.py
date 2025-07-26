@@ -308,9 +308,9 @@ class MLAnalysisTest(unittest.TestCase):
                 print(f"✅ Gemini {section} section present")
         
         # Verify timestamp exists
-        self.assertIn("timestamp", gemini_enrichment, "gemini_enrichment timestamp missing")
-        timestamp = gemini_enrichment["timestamp"]
-        self.assertIsInstance(timestamp, str, "gemini_enrichment timestamp should be string")
+        self.assertIn("generated_at", gemini_enrichment, "gemini_enrichment generated_at missing")
+        timestamp = gemini_enrichment["generated_at"]
+        self.assertIsInstance(timestamp, str, "gemini_enrichment generated_at should be string")
         
         # Try to parse timestamp
         try:
