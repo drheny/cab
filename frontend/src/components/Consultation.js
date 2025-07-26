@@ -828,7 +828,7 @@ const Consultation = ({ user }) => {
                         </span>
                         {viewModal.consultation.type_rdv === 'visite' && viewModal.consultation.paymentAmount != null && (
                           <span className="text-gray-600 text-sm">
-                            ({viewModal.consultation.paymentAmount} DH)
+                            ({viewModal.consultation.paymentAmount} TN)
                           </span>
                         )}
                       </div>
