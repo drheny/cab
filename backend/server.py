@@ -4372,30 +4372,89 @@ async def calculate_advanced_statistics(start_date: str, end_date: str):
             "total": len(appointments)
         }
         
-        # 2. Top 10 Patients Rentables
-        patient_revenue = defaultdict(lambda: {"consultations": 0, "revenue": 0, "last_visit": None})
+        # 2. Top 10 Patients Rentables - Enhanced Analysis
+        patient_revenue = defaultdict(lambda: {
+            "consultations": 0, 
+            "revenue": 0, 
+            "last_visit": None, 
+            "first_visit": None,
+            "loyalty_score": 0,
+            "avg_interval": 0,
+            "total_visits": 0,
+            "visits_per_year": 0
+        })
         
         for apt in appointments:
             patient_id = apt.get("patient_id")
-            if patient_id and apt.get("type_rdv") == "visite" and apt.get("paye", True):
+            if patient_id and apt.get("status") == "terminé":
+                # Count all types of visits
+                visit_revenue = 65 if apt.get("type_rdv") == "visite" else 45  # Control visits have some value
+                
                 patient_revenue[patient_id]["consultations"] += 1
-                patient_revenue[patient_id]["revenue"] += 65
-                if not patient_revenue[patient_id]["last_visit"] or apt["date"] > patient_revenue[patient_id]["last_visit"]:
-                    patient_revenue[patient_id]["last_visit"] = apt["date"]
-        
-        # Get patient names and create top 10 list
+                patient_revenue[patient_id]["total_visits"] += 1
+                
+                if apt.get("paye", True):  # Only count revenue if paid
+                    patient_revenue[patient_id]["revenue"] += visit_revenue
+                
+                # Track visit dates
+                apt_date = apt["date"]
+                if not patient_revenue[patient_id]["last_visit"] or apt_date > patient_revenue[patient_id]["last_visit"]:
+                    patient_revenue[patient_id]["last_visit"] = apt_date
+                if not patient_revenue[patient_id]["first_visit"] or apt_date < patient_revenue[patient_id]["first_visit"]:
+                    patient_revenue[patient_id]["first_visit"] = apt_date
+
+        # Calculate advanced metrics for each patient
+        for patient_id, stats in patient_revenue.items():
+            if stats["first_visit"] and stats["last_visit"] and stats["consultations"] > 1:
+                # Calculate visit frequency
+                first_date = datetime.strptime(stats["first_visit"], "%Y-%m-%d")
+                last_date = datetime.strptime(stats["last_visit"], "%Y-%m-%d")
+                total_days = (last_date - first_date).days
+                
+                if total_days > 0:
+                    stats["avg_interval"] = total_days / max(stats["consultations"] - 1, 1)
+                    stats["visits_per_year"] = (stats["consultations"] / max(total_days / 365, 0.1))
+                else:
+                    stats["avg_interval"] = 30
+                    stats["visits_per_year"] = stats["consultations"]
+                
+                # Loyalty score calculation (0-100)
+                # Based on frequency, revenue, and recency
+                frequency_score = min(50, stats["consultations"] * 8)
+                revenue_score = min(30, stats["revenue"] / 20)
+                
+                # Recency score (higher if recent visit)
+                days_since_last = (datetime.now() - last_date).days
+                recency_score = max(0, 20 - (days_since_last / 15))
+                
+                stats["loyalty_score"] = frequency_score + revenue_score + recency_score
+            else:
+                stats["avg_interval"] = 180  # Default for single visit
+                stats["visits_per_year"] = stats["consultations"]
+                stats["loyalty_score"] = min(20, stats["revenue"] / 10)  # Basic score for new patients
+
+        # Get patient names and create enhanced top 10 list
         top_patients = []
         for patient_id, stats in patient_revenue.items():
             patient = patients_collection.find_one({"id": patient_id}, {"_id": 0})
             if patient:
                 top_patients.append({
-                    "name": f"{patient.get('prenom', '')} {patient.get('nom', '')}".strip(),
+                    "nom": f"{patient.get('prenom', '')} {patient.get('nom', '')}".strip(),
                     "consultations": stats["consultations"],
                     "revenue": stats["revenue"],
-                    "last_visit": stats["last_visit"]
+                    "last_visit": stats["last_visit"],
+                    "loyalty_score": round(stats["loyalty_score"], 1),
+                    "avg_interval_days": round(stats["avg_interval"], 0),
+                    "visits_per_year": round(stats["visits_per_year"], 1),
+                    "status": "VIP" if stats["revenue"] > 400 else ("Fidèle" if stats["consultations"] > 3 else "Régulier")
                 })
-        
+
+        # Sort by revenue and get top 10
         top_patients = sorted(top_patients, key=lambda x: x["revenue"], reverse=True)[:10]
+
+        # Add ranking
+        for i, patient in enumerate(top_patients):
+            patient["ranking"] = i + 1
         
         # 3. Durées moyennes
         waiting_times = []
