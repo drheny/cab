@@ -1154,6 +1154,67 @@ const Consultation = ({ user }) => {
                           )}
                         </div>
                       </div>
+
+                      {/* Rappel vaccin */}
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Rappel vaccin</h3>
+                        <div className="space-y-4">
+                          <label className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              checked={consultationData.rappel_vaccin}
+                              onChange={(e) => setConsultationData({...consultationData, rappel_vaccin: e.target.checked})}
+                              className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                            />
+                            <span className="text-sm font-medium text-gray-700">
+                              💉 Programmer un rappel vaccin
+                            </span>
+                          </label>
+                          
+                          {consultationData.rappel_vaccin && (
+                            <div className="bg-blue-50 rounded-lg p-4 space-y-4">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Nom du prochain vaccin
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={consultationData.nom_vaccin}
+                                    onChange={(e) => setConsultationData({...consultationData, nom_vaccin: e.target.value})}
+                                    className="input-stylus"
+                                    placeholder="Ex: ROR, DTCoq, Pneumocoque..."
+                                    inputMode="text"
+                                    autoCapitalize="words"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Date du vaccin
+                                  </label>
+                                  <input
+                                    type="date"
+                                    value={consultationData.date_vaccin}
+                                    onChange={(e) => setConsultationData({...consultationData, date_vaccin: e.target.value})}
+                                    className="input-field"
+                                  />
+                                </div>
+                              </div>
+                              <label className="flex items-center space-x-2">
+                                <input
+                                  type="checkbox"
+                                  checked={consultationData.rappel_whatsapp_vaccin}
+                                  onChange={(e) => setConsultationData({...consultationData, rappel_whatsapp_vaccin: e.target.checked})}
+                                  className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                                />
+                                <span className="text-sm font-medium text-gray-700">
+                                  📱 Envoyer rappel via WhatsApp
+                                </span>
+                              </label>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
 
                     {/* Boutons */}
