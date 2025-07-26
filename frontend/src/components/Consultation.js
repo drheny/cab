@@ -315,12 +315,16 @@ const Consultation = ({ user }) => {
       poids: consultation.poids || '',
       taille: consultation.taille || '',
       pc: consultation.pc || '',
-      observation_medicale: consultation.observations || '',
-      traitement: consultation.traitement || '',
-      bilans: consultation.bilan || '',
+      diagnostic: consultation.diagnostic || consultation.traitement || '', // fallback ancien format
+      observation_clinique: consultation.observation_clinique || consultation.observations || '', // fallback ancien format
       relance_telephonique: consultation.relance_date ? true : false,
       date_relance: consultation.relance_date || '',
-      duree: consultation.duree || 0
+      duree: consultation.duree || 0,
+      // Rappel vaccin
+      rappel_vaccin: consultation.rappel_vaccin || false,
+      nom_vaccin: consultation.nom_vaccin || '',
+      date_vaccin: consultation.date_vaccin || '',
+      rappel_whatsapp_vaccin: consultation.rappel_whatsapp_vaccin || false
     });
 
     setConsultationModal({
