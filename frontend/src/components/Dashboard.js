@@ -288,6 +288,16 @@ const Dashboard = ({ user }) => {
     }
   };
 
+  const sendWhatsAppVaccineReminder = (vaccineReminder) => {
+    if (vaccineReminder.numero_whatsapp) {
+      const message = `🩺 Rappel Vaccin - Cabinet Médical\n\nBonjour ${vaccineReminder.patient_prenom},\n\nNous vous rappelons que le vaccin ${vaccineReminder.nom_vaccin} est prévu pour le ${new Date(vaccineReminder.date_vaccin).toLocaleDateString('fr-FR')}.\n\nMerci de prendre rendez-vous si ce n'est pas encore fait.\n\nÉquipe du cabinet`;
+      const whatsappUrl = `https://wa.me/${vaccineReminder.numero_whatsapp}?text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, '_blank');
+    } else {
+      toast.error('Numéro WhatsApp non disponible pour ce patient');
+    }
+  };
+
   // ==================== MESSAGING FUNCTIONS ====================
 
   const getShortSenderName = (senderName, senderType) => {
