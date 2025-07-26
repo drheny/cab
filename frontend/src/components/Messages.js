@@ -571,14 +571,26 @@ const Messages = ({ user }) => {
                     <div key={message.id} className="p-4 hover:bg-gray-50">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          {/* Patient Info */}
+                          {/* Message Header with Direction */}
                           <div className="flex items-center mb-2">
-                            <button
-                              onClick={() => viewPatientDetails(message.patient_id)}
-                              className="font-medium text-primary-600 hover:text-primary-800 underline"
-                            >
-                              {message.patient_name}
-                            </button>
+                            {/* Direction Badge */}
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mr-2 ${
+                              message.direction === 'secretary_to_doctor' 
+                                ? 'bg-blue-100 text-blue-800'
+                                : 'bg-green-100 text-green-800'
+                            }`}>
+                              {message.direction === 'secretary_to_doctor' ? '📝 Secrétaire → Médecin' : '👨‍⚕️ Médecin → Secrétaire'}
+                            </span>
+                            
+                            {/* Patient Name (only for secretary-to-doctor messages) */}
+                            {message.patient_name && (
+                              <button
+                                onClick={() => viewPatientDetails(message.patient_id)}
+                                className="font-medium text-primary-600 hover:text-primary-800 underline"
+                              >
+                                {message.patient_name}
+                              </button>
+                            )}
                             
                             {/* Priority Badge */}
                             {message.priority === 'urgent' && (
