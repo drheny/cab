@@ -519,13 +519,13 @@ const PatientsListComponent = ({ user }) => {
                 href={patient.lien_whatsapp}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-1 text-green-600 hover:bg-green-100 rounded transition-colors"
+                className="p-1.5 text-gray-400 hover:text-green-600 rounded-lg hover:bg-green-50 transition-colors"
                 title="Envoyer WhatsApp"
               >
                 <MessageCircle className="w-4 h-4" />
               </a>
             ) : (
-              <span className="p-1 text-gray-400">
+              <span className="p-1.5 text-gray-300">
                 <MessageCircle className="w-4 h-4" />
               </span>
             )}
