@@ -3129,36 +3129,71 @@ async def get_phone_messages(
 
 @app.post("/api/phone-messages")
 async def create_phone_message(message_data: PhoneMessageCreate):
-    """Create new phone message (secrétaire only)"""
+    """Create new phone message (bidirectional)"""
     try:
-        # Get patient info
-        patient = patients_collection.find_one({"id": message_data.patient_id}, {"_id": 0})
-        if not patient:
-            raise HTTPException(status_code=404, detail="Patient not found")
+        # Determine sender and recipient based on direction
+        if message_data.direction == "secretary_to_doctor":
+            # Secretary sending to doctor
+            if not message_data.patient_id:
+                raise HTTPException(status_code=400, detail="Patient ID is required for secretary-to-doctor messages")
+            
+            # Get patient info
+            patient = patients_collection.find_one({"id": message_data.patient_id}, {"_id": 0})
+            if not patient:
+                raise HTTPException(status_code=404, detail="Patient not found")
+            
+            created_by = "Secrétaire"
+            patient_name = f"{patient.get('prenom', '')} {patient.get('nom', '')}".strip()
+            
+        elif message_data.direction == "doctor_to_secretary":
+            # Doctor sending to secretary
+            created_by = "Dr Heni Dridi"
+            patient_name = ""  # No patient for doctor-to-secretary messages
+            
+        else:
+            raise HTTPException(status_code=400, detail="Invalid direction")
         
         # Create phone message
         phone_message = PhoneMessage(
             patient_id=message_data.patient_id,
-            patient_name=f"{patient.get('prenom', '')} {patient.get('nom', '')}".strip(),
+            patient_name=patient_name,
             message_content=message_data.message_content,
             priority=message_data.priority,
             call_date=message_data.call_date,
             call_time=message_data.call_time,
-            created_by="Secrétaire"  # Could be dynamic based on user session
+            direction=message_data.direction,
+            recipient_role=message_data.recipient_role,
+            created_by=created_by
         )
         
         # Insert into database
         phone_message_dict = phone_message.dict()
         phone_messages_collection.insert_one(phone_message_dict)
         
-        # Send WebSocket notification to médecin
-        notification_data = {
-            "type": "new_phone_message",
-            "message_id": phone_message.id,
-            "patient_name": phone_message.patient_name,
-            "priority": phone_message.priority,
-            "timestamp": phone_message.created_at.isoformat()
-        }
+        # Send WebSocket notification to appropriate recipient
+        if message_data.direction == "secretary_to_doctor":
+            notification_data = {
+                "type": "new_phone_message",
+                "message_id": phone_message.id,
+                "patient_name": phone_message.patient_name,
+                "sender": "Secrétaire",
+                "recipient": "Médecin",
+                "priority": phone_message.priority,
+                "direction": "secretary_to_doctor",
+                "timestamp": phone_message.created_at.isoformat()
+            }
+        else:  # doctor_to_secretary
+            notification_data = {
+                "type": "new_phone_message",
+                "message_id": phone_message.id,
+                "patient_name": "",
+                "sender": "Dr Heni Dridi",
+                "recipient": "Secrétaire",
+                "priority": phone_message.priority,
+                "direction": "doctor_to_secretary",
+                "timestamp": phone_message.created_at.isoformat()
+            }
+        
         await manager.broadcast(notification_data)
         
         return {"message": "Phone message created successfully", "message_id": phone_message.id}
