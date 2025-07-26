@@ -292,16 +292,18 @@ class UserResponse(BaseModel):
 # Modèles pour les messages téléphoniques
 class PhoneMessage(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    patient_id: str
-    patient_name: str  # Nom complet du patient pour faciliter la recherche
-    message_content: str  # Question/demande du patient
-    response_content: str = ""  # Réponse du médecin
+    patient_id: str = ""  # Optional for doctor-to-secretary messages
+    patient_name: str = ""  # Nom complet du patient pour faciliter la recherche
+    message_content: str  # Question/demande du patient ou message du médecin
+    response_content: str = ""  # Réponse du médecin ou de la secrétaire
     status: str = "nouveau"  # "nouveau", "traité"
     priority: str = "normal"  # "urgent", "normal"
     call_date: str  # Date de l'appel YYYY-MM-DD
     call_time: str  # Heure de l'appel HH:MM
-    created_by: str  # ID/nom de la secrétaire
-    responded_by: str = ""  # ID/nom du médecin qui répond
+    created_by: str  # ID/nom de l'expéditeur
+    responded_by: str = ""  # ID/nom de celui qui répond
+    direction: str = "secretary_to_doctor"  # "secretary_to_doctor", "doctor_to_secretary"
+    recipient_role: str = "medecin"  # "medecin", "secretaire"
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
 
