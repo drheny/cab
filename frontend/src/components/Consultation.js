@@ -69,12 +69,16 @@ const Consultation = ({ user }) => {
     poids: '',
     taille: '',
     pc: '',
-    observation_medicale: '',
-    traitement: '',
-    bilans: '',
+    diagnostic: '',
+    observation_clinique: '',
     relance_telephonique: false,
     date_relance: '',
-    duree: 0
+    duree: 0,
+    // Rappel vaccin
+    rappel_vaccin: false,
+    nom_vaccin: '',
+    date_vaccin: '',
+    rappel_whatsapp_vaccin: false
   });
 
   // Chargement initial des patients
