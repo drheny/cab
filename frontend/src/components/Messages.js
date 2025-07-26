@@ -303,7 +303,7 @@ const Messages = ({ user }) => {
   // Reload when filters change
   useEffect(() => {
     loadPhoneMessages();
-  }, [statusFilter, priorityFilter]);
+  }, [statusFilter, priorityFilter, directionFilter]);
 
   // Search patients when search query changes
   useEffect(() => {
