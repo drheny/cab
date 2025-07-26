@@ -4833,9 +4833,33 @@ async def calculate_predictions(evolution_data: list):
         
         return {
             "next_month": {
-                "consultations_estimees": max(0, round(predicted_consultations)),
-                "revenue_estime": max(0, round(predicted_revenue)),
+                "consultations_estimees": max(5, round(predicted_consultations)),
+                "revenue_estime": max(300, round(predicted_revenue)),
                 "confiance": round(min(average_confidence, 95), 1)  # Cap at 95%
+            },
+            "trend_analysis": {
+                "direction": "croissant" if consultation_model.coef_[0] > 0 else "décroissant",
+                "slope_consultations": round(consultation_model.coef_[0], 2),
+                "slope_revenue": round(revenue_model.coef_[0], 2),
+                "growth_rate": f"{round(consultation_model.coef_[0] * 12 / max(np.mean(y_consultations), 1) * 100, 1)}% annuel"
+            },
+            "model_performance": {
+                "consultation_accuracy": round(consultation_conf, 1),
+                "revenue_accuracy": round(revenue_conf, 1),
+                "data_points": len(evolution_data),
+                "prediction_reliability": "Élevée" if average_confidence > 80 else ("Moyenne" if average_confidence > 60 else "Faible")
+            },
+            "forecasts": {
+                "next_3_months": {
+                    "consultations": [
+                        max(5, round(consultation_model.predict([[next_month_index + i]])[0])) 
+                        for i in range(3)
+                    ],
+                    "revenue": [
+                        max(300, round(revenue_model.predict([[next_month_index + i]])[0])) 
+                        for i in range(3)
+                    ]
+                }
             },
             "trend": "croissant" if predicted_consultations > y_consultations[-1] else "décroissant"
         }
