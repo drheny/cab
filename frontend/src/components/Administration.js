@@ -1268,8 +1268,8 @@ const Administration = ({ user }) => {
                 )}
 
                 <button
-                  onClick={generateAdvancedReport}
-                  disabled={isGeneratingReport}
+                  onClick={generateNewAdvancedReport}
+                  disabled={advancedReportLoading}
                   className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50"
                 >
                   {isGeneratingReport ? (
