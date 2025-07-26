@@ -804,10 +804,10 @@ const Dashboard = ({ user }) => {
                   }`}
                 >
                   <div
-                    className={`max-w-xs lg:max-w-md px-3 py-2 rounded-lg ${
+                    className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl shadow-sm ${
                       message.sender_type === user.role
-                        ? 'bg-gray-900 text-white'
-                        : 'bg-gray-100 text-gray-900 border border-gray-200'
+                        ? 'bg-gradient-to-r from-blue-100 to-indigo-100 text-slate-700 border border-blue-200'
+                        : 'bg-gradient-to-r from-rose-50 to-pink-50 text-slate-700 border border-rose-200'
                     }`}
                   >
                     {/* Reply indicator */}
