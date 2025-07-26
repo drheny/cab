@@ -3098,10 +3098,12 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
 async def get_phone_messages(
     status: str = Query("", description="Filter by status: nouveau, traité"),
     priority: str = Query("", description="Filter by priority: urgent, normal"),
+    direction: str = Query("", description="Filter by direction: secretary_to_doctor, doctor_to_secretary"),
+    recipient_role: str = Query("", description="Filter by recipient role: medecin, secretaire"),
     date_from: str = Query("", description="Filter from date YYYY-MM-DD"),
     date_to: str = Query("", description="Filter to date YYYY-MM-DD")
 ):
-    """Get phone messages with filtering"""
+    """Get phone messages with filtering (bidirectional)"""
     try:
         # Build filter query
         filter_query = {}
@@ -3110,6 +3112,10 @@ async def get_phone_messages(
             filter_query["status"] = status
         if priority:
             filter_query["priority"] = priority
+        if direction:
+            filter_query["direction"] = direction
+        if recipient_role:
+            filter_query["recipient_role"] = recipient_role
         if date_from:
             filter_query["call_date"] = {"$gte": date_from}
         if date_to:
