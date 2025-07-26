@@ -241,7 +241,7 @@ const PatientsListComponent = ({ user }) => {
   const searchInputProps = useMemo(() => ({
     ref: searchInputRef,
     type: "text",
-    placeholder: "Rechercher par nom, prénom ou date de naissance - Écriture manuscrite supportée",
+    placeholder: "Rechercher par nom, prénom ou date de naissance (dd/mm/yyyy) - Écriture manuscrite supportée",
     defaultValue: searchTerm,
     onChange: handleSearch,
     className: "search-stylus w-full pl-8 sm:pl-10 pr-4",
