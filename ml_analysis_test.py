@@ -282,7 +282,7 @@ class MLAnalysisTest(unittest.TestCase):
         print("\n🔍 Testing GEMINI ENRICHMENT")
         
         # Call the advanced reports endpoint
-        response = requests.get(f"{self.base_url}/api/admin/advanced-reports?period_type=monthly&month=12&year=2024")
+        response = requests.get(f"{self.base_url}/api/admin/advanced-reports?period_type=monthly&month=7&year=2025")
         self.assertEqual(response.status_code, 200, f"Advanced reports failed: {response.text}")
         
         data = response.json()
