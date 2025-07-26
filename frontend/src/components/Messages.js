@@ -81,24 +81,53 @@ const Messages = ({ user }) => {
     }
   };
 
-  // Create phone message (secrétaire only)
+  // Create phone message (bidirectional)
   const handleCreateMessage = async () => {
-    if (!selectedPatient || !messageContent.trim()) {
-      toast.error('Veuillez sélectionner un patient et saisir un message');
+    if (!messageContent.trim()) {
+      toast.error('Veuillez saisir un message');
       return;
+    }
+
+    // Determine direction and validation based on user role
+    let direction, recipient_role;
+    
+    if (user.role === 'secretaire') {
+      // Secretary sending to doctor
+      if (!selectedPatient) {
+        toast.error('Veuillez sélectionner un patient');
+        return;
+      }
+      direction = 'secretary_to_doctor';
+      recipient_role = 'medecin';
+    } else {
+      // Doctor sending to secretary
+      direction = 'doctor_to_secretary';
+      recipient_role = 'secretaire';
     }
 
     try {
       const now = new Date();
-      await axios.post('/api/phone-messages', {
-        patient_id: selectedPatient.id,
+      const messageData = {
         message_content: messageContent,
         priority: priority,
         call_date: now.toISOString().split('T')[0],
-        call_time: now.toTimeString().split(' ')[0].substring(0, 5)
-      });
+        call_time: now.toTimeString().split(' ')[0].substring(0, 5),
+        direction: direction,
+        recipient_role: recipient_role
+      };
 
-      toast.success('Message créé avec succès');
+      // Add patient_id only for secretary-to-doctor messages
+      if (user.role === 'secretaire' && selectedPatient) {
+        messageData.patient_id = selectedPatient.id;
+      }
+
+      await axios.post('/api/phone-messages', messageData);
+
+      const successMessage = user.role === 'secretaire' 
+        ? 'Message envoyé au médecin avec succès'
+        : 'Message envoyé à la secrétaire avec succès';
+      
+      toast.success(successMessage);
       
       // Reset form
       setSelectedPatient(null);
