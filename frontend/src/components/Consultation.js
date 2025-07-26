@@ -396,10 +396,14 @@ const Consultation = ({ user }) => {
         poids: parseFloat(consultationData.poids) || 0,
         taille: parseFloat(consultationData.taille) || 0,
         pc: parseFloat(consultationData.pc) || 0,
-        observations: consultationData.observation_medicale,
-        traitement: consultationData.traitement,
-        bilan: consultationData.bilans,
-        relance_date: consultationData.relance_telephonique ? consultationData.date_relance : ""
+        diagnostic: consultationData.diagnostic,
+        observation_clinique: consultationData.observation_clinique,
+        relance_date: consultationData.relance_telephonique ? consultationData.date_relance : "",
+        // Rappel vaccin
+        rappel_vaccin: consultationData.rappel_vaccin,
+        nom_vaccin: consultationData.rappel_vaccin ? consultationData.nom_vaccin : "",
+        date_vaccin: consultationData.rappel_vaccin ? consultationData.date_vaccin : "",
+        rappel_whatsapp_vaccin: consultationData.rappel_vaccin ? consultationData.rappel_whatsapp_vaccin : false
       };
 
       if (consultationModal.mode === 'create') {
