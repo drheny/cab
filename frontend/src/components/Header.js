@@ -35,8 +35,8 @@ const Header = ({ user, onLogout, onToggleSidebar }) => {
               <User className="w-3 h-3 sm:w-4 sm:h-4 text-primary-600" />
             </div>
             <div className="hidden sm:block">
-              <h2 className="font-medium text-gray-900 text-xs sm:text-sm">{user.name}</h2>
-              <p className="text-xs text-gray-500 capitalize">{user.type}</p>
+              <h2 className="font-medium text-gray-900 text-xs sm:text-sm">{user.full_name}</h2>
+              <p className="text-xs text-gray-500 capitalize">{user.role}</p>
             </div>
           </div>
         </div>
