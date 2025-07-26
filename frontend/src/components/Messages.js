@@ -279,16 +279,30 @@ const Messages = ({ user }) => {
         loadPhoneMessages();
         
         // Show notification
-        if (data.type === 'new_phone_message' && user.type === 'medecin') {
-          toast.success(`Nouveau message de ${data.patient_name}`, {
-            icon: '📞',
-            duration: 5000
-          });
-        } else if (data.type === 'phone_message_responded' && user.type === 'secretaire') {
-          toast.success(`Réponse reçue pour ${data.patient_name}`, {
-            icon: '✅',
-            duration: 5000
-          });
+        if (data.type === 'new_phone_message') {
+          if (data.direction === 'secretary_to_doctor' && user.role === 'medecin') {
+            toast.success(`Nouveau message de la secrétaire concernant ${data.patient_name}`, {
+              icon: '📞',
+              duration: 5000
+            });
+          } else if (data.direction === 'doctor_to_secretary' && user.role === 'secretaire') {
+            toast.success(`Nouveau message du médecin`, {
+              icon: '📞',
+              duration: 5000
+            });
+          }
+        } else if (data.type === 'phone_message_responded') {
+          if (data.direction === 'secretary_to_doctor' && user.role === 'secretaire') {
+            toast.success(`Réponse reçue du médecin concernant ${data.patient_name}`, {
+              icon: '✅',
+              duration: 5000
+            });
+          } else if (data.direction === 'doctor_to_secretary' && user.role === 'medecin') {
+            toast.success(`Réponse reçue de la secrétaire`, {
+              icon: '✅',
+              duration: 5000
+            });
+          }
         }
       }
     };
