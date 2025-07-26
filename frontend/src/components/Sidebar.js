@@ -36,6 +36,7 @@ const Sidebar = ({ user, isOpen, onClose, phoneMessagesCount = 0 }) => {
     if (permission === 'patients') return user?.permissions?.patients || true;
     if (permission === 'appointments') return user?.permissions?.appointments || true;
     if (permission === 'consultations') return user?.permissions?.consultations || true;
+    if (permission === 'ai_room') return user?.permissions?.ai_room || false;
     return false;
   };
 
