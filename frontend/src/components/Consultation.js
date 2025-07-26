@@ -863,9 +863,28 @@ const Consultation = ({ user }) => {
                 </div>
               </div>
 
-              {/* Observations et traitement */}
+              {/* Diagnostic et observations */}
               <div className="mt-6 space-y-6">
-                {viewModal.consultation.observations && (
+                {viewModal.consultation.diagnostic && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Diagnostic</h3>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-gray-900">{viewModal.consultation.diagnostic}</p>
+                    </div>
+                  </div>
+                )}
+
+                {viewModal.consultation.observation_clinique && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Observation Clinique</h3>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-gray-900 whitespace-pre-wrap">{viewModal.consultation.observation_clinique}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Afficher les anciens champs pour compatibilité */}
+                {viewModal.consultation.observations && !viewModal.consultation.observation_clinique && (
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-3">Observations médicales</h3>
                     <div className="bg-gray-50 rounded-lg p-4">
@@ -874,7 +893,7 @@ const Consultation = ({ user }) => {
                   </div>
                 )}
 
-                {viewModal.consultation.traitement && (
+                {viewModal.consultation.traitement && !viewModal.consultation.diagnostic && (
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-3">Traitement</h3>
                     <div className="bg-gray-50 rounded-lg p-4">
@@ -888,6 +907,22 @@ const Consultation = ({ user }) => {
                     <h3 className="text-lg font-semibold text-gray-900 mb-3">Bilans</h3>
                     <div className="bg-gray-50 rounded-lg p-4">
                       <p className="text-gray-900 whitespace-pre-wrap">{viewModal.consultation.bilan}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Rappel vaccin */}
+                {viewModal.consultation.rappel_vaccin && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Rappel Vaccin</h3>
+                    <div className="bg-blue-50 rounded-lg p-4">
+                      <div className="flex items-center space-x-4 mb-2">
+                        <span className="font-medium text-blue-900">💉 {viewModal.consultation.nom_vaccin}</span>
+                        <span className="text-blue-700">📅 {formatDate(viewModal.consultation.date_vaccin)}</span>
+                        {viewModal.consultation.rappel_whatsapp_vaccin && (
+                          <span className="text-green-600">📱 WhatsApp activé</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
