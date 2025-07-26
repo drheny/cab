@@ -1300,6 +1300,40 @@ async def get_phone_reminders_today():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching phone reminders: {str(e)}")
 
+@app.get("/api/dashboard/vaccine-reminders")
+async def get_vaccine_reminders_today():
+    """Get scheduled vaccine reminders for today"""
+    try:
+        today_str = datetime.now().strftime("%Y-%m-%d")
+        
+        # Find consultations with vaccine reminders for today
+        consultations_with_vaccine = list(consultations_collection.find({
+            "rappel_vaccin": True,
+            "date_vaccin": today_str
+        }, {"_id": 0}))
+        
+        vaccine_reminders = []
+        for consultation in consultations_with_vaccine:
+            # Get patient info
+            patient = patients_collection.find_one({"id": consultation["patient_id"]}, {"_id": 0})
+            if patient:
+                vaccine_reminders.append({
+                    "id": consultation["id"],
+                    "patient_id": consultation["patient_id"],
+                    "patient_nom": patient.get("nom", ""),
+                    "patient_prenom": patient.get("prenom", ""),
+                    "numero_whatsapp": patient.get("numero_whatsapp", ""),
+                    "nom_vaccin": consultation.get("nom_vaccin", ""),
+                    "date_vaccin": consultation.get("date_vaccin", ""),
+                    "rappel_whatsapp_vaccin": consultation.get("rappel_whatsapp_vaccin", False),
+                    "consultation_id": consultation["id"]
+                })
+        
+        return {"vaccine_reminders": vaccine_reminders}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching vaccine reminders: {str(e)}")
+
 @app.get("/api/dashboard")
 async def get_dashboard():
     """Get dashboard statistics"""
