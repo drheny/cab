@@ -826,19 +826,19 @@ const Dashboard = ({ user }) => {
                     <div className="text-sm leading-relaxed font-medium">{message.content}</div>
                     
                     {/* Message footer */}
-                    <div className="flex items-center justify-between mt-2 text-xs">
+                    <div className="flex items-center justify-between mt-3 text-xs">
                       <div className="flex items-center space-x-2">
-                        <span className="text-xs">
+                        <span className="text-sm">
                           {message.sender_type === 'medecin' ? '👨‍⚕️' : '👩‍💼'}
                         </span>
-                        <span className="font-medium">
+                        <span className="font-semibold text-xs text-slate-600">
                           {getShortSenderName(message.sender_name, message.sender_type)}
                         </span>
                         {message.is_edited && (
-                          <span className={`px-2 py-1 rounded text-xs ${
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                             message.sender_type === user.role 
-                              ? 'bg-white bg-opacity-20 text-white text-opacity-80'
-                              : 'bg-gray-200 text-gray-600'
+                              ? 'bg-indigo-200 bg-opacity-60 text-indigo-700'
+                              : 'bg-rose-200 bg-opacity-60 text-rose-700'
                           }`}>
                             modifié
                           </span>
@@ -846,9 +846,7 @@ const Dashboard = ({ user }) => {
                       </div>
                       
                       <div className="flex items-center space-x-2">
-                        <span className={`text-xs ${
-                          message.sender_type === user.role ? 'text-white text-opacity-70' : 'text-gray-500'
-                        }`}>
+                        <span className="text-xs text-slate-500 font-medium">
                           {new Date(message.timestamp).toLocaleTimeString('fr-FR', {
                             hour: '2-digit',
                             minute: '2-digit'
@@ -865,10 +863,12 @@ const Dashboard = ({ user }) => {
                                   e.stopPropagation();
                                   handleEditMessage(message);
                                 }}
-                                className="p-1 rounded hover:bg-white hover:bg-opacity-20 transition-colors"
+                                className="p-1.5 rounded-full hover:bg-white hover:bg-opacity-50 transition-all duration-200 hover:shadow-sm"
                                 title="Modifier"
                               >
-                                <span className="text-xs">✏️</span>
+                                <svg className="w-3 h-3 text-slate-500 hover:text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
                               </button>
                               <button
                                 onClick={(e) => {
@@ -876,23 +876,28 @@ const Dashboard = ({ user }) => {
                                   e.stopPropagation();
                                   handleDeleteMessage(message.id);
                                 }}
-                                className="p-1 rounded hover:bg-red-500 hover:bg-opacity-20 transition-colors"
+                                className="p-1.5 rounded-full hover:bg-red-100 hover:bg-opacity-50 transition-all duration-200 hover:shadow-sm"
                                 title="Supprimer"
                               >
-                                <span className="text-xs">🗑️</span>
+                                <svg className="w-3 h-3 text-slate-500 hover:text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
                               </button>
                             </>
                           )}
-                          
-                          {message.sender_type !== user.role && (
-                            <button
-                              onClick={() => handleReplyToMessage(message)}
-                              className="p-1 rounded hover:bg-gray-200 transition-colors"
-                              title="Répondre"
-                            >
-                              <span className="text-xs">↩️</span>
-                            </button>
-                          )}
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleReplyToMessage(message);
+                            }}
+                            className="p-1.5 rounded-full hover:bg-white hover:bg-opacity-50 transition-all duration-200 hover:shadow-sm"
+                            title="Répondre"
+                          >
+                            <svg className="w-3 h-3 text-slate-500 hover:text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                            </svg>
+                          </button>
                         </div>
                       </div>
                     </div>
