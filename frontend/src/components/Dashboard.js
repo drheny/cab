@@ -41,6 +41,7 @@ const Dashboard = ({ user }) => {
   // Data states
   const [birthdays, setBirthdays] = useState([]);
   const [phoneReminders, setPhoneReminders] = useState([]);
+  const [vaccineReminders, setVaccineReminders] = useState([]);
   
   // Messaging states
   const [messages, setMessages] = useState([]);
