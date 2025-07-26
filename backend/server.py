@@ -3205,18 +3205,28 @@ async def create_phone_message(message_data: PhoneMessageCreate):
 
 @app.put("/api/phone-messages/{message_id}/response")
 async def respond_phone_message(message_id: str, response_data: PhoneMessageResponse):
-    """Add response to phone message (médecin only)"""
+    """Add response to phone message (bidirectional)"""
     try:
         # Find message
         message = phone_messages_collection.find_one({"id": message_id})
         if not message:
             raise HTTPException(status_code=404, detail="Phone message not found")
         
+        # Determine who is responding based on message direction
+        if message["direction"] == "secretary_to_doctor":
+            # Secretary sent to doctor, so doctor is responding
+            responded_by = "Dr Heni Dridi"
+            responder_role = "medecin"
+        else:  # doctor_to_secretary
+            # Doctor sent to secretary, so secretary is responding
+            responded_by = "Secrétaire"
+            responder_role = "secretaire"
+        
         # Update message with response
         update_data = {
             "response_content": response_data.response_content,
             "status": "traité",
-            "responded_by": "Dr Heni Dridi",  # Could be dynamic based on user session
+            "responded_by": responded_by,
             "updated_at": datetime.now()
         }
         
@@ -3233,6 +3243,9 @@ async def respond_phone_message(message_id: str, response_data: PhoneMessageResp
             "type": "phone_message_responded",
             "message_id": message_id,
             "patient_name": message.get("patient_name", ""),
+            "responder": responded_by,
+            "responder_role": responder_role,
+            "direction": message["direction"],
             "timestamp": datetime.now().isoformat()
         }
         await manager.broadcast(notification_data)
