@@ -36,9 +36,11 @@ class MLAnalysisTest(unittest.TestCase):
         
         data = response.json()
         
-        # Verify top_patients section exists
-        self.assertIn("top_patients", data, "top_patients section missing from response")
-        top_patients = data["top_patients"]
+        # Verify top_patients section exists in advanced_statistics
+        self.assertIn("advanced_statistics", data, "advanced_statistics section missing from response")
+        advanced_stats = data["advanced_statistics"]
+        self.assertIn("top_patients", advanced_stats, "top_patients section missing from advanced_statistics")
+        top_patients = advanced_stats["top_patients"]
         self.assertIsInstance(top_patients, list, "top_patients should be a list")
         
         print(f"✅ Found {len(top_patients)} top patients")
