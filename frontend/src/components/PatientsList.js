@@ -41,6 +41,21 @@ const PatientsListComponent = ({ user }) => {
     statut: 'programme'
   });
   const searchInputRef = useRef(null);
+
+  // Helper function to convert dd/mm/yyyy to yyyy-mm-dd for search
+  const formatDateForSearch = (searchTerm) => {
+    // Check if the search term matches dd/mm/yyyy format
+    const datePattern = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+    const match = searchTerm.match(datePattern);
+    
+    if (match) {
+      const [, day, month, year] = match;
+      // Convert to yyyy-mm-dd format for backend search
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    }
+    
+    return searchTerm;
+  };
   const [formData, setFormData] = useState({
     nom: '',
     prenom: '',
