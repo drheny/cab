@@ -75,6 +75,7 @@ const Dashboard = ({ user }) => {
     fetchDashboardData();
     fetchBirthdays();
     fetchPhoneReminders();
+    fetchVaccineReminders();
     fetchMessages();
     initializeWebSocket();
     
