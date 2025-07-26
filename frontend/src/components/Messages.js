@@ -31,6 +31,9 @@ const Messages = ({ user }) => {
   const [responseContent, setResponseContent] = useState('');
   const [respondingTo, setRespondingTo] = useState(null);
   
+  // Direction filter for bidirectional messages
+  const [directionFilter, setDirectionFilter] = useState('');
+  
   // Edition
   const [editingMessage, setEditingMessage] = useState(null);
   const [editContent, setEditContent] = useState('');
