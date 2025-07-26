@@ -312,7 +312,7 @@ const Messages = ({ user }) => {
         wsRef.current.close();
       }
     };
-  }, [user.type]);
+  }, [user.role]);
 
   // Reload when filters change
   useEffect(() => {
