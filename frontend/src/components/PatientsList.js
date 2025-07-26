@@ -174,8 +174,8 @@ const PatientsListComponent = ({ user }) => {
     try {
       setSearchLoading(Boolean(search));
       
-      // Format date search if needed
-      const formattedSearch = formatDateForSearch(search);
+      // Only format and search if should trigger search
+      const formattedSearch = shouldTriggerSearch(search) ? formatDateForSearch(search) : search;
       
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/patients`, {
         params: {
