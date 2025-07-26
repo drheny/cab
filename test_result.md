@@ -11018,6 +11018,18 @@ The backend APIs fully support the patient+appointment creation workflow. The pa
 ## YAML Test Results Structure
 
 backend:
+  - task: "Bidirectional phone messages API endpoints with direction and recipient_role filtering"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "BIDIRECTIONAL PHONE MESSAGES BACKEND TESTING COMPLETED SUCCESSFULLY ✅ (2025-01-23). Comprehensive testing of updated bidirectional phone messages API endpoints completed with all success criteria met. All test scenarios passed: 1) GET /api/phone-messages with new filtering parameters (direction: secretary_to_doctor/doctor_to_secretary, recipient_role: medecin/secretaire) working correctly with proper filtering logic, 2) POST /api/phone-messages for secretary-to-doctor messages (requires patient_id) creates messages with correct direction, recipient_role, created_by='Secrétaire', and patient_name populated, 3) POST /api/phone-messages for doctor-to-secretary messages (patient_id optional) creates messages with correct direction, recipient_role, created_by='Dr Heni Dridi', and empty patient_id/patient_name, 4) Direction field validation working - invalid directions return proper 400 errors, 5) Missing patient_id validation for secretary-to-doctor messages returns proper 400 error, 6) PUT /api/phone-messages/{message_id}/response working for both directions with correct responded_by assignment (Dr Heni Dridi for secretary-to-doctor, Secrétaire for doctor-to-secretary), 7) Combined filtering (direction + recipient_role + priority) working correctly, 8) WebSocket notifications triggered for both message directions, 9) All existing phone messages functionality maintained. Backend fully supports bidirectional messaging between secretary and doctor with proper validation and response handling."
+
   - task: "Enhanced /api/payments/stats endpoint with consultation statistics"
     implemented: true
     working: true
