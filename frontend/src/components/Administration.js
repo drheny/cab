@@ -1373,153 +1373,167 @@ const Administration = ({ user }) => {
             </div>
 
             {/* Advanced Statistics Display */}
-            {advancedReportsData && (
+            {advancedReportsData && advancedReportsData.advanced_statistics && (
               <div className="space-y-6">
                 {/* Main Statistics Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {/* Visites vs Contrôles */}
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-blue-700">Consultations</span>
-                      <BarChart3 className="w-5 h-5 text-blue-600" />
+                  {advancedReportsData.advanced_statistics.repartition_visite_controle && (
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-blue-700">Consultations</span>
+                        <BarChart3 className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-blue-600">Visites</span>
+                          <span className="text-lg font-bold text-blue-900">
+                            {advancedReportsData.advanced_statistics.repartition_visite_controle.visites?.count || 0}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-blue-600">Contrôles</span>
+                          <span className="text-lg font-bold text-blue-900">
+                            {advancedReportsData.advanced_statistics.repartition_visite_controle.controles?.count || 0}
+                          </span>
+                        </div>
+                        <div className="text-xs text-blue-500">
+                          Ratio V/C: {(
+                            (advancedReportsData.advanced_statistics.repartition_visite_controle.visites?.percentage || 0) / 
+                            Math.max(advancedReportsData.advanced_statistics.repartition_visite_controle.controles?.percentage || 1, 1)
+                          ).toFixed(1)}
+                        </div>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-blue-600">Visites</span>
-                        <span className="text-lg font-bold text-blue-900">
-                          {advancedReportsData.advanced_statistics.repartition_visite_controle.visites.count}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-blue-600">Contrôles</span>
-                        <span className="text-lg font-bold text-blue-900">
-                          {advancedReportsData.advanced_statistics.repartition_visite_controle.controles.count}
-                        </span>
-                      </div>
-                      <div className="text-xs text-blue-500">
-                        Ratio V/C: {(advancedReportsData.advanced_statistics.repartition_visite_controle.visites.percentage / 
-                        advancedReportsData.advanced_statistics.repartition_visite_controle.controles.percentage).toFixed(1)}
-                      </div>
-                    </div>
-                  </div>
+                  )}
 
                   {/* Top Patients */}
-                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-green-700">Top Patients</span>
-                      <Users className="w-5 h-5 text-green-600" />
+                  {advancedReportsData.advanced_statistics.top_patients && (
+                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-green-700">Top Patients</span>
+                        <Users className="w-5 h-5 text-green-600" />
+                      </div>
+                      <div className="space-y-1">
+                        {advancedReportsData.advanced_statistics.top_patients.slice(0, 3).map((patient, index) => (
+                          <div key={index} className="flex items-center justify-between">
+                            <span className="text-xs text-green-600 truncate mr-2">{patient.nom}</span>
+                            <span className="text-sm font-bold text-green-900">{patient.revenue} TND</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="text-xs text-green-500 mt-2">
+                        {advancedReportsData.advanced_statistics.top_patients.length} patients actifs
+                      </div>
                     </div>
-                    <div className="space-y-1">
-                      {advancedReportsData.advanced_statistics.top_patients.slice(0, 3).map((patient, index) => (
-                        <div key={index} className="flex items-center justify-between">
-                          <span className="text-xs text-green-600 truncate mr-2">{patient.nom}</span>
-                          <span className="text-sm font-bold text-green-900">{patient.revenue} TND</span>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="text-xs text-green-500 mt-2">
-                      {advancedReportsData.advanced_statistics.top_patients.length} patients actifs
-                    </div>
-                  </div>
+                  )}
 
                   {/* Duration Analysis */}
-                  <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-lg border border-yellow-200">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-yellow-700">Durées</span>
-                      <Clock className="w-5 h-5 text-yellow-600" />
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-yellow-600">Attente moy.</span>
-                        <span className="text-lg font-bold text-yellow-900">
-                          {advancedReportsData.advanced_statistics.durees_moyennes.temps_attente}min
-                        </span>
+                  {advancedReportsData.advanced_statistics.durees_moyennes && (
+                    <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-lg border border-yellow-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-yellow-700">Durées</span>
+                        <Clock className="w-5 h-5 text-yellow-600" />
                       </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-yellow-600">Consultation</span>
-                        <span className="text-lg font-bold text-yellow-900">
-                          {advancedReportsData.advanced_statistics.durees_moyennes.duree_consultation}min
-                        </span>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-yellow-600">Attente moy.</span>
+                          <span className="text-lg font-bold text-yellow-900">
+                            {advancedReportsData.advanced_statistics.durees_moyennes.temps_attente || 0}min
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-yellow-600">Consultation</span>
+                          <span className="text-lg font-bold text-yellow-900">
+                            {advancedReportsData.advanced_statistics.durees_moyennes.duree_consultation || 0}min
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Patient Retention */}
-                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg border border-purple-200">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-purple-700">Fidélisation</span>
-                      <UserCheck className="w-4 h-4 text-purple-600" />
+                  {advancedReportsData.advanced_statistics.taux_fidelisation && (
+                    <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg border border-purple-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-purple-700">Fidélisation</span>
+                        <UserCheck className="w-4 h-4 text-purple-600" />
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-purple-600">Taux retour</span>
+                          <span className="text-lg font-bold text-purple-900">
+                            {advancedReportsData.advanced_statistics.taux_fidelisation.taux_retour || 0}%
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-purple-600">Nouveaux</span>
+                          <span className="text-sm font-bold text-purple-800">
+                            {advancedReportsData.advanced_statistics.taux_fidelisation.nouveaux_patients || 0}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-purple-600">Récurrents</span>
+                          <span className="text-sm font-bold text-purple-800">
+                            {advancedReportsData.advanced_statistics.taux_fidelisation.patients_recurrents || 0}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-purple-600">Taux retour</span>
-                        <span className="text-lg font-bold text-purple-900">
-                          {advancedReportsData.advanced_statistics.taux_fidelisation.taux_retour}%
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-purple-600">Nouveaux</span>
-                        <span className="text-sm font-bold text-purple-800">
-                          {advancedReportsData.advanced_statistics.taux_fidelisation.nouveaux_patients}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-purple-600">Récurrents</span>
-                        <span className="text-sm font-bold text-purple-800">
-                          {advancedReportsData.advanced_statistics.taux_fidelisation.patients_recurrents}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* Additional Statistics */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Phone Reminders */}
-                  <div className="bg-white p-4 rounded-lg border border-gray-200">
-                    <div className="flex items-center space-x-2 mb-4">
-                      <Phone className="w-5 h-5 text-gray-600" />
-                      <h3 className="font-medium text-gray-900">Relances Téléphoniques</h3>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-blue-600">
-                          {advancedReportsData.advanced_statistics.relances_telephoniques.total}
-                        </div>
-                        <div className="text-sm text-gray-600">Total</div>
+                  {advancedReportsData.advanced_statistics.relances_telephoniques && (
+                    <div className="bg-white p-4 rounded-lg border border-gray-200">
+                      <div className="flex items-center space-x-2 mb-4">
+                        <Phone className="w-5 h-5 text-gray-600" />
+                        <h3 className="font-medium text-gray-900">Relances Téléphoniques</h3>
                       </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-green-600">
-                          {advancedReportsData.advanced_statistics.relances_telephoniques.taux_reponse}%
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-blue-600">
+                            {advancedReportsData.advanced_statistics.relances_telephoniques.total || 0}
+                          </div>
+                          <div className="text-sm text-gray-600">Total</div>
                         </div>
-                        <div className="text-sm text-gray-600">Taux réponse</div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-green-600">
+                            {advancedReportsData.advanced_statistics.relances_telephoniques.taux_reponse || 0}%
+                          </div>
+                          <div className="text-sm text-gray-600">Taux réponse</div>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Room Utilization */}
-                  <div className="bg-white p-4 rounded-lg border border-gray-200">
-                    <div className="flex items-center space-x-2 mb-4">
-                      <Monitor className="w-5 h-5 text-gray-600" />
-                      <h3 className="font-medium text-gray-900">Utilisation Salles</h3>
-                    </div>
-                    <div className="space-y-2">
-                      {Object.entries(advancedReportsData.advanced_statistics.utilisation_salles).map(([salle, data]) => (
-                        <div key={salle} className="flex items-center justify-between">
-                          <span className="text-sm text-gray-600 capitalize">{salle.replace('_', ' ')}</span>
-                          <div className="flex items-center space-x-2">
-                            <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
-                              <div 
-                                className="h-full bg-blue-500" 
-                                style={{ width: `${data.pourcentage}%` }}
-                              ></div>
+                  {advancedReportsData.advanced_statistics.utilisation_salles && (
+                    <div className="bg-white p-4 rounded-lg border border-gray-200">
+                      <div className="flex items-center space-x-2 mb-4">
+                        <Monitor className="w-5 h-5 text-gray-600" />
+                        <h3 className="font-medium text-gray-900">Utilisation Salles</h3>
+                      </div>
+                      <div className="space-y-2">
+                        {Object.entries(advancedReportsData.advanced_statistics.utilisation_salles).map(([salle, data]) => (
+                          <div key={salle} className="flex items-center justify-between">
+                            <span className="text-sm text-gray-600 capitalize">{salle.replace('_', ' ')}</span>
+                            <div className="flex items-center space-x-2">
+                              <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-blue-500" 
+                                  style={{ width: `${data.pourcentage || 0}%` }}
+                                ></div>
+                              </div>
+                              <span className="text-sm font-medium text-gray-900">{data.pourcentage || 0}%</span>
                             </div>
-                            <span className="text-sm font-medium text-gray-900">{data.pourcentage}%</span>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* 🤖 GEMINI 2.0 FLASH ENRICHED ANALYSIS PANEL */}
@@ -1573,13 +1587,13 @@ const Administration = ({ user }) => {
                         ) : (
                           // Fallback to basic insights
                           <>
-                            {advancedReportsData.predictions.trend === 'croissant' && (
+                            {advancedReportsData.predictions?.trend === 'croissant' && (
                               <div className="p-3 bg-green-100 border border-green-300 rounded text-sm text-green-800">
                                 📈 <strong>Croissance détectée</strong><br/>
                                 Considérez d'augmenter les créneaux disponibles
                               </div>
                             )}
-                            {advancedReportsData.advanced_statistics.durees_moyennes.temps_attente > 30 && (
+                            {advancedReportsData.advanced_statistics?.durees_moyennes?.temps_attente > 30 && (
                               <div className="p-3 bg-orange-100 border border-orange-300 rounded text-sm text-orange-800">
                                 ⏱️ <strong>Temps d'attente élevé</strong><br/>
                                 Optimisez la planification ({advancedReportsData.advanced_statistics.durees_moyennes.temps_attente}min)
