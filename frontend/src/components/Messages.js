@@ -367,16 +367,16 @@ const Messages = ({ user }) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Secrétaire Interface */}
-        {user.role === 'secretaire' && (
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <MessageCircle className="w-5 h-5 mr-2 text-blue-500" />
-                Nouveau Message
-              </h2>
+        {/* Left Column - Message Creation (both roles) */}
+        <div className="lg:col-span-1">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <MessageCircle className="w-5 h-5 mr-2 text-blue-500" />
+              {user.role === 'secretaire' ? 'Message au Médecin' : 'Message à la Secrétaire'}
+            </h2>
 
-              {/* Patient Search */}
+            {/* Patient Search (only for secretary) */}
+            {user.role === 'secretaire' && (
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Rechercher un patient
@@ -441,71 +441,74 @@ const Messages = ({ user }) => {
                   </div>
                 )}
               </div>
+            )}
 
-              {/* Message Content */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Question du patient
-                </label>
-                <textarea
-                  value={messageContent}
-                  onChange={(e) => setMessageContent(e.target.value)}
-                  className="textarea-stylus"
-                  rows={4}
-                  placeholder="Décrivez la question ou demande du patient - Optimisé pour Apple Pencil"
-                  inputMode="text"
-                  autoCapitalize="sentences"
-                />
-              </div>
-
-              {/* Priority */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Priorité
-                </label>
-                <div className="flex space-x-3">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      value="normal"
-                      checked={priority === 'normal'}
-                      onChange={(e) => setPriority(e.target.value)}
-                      className="mr-2"
-                    />
-                    <span className="text-sm text-gray-700">Normal</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      value="urgent"
-                      checked={priority === 'urgent'}
-                      onChange={(e) => setPriority(e.target.value)}
-                      className="mr-2"
-                    />
-                    <span className="text-sm text-red-700 flex items-center">
-                      <AlertTriangle className="w-4 h-4 mr-1" />
-                      Urgent
-                    </span>
-                  </label>
-                </div>
-              </div>
-
-              {/* Submit Button */}
-              <button
-                onClick={handleCreateMessage}
-                disabled={!selectedPatient || !messageContent.trim()}
-                className={`w-full flex items-center justify-center py-2 px-4 rounded-lg font-medium transition-colors ${
-                  selectedPatient && messageContent.trim()
-                    ? 'bg-primary-500 text-white hover:bg-primary-600'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
-              >
-                <Send className="w-4 h-4 mr-2" />
-                Envoyer au Médecin
-              </button>
+            {/* Message Content */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {user.role === 'secretaire' ? 'Question du patient' : 'Message pour la secrétaire'}
+              </label>
+              <textarea
+                value={messageContent}
+                onChange={(e) => setMessageContent(e.target.value)}
+                className="textarea-stylus"
+                rows={4}
+                placeholder={user.role === 'secretaire' 
+                  ? "Décrivez la question ou demande du patient - Optimisé pour Apple Pencil"
+                  : "Votre message pour la secrétaire - Optimisé pour Apple Pencil"
+                }
+                inputMode="text"
+                autoCapitalize="sentences"
+              />
             </div>
+
+            {/* Priority */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Priorité
+              </label>
+              <div className="flex space-x-3">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    value="normal"
+                    checked={priority === 'normal'}
+                    onChange={(e) => setPriority(e.target.value)}
+                    className="mr-2"
+                  />
+                  <span className="text-sm text-gray-700">Normal</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    value="urgent"
+                    checked={priority === 'urgent'}
+                    onChange={(e) => setPriority(e.target.value)}
+                    className="mr-2"
+                  />
+                  <span className="text-sm text-red-700 flex items-center">
+                    <AlertTriangle className="w-4 h-4 mr-1" />
+                    Urgent
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              onClick={handleCreateMessage}
+              disabled={!messageContent.trim() || (user.role === 'secretaire' && !selectedPatient)}
+              className={`w-full flex items-center justify-center py-2 px-4 rounded-lg font-medium transition-colors ${
+                messageContent.trim() && (user.role === 'medecin' || selectedPatient)
+                  ? 'bg-primary-500 text-white hover:bg-primary-600'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
+            >
+              <Send className="w-4 h-4 mr-2" />
+              {user.role === 'secretaire' ? 'Envoyer au Médecin' : 'Envoyer à la Secrétaire'}
+            </button>
           </div>
-        )}
+        </div>
 
         {/* Right Column - Messages List */}
         <div className={user.role === 'secretaire' ? 'lg:col-span-2' : 'lg:col-span-3'}>
