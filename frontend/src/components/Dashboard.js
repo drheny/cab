@@ -237,6 +237,15 @@ const Dashboard = ({ user }) => {
     }
   };
 
+  const fetchVaccineReminders = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/dashboard/vaccine-reminders`);
+      setVaccineReminders(response.data.vaccine_reminders || []);
+    } catch (error) {
+      console.error('Error fetching vaccine reminders:', error);
+    }
+  };
+
   const viewPatientDetails = async (patientId) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/api/patients/${patientId}`);
