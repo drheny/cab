@@ -308,11 +308,13 @@ class PhoneMessage(BaseModel):
     updated_at: datetime = Field(default_factory=datetime.now)
 
 class PhoneMessageCreate(BaseModel):
-    patient_id: str
+    patient_id: str = ""  # Optional for doctor-to-secretary messages
     message_content: str
     priority: str = "normal"  # "urgent", "normal"
     call_date: str
     call_time: str
+    direction: str = "secretary_to_doctor"  # "secretary_to_doctor", "doctor_to_secretary"
+    recipient_role: str = "medecin"  # "medecin", "secretaire"
 
 class PhoneMessageResponse(BaseModel):
     response_content: str
