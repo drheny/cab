@@ -1402,45 +1402,40 @@ const Calendar = ({ user }) => {
                               </div>
                             </div>
 
-                            {/* Observations cliniques - Full width pour iPad/stylet */}
+                            {/* Diagnostic - Taille standard */}
                             <div>
                               <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Observation clinique
+                                Diagnostic
                               </label>
-                              <textarea
-                                value={currentConsultationData.observation_medicale || ''}
-                                onChange={(e) => updateConsultationData(appointmentId, 'observation_medicale', e.target.value)}
-                                className="input-field textarea-stylus"
-                                rows="5"
-                                placeholder="Observations du médecin... (Optimisé pour Apple Pencil)"
+                              <input
+                                value={currentConsultationData.diagnostic || ''}
+                                onChange={(e) => updateConsultationData(appointmentId, 'diagnostic', e.target.value)}
+                                className="input-stylus"
+                                placeholder="Diagnostic médical - Optimisé pour Apple Pencil"
                               />
                             </div>
 
-                            {/* Traitement - Full width pour iPad/stylet */}
+                            {/* Observation Clinique - Grande taille avec fond strié comme papier */}
                             <div>
                               <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Traitements
+                                Observation Clinique
                               </label>
                               <textarea
-                                value={currentConsultationData.traitement || ''}
-                                onChange={(e) => updateConsultationData(appointmentId, 'traitement', e.target.value)}
-                                className="input-field textarea-stylus"
-                                rows="5"
-                                placeholder="Traitement prescrit... (Optimisé pour Apple Pencil)"
-                              />
-                            </div>
-
-                            {/* Bilans - Full width pour iPad/stylet */}
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Bilans
-                              </label>
-                              <textarea
-                                value={currentConsultationData.bilans || ''}
-                                onChange={(e) => updateConsultationData(appointmentId, 'bilans', e.target.value)}
-                                className="input-field textarea-stylus"
-                                rows="4"
-                                placeholder="Bilans demandés... (Optimisé pour Apple Pencil)"
+                                value={currentConsultationData.observation_clinique || ''}
+                                onChange={(e) => updateConsultationData(appointmentId, 'observation_clinique', e.target.value)}
+                                className="textarea-stylus bg-white bg-striped-paper border-2 border-gray-300 rounded-lg p-4 text-gray-900 shadow-inner"
+                                style={{
+                                  backgroundImage: `repeating-linear-gradient(
+                                    transparent,
+                                    transparent 24px,
+                                    #e5e7eb 24px,
+                                    #e5e7eb 25px
+                                  )`,
+                                  lineHeight: '25px',
+                                  paddingTop: '4px'
+                                }}
+                                rows="12"
+                                placeholder="Observations cliniques détaillées - Optimisé pour Apple Pencil"
                               />
                             </div>
 
