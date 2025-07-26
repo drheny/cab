@@ -44,20 +44,14 @@ const PatientsListComponent = ({ user }) => {
 
   // Helper function to convert dd/mm/yyyy to yyyy-mm-dd for search
   const formatDateForSearch = (searchTerm) => {
-    // Don't trigger search for incomplete dates
-    if (searchTerm.includes('/')) {
-      // Only search when we have a complete date pattern
-      const datePattern = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
-      const match = searchTerm.match(datePattern);
-      
-      if (match) {
-        const [, day, month, year] = match;
-        // Convert to yyyy-mm-dd format for backend search
-        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-      }
-      
-      // If incomplete date, return empty string to avoid search
-      return '';
+    // Check if the search term matches dd/mm/yyyy format
+    const datePattern = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+    const match = searchTerm.match(datePattern);
+    
+    if (match) {
+      const [, day, month, year] = match;
+      // Convert to yyyy-mm-dd format for backend search
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
     }
     
     return searchTerm;
@@ -68,10 +62,19 @@ const PatientsListComponent = ({ user }) => {
     // Don't search if empty
     if (!searchTerm.trim()) return false;
     
-    // If contains '/', only search if it's a complete date
-    if (searchTerm.includes('/')) {
-      const datePattern = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
-      return datePattern.test(searchTerm);
+    // If it's a partial date (contains / but not complete), don't search
+    if (searchTerm.includes('/') && !/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(searchTerm)) {
+      return false;
+    }
+    
+    // Always search for numbers (day part of date)
+    if (/^\d+$/.test(searchTerm)) {
+      return true;
+    }
+    
+    // Search for complete dates
+    if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(searchTerm)) {
+      return true;
     }
     
     // For regular text, search if at least 2 characters
