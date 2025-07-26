@@ -1079,17 +1079,16 @@ const Consultation = ({ user }) => {
                         </div>
                       </div>
 
-                      {/* Observations médicales - Toute largeur optimisée pour stylus */}
+                      {/* Diagnostic - Taille standard */}
                       <div className="mb-6">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Observation médicale
+                          Diagnostic
                         </label>
-                        <textarea
-                          value={consultationData.observation_medicale}
-                          onChange={(e) => setConsultationData({...consultationData, observation_medicale: e.target.value})}
-                          className="textarea-stylus"
-                          rows="6"
-                          placeholder="Observations du médecin - Optimisé pour Apple Pencil"
+                        <input
+                          value={consultationData.diagnostic}
+                          onChange={(e) => setConsultationData({...consultationData, diagnostic: e.target.value})}
+                          className="input-stylus"
+                          placeholder="Diagnostic médical - Optimisé pour Apple Pencil"
                           inputMode="text"
                           autoCapitalize="sentences"
                           spellCheck="true"
@@ -1098,36 +1097,27 @@ const Consultation = ({ user }) => {
                         />
                       </div>
 
-                      {/* Traitement - Toute largeur optimisée pour stylus */}
+                      {/* Observation Clinique - Grande taille avec fond strié comme papier */}
                       <div className="mb-6">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Traitement
+                          Observation Clinique
                         </label>
                         <textarea
-                          value={consultationData.traitement}
-                          onChange={(e) => setConsultationData({...consultationData, traitement: e.target.value})}
-                          className="textarea-stylus"
-                          rows="5"
-                          placeholder="Traitement prescrit - Optimisé pour Apple Pencil"
-                          inputMode="text"
-                          autoCapitalize="sentences"
-                          spellCheck="true"
-                          autoComplete="off"
-                          data-gramm="false"
-                        />
-                      </div>
-
-                      {/* Bilans - Toute largeur optimisée pour stylus */}
-                      <div className="mb-6">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Bilans
-                        </label>
-                        <textarea
-                          value={consultationData.bilans}
-                          onChange={(e) => setConsultationData({...consultationData, bilans: e.target.value})}
-                          className="textarea-stylus"
-                          rows="4"
-                          placeholder="Bilans demandés - Optimisé pour Apple Pencil"
+                          value={consultationData.observation_clinique}
+                          onChange={(e) => setConsultationData({...consultationData, observation_clinique: e.target.value})}
+                          className="textarea-stylus bg-white bg-striped-paper border-2 border-gray-300 rounded-lg p-4 text-gray-900 shadow-inner"
+                          style={{
+                            backgroundImage: `repeating-linear-gradient(
+                              transparent,
+                              transparent 24px,
+                              #e5e7eb 24px,
+                              #e5e7eb 25px
+                            )`,
+                            lineHeight: '25px',
+                            paddingTop: '4px'
+                          }}
+                          rows="12"
+                          placeholder="Observations cliniques détaillées - Optimisé pour Apple Pencil"
                           inputMode="text"
                           autoCapitalize="sentences"
                           spellCheck="true"
