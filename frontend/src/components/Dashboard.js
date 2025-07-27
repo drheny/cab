@@ -81,15 +81,16 @@ const Dashboard = ({ user }) => {
     fetchMessages();
     initializeWebSocket();
     
-    // Cleanup WebSocket on unmount
+    // Cleanup WebSocket on unmount only
     return () => {
-      if (ws) {
-        console.log('🔌 Closing WebSocket connection on cleanup');
+      console.log('🧹 Component cleanup - closing WebSocket connections');
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        console.log('🔌 Closing active WebSocket connection on cleanup');
         ws.close();
         setWs(null);
       }
-      if (wsInstance.current) {
-        console.log('🔌 Closing WebSocket instance on cleanup');
+      if (wsInstance.current && wsInstance.current.readyState === WebSocket.OPEN) {
+        console.log('🔌 Closing active WebSocket instance on cleanup');
         wsInstance.current.close();
         wsInstance.current = null;
       }
