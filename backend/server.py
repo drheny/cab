@@ -854,7 +854,12 @@ def create_demo_data():
             "bilan": "Infection virale bénigne. Guérison attendue en 3-5 jours.",
             "relance_date": today.strftime("%Y-%m-%d"),  # Relance pour aujourd'hui
             "created_at": datetime.now() - timedelta(days=30),
-            "type_rdv": "visite"
+            "type_rdv": "visite",
+            # Ajout rappel vaccin pour aujourd'hui
+            "rappel_vaccin": True,
+            "nom_vaccin": "ROR (Rougeole-Oreillons-Rubéole)",
+            "date_vaccin": today.strftime("%Y-%m-%d"),
+            "rappel_whatsapp_vaccin": True
         },
         {
             "id": "cons2",
