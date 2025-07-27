@@ -89,16 +89,6 @@ const Dashboard = ({ user }) => {
     };
   }, []);
 
-  // Separate useEffect for WebSocket cleanup to avoid stale closure issues
-  useEffect(() => {
-    return () => {
-      if (ws) {
-        console.log('🔌 Final WebSocket cleanup');
-        ws.close();
-      }
-    };
-  }, [ws]);
-
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
