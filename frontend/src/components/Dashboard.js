@@ -82,10 +82,22 @@ const Dashboard = ({ user }) => {
     // Cleanup WebSocket on unmount
     return () => {
       if (ws) {
+        console.log('🔌 Closing WebSocket connection on cleanup');
         ws.close();
+        setWs(null);
       }
     };
   }, []);
+
+  // Separate useEffect for WebSocket cleanup to avoid stale closure issues
+  useEffect(() => {
+    return () => {
+      if (ws) {
+        console.log('🔌 Final WebSocket cleanup');
+        ws.close();
+      }
+    };
+  }, [ws]);
 
   useEffect(() => {
     scrollToBottom();
