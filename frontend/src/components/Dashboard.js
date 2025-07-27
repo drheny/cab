@@ -156,7 +156,9 @@ const Dashboard = ({ user }) => {
   const [vaccineReminders, setVaccineReminders] = useState([]);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+  const [replyingTo, setReplyingTo] = useState(null);
   const [editingMessage, setEditingMessage] = useState(null);
+  const [editingContent, setEditingContent] = useState('');
   const [deleteConfirmDialog, setDeleteConfirmDialog] = useState({ show: false, messageId: null, messageContent: '' });
   const messagesEndRef = useRef(null);
   
