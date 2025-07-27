@@ -87,6 +87,7 @@ const Dashboard = ({ user }) => {
         ws.close();
         setWs(null);
       }
+      wsInitialized.current = false; // Reset the flag on cleanup
     };
   }, []);
 
