@@ -364,13 +364,8 @@ const Dashboard = ({ user }) => {
   // ==================== MESSAGING FUNCTIONS ====================
 
   const getShortSenderName = (senderName, senderType) => {
-    // Abbreviate sender names for messaging interface
-    if (senderType === 'medecin') {
-      return 'Dr';
-    } else if (senderType === 'secretaire') {
-      return 'Sec';
-    }
-    return senderName; // fallback to original name
+    // Return clean sender name without prefixes for minimalist design
+    return senderName;
   };
 
   const fetchMessages = async () => {
