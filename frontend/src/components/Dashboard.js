@@ -99,6 +99,12 @@ const Dashboard = ({ user }) => {
   };
 
   const initializeWebSocket = () => {
+    // Prevent multiple WebSocket connections using ref
+    if (wsInitialized.current) {
+      console.log('⚠️ WebSocket already initialized, skipping');
+      return;
+    }
+    
     // Prevent multiple WebSocket connections
     if (ws && ws.readyState === WebSocket.OPEN) {
       console.log('⚠️ WebSocket already connected, skipping initialization');
@@ -111,6 +117,8 @@ const Dashboard = ({ user }) => {
       ws.close();
       setWs(null);
     }
+    
+    wsInitialized.current = true;
     
     try {
       // Construct WebSocket URL properly handling both relative and absolute API_BASE_URL
@@ -152,6 +160,7 @@ const Dashboard = ({ user }) => {
       
       websocket.onerror = (error) => {
         console.error('❌ WebSocket error:', error);
+        wsInitialized.current = false; // Reset on error
         // Only show error on first connection attempt, not on reconnections
         if (isFirstConnection) {
           toast.error('Erreur de connexion messagerie temps réel');
@@ -162,6 +171,7 @@ const Dashboard = ({ user }) => {
         console.log('WebSocket disconnected. Code:', event.code, 'Reason:', event.reason);
         const wasConnected = ws !== null;
         setWs(null);
+        wsInitialized.current = false; // Reset on close
         
         // Only attempt reconnection if we were previously connected and the page is still active
         if (wasConnected && !event.wasClean && !isFirstConnection) {
@@ -173,6 +183,7 @@ const Dashboard = ({ user }) => {
       };
     } catch (error) {
       console.error('Failed to initialize WebSocket:', error);
+      wsInitialized.current = false; // Reset on error
       toast.error('Impossible d\'initialiser la messagerie temps réel');
     }
   };
