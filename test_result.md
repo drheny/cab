@@ -11390,9 +11390,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Enhanced /api/payments/stats endpoint with consultation statistics"
-    - "New /api/payments/advanced-stats endpoint with period breakdown"
-    - "Period breakdown functionality for billing statistics"
+    - "Consultation Modal System Cross-Component Integration"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
