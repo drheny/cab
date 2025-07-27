@@ -54,6 +54,7 @@ const Dashboard = ({ user }) => {
   const [deleteConfirmDialog, setDeleteConfirmDialog] = useState({ show: false, messageId: null, messageContent: '' });
   const messagesEndRef = useRef(null);
   const wsInitialized = useRef(false);
+  const wsInstance = useRef(null); // Track the actual WebSocket instance
   
   const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
