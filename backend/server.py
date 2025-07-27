@@ -909,7 +909,12 @@ def create_demo_data():
             "bilan": "Eczéma bien contrôlé. Poursuite des soins préventifs.",
             "relance_date": "",
             "created_at": datetime.now() - timedelta(days=20),
-            "type_rdv": "controle"
+            "type_rdv": "controle",
+            # Ajout rappel vaccin pour aujourd'hui
+            "rappel_vaccin": True,
+            "nom_vaccin": "DTCoq (Diphtérie-Tétanos-Coqueluche)",
+            "date_vaccin": today.strftime("%Y-%m-%d"),
+            "rappel_whatsapp_vaccin": True
         },
         
         # Consultation pour patient3 (Omar Tazi)
