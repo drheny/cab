@@ -154,19 +154,11 @@ const Dashboard = ({ user }) => {
   const [birthdays, setBirthdays] = useState([]);
   const [phoneReminders, setPhoneReminders] = useState([]);
   const [vaccineReminders, setVaccineReminders] = useState([]);
-  
-  // Messaging states
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const [replyingTo, setReplyingTo] = useState(null);
   const [editingMessage, setEditingMessage] = useState(null);
-  const [editingContent, setEditingContent] = useState('');
-  const [ws, setWs] = useState(null);
-  const [isFirstConnection, setIsFirstConnection] = useState(true);
   const [deleteConfirmDialog, setDeleteConfirmDialog] = useState({ show: false, messageId: null, messageContent: '' });
   const messagesEndRef = useRef(null);
-  const wsInitialized = useRef(false);
-  const wsInstance = useRef(null); // Track the actual WebSocket instance
   
   const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
