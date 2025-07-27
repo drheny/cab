@@ -88,6 +88,11 @@ const Dashboard = ({ user }) => {
         ws.close();
         setWs(null);
       }
+      if (wsInstance.current) {
+        console.log('🔌 Closing WebSocket instance on cleanup');
+        wsInstance.current.close();
+        wsInstance.current = null;
+      }
       wsInitialized.current = false; // Reset the flag on cleanup
     };
   }, []);
