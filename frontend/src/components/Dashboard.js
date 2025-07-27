@@ -101,9 +101,9 @@ const Dashboard = ({ user }) => {
   };
 
   const initializeWebSocket = () => {
-    // Prevent multiple WebSocket connections using ref
-    if (wsInitialized.current) {
-      console.log('⚠️ WebSocket already initialized, skipping');
+    // Prevent multiple WebSocket connections using multiple checks
+    if (wsInitialized.current || wsInstance.current) {
+      console.log('⚠️ WebSocket already initialized or exists, skipping');
       return;
     }
     
@@ -118,6 +118,12 @@ const Dashboard = ({ user }) => {
       console.log('🔌 Closing existing WebSocket before creating new one');
       ws.close();
       setWs(null);
+    }
+    
+    if (wsInstance.current) {
+      console.log('🔌 Closing existing WebSocket instance');
+      wsInstance.current.close();
+      wsInstance.current = null;
     }
     
     wsInitialized.current = true;
@@ -139,6 +145,7 @@ const Dashboard = ({ user }) => {
       
       console.log('Attempting WebSocket connection to:', wsUrl);
       const websocket = new WebSocket(wsUrl);
+      wsInstance.current = websocket; // Store the instance
       
       websocket.onopen = () => {
         console.log('✅ WebSocket connected successfully');
@@ -163,6 +170,7 @@ const Dashboard = ({ user }) => {
       websocket.onerror = (error) => {
         console.error('❌ WebSocket error:', error);
         wsInitialized.current = false; // Reset on error
+        wsInstance.current = null; // Clear instance
         // Only show error on first connection attempt, not on reconnections
         if (isFirstConnection) {
           toast.error('Erreur de connexion messagerie temps réel');
@@ -174,6 +182,7 @@ const Dashboard = ({ user }) => {
         const wasConnected = ws !== null;
         setWs(null);
         wsInitialized.current = false; // Reset on close
+        wsInstance.current = null; // Clear instance
         
         // Only attempt reconnection if we were previously connected and the page is still active
         if (wasConnected && !event.wasClean && !isFirstConnection) {
@@ -186,6 +195,7 @@ const Dashboard = ({ user }) => {
     } catch (error) {
       console.error('Failed to initialize WebSocket:', error);
       wsInitialized.current = false; // Reset on error
+      wsInstance.current = null; // Clear instance
       toast.error('Impossible d\'initialiser la messagerie temps réel');
     }
   };
