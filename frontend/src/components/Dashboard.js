@@ -18,6 +18,118 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { DashboardWidget, StatGrid, QuickActionButton } from './DashboardWidgets';
 
+// Global WebSocket manager to prevent multiple connections
+class WebSocketManager {
+  constructor() {
+    this.ws = null;
+    this.isConnecting = false;
+    this.listeners = new Set();
+    this.isFirstConnection = true;
+  }
+
+  addListener(listener) {
+    this.listeners.add(listener);
+  }
+
+  removeListener(listener) {
+    this.listeners.delete(listener);
+  }
+
+  broadcast(data) {
+    this.listeners.forEach(listener => {
+      try {
+        listener(data);
+      } catch (error) {
+        console.error('Error in WebSocket listener:', error);
+      }
+    });
+  }
+
+  connect(url) {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      console.log('🔗 WebSocket already connected, using existing connection');
+      return this.ws;
+    }
+
+    if (this.isConnecting) {
+      console.log('🔗 WebSocket already connecting, waiting for connection');
+      return null;
+    }
+
+    try {
+      console.log('🔗 Creating new WebSocket connection to:', url);
+      this.isConnecting = true;
+      
+      this.ws = new WebSocket(url);
+
+      this.ws.onopen = () => {
+        console.log('✅ WebSocket connected successfully (singleton)');
+        this.isConnecting = false;
+        
+        if (this.isFirstConnection) {
+          toast.success('Messagerie temps réel activée');
+          this.isFirstConnection = false;
+        }
+      };
+
+      this.ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log('📨 WebSocket message received (singleton):', data);
+          this.broadcast(data);
+        } catch (error) {
+          console.error('Error parsing WebSocket message:', error);
+        }
+      };
+
+      this.ws.onerror = (error) => {
+        console.error('❌ WebSocket error (singleton):', error);
+        this.isConnecting = false;
+        
+        if (this.isFirstConnection) {
+          toast.error('Erreur de connexion messagerie temps réel');
+        }
+      };
+
+      this.ws.onclose = (event) => {
+        console.log('WebSocket disconnected (singleton). Code:', event.code, 'Reason:', event.reason);
+        this.isConnecting = false;
+        this.ws = null;
+        
+        // Attempt reconnection if not intentional close
+        if (!event.wasClean && this.listeners.size > 0) {
+          setTimeout(() => {
+            console.log('🔄 Attempting WebSocket reconnection (singleton)...');
+            this.connect(url);
+          }, 3000);
+        }
+      };
+
+      return this.ws;
+    } catch (error) {
+      console.error('Failed to create WebSocket (singleton):', error);
+      this.isConnecting = false;
+      if (this.isFirstConnection) {
+        toast.error('Impossible d\'initialiser la messagerie temps réel');
+      }
+      return null;
+    }
+  }
+
+  disconnect() {
+    if (this.ws) {
+      console.log('🔌 Closing WebSocket connection (singleton)');
+      this.ws.close();
+      this.ws = null;
+    }
+    this.isConnecting = false;
+    this.listeners.clear();
+  }
+}
+
+// Global singleton instance
+const wsManager = new WebSocketManager();
+
 const Dashboard = ({ user }) => {
   const navigate = useNavigate();
   const [stats, setStats] = useState({
