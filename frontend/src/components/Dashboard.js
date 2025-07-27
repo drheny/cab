@@ -364,8 +364,13 @@ const Dashboard = ({ user }) => {
   // ==================== MESSAGING FUNCTIONS ====================
 
   const getShortSenderName = (senderName, senderType) => {
-    // Return clean sender name without prefixes for minimalist design
-    return senderName;
+    // Return clean emoji only for ultra-minimalist design
+    if (senderType === 'medecin') {
+      return '🩺';
+    } else if (senderType === 'secretaire') {
+      return '👩‍💼';
+    }
+    return '👤'; // fallback emoji
   };
 
   const fetchMessages = async () => {
