@@ -183,140 +183,35 @@ const Dashboard = ({ user }) => {
     fetchPhoneReminders();
     fetchVaccineReminders();
     fetchMessages();
+    
+    // Initialize WebSocket with singleton manager
     initializeWebSocket();
     
-    // Cleanup WebSocket on unmount only
+    // Cleanup function
     return () => {
-      console.log('🧹 Component cleanup - closing WebSocket connections');
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        console.log('🔌 Closing active WebSocket connection on cleanup');
-        ws.close();
-        setWs(null);
-      }
-      if (wsInstance.current && wsInstance.current.readyState === WebSocket.OPEN) {
-        console.log('🔌 Closing active WebSocket instance on cleanup');
-        wsInstance.current.close();
-        wsInstance.current = null;
-      }
-      wsInitialized.current = false; // Reset the flag on cleanup
+      console.log('🧹 Dashboard cleanup - removing WebSocket listener');
+      wsManager.removeListener(handleWebSocketMessage);
     };
   }, []);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
   const initializeWebSocket = () => {
-    // Prevent multiple WebSocket connections - check if already connected successfully
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      console.log('⚠️ WebSocket already connected, skipping initialization');
-      return;
+    // Add this component's message handler to the singleton
+    wsManager.addListener(handleWebSocketMessage);
+    
+    // Construct WebSocket URL
+    let wsUrl;
+    if (API_BASE_URL.startsWith('http://') || API_BASE_URL.startsWith('https://')) {
+      const backendUrl = new URL(API_BASE_URL);
+      const wsProtocol = backendUrl.protocol === 'https:' ? 'wss:' : 'ws:';
+      wsUrl = `${wsProtocol}//${backendUrl.host}/api/ws`;
+    } else {
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const host = window.location.host;
+      wsUrl = `${wsProtocol}//${host}/api/ws`;
     }
     
-    // Prevent multiple WebSocket connections - check if currently connecting
-    if (ws && ws.readyState === WebSocket.CONNECTING) {
-      console.log('⚠️ WebSocket already connecting, skipping initialization');
-      return;
-    }
-    
-    // Prevent initialization if already initialized and still has valid instance
-    if (wsInitialized.current && wsInstance.current && 
-        wsInstance.current.readyState !== WebSocket.CLOSED) {
-      console.log('⚠️ WebSocket already initialized with valid instance, skipping');
-      return;
-    }
-    
-    // Only close existing WebSocket if it's in a closed or error state
-    if (ws && (ws.readyState === WebSocket.CLOSED || ws.readyState === WebSocket.CLOSING)) {
-      console.log('🔌 Cleaning up closed WebSocket');
-      setWs(null);
-    }
-    
-    if (wsInstance.current && 
-        (wsInstance.current.readyState === WebSocket.CLOSED || wsInstance.current.readyState === WebSocket.CLOSING)) {
-      console.log('🔌 Cleaning up closed WebSocket instance');
-      wsInstance.current = null;
-    }
-    
-    // Mark as initialized before creating WebSocket
-    wsInitialized.current = true;
-    
-    try {
-      // Construct WebSocket URL properly handling both relative and absolute API_BASE_URL
-      let wsUrl;
-      if (API_BASE_URL.startsWith('http://') || API_BASE_URL.startsWith('https://')) {
-        // API_BASE_URL is absolute URL
-        const backendUrl = new URL(API_BASE_URL);
-        const wsProtocol = backendUrl.protocol === 'https:' ? 'wss:' : 'ws:';
-        wsUrl = `${wsProtocol}//${backendUrl.host}/api/ws`;
-      } else {
-        // API_BASE_URL is relative or empty, use current host with /api/ws
-        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const host = window.location.host;
-        wsUrl = `${wsProtocol}//${host}/api/ws`;
-      }
-      
-      console.log('Attempting WebSocket connection to:', wsUrl);
-      const websocket = new WebSocket(wsUrl);
-      wsInstance.current = websocket; // Store the instance
-      
-      websocket.onopen = () => {
-        console.log('✅ WebSocket connected successfully');
-        setWs(websocket);
-        // Only show activation message on first connection, not on reconnections
-        if (isFirstConnection) {
-          toast.success('Messagerie temps réel activée');
-          setIsFirstConnection(false);
-        }
-      };
-      
-      websocket.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          console.log('📨 WebSocket message received:', data);
-          handleWebSocketMessage(data);
-        } catch (error) {
-          console.error('Error parsing WebSocket message:', error);
-        }
-      };
-      
-      websocket.onerror = (error) => {
-        console.error('❌ WebSocket error:', error);
-        wsInitialized.current = false; // Reset on error
-        wsInstance.current = null; // Clear instance
-        // Only show error on first connection attempt, not on reconnections
-        if (isFirstConnection) {
-          toast.error('Erreur de connexion messagerie temps réel');
-        }
-      };
-      
-      websocket.onclose = (event) => {
-        console.log('WebSocket disconnected. Code:', event.code, 'Reason:', event.reason);
-        const wasConnected = ws !== null;
-        setWs(null);
-        wsInitialized.current = false; // Reset on close
-        wsInstance.current = null; // Clear instance
-        
-        // Only attempt reconnection if we were previously connected and the page is still active
-        if (wasConnected && !event.wasClean && !isFirstConnection) {
-          setTimeout(() => {
-            console.log('🔄 Attempting WebSocket reconnection...');
-            initializeWebSocket();
-          }, 3000);
-        }
-      };
-    } catch (error) {
-      console.error('Failed to initialize WebSocket:', error);
-      wsInitialized.current = false; // Reset on error
-      wsInstance.current = null; // Clear instance
-      if (isFirstConnection) {
-        toast.error('Impossible d\'initialiser la messagerie temps réel');
-      }
-    }
+    // Connect using singleton manager
+    wsManager.connect(wsUrl);
   };
 
   const handleWebSocketMessage = (data) => {
