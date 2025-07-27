@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from environment
-BACKEND_URL = "https://381e9303-1801-425b-be63-08a7cd034392.preview.emergentagent.com"
+BACKEND_URL = "https://83a0b511-23a5-4b39-ada5-aa5078fbcda8.preview.emergentagent.com"
 
 # Test results storage
 test_results = []

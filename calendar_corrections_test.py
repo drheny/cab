@@ -17,7 +17,7 @@ class CalendarCorrectionsTest(unittest.TestCase):
     
     def setUp(self):
         # Use the correct backend URL from environment
-        backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://381e9303-1801-425b-be63-08a7cd034392.preview.emergentagent.com')
+        backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://83a0b511-23a5-4b39-ada5-aa5078fbcda8.preview.emergentagent.com')
         self.base_url = backend_url
         print(f"Testing Calendar corrections at: {self.base_url}")
         
