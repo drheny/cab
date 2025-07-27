@@ -108,6 +108,19 @@ const Dashboard = ({ user }) => {
   };
 
   const initializeWebSocket = () => {
+    // Prevent multiple WebSocket connections
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      console.log('⚠️ WebSocket already connected, skipping initialization');
+      return;
+    }
+    
+    // Close existing WebSocket if any
+    if (ws) {
+      console.log('🔌 Closing existing WebSocket before creating new one');
+      ws.close();
+      setWs(null);
+    }
+    
     try {
       // Construct WebSocket URL properly handling both relative and absolute API_BASE_URL
       let wsUrl;
@@ -160,7 +173,7 @@ const Dashboard = ({ user }) => {
         setWs(null);
         
         // Only attempt reconnection if we were previously connected and the page is still active
-        if (wasConnected && !event.wasClean) {
+        if (wasConnected && !event.wasClean && !isFirstConnection) {
           setTimeout(() => {
             console.log('🔄 Attempting WebSocket reconnection...');
             initializeWebSocket();
