@@ -477,7 +477,7 @@ const Dashboard = ({ user }) => {
       setEditingContent('');
       
       // If WebSocket is not connected, fetch messages manually
-      if (!ws || ws.readyState !== WebSocket.OPEN) {
+      if (!wsManager.ws || wsManager.ws.readyState !== WebSocket.OPEN) {
         console.log('WebSocket not connected, fetching messages manually after edit');
         await fetchMessages();
       }
