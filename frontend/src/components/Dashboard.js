@@ -196,6 +196,14 @@ const Dashboard = ({ user }) => {
     };
   }, []);
 
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
   const initializeWebSocket = () => {
     // Add this component's message handler to the singleton
     wsManager.addListener(handleWebSocketMessage);
