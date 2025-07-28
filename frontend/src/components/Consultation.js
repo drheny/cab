@@ -225,42 +225,21 @@ const Consultation = ({ user }) => {
     }
   };
 
-  // Ouvrir modal d'ajout de consultation
+  // Ouvrir modal d'ajout de consultation (nouvelle logique)
   const handleAddConsultation = () => {
-    if (!selectedPatient) {
-      toast.error('Veuillez sélectionner un patient');
-      return;
-    }
-
-    setConsultationData({
-      patient_id: selectedPatient.id,
-      date: new Date().toISOString().split('T')[0],
-      type_rdv: 'visite', // Par défaut une visite
-      poids: '',
-      taille: '',
-      pc: '',
-      diagnostic: '',
-      observation_clinique: '',
-      relance_telephonique: false,
-      date_relance: '',
-      duree: 0,
-      // Rappel vaccin
-      rappel_vaccin: false,
-      nom_vaccin: '',
-      date_vaccin: '',
-      rappel_whatsapp_vaccin: false
-    });
-
-    setConsultationModal({
+    // Ouvrir le modal de consultation rapide au lieu de nécessiter un patient sélectionné
+    setQuickConsultationModal({
       isOpen: true,
-      isMinimized: false,
-      mode: 'create',
-      consultationId: null
+      data: {
+        isNewPatient: false,
+        selectedPatientId: selectedPatient?.id || '',
+        patientName: selectedPatient ? `${selectedPatient.prenom} ${selectedPatient.nom}` : '',
+        date: new Date().toISOString().split('T')[0],
+        visitType: 'visite',
+        paymentAmount: '',
+        isInsured: false
+      }
     });
-
-    // Démarrer le chronomètre
-    setTimer(0);
-    setIsRunning(true);
   };
 
   // Récupérer le montant du paiement pour une consultation
