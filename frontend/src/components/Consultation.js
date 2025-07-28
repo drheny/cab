@@ -648,6 +648,199 @@ const Consultation = ({ user }) => {
         )}
       </div>
 
+      {/* Modal de consultation rapide */}
+      {quickConsultationModal.isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">Consultation Rapide</h2>
+                  <p className="text-gray-600">Créer une nouvelle consultation</p>
+                </div>
+                <button
+                  onClick={() => setQuickConsultationModal({ isOpen: false, data: {} })}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                handleStartConsultation();
+              }}>
+                <div className="space-y-6">
+                  {/* Sélection du patient */}
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Patient</h3>
+                    <div className="space-y-4">
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={quickConsultationModal.data.isNewPatient}
+                          onChange={(e) => setQuickConsultationModal(prev => ({
+                            ...prev,
+                            data: {
+                              ...prev.data,
+                              isNewPatient: e.target.checked,
+                              selectedPatientId: e.target.checked ? '' : prev.data.selectedPatientId
+                            }
+                          }))}
+                          className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                        />
+                        <span className="text-sm font-medium text-gray-700">Nouveau patient</span>
+                      </label>
+                      
+                      {quickConsultationModal.data.isNewPatient ? (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Nom complet du patient
+                          </label>
+                          <input
+                            type="text"
+                            value={quickConsultationModal.data.patientName}
+                            onChange={(e) => setQuickConsultationModal(prev => ({
+                              ...prev,
+                              data: { ...prev.data, patientName: e.target.value }
+                            }))}
+                            className="input-field"
+                            placeholder="Prénom Nom"
+                            required
+                          />
+                        </div>
+                      ) : (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Sélectionner un patient existant
+                          </label>
+                          <select
+                            value={quickConsultationModal.data.selectedPatientId}
+                            onChange={(e) => {
+                              const patient = patients.find(p => p.id === e.target.value);
+                              setQuickConsultationModal(prev => ({
+                                ...prev,
+                                data: {
+                                  ...prev.data,
+                                  selectedPatientId: e.target.value,
+                                  patientName: patient ? `${patient.prenom} ${patient.nom}` : ''
+                                }
+                              }));
+                            }}
+                            className="input-field"
+                            required={!quickConsultationModal.data.isNewPatient}
+                          >
+                            <option value="">Choisir un patient...</option>
+                            {patients.map(patient => (
+                              <option key={patient.id} value={patient.id}>
+                                {patient.prenom} {patient.nom} - {calculateAge(patient.date_naissance)} ans
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Date et type de consultation */}
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Détails de la consultation</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Date
+                        </label>
+                        <input
+                          type="date"
+                          value={quickConsultationModal.data.date}
+                          onChange={(e) => setQuickConsultationModal(prev => ({
+                            ...prev,
+                            data: { ...prev.data, date: e.target.value }
+                          }))}
+                          className="input-field"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Type
+                        </label>
+                        <select
+                          value={quickConsultationModal.data.visitType}
+                          onChange={(e) => setQuickConsultationModal(prev => ({
+                            ...prev,
+                            data: { ...prev.data, visitType: e.target.value }
+                          }))}
+                          className="input-field"
+                        >
+                          <option value="visite">Visite</option>
+                          <option value="controle">Contrôle</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Informations de paiement (seulement pour les visites) */}
+                  {quickConsultationModal.data.visitType === 'visite' && (
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Paiement</h3>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Montant du paiement (TN)
+                          </label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={quickConsultationModal.data.paymentAmount}
+                            onChange={(e) => setQuickConsultationModal(prev => ({
+                              ...prev,
+                              data: { ...prev.data, paymentAmount: e.target.value }
+                            }))}
+                            className="input-field"
+                            placeholder="0.00"
+                          />
+                        </div>
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={quickConsultationModal.data.isInsured}
+                            onChange={(e) => setQuickConsultationModal(prev => ({
+                              ...prev,
+                              data: { ...prev.data, isInsured: e.target.checked }
+                            }))}
+                            className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                          />
+                          <span className="text-sm font-medium text-gray-700">Assuré</span>
+                        </label>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Boutons */}
+                <div className="flex justify-end space-x-3 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setQuickConsultationModal({ isOpen: false, data: {} })}
+                    className="btn-outline"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn-primary flex items-center space-x-2"
+                  >
+                    <Play className="w-4 h-4" />
+                    <span>Commencer Consultation</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
       {selectedPatient && (
         <>
           {/* Bannière patient sélectionné */}
