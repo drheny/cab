@@ -1652,6 +1652,194 @@ const Administration = ({ user }) => {
                       </div>
                     </div>
 
+                    {/* 🧠 AI MEDICAL INSIGHTS - New Enhanced Section */}
+                    {advancedReportsData.ai_medical_insights && (
+                      <div className="mb-6">
+                        <h4 className="font-medium text-purple-800 mb-4">🧠 Analyse Médicale IA (Gemini)</h4>
+                        
+                        {/* Executive Summary */}
+                        {advancedReportsData.ai_medical_insights.executive_summary && (
+                          <div className="mb-4 p-4 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg">
+                            <h5 className="font-semibold text-purple-900 mb-2">📊 Résumé Exécutif</h5>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                              <div className="text-center">
+                                <div className="text-2xl font-bold text-purple-600">
+                                  {advancedReportsData.ai_medical_insights.executive_summary.overall_score}/100
+                                </div>
+                                <div className="text-gray-600">Score Global</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-lg font-semibold text-gray-800 capitalize">
+                                  {advancedReportsData.ai_medical_insights.executive_summary.performance_trend}
+                                </div>
+                                <div className="text-gray-600">Tendance</div>
+                              </div>
+                              <div className="text-center">
+                                <div className={`text-lg font-semibold px-2 py-1 rounded ${
+                                  advancedReportsData.ai_medical_insights.executive_summary.urgency_level === 'élevé' ? 'bg-red-100 text-red-700' :
+                                  advancedReportsData.ai_medical_insights.executive_summary.urgency_level === 'moyen' ? 'bg-yellow-100 text-yellow-700' :
+                                  'bg-green-100 text-green-700'
+                                }`}>
+                                  {advancedReportsData.ai_medical_insights.executive_summary.urgency_level}
+                                </div>
+                                <div className="text-gray-600">Urgence</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-xs text-gray-700 font-medium">
+                                  {advancedReportsData.ai_medical_insights.executive_summary.key_highlight}
+                                </div>
+                                <div className="text-gray-600">Point Clé</div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Performance Analysis */}
+                        {advancedReportsData.ai_medical_insights.performance_analysis && (
+                          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                            <h5 className="font-semibold text-blue-900 mb-3">📈 Analyse de Performance</h5>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                              <div>
+                                <div className="text-gray-600 mb-1">Efficacité Consultations</div>
+                                <div className="flex items-center">
+                                  <div className="bg-blue-200 rounded-full h-2 w-16 mr-2">
+                                    <div 
+                                      className="bg-blue-600 h-2 rounded-full" 
+                                      style={{width: `${advancedReportsData.ai_medical_insights.performance_analysis.consultation_efficiency}%`}}
+                                    ></div>
+                                  </div>
+                                  <span className="font-semibold">{advancedReportsData.ai_medical_insights.performance_analysis.consultation_efficiency}%</span>
+                                </div>
+                              </div>
+                              <div>
+                                <div className="text-gray-600 mb-1">Stabilité Revenus</div>
+                                <div className="flex items-center">
+                                  <div className="bg-green-200 rounded-full h-2 w-16 mr-2">
+                                    <div 
+                                      className="bg-green-600 h-2 rounded-full" 
+                                      style={{width: `${advancedReportsData.ai_medical_insights.performance_analysis.revenue_stability}%`}}
+                                    ></div>
+                                  </div>
+                                  <span className="font-semibold">{advancedReportsData.ai_medical_insights.performance_analysis.revenue_stability}%</span>
+                                </div>
+                              </div>
+                              <div>
+                                <div className="text-gray-600 mb-1">Rétention Patients</div>
+                                <div className="flex items-center">
+                                  <div className="bg-purple-200 rounded-full h-2 w-16 mr-2">
+                                    <div 
+                                      className="bg-purple-600 h-2 rounded-full" 
+                                      style={{width: `${advancedReportsData.ai_medical_insights.performance_analysis.patient_retention}%`}}
+                                    ></div>
+                                  </div>
+                                  <span className="font-semibold">{advancedReportsData.ai_medical_insights.performance_analysis.patient_retention}%</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="mt-3">
+                              <span className="text-gray-600">Taux de croissance:</span>
+                              <span className="ml-2 font-semibold text-green-600">+{advancedReportsData.ai_medical_insights.performance_analysis.growth_rate}%</span>
+                              <span className="ml-4 px-2 py-1 bg-gray-100 rounded text-xs">
+                                Position: {advancedReportsData.ai_medical_insights.performance_analysis.benchmark_position}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Deep Insights */}
+                        {advancedReportsData.ai_medical_insights.deep_insights && advancedReportsData.ai_medical_insights.deep_insights.length > 0 && (
+                          <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                            <h5 className="font-semibold text-yellow-900 mb-3">💡 Insights Analytiques</h5>
+                            <div className="space-y-2">
+                              {advancedReportsData.ai_medical_insights.deep_insights.map((insight, index) => (
+                                <div key={index} className="flex items-start space-x-2 text-sm">
+                                  <span className="text-yellow-600 font-bold text-lg">•</span>
+                                  <span className="text-gray-800">{insight}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Strategic Recommendations */}
+                        {advancedReportsData.ai_medical_insights.strategic_recommendations && (
+                          <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                            <h5 className="font-semibold text-green-900 mb-3">🎯 Actions Prioritaires IA</h5>
+                            {advancedReportsData.ai_medical_insights.strategic_recommendations.priority_actions && (
+                              <div className="space-y-2 mb-3">
+                                {advancedReportsData.ai_medical_insights.strategic_recommendations.priority_actions.map((action, index) => (
+                                  <div key={index} className="flex items-center space-x-2 text-sm">
+                                    <span className="bg-green-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                                      {index + 1}
+                                    </span>
+                                    <span className="text-gray-800 font-medium">{action}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            
+                            {advancedReportsData.ai_medical_insights.strategic_recommendations.operational_improvements && (
+                              <div className="mt-3 pt-3 border-t border-green-200">
+                                <h6 className="text-xs font-medium text-green-800 mb-2">Améliorations Opérationnelles:</h6>
+                                <div className="flex flex-wrap gap-2">
+                                  {advancedReportsData.ai_medical_insights.strategic_recommendations.operational_improvements.map((improvement, index) => (
+                                    <span key={index} className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">
+                                      {improvement}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Predictions */}
+                        {advancedReportsData.ai_medical_insights.predictions && (
+                          <div className="p-4 bg-indigo-50 border border-indigo-200 rounded-lg">
+                            <h5 className="font-semibold text-indigo-900 mb-3">🔮 Prédictions IA Avancées</h5>
+                            
+                            {advancedReportsData.ai_medical_insights.predictions.next_quarter_forecast && (
+                              <div className="mb-3">
+                                <h6 className="text-sm font-medium text-indigo-800 mb-2">Prévisions Trimestre Prochain:</h6>
+                                <div className="grid grid-cols-3 gap-4 text-sm">
+                                  <div className="text-center">
+                                    <div className="text-lg font-bold text-indigo-600">
+                                      {advancedReportsData.ai_medical_insights.predictions.next_quarter_forecast.consultations}
+                                    </div>
+                                    <div className="text-gray-600">Consultations</div>
+                                  </div>
+                                  <div className="text-center">
+                                    <div className="text-lg font-bold text-indigo-600">
+                                      {advancedReportsData.ai_medical_insights.predictions.next_quarter_forecast.revenue} TND
+                                    </div>
+                                    <div className="text-gray-600">Revenus</div>
+                                  </div>
+                                  <div className="text-center">
+                                    <div className="text-lg font-bold text-indigo-600">
+                                      {advancedReportsData.ai_medical_insights.predictions.next_quarter_forecast.confidence}%
+                                    </div>
+                                    <div className="text-gray-600">Confiance</div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {advancedReportsData.ai_medical_insights.predictions.annual_projection && (
+                              <div className="mt-3 pt-3 border-t border-indigo-200">
+                                <h6 className="text-xs font-medium text-indigo-800 mb-2">Projection Annuelle:</h6>
+                                <div className="text-sm text-gray-700">
+                                  <span>Croissance: </span>
+                                  <span className="font-semibold text-indigo-600">+{advancedReportsData.ai_medical_insights.predictions.annual_projection.growth_rate}%</span>
+                                  <span className="ml-4">Objectif revenus: </span>
+                                  <span className="font-semibold">{advancedReportsData.ai_medical_insights.predictions.annual_projection.revenue_target} TND</span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {/* 🎯 INTELLIGENT RECOMMENDATIONS - Enhanced by Gemini */}
                     <div>
                       <h4 className="font-medium text-indigo-800 mb-3">🎯 Recommandations Intelligentes</h4>
