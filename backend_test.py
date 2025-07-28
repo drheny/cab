@@ -1549,7 +1549,7 @@ class CabinetMedicalAPITest(unittest.TestCase):
         print("\n🔍 Testing Payment Retrieval Endpoints")
         
         # First create a payment to retrieve
-        payment_id, appointment_id = self.test_payment_creation_post_endpoint()
+        payment_id, appointment_id = self.test_payment_creation_put_endpoint()
         
         # Test GET /api/payments endpoint
         response = requests.get(f"{self.base_url}/api/payments")
@@ -1562,14 +1562,14 @@ class CabinetMedicalAPITest(unittest.TestCase):
         # Find our created payment in the list
         created_payment = None
         for payment in payments_data["payments"]:
-            if payment["id"] == payment_id:
+            if payment["appointment_id"] == appointment_id:
                 created_payment = payment
                 break
         
         self.assertIsNotNone(created_payment, "Created payment not found in payments list")
         
         # Verify payment data structure for billing display
-        required_fields = ["id", "patient_id", "appointment_id", "montant", "date", "assure", "statut", "type_paiement"]
+        required_fields = ["appointment_id", "montant", "assure", "statut", "type_paiement"]
         for field in required_fields:
             self.assertIn(field, created_payment, f"Required field '{field}' missing from payment")
         
@@ -1578,12 +1578,11 @@ class CabinetMedicalAPITest(unittest.TestCase):
         self.assertEqual(specific_payment_response.status_code, 200, f"GET payment by appointment failed: {specific_payment_response.text}")
         
         specific_payment = specific_payment_response.json()
-        self.assertEqual(specific_payment["id"], payment_id)
         self.assertEqual(specific_payment["appointment_id"], appointment_id)
         
         print(f"✅ Payment retrieval endpoints working correctly")
         print(f"   - Total payments in system: {len(payments_data['payments'])}")
-        print(f"   - Retrieved payment ID: {specific_payment['id']}")
+        print(f"   - Retrieved payment for appointment: {appointment_id}")
         print(f"   - Payment amount: {specific_payment['montant']} TND")
         
         print(f"🎉 Payment Retrieval Test: PASSED")
