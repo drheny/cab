@@ -371,6 +371,8 @@ const Consultation = ({ user }) => {
       toast.error('Erreur lors de la création de la consultation');
     }
   };
+
+  // Récupérer le montant du paiement pour une consultation
   const getPaymentAmount = async (appointmentId) => {
     try {
       console.log(`🔍 Fetching payment for appointment: ${appointmentId}`);
