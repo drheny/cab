@@ -604,10 +604,7 @@ const Consultation = ({ user }) => {
         </div>
         <button
           onClick={handleAddConsultation}
-          disabled={!selectedPatient}
-          className={`btn-primary flex items-center space-x-2 ${
-            !selectedPatient ? 'opacity-50 cursor-not-allowed' : ''
-          }`}
+          className="btn-primary flex items-center space-x-2"
         >
           <Plus className="w-5 h-5" />
           <span>Ajouter Consultation</span>
