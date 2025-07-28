@@ -1789,10 +1789,7 @@ class CabinetMedicalAPITest(unittest.TestCase):
         # Test billing page data retrieval
         billing_response = requests.get(f"{self.base_url}/api/payments")
         self.assertEqual(billing_response.status_code, 200)
-        billing_data = billing_response.json()
-        
-        self.assertIn("payments", billing_data)
-        payments_list = billing_data["payments"]
+        payments_list = billing_response.json()
         
         # Verify all test payments appear in billing
         for test_payment in test_payments:
