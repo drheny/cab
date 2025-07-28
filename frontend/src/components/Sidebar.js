@@ -9,7 +9,6 @@ import {
   Settings,
   X,
   MessageSquare,
-  Brain,
   MessageCircle
 } from 'lucide-react';
 
