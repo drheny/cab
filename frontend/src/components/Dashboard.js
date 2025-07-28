@@ -967,9 +967,6 @@ const Dashboard = ({ user }) => {
                     {/* Message footer */}
                     <div className="flex items-center justify-between mt-3 text-xs">
                       <div className="flex items-center space-x-2">
-                        <span className="text-sm">
-                          {message.sender_type === 'medecin' ? '👨‍⚕️' : '👩‍💼'}
-                        </span>
                         <span className="font-semibold text-xs text-slate-600">
                           {getShortSenderName(message.sender_name, message.sender_type)}
                         </span>
