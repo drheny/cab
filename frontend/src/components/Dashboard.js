@@ -980,9 +980,15 @@ const Dashboard = ({ user }) => {
                     
                     {/* Message footer */}
                     <div className="flex items-center justify-between mt-3 text-xs">
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-3">
                         <span className="font-semibold text-xs text-slate-600">
                           {getShortSenderName(message.sender_name, message.sender_type)}
+                        </span>
+                        <span className="text-xs text-slate-500 font-medium">
+                          {new Date(message.timestamp).toLocaleTimeString('fr-FR', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
                         </span>
                         {message.is_edited && (
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -993,62 +999,63 @@ const Dashboard = ({ user }) => {
                             modifié
                           </span>
                         )}
+                        {/* VU indicator - only show for sent messages */}
+                        {message.sender_type === user.role && (
+                          <span className={`text-xs font-medium ${
+                            message.is_read 
+                              ? 'text-blue-600' 
+                              : 'text-slate-400'
+                          }`}>
+                            {message.is_read ? '✓✓ VU' : '✓ ENVOYÉ'}
+                          </span>
+                        )}
                       </div>
                       
-                      <div className="flex items-center space-x-2">
-                        <span className="text-xs text-slate-500 font-medium">
-                          {new Date(message.timestamp).toLocaleTimeString('fr-FR', {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </span>
-                        
-                        {/* Action buttons */}
-                        <div className="flex items-center space-x-1">
-                          {message.sender_type === user.role && (
-                            <>
-                              <button
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  handleEditMessage(message);
-                                }}
-                                className="p-1.5 rounded-full hover:bg-white hover:bg-opacity-50 transition-all duration-200 hover:shadow-sm"
-                                title="Modifier"
-                              >
-                                <svg className="w-3 h-3 text-slate-500 hover:text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                </svg>
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  handleDeleteMessage(message.id);
-                                }}
-                                className="p-1.5 rounded-full hover:bg-red-100 hover:bg-opacity-50 transition-all duration-200 hover:shadow-sm"
-                                title="Supprimer"
-                              >
-                                <svg className="w-3 h-3 text-slate-500 hover:text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              </button>
-                            </>
-                          )}
-                          <button
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              handleReplyToMessage(message);
-                            }}
-                            className="p-1.5 rounded-full hover:bg-white hover:bg-opacity-50 transition-all duration-200 hover:shadow-sm"
-                            title="Répondre"
-                          >
-                            <svg className="w-3 h-3 text-slate-500 hover:text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                            </svg>
-                          </button>
-                        </div>
+                      {/* Action buttons */}
+                      <div className="flex items-center space-x-1">
+                        {message.sender_type === user.role && (
+                          <>
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleEditMessage(message);
+                              }}
+                              className="p-1.5 rounded-full hover:bg-white hover:bg-opacity-50 transition-all duration-200 hover:shadow-sm"
+                              title="Modifier"
+                            >
+                              <svg className="w-3 h-3 text-slate-500 hover:text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleDeleteMessage(message.id);
+                              }}
+                              className="p-1.5 rounded-full hover:bg-red-100 hover:bg-opacity-50 transition-all duration-200 hover:shadow-sm"
+                              title="Supprimer"
+                            >
+                              <svg className="w-3 h-3 text-slate-500 hover:text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </>
+                        )}
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleReplyToMessage(message);
+                          }}
+                          className="p-1.5 rounded-full hover:bg-white hover:bg-opacity-50 transition-all duration-200 hover:shadow-sm"
+                          title="Répondre"
+                        >
+                          <svg className="w-3 h-3 text-slate-500 hover:text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                          </svg>
+                        </button>
                       </div>
                     </div>
                   </div>
