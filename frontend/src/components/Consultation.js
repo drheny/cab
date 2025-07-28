@@ -242,7 +242,135 @@ const Consultation = ({ user }) => {
     });
   };
 
-  // Récupérer le montant du paiement pour une consultation
+  // Commencer consultation depuis le modal rapide
+  const handleStartConsultation = async () => {
+    try {
+      let currentPatient = null;
+      
+      if (quickConsultationModal.data.isNewPatient) {
+        // Créer un nouveau patient avec nom minimum
+        if (!quickConsultationModal.data.patientName.trim()) {
+          toast.error('Veuillez entrer le nom du patient');
+          return;
+        }
+        
+        const nameParts = quickConsultationModal.data.patientName.trim().split(' ');
+        const prenom = nameParts[0] || '';
+        const nom = nameParts.slice(1).join(' ') || nameParts[0] || 'Patient';
+        
+        const newPatientData = {
+          prenom,
+          nom,
+          telephone: '',
+          date_naissance: '',
+          adresse: '',
+          antecedents: '',
+          notes: ''
+        };
+        
+        const response = await axios.post(`${API_BASE_URL}/api/patients`, newPatientData);
+        currentPatient = response.data;
+        
+        // Ajouter le nouveau patient à la liste
+        setPatients(prev => [...prev, currentPatient]);
+        toast.success('Nouveau patient créé avec succès');
+      } else {
+        // Utiliser patient existant
+        if (!quickConsultationModal.data.selectedPatientId) {
+          toast.error('Veuillez sélectionner un patient');
+          return;
+        }
+        currentPatient = patients.find(p => p.id === quickConsultationModal.data.selectedPatientId);
+      }
+      
+      if (!currentPatient) {
+        toast.error('Patient non trouvé');
+        return;
+      }
+      
+      // Définir le patient sélectionné
+      setSelectedPatient(currentPatient);
+      setSearchTerm(`${currentPatient.prenom} ${currentPatient.nom}`);
+      
+      // Créer un rendez-vous pour cette consultation si c'est une visite
+      let appointmentId = `consultation_${Date.now()}`;
+      
+      if (quickConsultationModal.data.visitType === 'visite') {
+        try {
+          const appointmentData = {
+            patient_id: currentPatient.id,
+            date: quickConsultationModal.data.date,
+            heure: '09:00', // Default time
+            motif: 'Consultation',
+            notes: '',
+            statut: 'confirme'
+          };
+          
+          const appointmentResponse = await axios.post(`${API_BASE_URL}/api/appointments`, appointmentData);
+          appointmentId = appointmentResponse.data.id;
+          
+          // Créer le paiement si c'est une visite
+          if (quickConsultationModal.data.paymentAmount) {
+            const paymentData = {
+              appointment_id: appointmentId,
+              patient_id: currentPatient.id,
+              montant: parseFloat(quickConsultationModal.data.paymentAmount),
+              date: quickConsultationModal.data.date,
+              assure: quickConsultationModal.data.isInsured,
+              statut: 'paye'
+            };
+            
+            await axios.post(`${API_BASE_URL}/api/payments`, paymentData);
+          }
+        } catch (error) {
+          console.warn('Could not create appointment/payment:', error);
+          // Continue anyway with manual appointment ID
+        }
+      }
+      
+      // Configurer les données de consultation
+      setConsultationData({
+        patient_id: currentPatient.id,
+        appointment_id: appointmentId,
+        date: quickConsultationModal.data.date,
+        type_rdv: quickConsultationModal.data.visitType,
+        poids: '',
+        taille: '',
+        pc: '',
+        diagnostic: '',
+        observation_clinique: '',
+        relance_telephonique: false,
+        date_relance: '',
+        duree: 0,
+        // Rappel vaccin
+        rappel_vaccin: false,
+        nom_vaccin: '',
+        date_vaccin: '',
+        rappel_whatsapp_vaccin: false
+      });
+
+      // Fermer le modal rapide et ouvrir le modal principal
+      setQuickConsultationModal({ isOpen: false, data: {} });
+      
+      setConsultationModal({
+        isOpen: true,
+        isMinimized: false,
+        mode: 'create',
+        consultationId: null
+      });
+
+      // Démarrer le chronomètre
+      setTimer(0);
+      setIsRunning(true);
+      
+      // Charger les consultations du patient
+      await fetchPatientConsultations(currentPatient.id);
+      
+    } catch (error) {
+      console.error('Error starting consultation:', error);
+      toast.error('Erreur lors de la création de la consultation');
+    }
+  };
   const getPaymentAmount = async (appointmentId) => {
     try {
       console.log(`🔍 Fetching payment for appointment: ${appointmentId}`);
