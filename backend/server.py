@@ -5241,6 +5241,11 @@ async def get_advanced_reports(
             "date": {"$gte": start_date, "$lte": end_date}
         }))
         
+        # Get consultations for the period (needed for Gemini AI predictions)
+        consultations = list(consultations_collection.find({
+            "date": {"$gte": start_date, "$lte": end_date}
+        }))
+        
         # Calculate advanced statistics
         advanced_stats = await calculate_advanced_statistics(start_date, end_date)
         
@@ -5256,8 +5261,8 @@ async def get_advanced_reports(
         # Calculate seasonality patterns
         seasonality = await calculate_seasonality_patterns()
         
-        # Calculate predictions
-        predictions = await calculate_predictions(evolution)
+        # Calculate predictions with Gemini AI
+        predictions = await calculate_predictions_with_gemini(evolution, consultations)
         
         # Check alert thresholds
         alerts = await check_alert_thresholds(advanced_stats)
