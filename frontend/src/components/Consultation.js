@@ -261,6 +261,49 @@ const Consultation = ({ user }) => {
     });
   };
 
+  // Recherche de patients pour le modal rapide
+  const handlePatientSearchForModal = (searchTerm) => {
+    setQuickConsultationModal(prev => ({
+      ...prev,
+      data: {
+        ...prev.data,
+        patientSearchTerm: searchTerm,
+        selectedPatientId: '',
+        patientName: ''
+      }
+    }));
+
+    if (searchTerm.trim() === '') {
+      setQuickConsultationModal(prev => ({
+        ...prev,
+        data: { ...prev.data, filteredPatientsForModal: [] }
+      }));
+    } else {
+      const filtered = patients.filter(patient =>
+        `${patient.prenom} ${patient.nom}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        patient.telephone?.includes(searchTerm)
+      );
+      setQuickConsultationModal(prev => ({
+        ...prev,
+        data: { ...prev.data, filteredPatientsForModal: filtered.slice(0, 10) }
+      }));
+    }
+  };
+
+  // Sélectionner un patient dans le modal rapide
+  const handlePatientSelectForModal = (patient) => {
+    setQuickConsultationModal(prev => ({
+      ...prev,
+      data: {
+        ...prev.data,
+        selectedPatientId: patient.id,
+        patientName: `${patient.prenom} ${patient.nom}`,
+        patientSearchTerm: `${patient.prenom} ${patient.nom}`,
+        filteredPatientsForModal: []
+      }
+    }));
+  };
+
   // Commencer consultation depuis le modal rapide
   const handleStartConsultation = async () => {
     try {
