@@ -526,23 +526,6 @@ const PatientsListComponent = ({ user }) => {
               <span className="truncate">{patient.adresse || 'N/A'}</span>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
-            {patient.lien_whatsapp ? (
-              <a
-                href={patient.lien_whatsapp}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-1.5 text-gray-400 hover:text-green-600 rounded-lg hover:bg-green-50 transition-colors"
-                title="Envoyer WhatsApp"
-              >
-                <MessageCircle className="w-4 h-4" />
-              </a>
-            ) : (
-              <span className="p-1.5 text-gray-300">
-                <MessageCircle className="w-4 h-4" />
-              </span>
-            )}
-          </div>
         </div>
       </div>
     ));
