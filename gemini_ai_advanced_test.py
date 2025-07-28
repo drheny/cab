@@ -131,10 +131,9 @@ class GeminiAIAdvancedTest(unittest.TestCase):
         print(f"   - Next month consultations: {next_month['consultations_estimees']}")
         print(f"   - Next month revenue: {next_month['revenue_estime']} TND")
         print(f"   - Confidence level: {next_month['confiance']}%")
-        print(f"   - AI-powered: {predictions['ai_powered']}")
+        print(f"   - AI-powered: {ai_powered}")
         print(f"   - Insights count: {len(predictions['insights'])}")
         print(f"   - Risk factors: {len(predictions['risk_factors'])}")
-        print(f"   - Opportunities: {len(predictions['opportunities'])}")
         print(f"   - Recommendations: {len(predictions['recommendations'])}")
         print(f"🎉 Gemini AI Predictions Test: PASSED")
     
