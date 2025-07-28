@@ -579,13 +579,12 @@ const PatientsListComponent = ({ user }) => {
       {/* Table Header (Hidden on mobile) */}
       <div className="hidden md:block">
         <div className="bg-gray-50 rounded-lg p-4 mb-4">
-          <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-600">
+          <div className="grid grid-cols-11 gap-4 text-sm font-medium text-gray-600">
             <div className="col-span-2">Nom Prénom</div>
             <div className="col-span-2">Date naissance</div>
             <div className="col-span-2">Nom mère</div>
             <div className="col-span-2">Tel mère</div>
             <div className="col-span-2">Adresse</div>
-            <div className="col-span-1">WhatsApp</div>
             <div className="col-span-1">Actions</div>
           </div>
         </div>
