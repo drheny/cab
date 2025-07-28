@@ -383,7 +383,7 @@ const PatientsListComponent = ({ user }) => {
       <div key={patient.id} className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
         {/* Desktop Layout */}
         <div className="hidden md:block p-4">
-          <div className="grid grid-cols-12 gap-4 items-center">
+          <div className="grid grid-cols-11 gap-4 items-center">
             <div className="col-span-2">
               <button
                 onClick={() => viewPatientDetails(patient.id)}
@@ -415,24 +415,22 @@ const PatientsListComponent = ({ user }) => {
               </span>
             </div>
             <div className="col-span-1">
-              {patient.lien_whatsapp ? (
-                <a
-                  href={patient.lien_whatsapp}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 text-gray-400 hover:text-green-600 rounded-lg hover:bg-green-50 transition-colors"
-                  title="Envoyer WhatsApp"
-                >
-                  <MessageCircle className="w-4 h-4" />
-                </a>
-              ) : (
-                <span className="p-2 text-gray-300">
-                  <MessageCircle className="w-4 h-4" />
-                </span>
-              )}
-            </div>
-            <div className="col-span-1">
               <div className="flex items-center space-x-1">
+                {patient.lien_whatsapp ? (
+                  <a
+                    href={patient.lien_whatsapp}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 text-gray-400 hover:text-green-600 rounded-lg hover:bg-green-50 transition-colors"
+                    title="Envoyer WhatsApp"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                  </a>
+                ) : (
+                  <span className="p-2 text-gray-300" title="WhatsApp non disponible">
+                    <MessageCircle className="w-4 h-4" />
+                  </span>
+                )}
                 <button
                   onClick={() => openAppointmentModal(patient)}
                   className="p-2 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50"
