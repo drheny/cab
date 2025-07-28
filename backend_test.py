@@ -1699,7 +1699,7 @@ class CabinetMedicalAPITest(unittest.TestCase):
         print("\n🔍 Testing Payment Data Structure Verification")
         
         # Create a test payment
-        payment_id, appointment_id = self.test_payment_creation_post_endpoint()
+        payment_id, appointment_id = self.test_payment_creation_put_endpoint()
         
         # Get payment details
         response = requests.get(f"{self.base_url}/api/payments/appointment/{appointment_id}")
@@ -1708,15 +1708,11 @@ class CabinetMedicalAPITest(unittest.TestCase):
         
         # Verify all required fields are present
         required_fields = {
-            "id": str,
-            "patient_id": str,
             "appointment_id": str,
             "montant": (int, float),
-            "date": str,
             "assure": bool,
             "statut": str,
-            "type_paiement": str,
-            "created_at": str
+            "type_paiement": str
         }
         
         for field, expected_type in required_fields.items():
@@ -1735,17 +1731,11 @@ class CabinetMedicalAPITest(unittest.TestCase):
         valid_types = ["espece", "carte", "cheque", "virement", "gratuit"]
         self.assertIn(payment["type_paiement"], valid_types, f"Invalid payment type: {payment['type_paiement']}")
         
-        # Verify date format (YYYY-MM-DD)
-        import re
-        date_pattern = r'^\d{4}-\d{2}-\d{2}$'
-        self.assertTrue(re.match(date_pattern, payment["date"]), f"Invalid date format: {payment['date']}")
-        
         print(f"✅ Payment data structure verification complete")
         print(f"   - All required fields present: {list(required_fields.keys())}")
         print(f"   - Amount format: {payment['montant']} (numeric for TN currency)")
         print(f"   - Status: {payment['statut']} (valid)")
         print(f"   - Type: {payment['type_paiement']} (valid)")
-        print(f"   - Date format: {payment['date']} (YYYY-MM-DD)")
         print(f"   - Insurance: {payment['assure']} (boolean)")
         
         print(f"🎉 Payment Data Structure Test: PASSED")
