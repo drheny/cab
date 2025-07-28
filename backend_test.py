@@ -1616,22 +1616,19 @@ class CabinetMedicalAPITest(unittest.TestCase):
         
         print(f"  Step 2: Created appointment {appointment_id}")
         
-        # Step 3: Create payment linked to appointment
+        # Step 3: Create payment linked to appointment via PUT endpoint
         payment_data = {
-            "patient_id": patient_id,
-            "appointment_id": appointment_id,
+            "paye": True,
             "montant": 65.0,
-            "date": "2025-01-28",
+            "type_paiement": "espece",
             "assure": True,
-            "statut": "paye",
-            "type_paiement": "espece"
+            "notes": "Paiement intégration test"
         }
         
-        payment_response = requests.post(f"{self.base_url}/api/payments", json=payment_data)
+        payment_response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/paiement", json=payment_data)
         self.assertEqual(payment_response.status_code, 200)
-        payment_id = payment_response.json()["payment_id"]
         
-        print(f"  Step 3: Created payment {payment_id} for 65.0 TND")
+        print(f"  Step 3: Created payment for 65.0 TND")
         
         # Step 4: Verify payment appears in GET /api/payments list
         payments_list_response = requests.get(f"{self.base_url}/api/payments")
@@ -1640,13 +1637,11 @@ class CabinetMedicalAPITest(unittest.TestCase):
         
         payment_found_in_list = False
         for payment in payments_list:
-            if payment["id"] == payment_id:
+            if payment["appointment_id"] == appointment_id:
                 payment_found_in_list = True
                 # Verify all required fields for billing display
                 self.assertEqual(payment["appointment_id"], appointment_id)
-                self.assertEqual(payment["patient_id"], patient_id)
                 self.assertEqual(payment["montant"], 65.0)
-                self.assertEqual(payment["date"], "2025-01-28")
                 self.assertEqual(payment["assure"], True)
                 self.assertEqual(payment["statut"], "paye")
                 self.assertEqual(payment["type_paiement"], "espece")
@@ -1682,7 +1677,7 @@ class CabinetMedicalAPITest(unittest.TestCase):
         
         self.assertIsNotNone(linked_appointment, "Appointment not found")
         # The appointment should now be marked as paid
-        # Note: This depends on the backend implementation
+        self.assertEqual(linked_appointment["paye"], True)
         
         print(f"  Step 6: Appointment-payment linkage verified")
         
@@ -1695,6 +1690,7 @@ class CabinetMedicalAPITest(unittest.TestCase):
         print(f"   - Payment appears in billing history")
         print(f"   - Data structure matches billing requirements")
         print(f"   - TN currency format validated")
+        print(f"   - Appointment marked as paid")
         
         print(f"🎉 Payment Integration Workflow Test: PASSED")
     
