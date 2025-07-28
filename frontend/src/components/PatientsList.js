@@ -474,6 +474,21 @@ const PatientsListComponent = ({ user }) => {
               </p>
             </div>
             <div className="flex items-center space-x-1">
+              {patient.lien_whatsapp ? (
+                <a
+                  href={patient.lien_whatsapp}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-1.5 text-gray-400 hover:text-green-600 rounded-lg hover:bg-green-50 transition-colors"
+                  title="Envoyer WhatsApp"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                </a>
+              ) : (
+                <span className="p-1.5 text-gray-300" title="WhatsApp non disponible">
+                  <MessageCircle className="w-4 h-4" />
+                </span>
+              )}
               <button
                 onClick={() => openAppointmentModal(patient)}
                 className="p-1.5 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50"
