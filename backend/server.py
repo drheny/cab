@@ -9642,6 +9642,69 @@ async def get_automation_status():
 
 # ==================== End Cash Movements API ====================
 
+@app.get("/api/admin/ai-medical-report")
+async def get_ai_medical_report(
+    start_date: str = Query(..., description="Date de début (YYYY-MM-DD)"),
+    end_date: str = Query(..., description="Date de fin (YYYY-MM-DD)"),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Generate comprehensive AI-powered medical practice analysis
+    Provides deep insights, strategic recommendations, and predictions
+    """
+    try:
+        # Parse dates
+        start_date_dt = datetime.strptime(start_date, "%Y-%m-%d")
+        end_date_dt = datetime.strptime(end_date, "%Y-%m-%d")
+        
+        # Get comprehensive data
+        appointments = list(appointments_collection.find({
+            "date": {"$gte": start_date, "$lte": end_date}
+        }))
+        
+        consultations = list(consultations_collection.find({
+            "date": {"$gte": start_date, "$lte": end_date}
+        }))
+        
+        patients = list(patients_collection.find({}))
+        
+        # Get evolution data for trends
+        evolution = await calculate_monthly_evolution(start_date, end_date)
+        
+        # Generate comprehensive AI report
+        ai_report = await generate_ai_medical_report(evolution, consultations, patients)
+        
+        return {
+            "status": "success",
+            "message": "Rapport IA médical généré avec succès",
+            "generated_at": datetime.now().isoformat(),
+            "period": {
+                "start": start_date_dt.strftime('%Y-%m-%d'),
+                "end": end_date_dt.strftime('%Y-%m-%d'),
+                "duration_days": (end_date_dt - start_date_dt).days
+            },
+            "data_summary": {
+                "appointments_analyzed": len(appointments),
+                "consultations_analyzed": len(consultations),
+                "patients_in_database": len(patients),
+                "evolution_periods": len(evolution)
+            },
+            "ai_analysis": ai_report,
+            "methodology": {
+                "ai_model": "Google Gemini 2.0 Flash",
+                "analysis_type": "Comprehensive Medical Practice Analysis",
+                "confidence_methodology": "Multi-factor assessment including data quality, pattern consistency, and historical accuracy"
+            }
+        }
+        
+    except Exception as e:
+        print(f"Error generating AI medical report: {e}")
+        return {
+            "status": "error",
+            "message": f"Erreur lors de la génération du rapport IA: {str(e)}",
+            "error_type": type(e).__name__
+        }
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
