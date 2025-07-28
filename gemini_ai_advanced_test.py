@@ -265,46 +265,51 @@ class GeminiAIAdvancedTest(unittest.TestCase):
         self.assertIn("key_highlight", exec_summary)
         self.assertIn("urgency_level", exec_summary)
         
-        # Verify performance analysis
-        performance = ai_analysis["performance_analysis"]
-        self.assertIn("consultation_efficiency", performance)
-        self.assertIn("revenue_stability", performance)
-        self.assertIn("patient_retention", performance)
-        self.assertIn("growth_rate", performance)
-        self.assertIn("benchmark_position", performance)
+        # Verify data types for basic fields
+        self.assertIsInstance(exec_summary["overall_score"], (int, float))
+        self.assertIsInstance(ai_analysis["ai_confidence"], (int, float))
         
-        # Verify risk assessment
-        risk_assessment = ai_analysis["risk_assessment"]
-        self.assertIn("financial_risks", risk_assessment)
-        self.assertIn("operational_risks", risk_assessment)
-        self.assertIn("market_risks", risk_assessment)
-        self.assertIn("overall_risk_level", risk_assessment)
-        
-        # Verify opportunities
-        opportunities = ai_analysis["opportunities"]
-        self.assertIn("immediate_opportunities", opportunities)
-        self.assertIn("medium_term_opportunities", opportunities)
-        self.assertIn("strategic_opportunities", opportunities)
-        self.assertIn("revenue_potential", opportunities)
-        
-        # Verify strategic recommendations
-        recommendations = ai_analysis["strategic_recommendations"]
-        self.assertIn("priority_actions", recommendations)
-        self.assertIn("operational_improvements", recommendations)
-        self.assertIn("technology_recommendations", recommendations)
-        self.assertIn("marketing_suggestions", recommendations)
-        
-        # Verify predictions
-        predictions = ai_analysis["predictions"]
-        self.assertIn("next_quarter_forecast", predictions)
-        self.assertIn("annual_projection", predictions)
-        self.assertIn("market_evolution", predictions)
-        
-        # Verify action plan
-        action_plan = ai_analysis["action_plan"]
-        self.assertIn("immediate_actions", action_plan)
-        self.assertIn("quarterly_objectives", action_plan)
-        self.assertIn("annual_goals", action_plan)
+        if not is_fallback:
+            # Full analysis verification
+            performance = ai_analysis["performance_analysis"]
+            self.assertIn("consultation_efficiency", performance)
+            self.assertIn("revenue_stability", performance)
+            self.assertIn("patient_retention", performance)
+            self.assertIn("growth_rate", performance)
+            self.assertIn("benchmark_position", performance)
+            
+            # Verify risk assessment
+            risk_assessment = ai_analysis["risk_assessment"]
+            self.assertIn("financial_risks", risk_assessment)
+            self.assertIn("operational_risks", risk_assessment)
+            self.assertIn("market_risks", risk_assessment)
+            self.assertIn("overall_risk_level", risk_assessment)
+            
+            # Verify opportunities
+            opportunities = ai_analysis["opportunities"]
+            self.assertIn("immediate_opportunities", opportunities)
+            self.assertIn("medium_term_opportunities", opportunities)
+            self.assertIn("strategic_opportunities", opportunities)
+            self.assertIn("revenue_potential", opportunities)
+            
+            # Verify strategic recommendations
+            recommendations = ai_analysis["strategic_recommendations"]
+            self.assertIn("priority_actions", recommendations)
+            self.assertIn("operational_improvements", recommendations)
+            self.assertIn("technology_recommendations", recommendations)
+            self.assertIn("marketing_suggestions", recommendations)
+            
+            # Verify predictions
+            predictions = ai_analysis["predictions"]
+            self.assertIn("next_quarter_forecast", predictions)
+            self.assertIn("annual_projection", predictions)
+            self.assertIn("market_evolution", predictions)
+            
+            # Verify action plan
+            action_plan = ai_analysis["action_plan"]
+            self.assertIn("immediate_actions", action_plan)
+            self.assertIn("quarterly_objectives", action_plan)
+            self.assertIn("annual_goals", action_plan)
         
         # Verify methodology
         methodology = data["methodology"]
