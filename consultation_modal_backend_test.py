@@ -211,21 +211,17 @@ class ConsultationModalAPITester:
             return None
     
     def test_payment_creation_linked_to_appointment(self, patient_id, appointment_id):
-        """Test POST /api/payments - Create payment linked to appointment"""
+        """Test PUT /api/rdv/{rdv_id}/paiement - Create payment linked to appointment"""
         try:
-            today = datetime.now().strftime("%Y-%m-%d")
             payment_data = {
-                "patient_id": patient_id,
-                "appointment_id": appointment_id,
+                "paye": True,
                 "montant": 65.0,
                 "type_paiement": "espece",
-                "statut": "paye",
                 "assure": False,
-                "date": today,
                 "notes": "Payment via quick modal test"
             }
             
-            response = requests.post(f"{API_BASE}/payments", json=payment_data, headers=HEADERS)
+            response = requests.put(f"{API_BASE}/rdv/{appointment_id}/paiement", json=payment_data, headers=HEADERS)
             
             if response.status_code == 200:
                 create_data = response.json()
