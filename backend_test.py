@@ -1910,7 +1910,7 @@ class CabinetMedicalAPITest(unittest.TestCase):
         # Step 3: Verify payment appears in GET /api/payments list
         payments_response = requests.get(f"{self.base_url}/api/payments")
         self.assertEqual(payments_response.status_code, 200)
-        payments_list = payments_response.json()["payments"]
+        payments_list = payments_response.json()
         
         payment_in_list = any(p["appointment_id"] == appointment_id for p in payments_list)
         self.assertTrue(payment_in_list, "Payment not found in payments list")
