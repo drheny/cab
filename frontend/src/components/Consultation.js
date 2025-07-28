@@ -237,13 +237,23 @@ const Consultation = ({ user }) => {
   // Ouvrir modal d'ajout de consultation (nouvelle logique)
   const handleAddConsultation = () => {
     // Ouvrir le modal de consultation rapide au lieu de nécessiter un patient sélectionné
+    const now = new Date();
     setQuickConsultationModal({
       isOpen: true,
       data: {
         isNewPatient: false,
         selectedPatientId: selectedPatient?.id || '',
         patientName: selectedPatient ? `${selectedPatient.prenom} ${selectedPatient.nom}` : '',
-        date: new Date().toISOString().split('T')[0],
+        patientSearchTerm: selectedPatient ? `${selectedPatient.prenom} ${selectedPatient.nom}` : '',
+        filteredPatientsForModal: [],
+        newPatient: {
+          nom: '',
+          prenom: '',
+          date_naissance: '',
+          telephone: ''
+        },
+        date: now.toISOString().split('T')[0],
+        time: now.toTimeString().slice(0, 5),
         visitType: 'visite',
         paymentAmount: '',
         isInsured: false
