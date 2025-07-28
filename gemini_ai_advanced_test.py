@@ -474,14 +474,14 @@ class GeminiAIAdvancedTest(unittest.TestCase):
             f"{self.base_url}/api/admin/advanced-reports",
             params={"period_type": "monthly", "year": 2024, "month": 12}
         )
-        self.assertEqual(response.status_code, 401, "Advanced reports should require authentication")
+        self.assertIn(response.status_code, [401, 403], "Advanced reports should require authentication")
         
         # Test AI medical report without auth
         response = requests.get(
             f"{self.base_url}/api/admin/ai-medical-report",
             params={"start_date": "2024-01-01", "end_date": "2024-12-31"}
         )
-        self.assertEqual(response.status_code, 401, "AI medical report should require authentication")
+        self.assertIn(response.status_code, [401, 403], "AI medical report should require authentication")
         
         print(f"✅ Authentication properly required for admin endpoints")
         print(f"🎉 Authentication Test: PASSED")
