@@ -1766,23 +1766,19 @@ class CabinetMedicalAPITest(unittest.TestCase):
             self.assertEqual(appointment_response.status_code, 200)
             appointment_id = appointment_response.json()["appointment_id"]
             
-            # Create payment via modal simulation
+            # Create payment via modal simulation using PUT endpoint
             payment_data = {
-                "patient_id": patient["id"],
-                "appointment_id": appointment_id,
+                "paye": True,
                 "montant": 65.0,
-                "date": "2025-01-28",
+                "type_paiement": "espece",
                 "assure": i % 2 == 0,  # Alternate insurance status
-                "statut": "paye",
-                "type_paiement": "espece"
+                "notes": f"Billing test payment {i+1}"
             }
             
-            payment_response = requests.post(f"{self.base_url}/api/payments", json=payment_data)
+            payment_response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/paiement", json=payment_data)
             self.assertEqual(payment_response.status_code, 200)
-            payment_id = payment_response.json()["payment_id"]
             
             test_payments.append({
-                "payment_id": payment_id,
                 "appointment_id": appointment_id,
                 "patient_name": f"{patient['prenom']} {patient['nom']}",
                 "amount": 65.0,
@@ -1803,7 +1799,7 @@ class CabinetMedicalAPITest(unittest.TestCase):
         for test_payment in test_payments:
             payment_found = False
             for billing_payment in payments_list:
-                if billing_payment["id"] == test_payment["payment_id"]:
+                if billing_payment["appointment_id"] == test_payment["appointment_id"]:
                     payment_found = True
                     
                     # Verify billing display data
@@ -1812,13 +1808,12 @@ class CabinetMedicalAPITest(unittest.TestCase):
                     self.assertEqual(billing_payment["statut"], "paye")
                     self.assertEqual(billing_payment["type_paiement"], "espece")
                     
-                    # Verify patient linkage
-                    self.assertEqual(billing_payment["patient_id"], billing_payment["patient_id"])
+                    # Verify appointment linkage
                     self.assertEqual(billing_payment["appointment_id"], test_payment["appointment_id"])
                     
                     break
             
-            self.assertTrue(payment_found, f"Payment {test_payment['payment_id']} not found in billing")
+            self.assertTrue(payment_found, f"Payment for appointment {test_payment['appointment_id']} not found in billing")
         
         # Test payment statistics for billing dashboard
         total_amount = sum(p["amount"] for p in test_payments)
