@@ -226,42 +226,28 @@ class ConsultationModalAPITester:
             if response.status_code == 200:
                 create_data = response.json()
                 
-                if "payment_id" in create_data:
-                    payment_id = create_data["payment_id"]
-                    self.created_records["payments"].append(payment_id)
+                # Verify payment was created by checking the appointment payment endpoint
+                verify_response = requests.get(f"{API_BASE}/payments/appointment/{appointment_id}", headers=HEADERS)
+                
+                if verify_response.status_code == 200:
+                    payment = verify_response.json()
                     
-                    # Verify payment was created
-                    verify_response = requests.get(f"{API_BASE}/payments", headers=HEADERS)
-                    
-                    if verify_response.status_code == 200:
-                        payments = verify_response.json()
+                    if (payment["appointment_id"] == appointment_id and
+                        payment["montant"] == 65.0 and
+                        payment["statut"] == "paye"):
                         
-                        # Find our payment
-                        found_payment = None
-                        for payment in payments:
-                            if payment["id"] == payment_id:
-                                found_payment = payment
-                                break
-                        
-                        if (found_payment and 
-                            found_payment["appointment_id"] == appointment_id and
-                            found_payment["patient_id"] == patient_id):
-                            
-                            details = f"Payment created with ID: {payment_id}, Amount: {found_payment['montant']} TND"
-                            self.log_test("Payment Creation Linked to Appointment", True, details)
-                            return payment_id
-                        else:
-                            self.log_test("Payment Creation Linked to Appointment", False, "Payment not found in verification")
-                            return None
+                        details = f"Payment created for appointment, Amount: {payment['montant']} TND"
+                        self.log_test("Payment Creation Linked to Appointment", True, details)
+                        return True
                     else:
-                        self.log_test("Payment Creation Linked to Appointment", False, "Verification request failed")
-                        return None
+                        self.log_test("Payment Creation Linked to Appointment", False, "Payment data verification failed")
+                        return False
                 else:
-                    self.log_test("Payment Creation Linked to Appointment", False, "No payment_id in response")
-                    return None
+                    self.log_test("Payment Creation Linked to Appointment", False, "Payment verification request failed")
+                    return False
             else:
                 self.log_test("Payment Creation Linked to Appointment", False, f"Status: {response.status_code}", response.text)
-                return None
+                return False
                 
         except Exception as e:
             self.log_test("Payment Creation Linked to Appointment", False, "", str(e))
