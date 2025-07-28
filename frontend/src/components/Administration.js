@@ -436,22 +436,151 @@ const Administration = ({ user }) => {
     try {
       setReportLoading(true);
       
-      let url = '/api/admin/monthly-report';
-      const params = new URLSearchParams();
+      // Calculate start and end dates based on form
+      let startDate, endDate;
       
       if (reportForm.reportType === 'single') {
-        params.append('year', reportForm.singleYear);
-        params.append('month', reportForm.singleMonth);
+        // Single month - use our Gemini AI advanced reports
+        const year = parseInt(reportForm.singleYear);
+        const month = parseInt(reportForm.singleMonth);
+        startDate = new Date(year, month - 1, 1).toISOString().split('T')[0];
+        endDate = new Date(year, month, 0).toISOString().split('T')[0];
       } else {
-        params.append('start_month', reportForm.startMonth);
-        params.append('start_year', reportForm.startYear);
-        params.append('end_month', reportForm.endMonth);
-        params.append('end_year', reportForm.endYear);
+        // Multi-month range
+        const startYear = parseInt(reportForm.startYear);
+        const startMonth = parseInt(reportForm.startMonth);
+        const endYear = parseInt(reportForm.endYear);
+        const endMonth = parseInt(reportForm.endMonth);
+        
+        startDate = new Date(startYear, startMonth - 1, 1).toISOString().split('T')[0];
+        endDate = new Date(endYear, endMonth, 0).toISOString().split('T')[0];
       }
       
-      const response = await axios.get(`${url}?${params}`);
+      // Use our advanced AI reports endpoint
+      const params = new URLSearchParams({
+        start_date: startDate,
+        end_date: endDate
+      });
+      
+      console.log('🤖 Generating AI-powered advanced report...');
+      const response = await axios.get(`/api/admin/advanced-reports?${params}`);
       const report = response.data;
-      setReportData(report);
+      
+      // Also get the new AI medical report for enhanced insights
+      try {
+        console.log('🧠 Fetching AI medical insights...');
+        const aiReportResponse = await axios.get(`/api/admin/ai-medical-report?${params}`);
+        const aiReport = aiReportResponse.data;
+        
+        // Merge AI insights with advanced reports
+        report.ai_medical_insights = aiReport.ai_analysis;
+        report.ai_methodology = aiReport.methodology;
+        console.log('✅ AI medical insights integrated successfully');
+      } catch (aiError) {
+        console.warn('⚠️ Could not fetch AI medical insights:', aiError);
+      }
+      
+      setAdvancedReportsData(report);
+      
+      // Create enhanced CSV content with AI insights
+      let csvContent = [];
+      
+      csvContent = [
+        ['=== RAPPORT AVANCÉ IA - CABINET MÉDICAL ==='],
+        ['Période d\'analyse', `Du ${startDate} au ${endDate}`],
+        ['Généré le', new Date().toLocaleString('fr-FR')],
+        ['Méthode d\'analyse', 'Gemini AI + Prédictions ML'],
+        [''],
+        ['=== PRÉDICTIONS IA ===']
+      ];
+      
+      // Add AI predictions to CSV
+      if (report.predictions) {
+        csvContent.push(
+          ['Consultations prédites (mois prochain)', report.predictions.next_month.consultations_estimees],
+          ['Revenus prédits (mois prochain)', `${report.predictions.next_month.revenue_estime} TND`],
+          ['Niveau de confiance', `${report.predictions.next_month.confiance}%`],
+          ['Tendance analysée', report.predictions.trend],
+          ['']
+        );
+        
+        // Add AI insights
+        if (report.predictions.insights) {
+          csvContent.push(['=== INSIGHTS IA ===']);
+          report.predictions.insights.forEach((insight, index) => {
+            csvContent.push([`Insight ${index + 1}`, insight]);
+          });
+          csvContent.push(['']);
+        }
+        
+        // Add recommendations
+        if (report.predictions.recommendations) {
+          csvContent.push(['=== RECOMMANDATIONS IA ===']);
+          report.predictions.recommendations.forEach((rec, index) => {
+            csvContent.push([`Recommandation ${index + 1}`, rec]);
+          });
+          csvContent.push(['']);
+        }
+      }
+      
+      // Add AI medical insights if available
+      if (report.ai_medical_insights) {
+        csvContent.push(['=== ANALYSE MÉDICALE IA ===']);
+        
+        if (report.ai_medical_insights.executive_summary) {
+          csvContent.push(
+            ['Score global de performance', `${report.ai_medical_insights.executive_summary.overall_score}/100`],
+            ['Tendance de performance', report.ai_medical_insights.executive_summary.performance_trend],
+            ['Point clé principal', report.ai_medical_insights.executive_summary.key_highlight],
+            ['Niveau d\'urgence', report.ai_medical_insights.executive_summary.urgency_level],
+            ['']
+          );
+        }
+        
+        if (report.ai_medical_insights.strategic_recommendations) {
+          csvContent.push(['=== ACTIONS PRIORITAIRES ===']);
+          report.ai_medical_insights.strategic_recommendations.priority_actions?.forEach((action, index) => {
+            csvContent.push([`Action prioritaire ${index + 1}`, action]);
+          });
+          csvContent.push(['']);
+        }
+      }
+      
+      // Add evolution data
+      if (report.evolution) {
+        csvContent.push(
+          ['=== ÉVOLUTION MENSUELLE ==='],
+          ['Mois', 'Visites', 'Contrôles', 'Revenus (TND)']
+        );
+        
+        report.evolution.forEach(month => {
+          csvContent.push([
+            month.period || 'N/A',
+            month.visites || 0,
+            month.controles || 0,
+            month.revenue || 0
+          ]);
+        });
+      }
+      
+      // Store CSV content for download
+      const csvString = csvContent.map(row => 
+        row.map(cell => `"${String(cell || '').replace(/"/g, '""')}"`).join(',')
+      ).join('\n');
+      
+      // Add UTF-8 BOM for Excel compatibility
+      const BOM = '\uFEFF';
+      setCsvContent(BOM + csvString);
+      
+      toast.success('🤖 Rapport IA généré avec succès ! Insights avancés disponibles.');
+      
+    } catch (error) {
+      console.error('Error generating advanced report:', error);
+      toast.error(`Erreur lors de la génération du rapport IA: ${error.response?.data?.message || error.message}`);
+    } finally {
+      setReportLoading(false);
+    }
+  };
       
       // Create enhanced CSV content
       let csvContent = [];
