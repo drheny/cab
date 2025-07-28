@@ -757,7 +757,22 @@ const Consultation = ({ user }) => {
                   <p className="text-gray-600">Créer une nouvelle consultation</p>
                 </div>
                 <button
-                  onClick={() => setQuickConsultationModal({ isOpen: false, data: {} })}
+                  onClick={() => setQuickConsultationModal({ 
+                    isOpen: false, 
+                    data: {
+                      isNewPatient: false,
+                      selectedPatientId: '',
+                      patientName: '',
+                      patientSearchTerm: '',
+                      filteredPatientsForModal: [],
+                      newPatient: { nom: '', prenom: '', date_naissance: '', telephone: '' },
+                      date: new Date().toISOString().split('T')[0],
+                      time: new Date().toTimeString().slice(0, 5),
+                      visitType: 'visite',
+                      paymentAmount: '',
+                      isInsured: false
+                    }
+                  })}
                   className="text-gray-400 hover:text-gray-600"
                 >
                   <X className="w-6 h-6" />
@@ -782,7 +797,9 @@ const Consultation = ({ user }) => {
                             data: {
                               ...prev.data,
                               isNewPatient: e.target.checked,
-                              selectedPatientId: e.target.checked ? '' : prev.data.selectedPatientId
+                              selectedPatientId: e.target.checked ? '' : prev.data.selectedPatientId,
+                              patientSearchTerm: e.target.checked ? '' : prev.data.patientSearchTerm,
+                              filteredPatientsForModal: []
                             }
                           }))}
                           className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
@@ -791,59 +808,143 @@ const Consultation = ({ user }) => {
                       </label>
                       
                       {quickConsultationModal.data.isNewPatient ? (
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Nom complet du patient
-                          </label>
-                          <input
-                            type="text"
-                            value={quickConsultationModal.data.patientName}
-                            onChange={(e) => setQuickConsultationModal(prev => ({
-                              ...prev,
-                              data: { ...prev.data, patientName: e.target.value }
-                            }))}
-                            className="input-field"
-                            placeholder="Prénom Nom"
-                            required
-                          />
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Nom *
+                              </label>
+                              <input
+                                type="text"
+                                value={quickConsultationModal.data.newPatient.nom}
+                                onChange={(e) => setQuickConsultationModal(prev => ({
+                                  ...prev,
+                                  data: {
+                                    ...prev.data,
+                                    newPatient: { ...prev.data.newPatient, nom: e.target.value }
+                                  }
+                                }))}
+                                className="input-field"
+                                placeholder="Nom de famille"
+                                required
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Prénom *
+                              </label>
+                              <input
+                                type="text"
+                                value={quickConsultationModal.data.newPatient.prenom}
+                                onChange={(e) => setQuickConsultationModal(prev => ({
+                                  ...prev,
+                                  data: {
+                                    ...prev.data,
+                                    newPatient: { ...prev.data.newPatient, prenom: e.target.value }
+                                  }
+                                }))}
+                                className="input-field"
+                                placeholder="Prénom"
+                                required
+                              />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Date de naissance
+                              </label>
+                              <input
+                                type="date"
+                                value={quickConsultationModal.data.newPatient.date_naissance}
+                                onChange={(e) => setQuickConsultationModal(prev => ({
+                                  ...prev,
+                                  data: {
+                                    ...prev.data,
+                                    newPatient: { ...prev.data.newPatient, date_naissance: e.target.value }
+                                  }
+                                }))}
+                                className="input-field"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Téléphone
+                              </label>
+                              <input
+                                type="tel"
+                                value={quickConsultationModal.data.newPatient.telephone}
+                                onChange={(e) => setQuickConsultationModal(prev => ({
+                                  ...prev,
+                                  data: {
+                                    ...prev.data,
+                                    newPatient: { ...prev.data.newPatient, telephone: e.target.value }
+                                  }
+                                }))}
+                                className="input-field"
+                                placeholder="0612345678"
+                              />
+                            </div>
+                          </div>
                         </div>
                       ) : (
-                        <div>
+                        <div className="relative">
                           <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Sélectionner un patient existant
+                            Rechercher un patient existant
                           </label>
-                          <select
-                            value={quickConsultationModal.data.selectedPatientId}
-                            onChange={(e) => {
-                              const patient = patients.find(p => p.id === e.target.value);
-                              setQuickConsultationModal(prev => ({
-                                ...prev,
-                                data: {
-                                  ...prev.data,
-                                  selectedPatientId: e.target.value,
-                                  patientName: patient ? `${patient.prenom} ${patient.nom}` : ''
-                                }
-                              }));
-                            }}
-                            className="input-field"
-                            required={!quickConsultationModal.data.isNewPatient}
-                          >
-                            <option value="">Choisir un patient...</option>
-                            {patients.map(patient => (
-                              <option key={patient.id} value={patient.id}>
-                                {patient.prenom} {patient.nom} - {calculateAge(patient.date_naissance)} ans
-                              </option>
-                            ))}
-                          </select>
+                          <div className="relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <input
+                              type="text"
+                              value={quickConsultationModal.data.patientSearchTerm}
+                              onChange={(e) => handlePatientSearchForModal(e.target.value)}
+                              className="input-field pl-10"
+                              placeholder="Nom, prénom ou téléphone..."
+                              required={!quickConsultationModal.data.isNewPatient}
+                            />
+                          </div>
+                          
+                          {/* Dropdown des résultats de recherche */}
+                          {quickConsultationModal.data.filteredPatientsForModal.length > 0 && (
+                            <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto mt-1">
+                              {quickConsultationModal.data.filteredPatientsForModal.map((patient) => (
+                                <button
+                                  key={patient.id}
+                                  type="button"
+                                  onClick={() => handlePatientSelectForModal(patient)}
+                                  className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
+                                >
+                                  <div className="font-medium text-gray-900">
+                                    {patient.prenom} {patient.nom}
+                                  </div>
+                                  <div className="text-sm text-gray-600">
+                                    {patient.telephone} • {calculateAge(patient.date_naissance)} ans
+                                  </div>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                          
+                          {/* Patient sélectionné */}
+                          {quickConsultationModal.data.selectedPatientId && (
+                            <div className="mt-2 p-3 bg-primary-50 border border-primary-200 rounded-lg">
+                              <div className="flex items-center space-x-2">
+                                <UserCheck className="w-4 h-4 text-primary-600" />
+                                <span className="text-sm font-medium text-primary-900">
+                                  Patient sélectionné: {quickConsultationModal.data.patientName}
+                                </span>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
                   </div>
 
-                  {/* Date et type de consultation */}
+                  {/* Date et heure de consultation */}
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Détails de la consultation</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Date et heure de consultation</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Date
@@ -854,6 +955,21 @@ const Consultation = ({ user }) => {
                           onChange={(e) => setQuickConsultationModal(prev => ({
                             ...prev,
                             data: { ...prev.data, date: e.target.value }
+                          }))}
+                          className="input-field"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Heure
+                        </label>
+                        <input
+                          type="time"
+                          value={quickConsultationModal.data.time}
+                          onChange={(e) => setQuickConsultationModal(prev => ({
+                            ...prev,
+                            data: { ...prev.data, time: e.target.value }
                           }))}
                           className="input-field"
                           required
@@ -920,7 +1036,22 @@ const Consultation = ({ user }) => {
                 <div className="flex justify-end space-x-3 mt-6">
                   <button
                     type="button"
-                    onClick={() => setQuickConsultationModal({ isOpen: false, data: {} })}
+                    onClick={() => setQuickConsultationModal({ 
+                      isOpen: false, 
+                      data: {
+                        isNewPatient: false,
+                        selectedPatientId: '',
+                        patientName: '',
+                        patientSearchTerm: '',
+                        filteredPatientsForModal: [],
+                        newPatient: { nom: '', prenom: '', date_naissance: '', telephone: '' },
+                        date: new Date().toISOString().split('T')[0],
+                        time: new Date().toTimeString().slice(0, 5),
+                        visitType: 'visite',
+                        paymentAmount: '',
+                        isInsured: false
+                      }
+                    })}
                     className="btn-outline"
                   >
                     Annuler
