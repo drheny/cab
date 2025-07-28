@@ -496,7 +496,7 @@ class ConsultationModalAPITester:
             print("\n📋 WORKFLOW SUMMARY:")
             print(f"   - Patient created: ID {patient_id}")
             print(f"   - Appointment scheduled: ID {appointment_id}")
-            print(f"   - Payment processed: ID {payment_id}")
+            print(f"   - Payment processed: Successfully linked to appointment")
             print(f"   - Consultation completed: ID {consultation_id}")
             print("   - All records linked and verified successfully")
             print("\n✅ The backend APIs support the quick consultation modal workflow!")
