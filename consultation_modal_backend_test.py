@@ -251,7 +251,7 @@ class ConsultationModalAPITester:
                 
         except Exception as e:
             self.log_test("Payment Creation Linked to Appointment", False, "", str(e))
-            return None
+            return False
     
     def test_consultation_creation_new_structure(self, patient_id, appointment_id):
         """Test POST /api/consultations - Create consultation with new data structure"""
