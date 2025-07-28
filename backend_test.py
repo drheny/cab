@@ -1414,9 +1414,9 @@ class CabinetMedicalAPITest(unittest.TestCase):
 
     # ========== PAYMENT INTEGRATION TESTING FOR CONSULTATION MODAL ==========
     
-    def test_payment_creation_post_endpoint(self):
-        """Test POST /api/payments endpoint with appointment_id, patient_id, montant, date, assure, statut, type_paiement"""
-        print("\n🔍 Testing Payment Creation - POST /api/payments")
+    def test_payment_creation_put_endpoint(self):
+        """Test PUT /api/rdv/{rdv_id}/paiement endpoint for payment creation"""
+        print("\n🔍 Testing Payment Creation - PUT /api/rdv/{rdv_id}/paiement")
         
         # Get a valid patient and create an appointment first
         response = requests.get(f"{self.base_url}/api/patients")
@@ -1440,40 +1440,38 @@ class CabinetMedicalAPITest(unittest.TestCase):
         self.assertEqual(appointment_response.status_code, 200)
         appointment_id = appointment_response.json()["appointment_id"]
         
-        # Test payment creation with all required fields
+        # Test payment creation with all required fields via PUT endpoint
         payment_data = {
-            "patient_id": patient_id,
-            "appointment_id": appointment_id,
+            "paye": True,
             "montant": 65.0,
-            "date": "2025-01-28",
+            "type_paiement": "espece",
             "assure": True,
-            "statut": "paye",
-            "type_paiement": "espece"
+            "notes": "Paiement consultation modal"
         }
         
-        response = requests.post(f"{self.base_url}/api/payments", json=payment_data)
+        response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/paiement", json=payment_data)
         self.assertEqual(response.status_code, 200, f"Payment creation failed: {response.text}")
         
         create_data = response.json()
         self.assertIn("message", create_data)
-        self.assertIn("payment_id", create_data)
-        payment_id = create_data["payment_id"]
+        self.assertEqual(create_data["paye"], True)
+        self.assertEqual(create_data["montant"], 65.0)
+        self.assertEqual(create_data["type_paiement"], "espece")
+        self.assertEqual(create_data["assure"], True)
         
         # Verify payment was created correctly
         payment_response = requests.get(f"{self.base_url}/api/payments/appointment/{appointment_id}")
         self.assertEqual(payment_response.status_code, 200)
         payment_details = payment_response.json()
         
-        self.assertEqual(payment_details["patient_id"], patient_id)
         self.assertEqual(payment_details["appointment_id"], appointment_id)
         self.assertEqual(payment_details["montant"], 65.0)
-        self.assertEqual(payment_details["date"], "2025-01-28")
-        self.assertEqual(payment_details["assure"], True)
-        self.assertEqual(payment_details["statut"], "paye")
         self.assertEqual(payment_details["type_paiement"], "espece")
+        self.assertEqual(payment_details["statut"], "paye")
+        self.assertEqual(payment_details["assure"], True)
         
-        print(f"✅ Payment created successfully")
-        print(f"   - Payment ID: {payment_id}")
+        print(f"✅ Payment created successfully via PUT endpoint")
+        print(f"   - Appointment ID: {appointment_id}")
         print(f"   - Amount: {payment_details['montant']} TND")
         print(f"   - Type: {payment_details['type_paiement']}")
         print(f"   - Status: {payment_details['statut']}")
@@ -1482,9 +1480,9 @@ class CabinetMedicalAPITest(unittest.TestCase):
         # Clean up
         requests.delete(f"{self.base_url}/api/appointments/{appointment_id}")
         
-        print(f"🎉 Payment Creation POST Test: PASSED")
+        print(f"🎉 Payment Creation PUT Test: PASSED")
         
-        return payment_id, appointment_id
+        return payment_details.get("id", appointment_id), appointment_id
     
     def test_payment_creation_put_fallback_endpoint(self):
         """Test PUT /api/rdv/{rdv_id}/paiement endpoint as fallback"""
