@@ -5428,7 +5428,8 @@ async def get_advanced_reports(
     month: int = Query(None, description="Month (1-12)"),
     semester: int = Query(None, description="Semester (1 or 2)"),
     start_date: str = Query(None, description="Start date (YYYY-MM-DD)"),
-    end_date: str = Query(None, description="End date (YYYY-MM-DD)")
+    end_date: str = Query(None, description="End date (YYYY-MM-DD)"),
+    current_user: dict = Depends(get_current_user)
 ):
     """Generate comprehensive advanced reports with multiple data points"""
     try:
