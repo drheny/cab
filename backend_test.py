@@ -1555,13 +1555,12 @@ class CabinetMedicalAPITest(unittest.TestCase):
         response = requests.get(f"{self.base_url}/api/payments")
         self.assertEqual(response.status_code, 200, f"GET /api/payments failed: {response.text}")
         
-        payments_data = response.json()
-        self.assertIn("payments", payments_data)
-        self.assertIsInstance(payments_data["payments"], list)
+        payments_list = response.json()
+        self.assertIsInstance(payments_list, list)
         
         # Find our created payment in the list
         created_payment = None
-        for payment in payments_data["payments"]:
+        for payment in payments_list:
             if payment["appointment_id"] == appointment_id:
                 created_payment = payment
                 break
@@ -1581,7 +1580,7 @@ class CabinetMedicalAPITest(unittest.TestCase):
         self.assertEqual(specific_payment["appointment_id"], appointment_id)
         
         print(f"✅ Payment retrieval endpoints working correctly")
-        print(f"   - Total payments in system: {len(payments_data['payments'])}")
+        print(f"   - Total payments in system: {len(payments_list)}")
         print(f"   - Retrieved payment for appointment: {appointment_id}")
         print(f"   - Payment amount: {specific_payment['montant']} TND")
         
