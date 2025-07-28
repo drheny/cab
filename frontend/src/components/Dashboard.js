@@ -230,6 +230,8 @@ const Dashboard = ({ user }) => {
         // Ne pas ajouter ses propres messages (déjà ajoutés optimistiquement)
         if (data.data.sender_type !== user.role || data.data.sender_name !== user.full_name) {
           setMessages(prev => [...prev, data.data]);
+          // Play notification sound for received messages
+          playNotificationSound();
         }
         break;
       case 'message_updated':
@@ -251,6 +253,18 @@ const Dashboard = ({ user }) => {
         break;
       default:
         break;
+    }
+  };
+
+  // Play notification sound for new messages
+  const playNotificationSound = () => {
+    try {
+      // Create audio element and play notification sound
+      const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBz2YuO7AaBUOSLjk1pE7BBKM1/j5oU0GEYTQt2YaDk+a6NKgSgwOVp3o25dHCC6Ky+6xZCEFMH3I7bBrJQU2jdXz4I44DRKHz/LNfSgIJHfH8N+QQAoTXbPn66hVFApGn+DyvmwhBz2YuO7AaBUOSLjn1pE7BBKM1/j5oU0GEYTQt2YaDk+a6NKgSgwOVp3o25dHCC6Ky+6xZCEFMH3I7bBrJQU2jdXz4I44DRKHz/LNfSgIJHfH8N+QQAoTXbPn66hVFApGn+DyvmwhBz2YuO7AaBUOSLjn1pE7BBKM1/j5oU0GEYTQt2YaDk+a6NKgSgwOVp3o25dHCC6Ky+6xZCEFMH3I7bBrJQU2jdXz4I44DRKHz/LNfSgIJHfH8N+QQAoTXbPn66hVFApGn+DyvmwhBz2YuO7AaBUOSLjn1pE7BBKM1/j5oU0GEYTQt2YaDk+a6NKgSgwOVp3o25dHCC6Ky+6xZCEFMH3I7bBrJQU2jdXz4I44DRKHz/LNfSgIJHfH8N+QQAoTXbPn66hVFApGn+DyvmwhBz2YuO7AaBUOSLjn1pE7BBKM1/j5oU0GEYTQt2YaDk+a6NKgSgwOVp3o25dHCC6Ky+6xZCEFMH3I7bBrJQU2jdXz4I44DRKHz/LNfSgIJHfH8N+QQAoTXbPn66hVFApGn+DyvmwhBz2YuO7AaBUOSLjn1pE7BBKM1/j5oU0GEYTQt2YaDk+a6NKgSgwOVp3o25dHCC6Ky+6xZCEFMH3I7bBrJQU2jdXz4I44DRKHz/LNfSgIJHfH8N+QQAoTXbPn66hVFApGn+DyvmwhBz2YuO7AaBUONjIRgAA');
+      audio.volume = 0.3; // Set volume to 30%
+      audio.play().catch(e => console.log('Notification sound failed:', e));
+    } catch (error) {
+      console.log('Could not play notification sound:', error);
     }
   };
 
