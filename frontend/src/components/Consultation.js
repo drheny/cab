@@ -310,21 +310,19 @@ const Consultation = ({ user }) => {
       let currentPatient = null;
       
       if (quickConsultationModal.data.isNewPatient) {
-        // Créer un nouveau patient avec nom minimum
-        if (!quickConsultationModal.data.patientName.trim()) {
-          toast.error('Veuillez entrer le nom du patient');
+        // Validation des champs obligatoires pour nouveau patient
+        const { nom, prenom, date_naissance, telephone } = quickConsultationModal.data.newPatient;
+        if (!nom.trim() || !prenom.trim()) {
+          toast.error('Veuillez renseigner au moins le nom et prénom du patient');
           return;
         }
         
-        const nameParts = quickConsultationModal.data.patientName.trim().split(' ');
-        const prenom = nameParts[0] || '';
-        const nom = nameParts.slice(1).join(' ') || nameParts[0] || 'Patient';
-        
         const newPatientData = {
-          prenom,
-          nom,
-          telephone: '',
-          date_naissance: '',
+          nom: nom.trim(),
+          prenom: prenom.trim(),
+          date_naissance: date_naissance || '',
+          telephone: telephone || '',
+          numero_whatsapp: telephone || '',
           adresse: '',
           antecedents: '',
           notes: ''
@@ -354,40 +352,61 @@ const Consultation = ({ user }) => {
       setSelectedPatient(currentPatient);
       setSearchTerm(`${currentPatient.prenom} ${currentPatient.nom}`);
       
-      // Créer un rendez-vous pour cette consultation si c'est une visite
+      // Créer un rendez-vous pour cette consultation
       let appointmentId = `consultation_${Date.now()}`;
       
-      if (quickConsultationModal.data.visitType === 'visite') {
-        try {
-          const appointmentData = {
-            patient_id: currentPatient.id,
-            date: quickConsultationModal.data.date,
-            heure: '09:00', // Default time
-            motif: 'Consultation',
-            notes: '',
-            statut: 'confirme'
-          };
-          
-          const appointmentResponse = await axios.post(`${API_BASE_URL}/api/appointments`, appointmentData);
-          appointmentId = appointmentResponse.data.id;
-          
-          // Créer le paiement si c'est une visite
-          if (quickConsultationModal.data.paymentAmount) {
+      try {
+        const appointmentData = {
+          patient_id: currentPatient.id,
+          date: quickConsultationModal.data.date,
+          heure: quickConsultationModal.data.time,
+          type_rdv: quickConsultationModal.data.visitType,
+          motif: quickConsultationModal.data.visitType === 'visite' ? 'Consultation' : 'Contrôle',
+          notes: '',
+          statut: 'confirme'
+        };
+        
+        const appointmentResponse = await axios.post(`${API_BASE_URL}/api/appointments`, appointmentData);
+        appointmentId = appointmentResponse.data.id;
+        
+        // Créer le paiement directement via l'API payments si c'est une visite
+        if (quickConsultationModal.data.visitType === 'visite' && quickConsultationModal.data.paymentAmount) {
+          try {
             const paymentData = {
               appointment_id: appointmentId,
               patient_id: currentPatient.id,
               montant: parseFloat(quickConsultationModal.data.paymentAmount),
               date: quickConsultationModal.data.date,
               assure: quickConsultationModal.data.isInsured,
-              statut: 'paye'
+              statut: 'paye',
+              type_paiement: 'especes' // Par défaut
             };
             
+            // Utiliser l'endpoint payments directement
             await axios.post(`${API_BASE_URL}/api/payments`, paymentData);
+            console.log('✅ Paiement créé avec succès');
+          } catch (paymentError) {
+            console.warn('⚠️ Échec création paiement direct, tentative via RDV:', paymentError);
+            
+            // Fallback: essayer de mettre à jour le RDV avec le paiement
+            try {
+              const rdvPaymentData = {
+                montant: parseFloat(quickConsultationModal.data.paymentAmount),
+                assure: quickConsultationModal.data.isInsured,
+                type_paiement: 'especes'
+              };
+              
+              await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/paiement`, rdvPaymentData);
+              console.log('✅ Paiement créé via RDV avec succès');
+            } catch (rdvPaymentError) {
+              console.error('❌ Échec création paiement:', rdvPaymentError);
+              toast.warning('Consultation créée mais paiement non enregistré. Veuillez l\'ajouter manuellement.');
+            }
           }
-        } catch (error) {
-          console.warn('Could not create appointment/payment:', error);
-          // Continue anyway with manual appointment ID
         }
+      } catch (error) {
+        console.warn('Could not create appointment:', error);
+        // Continue anyway with manual appointment ID
       }
       
       // Configurer les données de consultation
@@ -412,7 +431,22 @@ const Consultation = ({ user }) => {
       });
 
       // Fermer le modal rapide et ouvrir le modal principal
-      setQuickConsultationModal({ isOpen: false, data: {} });
+      setQuickConsultationModal({ 
+        isOpen: false, 
+        data: {
+          isNewPatient: false,
+          selectedPatientId: '',
+          patientName: '',
+          patientSearchTerm: '',
+          filteredPatientsForModal: [],
+          newPatient: { nom: '', prenom: '', date_naissance: '', telephone: '' },
+          date: new Date().toISOString().split('T')[0],
+          time: new Date().toTimeString().slice(0, 5),
+          visitType: 'visite',
+          paymentAmount: '',
+          isInsured: false
+        }
+      });
       
       setConsultationModal({
         isOpen: true,
