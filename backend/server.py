@@ -5998,6 +5998,16 @@ class GeminiAIService:
             return response
         except Exception as e:
             return f"Erreur lors de l'analyse comportementale: {str(e)}"
+    
+    async def get_response(self, prompt: str) -> str:
+        """Generic method to get AI response from Gemini"""
+        try:
+            user_message = UserMessage(text=prompt)
+            response = await self.chat.send_message(user_message)
+            return response
+        except Exception as e:
+            print(f"Error getting Gemini response: {e}")
+            return f"Erreur lors de la génération de réponse IA: {str(e)}"
 
     async def generate_proactive_recommendations(self, schedule_data: Dict[str, Any], doctor_analytics: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Generate proactive workflow recommendations"""
