@@ -64,7 +64,16 @@ const Consultation = ({ user }) => {
       isNewPatient: false,
       selectedPatientId: '',
       patientName: '',
+      patientSearchTerm: '',
+      filteredPatientsForModal: [],
+      newPatient: {
+        nom: '',
+        prenom: '',
+        date_naissance: '',
+        telephone: ''
+      },
       date: new Date().toISOString().split('T')[0],
+      time: new Date().toTimeString().slice(0, 5), // Format HH:MM
       visitType: 'visite',
       paymentAmount: '',
       isInsured: false
