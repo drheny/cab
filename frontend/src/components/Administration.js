@@ -553,12 +553,12 @@ const Administration = ({ user }) => {
           ['Mois', 'Visites', 'Contrôles', 'Revenus (TND)']
         );
         
-        report.evolution.forEach(month => {
+        report.evolution.forEach(monthData => {
           csvContent.push([
-            month.period || 'N/A',
-            month.visites || 0,
-            month.controles || 0,
-            month.revenue || 0
+            monthData.period || 'N/A',
+            monthData.visites || 0,
+            monthData.controles || 0,
+            monthData.revenue || 0
           ]);
         });
       }
