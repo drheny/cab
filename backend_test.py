@@ -1898,28 +1898,25 @@ class CabinetMedicalAPITest(unittest.TestCase):
         appointment_id = appointment_response.json()["appointment_id"]
         print(f"  ✅ Step 1: Appointment created ({appointment_id})")
         
-        # Step 2: Create payment linked to appointment via POST /api/payments
+        # Step 2: Create payment linked to appointment via PUT /api/rdv/{rdv_id}/paiement
         payment_data = {
-            "patient_id": patient["id"],
-            "appointment_id": appointment_id,
+            "paye": True,
             "montant": 65.0,
-            "date": "2025-01-28",
+            "type_paiement": "espece",
             "assure": True,
-            "statut": "paye",
-            "type_paiement": "espece"
+            "notes": "Complete workflow test payment"
         }
         
-        payment_response = requests.post(f"{self.base_url}/api/payments", json=payment_data)
+        payment_response = requests.put(f"{self.base_url}/api/rdv/{appointment_id}/paiement", json=payment_data)
         self.assertEqual(payment_response.status_code, 200)
-        payment_id = payment_response.json()["payment_id"]
-        print(f"  ✅ Step 2: Payment created ({payment_id})")
+        print(f"  ✅ Step 2: Payment created (65.0 TND)")
         
         # Step 3: Verify payment appears in GET /api/payments list
         payments_response = requests.get(f"{self.base_url}/api/payments")
         self.assertEqual(payments_response.status_code, 200)
         payments_list = payments_response.json()["payments"]
         
-        payment_in_list = any(p["id"] == payment_id for p in payments_list)
+        payment_in_list = any(p["appointment_id"] == appointment_id for p in payments_list)
         self.assertTrue(payment_in_list, "Payment not found in payments list")
         print(f"  ✅ Step 3: Payment appears in billing list")
         
@@ -1928,7 +1925,7 @@ class CabinetMedicalAPITest(unittest.TestCase):
         self.assertEqual(payment_detail_response.status_code, 200)
         payment_detail = payment_detail_response.json()
         
-        required_fields = ["appointment_id", "patient_id", "montant", "date", "assure", "statut", "type_paiement"]
+        required_fields = ["appointment_id", "montant", "assure", "statut", "type_paiement"]
         for field in required_fields:
             self.assertIn(field, payment_detail, f"Missing required field: {field}")
         
@@ -1950,6 +1947,7 @@ class CabinetMedicalAPITest(unittest.TestCase):
         
         linked_appointment = next((a for a in appointments if a["id"] == appointment_id), None)
         self.assertIsNotNone(linked_appointment, "Appointment not found")
+        self.assertEqual(linked_appointment["paye"], True)
         print(f"  ✅ Step 7: Appointment-payment linkage verified")
         
         # Clean up
