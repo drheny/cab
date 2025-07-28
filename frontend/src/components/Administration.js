@@ -165,6 +165,7 @@ const Administration = ({ user }) => {
   const [demographicsData, setDemographicsData] = useState(null);
   const [topPatientsData, setTopPatientsData] = useState(null);
   const [alerts, setAlerts] = useState([]);
+  const [csvContent, setCsvContent] = useState('');
 
   useEffect(() => {
     if (user?.permissions?.administration) {
