@@ -57,6 +57,20 @@ const Consultation = ({ user }) => {
     consultation: null
   });
   
+  // États du modal de consultation rapide
+  const [quickConsultationModal, setQuickConsultationModal] = useState({
+    isOpen: false,
+    data: {
+      isNewPatient: false,
+      selectedPatientId: '',
+      patientName: '',
+      date: new Date().toISOString().split('T')[0],
+      visitType: 'visite',
+      paymentAmount: '',
+      isInsured: false
+    }
+  });
+  
   // Chronomètre
   const [timer, setTimer] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
