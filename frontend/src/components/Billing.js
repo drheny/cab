@@ -82,6 +82,7 @@ const Billing = ({ user }) => {
 
   useEffect(() => {
     fetchInitialData();
+    fetchPatients();
   }, []);
 
   const fetchInitialData = async () => {
@@ -91,13 +92,42 @@ const Billing = ({ user }) => {
         fetchEnhancedStats(),
         fetchTopPatients(),
         fetchEvolutionData(),
-        fetchPredictiveAnalysis()
+        fetchPredictiveAnalysis(),
+        fetchPayments(),
+        fetchCashMovements()
       ]);
     } catch (error) {
       console.error('Error fetching initial data:', error);
       toast.error('Erreur lors du chargement des données');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPayments = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/payments`);
+      setPayments(response.data?.payments || []);
+    } catch (error) {
+      console.error('Error fetching payments:', error);
+    }
+  };
+
+  const fetchPatients = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/patients`);
+      setPatients(response.data?.patients || []);
+    } catch (error) {
+      console.error('Error fetching patients:', error);
+    }
+  };
+
+  const fetchCashMovements = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/cash-movements`);
+      setCashMovements(response.data?.movements || []);
+    } catch (error) {
+      console.error('Error fetching cash movements:', error);
     }
   };
 
