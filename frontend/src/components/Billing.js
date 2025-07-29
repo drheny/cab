@@ -478,6 +478,11 @@ const Billing = ({ user }) => {
     setShowEditModal(true);
   };
 
+  const handleViewPayment = (payment) => {
+    setSelectedPayment(payment);
+    setShowPaymentModal(true);
+  };
+
   const handleAdvancedSearch = async (page = 1) => {
     setIsSearching(true);
     try {
