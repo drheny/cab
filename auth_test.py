@@ -11,7 +11,7 @@ load_dotenv('/app/frontend/.env')
 class AuthenticationSystemTest(unittest.TestCase):
     def setUp(self):
         # Use the correct backend URL from environment
-        backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://0f556255-778a-43ef-b1e4-2e04fe02d592.preview.emergentagent.com')
+        backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://b41bbcdf-8fee-41b8-8d35-533fd4cb83fc.preview.emergentagent.com')
         self.base_url = backend_url
         print(f"Testing authentication system at: {self.base_url}")
     
