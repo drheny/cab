@@ -1332,22 +1332,128 @@ const Billing = ({ user }) => {
                 {/* Monthly Averages Chart */}
                 {predictiveAnalysis.monthly_averages && (
                   <div>
-                    <h4 className="font-medium text-gray-900 mb-3">Moyennes mensuelles</h4>
-                    <div className="grid grid-cols-12 gap-1">
-                      {predictiveAnalysis.monthly_averages.map((data) => (
-                        <div key={data.month} className="text-center">
-                          <div className="mb-2">
-                            <div 
-                              className="bg-purple-500 rounded-t"
-                              style={{ 
-                                height: `${Math.max(20, (data.avg_recette / Math.max(...predictiveAnalysis.monthly_averages.map(d => d.avg_recette))) * 80)}px`,
-                                minHeight: '20px'
-                              }}
-                            ></div>
-                          </div>
-                          <div className="text-xs text-gray-600">{data.month}</div>
+                    <h4 className="font-medium text-gray-900 mb-4">Moyennes mensuelles - Analyse complète</h4>
+                    <div className="h-64 w-full">
+                      <svg viewBox="0 0 800 240" className="w-full h-full">
+                        {/* Grid */}
+                        <rect width="800" height="200" fill="url(#grid)" />
+                        
+                        {/* Circular chart background */}
+                        <defs>
+                          <radialGradient id="circularGradient" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.1"/>
+                            <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.3"/>
+                          </radialGradient>
+                        </defs>
+                        
+                        {/* Monthly data as circular chart */}
+                        <g transform="translate(400, 100)">
+                          {predictiveAnalysis.monthly_averages.map((data, index) => {
+                            const angle = (index * 2 * Math.PI) / 12 - Math.PI / 2;
+                            const maxRevenue = Math.max(...predictiveAnalysis.monthly_averages.map(d => d.avg_recette));
+                            const radius = 30 + (data.avg_recette / maxRevenue) * 60;
+                            const x = Math.cos(angle) * radius;
+                            const y = Math.sin(angle) * radius;
+                            const labelRadius = 110;
+                            const labelX = Math.cos(angle) * labelRadius;
+                            const labelY = Math.sin(angle) * labelRadius;
+                            
+                            // Color based on peak/trough
+                            const isPeak = predictiveAnalysis.peak_months?.some(p => p.month === data.month);
+                            const isTrough = predictiveAnalysis.trough_months?.some(t => t.month === data.month);
+                            const color = isPeak ? '#10b981' : isTrough ? '#ef4444' : '#8b5cf6';
+                            
+                            return (
+                              <g key={data.month}>
+                                <circle 
+                                  cx={x} 
+                                  cy={y} 
+                                  r="8" 
+                                  fill={color}
+                                  stroke="white"
+                                  strokeWidth="2"
+                                />
+                                <text 
+                                  x={labelX} 
+                                  y={labelY} 
+                                  textAnchor="middle" 
+                                  fontSize="12" 
+                                  fill="#374151"
+                                  fontWeight="bold"
+                                >
+                                  {data.month}
+                                </text>
+                                <text 
+                                  x={x} 
+                                  y={y - 12} 
+                                  textAnchor="middle" 
+                                  fontSize="9" 
+                                  fill="#374151"
+                                  fontWeight="bold"
+                                >
+                                  {Math.round(data.avg_recette)}
+                                </text>
+                              </g>
+                            );
+                          })}
+                          
+                          {/* Center circle */}
+                          <circle cx="0" cy="0" r="25" fill="url(#circularGradient)" />
+                          <text x="0" y="0" textAnchor="middle" fontSize="14" fill="#8b5cf6" fontWeight="bold">
+                            Analyse
+                          </text>
+                          <text x="0" y="15" textAnchor="middle" fontSize="10" fill="#6b7280">
+                            Annuelle
+                          </text>
+                        </g>
+                        
+                        {/* Legend */}
+                        <g transform="translate(50, 210)">
+                          <circle cx="0" cy="0" r="4" fill="#10b981" />
+                          <text x="10" y="4" fontSize="12" fill="#374151">Pics</text>
+                          
+                          <circle cx="60" cy="0" r="4" fill="#ef4444" />
+                          <text x="70" y="4" fontSize="12" fill="#374151">Creux</text>
+                          
+                          <circle cx="120" cy="0" r="4" fill="#8b5cf6" />
+                          <text x="130" y="4" fontSize="12" fill="#374151">Normal</text>
+                        </g>
+                      </svg>
+                    </div>
+                    
+                    {/* Summary stats */}
+                    <div className="mt-4 grid grid-cols-3 gap-4 text-center">
+                      <div className="bg-green-50 p-3 rounded-lg">
+                        <div className="text-sm text-green-600 font-medium">Pic moyen</div>
+                        <div className="text-lg font-bold text-green-700">
+                          {predictiveAnalysis.peak_months?.length > 0 && 
+                            formatCurrency(predictiveAnalysis.peak_months[0].avg_recette)
+                          }
                         </div>
-                      ))}
+                      </div>
+                      <div className="bg-red-50 p-3 rounded-lg">
+                        <div className="text-sm text-red-600 font-medium">Creux moyen</div>
+                        <div className="text-lg font-bold text-red-700">
+                          {predictiveAnalysis.trough_months?.length > 0 && 
+                            formatCurrency(predictiveAnalysis.trough_months[0].avg_recette)
+                          }
+                        </div>
+                      </div>
+                      <div className="bg-purple-50 p-3 rounded-lg">
+                        <div className="text-sm text-purple-600 font-medium">Écart type</div>
+                        <div className="text-lg font-bold text-purple-700">
+                          {predictiveAnalysis.monthly_averages && 
+                            Math.round(
+                              Math.sqrt(
+                                predictiveAnalysis.monthly_averages.reduce((sum, data) => {
+                                  const mean = predictiveAnalysis.monthly_averages.reduce((s, d) => s + d.avg_recette, 0) / predictiveAnalysis.monthly_averages.length;
+                                  return sum + Math.pow(data.avg_recette - mean, 2);
+                                }, 0) / predictiveAnalysis.monthly_averages.length
+                              )
+                            )
+                          } TND
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
