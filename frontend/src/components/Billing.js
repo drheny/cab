@@ -27,12 +27,45 @@ const Billing = ({ user }) => {
   
   // States for UI
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('dashboard'); // dashboard, payments, caisse
   
   // New states for enhanced features
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [dailyPayments, setDailyPayments] = useState(null);
   const [monthlyStats, setMonthlyStats] = useState(null);
   const [yearlyStats, setYearlyStats] = useState(null);
+  
+  // States for payments tab
+  const [payments, setPayments] = useState([]);
+  const [patients, setPatients] = useState([]);
+  const [searchFilters, setSearchFilters] = useState({
+    patientName: '',
+    dateDebut: '',
+    dateFin: '',
+    statutPaiement: '',
+    assure: ''
+  });
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalCount: 0
+  });
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingPayment, setEditingPayment] = useState(null);
+  
+  // States for cash management (caisse)
+  const [cashMovements, setCashMovements] = useState([]);
+  const [showCashForm, setShowCashForm] = useState(false);
+  const [cashForm, setCashForm] = useState({
+    montant: '',
+    type_mouvement: 'ajout',
+    date: new Date().toISOString().split('T')[0],
+    motif: ''
+  });
   
   // Export states
   const [showExportModal, setShowExportModal] = useState(false);
