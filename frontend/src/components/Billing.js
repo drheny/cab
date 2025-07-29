@@ -31,16 +31,29 @@ const Billing = ({ user }) => {
   const [payments, setPayments] = useState([]);
   const [stats, setStats] = useState({});
   const [advancedStats, setAdvancedStats] = useState({});
+  const [enhancedStats, setEnhancedStats] = useState({});
   const [cashMovements, setCashMovements] = useState([]);
   const [cashBalance, setCashBalance] = useState(0);
+  const [topPatients, setTopPatients] = useState([]);
+  const [evolutionData, setEvolutionData] = useState([]);
+  const [predictiveAnalysis, setPredictiveAnalysis] = useState(null);
   
   // States for UI
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('dashboard'); // dashboard, payments, caisse
+  const [activeTab, setActiveTab] = useState('dashboard'); // dashboard, payments, caisse, stats
   const [dateFilter, setDateFilter] = useState({
     debut: new Date().toISOString().split('T')[0].substring(0, 7) + '-01', // First day of current month
     fin: new Date().toISOString().split('T')[0] // Today
   });
+  
+  // New states for enhanced features
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [dailyPayments, setDailyPayments] = useState(null);
+  const [monthlyStats, setMonthlyStats] = useState(null);
+  const [yearlyStats, setYearlyStats] = useState(null);
+  const [selectedPatient, setSelectedPatient] = useState('');
+  const [patientPayments, setPatientPayments] = useState(null);
+  const [patients, setPatients] = useState([]);
   
   // States for advanced search
   const [searchFilters, setSearchFilters] = useState({
