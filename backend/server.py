@@ -3054,6 +3054,147 @@ async def get_evolution_graphs(period: str = Query("month"), year: int = Query(N
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error calculating evolution graphs: {str(e)}")
 
+@app.get("/api/facturation/predictive-analysis")
+async def get_predictive_analysis():
+    """Get predictive analysis for peak and trough periods using Gemini AI"""
+    try:
+        current_year = datetime.now().year
+        
+        # Get historical data for the past 2 years to improve predictions
+        years_to_analyze = [current_year - 1, current_year]
+        historical_data = []
+        
+        for year in years_to_analyze:
+            for month in range(1, 13):
+                # Skip future months
+                if year == current_year and month > datetime.now().month:
+                    continue
+                    
+                # Calculate month boundaries
+                month_start = datetime(year, month, 1).strftime("%Y-%m-%d")
+                if month == 12:
+                    month_end = datetime(year + 1, 1, 1) - timedelta(days=1)
+                else:
+                    month_end = datetime(year, month + 1, 1) - timedelta(days=1)
+                month_end_str = month_end.strftime("%Y-%m-%d")
+                
+                # Get payments and appointments for the month
+                payments = list(payments_collection.find({
+                    "date": {"$gte": month_start, "$lte": month_end_str},
+                    "statut": "paye"
+                }, {"_id": 0}))
+                
+                appointments = list(appointments_collection.find({
+                    "date": {"$gte": month_start, "$lte": month_end_str}
+                }, {"_id": 0}))
+                
+                # Get cash movements
+                cash_movements = list(cash_movements_collection.find({
+                    "date": {"$gte": month_start, "$lte": month_end_str}
+                }, {"_id": 0}))
+                
+                # Calculate totals
+                recette_payments = sum(p.get("montant", 0) for p in payments)
+                movements_total = 0
+                for movement in cash_movements:
+                    if movement["type_mouvement"] == "ajout":
+                        movements_total += movement["montant"]
+                    else:
+                        movements_total -= movement["montant"]
+                
+                historical_data.append({
+                    "year": year,
+                    "month": month,
+                    "recette": recette_payments + movements_total,
+                    "nb_consultations": len(appointments),
+                    "nb_visites": len([a for a in appointments if a.get("type_rdv") == "visite"]),
+                    "nb_controles": len([a for a in appointments if a.get("type_rdv") == "controle"])
+                })
+        
+        # Prepare data for AI analysis
+        analysis_context = f"""
+        Analyse les données historiques du cabinet médical pour identifier les périodes de pic et de creux d'activité:
+        
+        Données historiques:
+        {json.dumps(historical_data, indent=2)}
+        
+        Identifie:
+        1. Les mois avec le plus d'activité (pics)
+        2. Les mois avec le moins d'activité (creux)
+        3. Les tendances saisonnières
+        4. Les prédictions pour les prochains mois de {current_year + 1}
+        """
+        
+        try:
+            # Use Gemini AI for analysis if available
+            from emergentintegrations import GeminiAIService
+            
+            gemini_service = GeminiAIService()
+            ai_response = gemini_service.get_response(analysis_context)
+            
+            # Basic statistics as fallback
+            month_averages = {}
+            for i in range(1, 13):
+                month_data = [d for d in historical_data if d["month"] == i]
+                if month_data:
+                    avg_recette = sum(d["recette"] for d in month_data) / len(month_data)
+                    avg_consultations = sum(d["nb_consultations"] for d in month_data) / len(month_data)
+                    month_averages[i] = {
+                        "month": i,
+                        "avg_recette": avg_recette,
+                        "avg_consultations": avg_consultations
+                    }
+            
+            # Identify peaks and troughs
+            sorted_by_recette = sorted(month_averages.values(), key=lambda x: x["avg_recette"], reverse=True)
+            sorted_by_consultations = sorted(month_averages.values(), key=lambda x: x["avg_consultations"], reverse=True)
+            
+            peak_months = sorted_by_recette[:3]  # Top 3 months
+            trough_months = sorted_by_recette[-3:]  # Bottom 3 months
+            
+            return {
+                "ai_analysis": ai_response if 'ai_response' in locals() else "Analyse automatique basée sur les données disponibles",
+                "historical_data": historical_data,
+                "peak_months": peak_months,
+                "trough_months": trough_months,
+                "monthly_averages": list(month_averages.values()),
+                "generation_method": "ai" if 'ai_response' in locals() else "statistical"
+            }
+            
+        except Exception as ai_error:
+            print(f"AI analysis failed: {ai_error}")
+            
+            # Fallback to statistical analysis
+            month_averages = {}
+            for i in range(1, 13):
+                month_data = [d for d in historical_data if d["month"] == i]
+                if month_data:
+                    avg_recette = sum(d["recette"] for d in month_data) / len(month_data)
+                    avg_consultations = sum(d["nb_consultations"] for d in month_data) / len(month_data)
+                    month_averages[i] = {
+                        "month": i,
+                        "avg_recette": avg_recette,
+                        "avg_consultations": avg_consultations
+                    }
+            
+            # Identify peaks and troughs
+            sorted_by_recette = sorted(month_averages.values(), key=lambda x: x["avg_recette"], reverse=True)
+            
+            peak_months = sorted_by_recette[:3]  # Top 3 months
+            trough_months = sorted_by_recette[-3:]  # Bottom 3 months
+            
+            return {
+                "ai_analysis": "Analyse statistique basée sur les moyennes historiques. Les périodes de pic correspondent aux mois avec les plus hauts revenus moyens.",
+                "historical_data": historical_data,
+                "peak_months": peak_months,
+                "trough_months": trough_months,
+                "monthly_averages": list(month_averages.values()),
+                "generation_method": "statistical"
+            }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error calculating predictive analysis: {str(e)}")
+
 
 # ==================== MESSAGERIE INSTANTANÉE ====================
 
