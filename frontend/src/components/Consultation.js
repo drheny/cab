@@ -1118,7 +1118,7 @@ const Consultation = ({ user }) => {
                   {selectedPatient.prenom} {selectedPatient.nom}
                 </h2>
                 <p className="text-primary-700">
-                  {calculateAge(selectedPatient.date_naissance)} ans • {consultations.length} consultation{consultations.length > 1 ? 's' : ''}
+                  {calculateAge(selectedPatient.date_naissance) ? `${calculateAge(selectedPatient.date_naissance)} ans` : 'Âge non renseigné'} • {consultations.length} consultation{consultations.length > 1 ? 's' : ''}
                 </p>
               </div>
             </div>
