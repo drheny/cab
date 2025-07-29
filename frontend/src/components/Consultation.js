@@ -360,9 +360,19 @@ const Consultation = ({ user }) => {
       }
       
       if (!currentPatient) {
+        console.error('❌ Patient non trouvé:', currentPatient);
         toast.error('Patient non trouvé');
         return;
       }
+      
+      // Vérifier que le patient a les propriétés nécessaires
+      if (!currentPatient.nom || !currentPatient.prenom) {
+        console.error('❌ Propriétés patient manquantes:', currentPatient);
+        toast.error('Erreur: données patient incomplètes');
+        return;
+      }
+      
+      console.log('🔍 Patient actuel pour consultation:', currentPatient);
       
       // Définir le patient sélectionné
       setSelectedPatient(currentPatient);
