@@ -2667,6 +2667,393 @@ async def delete_payment(payment_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error deleting payment: {str(e)}")
 
+# ==================== ENHANCED FACTURATION ENDPOINTS ====================
+
+@app.get("/api/facturation/enhanced-stats")
+async def get_enhanced_facturation_stats():
+    """Get enhanced statistics for facturation page including daily, monthly, yearly revenue"""
+    try:
+        today = datetime.now()
+        
+        # Daily revenue (today)
+        today_str = today.strftime("%Y-%m-%d")
+        daily_payments = list(payments_collection.find({
+            "date": today_str,
+            "statut": "paye"
+        }, {"_id": 0}))
+        
+        daily_cash_movements = list(cash_movements_collection.find({
+            "date": today_str
+        }, {"_id": 0}))
+        
+        recette_jour = sum(p.get("montant", 0) for p in daily_payments)
+        for movement in daily_cash_movements:
+            if movement["type_mouvement"] == "ajout":
+                recette_jour += movement["montant"]
+            else:
+                recette_jour -= movement["montant"]
+        
+        # Monthly revenue (current month)
+        month_start = today.replace(day=1).strftime("%Y-%m-%d")
+        month_end = today.strftime("%Y-%m-%d")
+        
+        monthly_payments = list(payments_collection.find({
+            "date": {"$gte": month_start, "$lte": month_end},
+            "statut": "paye"
+        }, {"_id": 0}))
+        
+        monthly_cash_movements = list(cash_movements_collection.find({
+            "date": {"$gte": month_start, "$lte": month_end}
+        }, {"_id": 0}))
+        
+        recette_mois = sum(p.get("montant", 0) for p in monthly_payments)
+        for movement in monthly_cash_movements:
+            if movement["type_mouvement"] == "ajout":
+                recette_mois += movement["montant"]
+            else:
+                recette_mois -= movement["montant"]
+        
+        # Yearly revenue (current year)
+        year_start = today.replace(month=1, day=1).strftime("%Y-%m-%d")
+        year_end = today.strftime("%Y-%m-%d")
+        
+        yearly_payments = list(payments_collection.find({
+            "date": {"$gte": year_start, "$lte": year_end},
+            "statut": "paye"
+        }, {"_id": 0}))
+        
+        yearly_cash_movements = list(cash_movements_collection.find({
+            "date": {"$gte": year_start, "$lte": year_end}
+        }, {"_id": 0}))
+        
+        recette_annee = sum(p.get("montant", 0) for p in yearly_payments)
+        for movement in yearly_cash_movements:
+            if movement["type_mouvement"] == "ajout":
+                recette_annee += movement["montant"]
+            else:
+                recette_annee -= movement["montant"]
+        
+        # New patients count since beginning of year
+        new_patients_count = patients_collection.count_documents({
+            "created_at": {"$gte": year_start}
+        })
+        
+        return {
+            "recette_jour": recette_jour,
+            "recette_mois": recette_mois,
+            "recette_annee": recette_annee,
+            "nouveaux_patients_annee": new_patients_count
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error calculating enhanced stats: {str(e)}")
+
+@app.get("/api/facturation/daily-payments")
+async def get_daily_payments(date: str = Query(...)):
+    """Get payments for a specific day with detailed breakdown"""
+    try:
+        # Get payments for the day
+        payments = list(payments_collection.find({
+            "date": date,
+            "statut": "paye"
+        }, {"_id": 0}))
+        
+        # Enrich with patient information
+        for payment in payments:
+            patient = patients_collection.find_one({"id": payment["patient_id"]}, {"_id": 0})
+            if patient:
+                payment["patient"] = {
+                    "nom": patient.get("nom", ""),
+                    "prenom": patient.get("prenom", ""),
+                    "telephone": patient.get("numero_whatsapp", "")
+                }
+            
+            # Get appointment info for visit type
+            appointment = appointments_collection.find_one({"id": payment["appointment_id"]}, {"_id": 0})
+            if appointment:
+                payment["type_visite"] = appointment.get("type_rdv", "visite")
+        
+        # Calculate daily totals
+        total_montant = sum(p.get("montant", 0) for p in payments)
+        nb_visites = len([p for p in payments if p.get("type_visite") == "visite"])
+        nb_controles = len([p for p in payments if p.get("type_visite") == "controle"])
+        nb_assures = len([p for p in payments if p.get("assure", False)])
+        
+        return {
+            "date": date,
+            "payments": payments,
+            "totals": {
+                "recette_totale": total_montant,
+                "nb_visites": nb_visites,
+                "nb_controles": nb_controles,
+                "nb_assures": nb_assures,
+                "nb_total": len(payments)
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching daily payments: {str(e)}")
+
+@app.get("/api/facturation/monthly-stats")
+async def get_monthly_stats(year: int = Query(...), month: int = Query(...)):
+    """Get monthly statistics breakdown"""
+    try:
+        # Calculate month boundaries
+        month_start = datetime(year, month, 1).strftime("%Y-%m-%d")
+        if month == 12:
+            month_end = datetime(year + 1, 1, 1) - timedelta(days=1)
+        else:
+            month_end = datetime(year, month + 1, 1) - timedelta(days=1)
+        month_end_str = month_end.strftime("%Y-%m-%d")
+        
+        # Get payments for the month
+        payments = list(payments_collection.find({
+            "date": {"$gte": month_start, "$lte": month_end_str},
+            "statut": "paye"
+        }, {"_id": 0}))
+        
+        # Get appointments for visit/control breakdown
+        appointments = list(appointments_collection.find({
+            "date": {"$gte": month_start, "$lte": month_end_str}
+        }, {"_id": 0}))
+        
+        # Get cash movements for the month
+        cash_movements = list(cash_movements_collection.find({
+            "date": {"$gte": month_start, "$lte": month_end_str}
+        }, {"_id": 0}))
+        
+        # Calculate totals
+        recette_payments = sum(p.get("montant", 0) for p in payments)
+        movements_total = 0
+        for movement in cash_movements:
+            if movement["type_mouvement"] == "ajout":
+                movements_total += movement["montant"]
+            else:
+                movements_total -= movement["montant"]
+        
+        recette_mois = recette_payments + movements_total
+        nb_visites = len([a for a in appointments if a.get("type_rdv") == "visite"])
+        nb_controles = len([a for a in appointments if a.get("type_rdv") == "controle"])
+        nb_assures = len([a for a in appointments if a.get("assure", False)])
+        
+        return {
+            "year": year,
+            "month": month,
+            "recette_mois": recette_mois,
+            "nb_visites": nb_visites,
+            "nb_controles": nb_controles,
+            "nb_assures": nb_assures,
+            "nb_total_rdv": len(appointments)
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error calculating monthly stats: {str(e)}")
+
+@app.get("/api/facturation/yearly-stats")
+async def get_yearly_stats(year: int = Query(...)):
+    """Get yearly statistics breakdown"""
+    try:
+        year_start = f"{year}-01-01"
+        year_end = f"{year}-12-31"
+        
+        # Get payments for the year
+        payments = list(payments_collection.find({
+            "date": {"$gte": year_start, "$lte": year_end},
+            "statut": "paye"
+        }, {"_id": 0}))
+        
+        # Get appointments for the year
+        appointments = list(appointments_collection.find({
+            "date": {"$gte": year_start, "$lte": year_end}
+        }, {"_id": 0}))
+        
+        # Get cash movements for the year
+        cash_movements = list(cash_movements_collection.find({
+            "date": {"$gte": year_start, "$lte": year_end}
+        }, {"_id": 0}))
+        
+        # Calculate totals
+        recette_payments = sum(p.get("montant", 0) for p in payments)
+        movements_total = 0
+        for movement in cash_movements:
+            if movement["type_mouvement"] == "ajout":
+                movements_total += movement["montant"]
+            else:
+                movements_total -= movement["montant"]
+        
+        recette_annee = recette_payments + movements_total
+        nb_visites = len([a for a in appointments if a.get("type_rdv") == "visite"])
+        nb_controles = len([a for a in appointments if a.get("type_rdv") == "controle"])
+        nb_assures = len([a for a in appointments if a.get("assure", False)])
+        
+        return {
+            "year": year,
+            "recette_annee": recette_annee,
+            "nb_visites": nb_visites,
+            "nb_controles": nb_controles,
+            "nb_assures": nb_assures,
+            "nb_total_rdv": len(appointments)
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error calculating yearly stats: {str(e)}")
+
+@app.get("/api/facturation/patient-payments")
+async def get_patient_payments(patient_id: str = Query(...)):
+    """Get all payments for a specific patient"""
+    try:
+        # Get patient info
+        patient = patients_collection.find_one({"id": patient_id}, {"_id": 0})
+        if not patient:
+            raise HTTPException(status_code=404, detail="Patient not found")
+        
+        # Get all payments for the patient
+        payments = list(payments_collection.find({
+            "patient_id": patient_id,
+            "statut": "paye"
+        }, {"_id": 0}).sort("date", -1))
+        
+        # Enrich payments with appointment info
+        for payment in payments:
+            appointment = appointments_collection.find_one({"id": payment["appointment_id"]}, {"_id": 0})
+            if appointment:
+                payment["type_visite"] = appointment.get("type_rdv", "visite")
+                payment["date_rdv"] = appointment.get("date", payment["date"])
+        
+        total_paye = sum(p.get("montant", 0) for p in payments)
+        
+        return {
+            "patient": {
+                "id": patient["id"],
+                "nom": patient.get("nom", ""),
+                "prenom": patient.get("prenom", ""),
+                "telephone": patient.get("numero_whatsapp", "")
+            },
+            "payments": payments,
+            "total_paye": total_paye,
+            "nb_payments": len(payments)
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching patient payments: {str(e)}")
+
+@app.get("/api/facturation/top-patients")
+async def get_top_profitable_patients(limit: int = Query(10)):
+    """Get top 10 most profitable patients"""
+    try:
+        # Get all payments grouped by patient
+        payments = list(payments_collection.find({"statut": "paye"}, {"_id": 0}))
+        
+        # Group by patient and calculate totals
+        patient_totals = {}
+        for payment in payments:
+            patient_id = payment["patient_id"]
+            if patient_id not in patient_totals:
+                patient_totals[patient_id] = {
+                    "total_montant": 0,
+                    "nb_payments": 0
+                }
+            patient_totals[patient_id]["total_montant"] += payment.get("montant", 0)
+            patient_totals[patient_id]["nb_payments"] += 1
+        
+        # Sort by total amount and get top patients
+        sorted_patients = sorted(patient_totals.items(), key=lambda x: x[1]["total_montant"], reverse=True)[:limit]
+        
+        # Enrich with patient information
+        top_patients = []
+        for patient_id, stats in sorted_patients:
+            patient = patients_collection.find_one({"id": patient_id}, {"_id": 0})
+            if patient:
+                top_patients.append({
+                    "patient": {
+                        "id": patient["id"],
+                        "nom": patient.get("nom", ""),
+                        "prenom": patient.get("prenom", ""),
+                        "telephone": patient.get("numero_whatsapp", "")
+                    },
+                    "total_montant": stats["total_montant"],
+                    "nb_payments": stats["nb_payments"],
+                    "moyenne_paiement": stats["total_montant"] / stats["nb_payments"] if stats["nb_payments"] > 0 else 0
+                })
+        
+        return {
+            "top_patients": top_patients,
+            "total_analyzed": len(patient_totals)
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error calculating top patients: {str(e)}")
+
+@app.get("/api/facturation/evolution-graphs")
+async def get_evolution_graphs(period: str = Query("month"), year: int = Query(None)):
+    """Get data for evolution graphs (revenue, consultations, new patients)"""
+    try:
+        current_year = datetime.now().year if year is None else year
+        
+        if period == "month":
+            # Monthly evolution for the year
+            evolution_data = []
+            for month in range(1, 13):
+                # Calculate month boundaries
+                month_start = datetime(current_year, month, 1).strftime("%Y-%m-%d")
+                if month == 12:
+                    month_end = datetime(current_year + 1, 1, 1) - timedelta(days=1)
+                else:
+                    month_end = datetime(current_year, month + 1, 1) - timedelta(days=1)
+                month_end_str = month_end.strftime("%Y-%m-%d")
+                
+                # Get payments for the month
+                payments = list(payments_collection.find({
+                    "date": {"$gte": month_start, "$lte": month_end_str},
+                    "statut": "paye"
+                }, {"_id": 0}))
+                
+                # Get appointments for the month
+                appointments = list(appointments_collection.find({
+                    "date": {"$gte": month_start, "$lte": month_end_str}
+                }, {"_id": 0}))
+                
+                # Get new patients for the month
+                new_patients = patients_collection.count_documents({
+                    "created_at": {"$gte": month_start, "$lte": month_end_str}
+                })
+                
+                # Get cash movements for the month
+                cash_movements = list(cash_movements_collection.find({
+                    "date": {"$gte": month_start, "$lte": month_end_str}
+                }, {"_id": 0}))
+                
+                # Calculate totals
+                recette_payments = sum(p.get("montant", 0) for p in payments)
+                movements_total = 0
+                for movement in cash_movements:
+                    if movement["type_mouvement"] == "ajout":
+                        movements_total += movement["montant"]
+                    else:
+                        movements_total -= movement["montant"]
+                
+                recette_total = recette_payments + movements_total
+                
+                evolution_data.append({
+                    "periode": f"{current_year}-{month:02d}",
+                    "mois": month,
+                    "recette": recette_total,
+                    "nb_consultations": len(appointments),
+                    "nouveaux_patients": new_patients
+                })
+            
+            return {
+                "period": "month",
+                "year": current_year,
+                "evolution": evolution_data
+            }
+        
+        else:
+            raise HTTPException(status_code=400, detail="Only 'month' period is currently supported")
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error calculating evolution graphs: {str(e)}")
+
 
 # ==================== MESSAGERIE INSTANTANÉE ====================
 
