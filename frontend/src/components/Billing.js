@@ -1030,9 +1030,9 @@ const Billing = ({ user }) => {
         <>
           {/* Advanced Statistics Section */}
           <div className="space-y-6">
-        {/* Top 10 Profitable Patients */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-6">
+            {/* Top 10 Profitable Patients */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-gray-900 flex items-center">
               <Award className="w-5 h-5 text-yellow-500 mr-2" />
               Top 10 patients les plus rentables
