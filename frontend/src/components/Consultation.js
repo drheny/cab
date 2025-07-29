@@ -953,7 +953,7 @@ const Consultation = ({ user }) => {
                                     {patient.prenom} {patient.nom}
                                   </div>
                                   <div className="text-sm text-gray-600">
-                                    {patient.telephone} • {calculateAge(patient.date_naissance)} ans
+                                    {patient.telephone}{calculateAge(patient.date_naissance) ? ` • ${calculateAge(patient.date_naissance)} ans` : ''}
                                   </div>
                                 </button>
                               ))}
