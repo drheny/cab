@@ -329,7 +329,22 @@ const Consultation = ({ user }) => {
         };
         
         const response = await axios.post(`${API_BASE_URL}/api/patients`, newPatientData);
-        currentPatient = response.data;
+        
+        // L'API retourne {"message": "...", "patient_id": "..."}, donc on doit récupérer les données complètes
+        if (response.data && response.data.patient_id) {
+          const patientId = response.data.patient_id;
+          
+          // Récupérer les données complètes du patient créé
+          const patientResponse = await axios.get(`${API_BASE_URL}/api/patients/${patientId}`);
+          currentPatient = patientResponse.data;
+          
+          // S'assurer que le patient a un ID
+          if (!currentPatient.id) {
+            currentPatient.id = patientId;
+          }
+        } else {
+          throw new Error('Invalid response from patient creation API');
+        }
         
         // Ajouter le nouveau patient à la liste
         setPatients(prev => [...prev, currentPatient]);
