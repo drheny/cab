@@ -457,8 +457,37 @@ const Billing = ({ user }) => {
         </div>
       </div>
 
-      {/* Enhanced Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      {/* Tabs */}
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          {[
+            { id: 'dashboard', label: 'Tableau de bord', icon: 'PieChart' },
+            { id: 'payments', label: 'Historique paiements', icon: 'CreditCard' },
+            { id: 'caisse', label: 'Caisse', icon: 'DollarSign' }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === tab.id
+                  ? 'border-primary-500 text-primary-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              {tab.icon === 'PieChart' && <BarChart3 className="w-4 h-4" />}
+              {tab.icon === 'CreditCard' && <Calendar className="w-4 h-4" />}
+              {tab.icon === 'DollarSign' && <DollarSign className="w-4 h-4" />}
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      {/* Dashboard Tab */}
+      {activeTab === 'dashboard' && (
+        <div className="space-y-6">
+          {/* Enhanced Statistics Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
