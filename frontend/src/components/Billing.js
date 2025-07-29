@@ -1636,11 +1636,9 @@ const Billing = ({ user }) => {
                 </button>
               </div>
             )}
-          </div>
-        </div>
-      </div>
+      )}
 
-      {/* Payments Tab */}
+      {/* Export Modal */}
       {activeTab === 'payments' && (
         <div className="space-y-6">
           {/* Advanced Search Section */}
