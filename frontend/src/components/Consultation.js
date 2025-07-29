@@ -348,6 +348,7 @@ const Consultation = ({ user }) => {
         
         // Ajouter le nouveau patient à la liste
         setPatients(prev => [...prev, currentPatient]);
+        console.log('✅ Nouveau patient créé:', currentPatient);
         toast.success('Nouveau patient créé avec succès');
       } else {
         // Utiliser patient existant
