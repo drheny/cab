@@ -1025,23 +1025,188 @@ const Billing = ({ user }) => {
         </div>
       </div>
 
+      {/* Payments and Advanced Search Section */}
+      <div className="space-y-6">
+        {/* Advanced Search Section */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recherche avancée</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
+            <input
+              type="text"
+              placeholder="Nom du patient..."
+              value={searchFilters.patientName}
+              onChange={(e) => setSearchFilters(prev => ({ ...prev, patientName: e.target.value }))}
+              className="input-field"
+            />
+            <input
+              type="date"
+              value={searchFilters.dateDebut}
+              onChange={(e) => setSearchFilters(prev => ({ ...prev, dateDebut: e.target.value }))}
+              className="input-field"
+            />
+            <input
+              type="date"
+              value={searchFilters.dateFin}
+              onChange={(e) => setSearchFilters(prev => ({ ...prev, dateFin: e.target.value }))}
+              className="input-field"
+            />
+            <select
+              value={searchFilters.statutPaiement}
+              onChange={(e) => setSearchFilters(prev => ({ ...prev, statutPaiement: e.target.value }))}
+              className="input-field"
+            >
+              <option value="">Tous les statuts</option>
+              <option value="paye">Payé</option>
+              <option value="impaye">Impayé</option>
+            </select>
+            <select
+              value={searchFilters.assure}
+              onChange={(e) => setSearchFilters(prev => ({ ...prev, assure: e.target.value }))}
+              className="input-field"
+            >
+              <option value="">Assurance</option>
+              <option value="true">Assuré</option>
+              <option value="false">Non assuré</option>
+            </select>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-600">
+              {filteredPayments.length} paiement{filteredPayments.length !== 1 ? 's' : ''} trouvé{filteredPayments.length !== 1 ? 's' : ''}
+            </div>
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => setSearchFilters({
+                  patientName: '',
+                  dateDebut: '',
+                  dateFin: '',
+                  statutPaiement: '',
+                  assure: ''
+                })}
+                className="btn-outline text-sm"
+              >
+                Réinitialiser
+              </button>
+              <button
+                onClick={() => setShowExportModal(true)}
+                className="btn-primary text-sm flex items-center space-x-2"
+              >
+                <Download className="w-4 h-4" />
+                <span>Exporter</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Payments List */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="p-6 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">Historique des paiements</h3>
+          </div>
+          
+          {loading ? (
+            <div className="flex items-center justify-center p-8">
+              <RefreshCw className="w-6 h-6 animate-spin text-primary-500" />
+              <span className="ml-2">Chargement...</span>
+            </div>
+          ) : filteredPayments.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Patient
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Montant
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Méthode
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Statut
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredPayments.map((payment) => (
+                    <tr key={payment.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="text-sm font-medium text-gray-900">
+                            {payment.patient?.prenom} {payment.patient?.nom}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {new Date(payment.date).toLocaleDateString('fr-FR')}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
+                        {formatCurrency(payment.montant)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {payment.type_paiement}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          payment.statut === 'paye' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {payment.statut === 'paye' ? 'Payé' : 'Impayé'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => handleViewPayment(payment)}
+                            className="text-blue-600 hover:text-blue-900"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun paiement trouvé</h3>
+              <p className="text-gray-500">Aucun paiement ne correspond à vos critères de recherche.</p>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Advanced Statistics Section */}
       <div className="space-y-6">
-            {/* Top 10 Profitable Patients */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <Award className="w-5 h-5 text-yellow-500 mr-2" />
-                  Top 10 patients les plus rentables
-                </h3>
-                <button
-                  onClick={fetchTopPatients}
-                  className="btn-outline text-sm"
-                >
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Actualiser
-                </button>
-              </div>
+        {/* Top 10 Profitable Patients */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+              <Award className="w-5 h-5 text-yellow-500 mr-2" />
+              Top 10 patients les plus rentables
+            </h3>
+            <button
+              onClick={fetchTopPatients}
+              className="btn-outline text-sm"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Actualiser
+            </button>
+          </div>
             
             {topPatients.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
