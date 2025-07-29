@@ -326,12 +326,22 @@ const Billing = ({ user }) => {
         return row;
       });
 
-      // Add statistics section if requested
+      // Add enhanced statistics section if requested
       if (Object.values(exportOptions.indicateurs).some(v => v)) {
         csvData.push([]); // Empty row
-        csvData.push(['=== STATISTIQUES ===']);
+        csvData.push(['=== STATISTIQUES ENHANCÉES ===']);
         csvData.push([]);
         
+        // Enhanced stats
+        if (enhancedStats) {
+          csvData.push(['Recette du jour:', `${formatCurrency(enhancedStats.recette_jour || 0)}`]);
+          csvData.push(['Recette du mois:', `${formatCurrency(enhancedStats.recette_mois || 0)}`]);
+          csvData.push(['Recette de l\'année:', `${formatCurrency(enhancedStats.recette_annee || 0)}`]);
+          csvData.push(['Nouveaux patients cette année:', enhancedStats.nouveaux_patients_annee || 0]);
+          csvData.push([]);
+        }
+        
+        // Legacy stats for compatibility
         if (exportOptions.indicateurs.ca) {
           csvData.push(['Chiffre d\'affaires total:', `${formatCurrency(stats.total_montant || 0)}`]);
         }
@@ -346,6 +356,74 @@ const Billing = ({ user }) => {
         }
         if (exportOptions.indicateurs.assures) {
           csvData.push(['Patients assurés:', stats.consultations?.nb_assures || 0]);
+        }
+        
+        // Add top patients section
+        if (topPatients.length > 0) {
+          csvData.push([]);
+          csvData.push(['=== TOP 10 PATIENTS LES PLUS RENTABLES ===']);
+          csvData.push(['Rang', 'Patient', 'Total Payé (TND)', 'Nb Paiements', 'Moyenne']);
+          topPatients.forEach((patient, index) => {
+            csvData.push([
+              index + 1,
+              `${patient.patient.prenom} ${patient.patient.nom}`,
+              patient.total_montant,
+              patient.nb_payments,
+              patient.moyenne_paiement.toFixed(2)
+            ]);
+          });
+        }
+        
+        // Add evolution data section
+        if (evolutionData.length > 0) {
+          csvData.push([]);
+          csvData.push(['=== ÉVOLUTION MENSUELLE ===']);
+          csvData.push(['Mois', 'Recette (TND)', 'Nb Consultations', 'Nouveaux Patients']);
+          evolutionData.forEach(data => {
+            csvData.push([
+              data.mois,
+              data.recette,
+              data.nb_consultations,
+              data.nouveaux_patients || 0
+            ]);
+          });
+        }
+        
+        // Add predictive analysis section
+        if (predictiveAnalysis) {
+          csvData.push([]);
+          csvData.push(['=== ANALYSE PRÉDICTIVE ===']);
+          csvData.push(['Type d\'analyse:', predictiveAnalysis.generation_method === 'ai' ? 'Intelligence Artificielle' : 'Statistique']);
+          csvData.push([]);
+          csvData.push(['Analyse:', predictiveAnalysis.ai_analysis]);
+          csvData.push([]);
+          
+          if (predictiveAnalysis.peak_months) {
+            csvData.push(['PÉRIODES DE PIC (TOP 3):']);
+            csvData.push(['Rang', 'Mois', 'Recette Moyenne (TND)', 'Consultations Moyennes']);
+            predictiveAnalysis.peak_months.forEach((month, index) => {
+              csvData.push([
+                index + 1,
+                month.month,
+                month.avg_recette.toFixed(2),
+                Math.round(month.avg_consultations)
+              ]);
+            });
+            csvData.push([]);
+          }
+          
+          if (predictiveAnalysis.trough_months) {
+            csvData.push(['PÉRIODES DE CREUX (BOTTOM 3):']);
+            csvData.push(['Rang', 'Mois', 'Recette Moyenne (TND)', 'Consultations Moyennes']);
+            predictiveAnalysis.trough_months.forEach((month, index) => {
+              csvData.push([
+                index + 1,
+                month.month,
+                month.avg_recette.toFixed(2),
+                Math.round(month.avg_consultations)
+              ]);
+            });
+          }
         }
         
         // Add period breakdown if advanced stats are available
@@ -372,18 +450,21 @@ const Billing = ({ user }) => {
         .map(row => row.map(field => `"${field}"`).join(','))
         .join('\n');
 
-      // Download file
+      // Download file with enhanced filename
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
       link.setAttribute('href', url);
-      link.setAttribute('download', `facturation_${dateFilter.debut}_${dateFilter.fin}.csv`);
+      
+      const today = new Date().toISOString().split('T')[0];
+      const filename = `facturation_enhanced_${dateFilter.debut}_${dateFilter.fin}_${today}.csv`;
+      link.setAttribute('download', filename);
       link.style.visibility = 'hidden';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       
-      toast.success('Export CSV téléchargé avec succès');
+      toast.success('Export CSV avancé téléchargé avec succès');
       setShowExportModal(false);
       
     } catch (error) {
