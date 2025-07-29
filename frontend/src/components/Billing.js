@@ -116,6 +116,7 @@ const Billing = ({ user }) => {
 
   useEffect(() => {
     fetchInitialData();
+    fetchPatients();
   }, []);
 
   useEffect(() => {
@@ -133,13 +134,112 @@ const Billing = ({ user }) => {
         fetchPayments(),
         fetchStats(),
         fetchAdvancedStats(),
-        fetchCashMovements()
+        fetchCashMovements(),
+        fetchEnhancedStats(),
+        fetchTopPatients(),
+        fetchEvolutionData(),
+        fetchPredictiveAnalysis()
       ]);
     } catch (error) {
       console.error('Error fetching initial data:', error);
       toast.error('Erreur lors du chargement des données');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchEnhancedStats = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/facturation/enhanced-stats`);
+      setEnhancedStats(response.data || {});
+    } catch (error) {
+      console.error('Error fetching enhanced stats:', error);
+    }
+  };
+
+  const fetchTopPatients = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/facturation/top-patients?limit=10`);
+      setTopPatients(response.data?.top_patients || []);
+    } catch (error) {
+      console.error('Error fetching top patients:', error);
+    }
+  };
+
+  const fetchEvolutionData = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/facturation/evolution-graphs`, {
+        params: { period: 'month', year: new Date().getFullYear() }
+      });
+      setEvolutionData(response.data?.evolution || []);
+    } catch (error) {
+      console.error('Error fetching evolution data:', error);
+    }
+  };
+
+  const fetchPredictiveAnalysis = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/facturation/predictive-analysis`);
+      setPredictiveAnalysis(response.data);
+    } catch (error) {
+      console.error('Error fetching predictive analysis:', error);
+    }
+  };
+
+  const fetchPatients = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/patients`);
+      setPatients(response.data?.patients || []);
+    } catch (error) {
+      console.error('Error fetching patients:', error);
+    }
+  };
+
+  const fetchDailyPayments = async (date) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/facturation/daily-payments`, {
+        params: { date }
+      });
+      setDailyPayments(response.data);
+    } catch (error) {
+      console.error('Error fetching daily payments:', error);
+      toast.error('Erreur lors du chargement des paiements du jour');
+    }
+  };
+
+  const fetchMonthlyStats = async (year, month) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/facturation/monthly-stats`, {
+        params: { year, month }
+      });
+      setMonthlyStats(response.data);
+    } catch (error) {
+      console.error('Error fetching monthly stats:', error);
+      toast.error('Erreur lors du chargement des statistiques mensuelles');
+    }
+  };
+
+  const fetchYearlyStats = async (year) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/facturation/yearly-stats`, {
+        params: { year }
+      });
+      setYearlyStats(response.data);
+    } catch (error) {
+      console.error('Error fetching yearly stats:', error);
+      toast.error('Erreur lors du chargement des statistiques annuelles');
+    }
+  };
+
+  const fetchPatientPayments = async (patientId) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/facturation/patient-payments`, {
+        params: { patient_id: patientId }
+      });
+      setPatientPayments(response.data);
+    } catch (error) {
+      console.error('Error fetching patient payments:', error);
+      toast.error('Erreur lors du chargement des paiements du patient');
     }
   };
 
