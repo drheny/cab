@@ -1098,82 +1098,137 @@ const Billing = ({ user }) => {
             </h3>
             
             {evolutionData.length > 0 ? (
-              <div className="space-y-6">
-                {/* Revenue Evolution */}
+              <div className="space-y-8">
+                {/* Revenue Evolution Chart */}
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-3">Évolution de la recette</h4>
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-2">
-                    {evolutionData.map((data, index) => (
-                      <div key={index} className="text-center">
-                        <div className="mb-2">
-                          <div 
-                            className="bg-green-500 rounded-t"
-                            style={{ 
-                              height: `${Math.max(20, (data.recette / Math.max(...evolutionData.map(d => d.recette))) * 100)}px`,
-                              minHeight: '20px'
-                            }}
-                          ></div>
-                        </div>
-                        <div className="text-xs text-gray-600">
-                          {data.mois}
-                        </div>
-                        <div className="text-xs font-medium text-green-600">
-                          {formatCurrency(data.recette).replace(' TND', '')}
-                        </div>
-                      </div>
-                    ))}
+                  <h4 className="font-medium text-gray-900 mb-4">Évolution de la recette (TND)</h4>
+                  <div className="h-64 w-full">
+                    <svg viewBox="0 0 800 200" className="w-full h-full">
+                      {/* Grid lines */}
+                      <defs>
+                        <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+                          <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#e5e7eb" strokeWidth="0.5"/>
+                        </pattern>
+                      </defs>
+                      <rect width="800" height="200" fill="url(#grid)" />
+                      
+                      {/* Line chart */}
+                      <polyline
+                        fill="none"
+                        stroke="#10b981"
+                        strokeWidth="3"
+                        points={evolutionData.map((data, index) => {
+                          const x = (index * 700) / (evolutionData.length - 1) + 50;
+                          const maxRevenue = Math.max(...evolutionData.map(d => d.recette));
+                          const y = 180 - ((data.recette / maxRevenue) * 160);
+                          return `${x},${y}`;
+                        }).join(' ')}
+                      />
+                      
+                      {/* Data points */}
+                      {evolutionData.map((data, index) => {
+                        const x = (index * 700) / (evolutionData.length - 1) + 50;
+                        const maxRevenue = Math.max(...evolutionData.map(d => d.recette));
+                        const y = 180 - ((data.recette / maxRevenue) * 160);
+                        return (
+                          <g key={index}>
+                            <circle cx={x} cy={y} r="4" fill="#10b981" />
+                            <text x={x} y="195" textAnchor="middle" fontSize="12" fill="#6b7280">
+                              {data.mois}
+                            </text>
+                            <text x={x} y={y - 8} textAnchor="middle" fontSize="10" fill="#374151" fontWeight="bold">
+                              {Math.round(data.recette)}
+                            </text>
+                          </g>
+                        );
+                      })}
+                    </svg>
                   </div>
                 </div>
 
-                {/* Consultations Evolution */}
+                {/* Consultations Evolution Chart */}
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-3">Évolution des consultations</h4>
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-2">
-                    {evolutionData.map((data, index) => (
-                      <div key={index} className="text-center">
-                        <div className="mb-2">
-                          <div 
-                            className="bg-blue-500 rounded-t"
-                            style={{ 
-                              height: `${Math.max(20, (data.nb_consultations / Math.max(...evolutionData.map(d => d.nb_consultations))) * 100)}px`,
-                              minHeight: '20px'
-                            }}
-                          ></div>
-                        </div>
-                        <div className="text-xs text-gray-600">
-                          {data.mois}
-                        </div>
-                        <div className="text-xs font-medium text-blue-600">
-                          {data.nb_consultations}
-                        </div>
-                      </div>
-                    ))}
+                  <h4 className="font-medium text-gray-900 mb-4">Évolution des consultations</h4>
+                  <div className="h-64 w-full">
+                    <svg viewBox="0 0 800 200" className="w-full h-full">
+                      <rect width="800" height="200" fill="url(#grid)" />
+                      
+                      {/* Area chart */}
+                      <defs>
+                        <linearGradient id="blueGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3"/>
+                          <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.1"/>
+                        </linearGradient>
+                      </defs>
+                      
+                      <polygon 
+                        fill="url(#blueGradient)"
+                        stroke="#3b82f6"
+                        strokeWidth="2"
+                        points={`50,180 ${evolutionData.map((data, index) => {
+                          const x = (index * 700) / (evolutionData.length - 1) + 50;
+                          const maxConsultations = Math.max(...evolutionData.map(d => d.nb_consultations));
+                          const y = 180 - ((data.nb_consultations / maxConsultations) * 160);
+                          return `${x},${y}`;
+                        }).join(' ')} ${(evolutionData.length - 1) * 700 / (evolutionData.length - 1) + 50},180`}
+                      />
+                      
+                      {/* Data points */}
+                      {evolutionData.map((data, index) => {
+                        const x = (index * 700) / (evolutionData.length - 1) + 50;
+                        const maxConsultations = Math.max(...evolutionData.map(d => d.nb_consultations));
+                        const y = 180 - ((data.nb_consultations / maxConsultations) * 160);
+                        return (
+                          <g key={index}>
+                            <circle cx={x} cy={y} r="3" fill="#3b82f6" />
+                            <text x={x} y="195" textAnchor="middle" fontSize="12" fill="#6b7280">
+                              {data.mois}
+                            </text>
+                            <text x={x} y={y - 8} textAnchor="middle" fontSize="10" fill="#374151" fontWeight="bold">
+                              {data.nb_consultations}
+                            </text>
+                          </g>
+                        );
+                      })}
+                    </svg>
                   </div>
                 </div>
 
-                {/* New Patients Evolution */}
+                {/* New Patients Bar Chart */}
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-3">Évolution des nouveaux patients</h4>
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-2">
-                    {evolutionData.map((data, index) => (
-                      <div key={index} className="text-center">
-                        <div className="mb-2">
-                          <div 
-                            className="bg-orange-500 rounded-t"
-                            style={{ 
-                              height: `${Math.max(20, (data.nouveaux_patients / Math.max(...evolutionData.map(d => d.nouveaux_patients || 0))) * 100)}px`,
-                              minHeight: '20px'
-                            }}
-                          ></div>
-                        </div>
-                        <div className="text-xs text-gray-600">
-                          {data.mois}
-                        </div>
-                        <div className="text-xs font-medium text-orange-600">
-                          {data.nouveaux_patients || 0}
-                        </div>
-                      </div>
-                    ))}
+                  <h4 className="font-medium text-gray-900 mb-4">Évolution des nouveaux patients</h4>
+                  <div className="h-64 w-full">
+                    <svg viewBox="0 0 800 200" className="w-full h-full">
+                      <rect width="800" height="200" fill="url(#grid)" />
+                      
+                      {/* Bar chart */}
+                      {evolutionData.map((data, index) => {
+                        const barWidth = 700 / evolutionData.length * 0.8;
+                        const x = (index * 700) / evolutionData.length + 50 + (700 / evolutionData.length * 0.1);
+                        const maxPatients = Math.max(...evolutionData.map(d => d.nouveaux_patients || 0));
+                        const barHeight = maxPatients > 0 ? ((data.nouveaux_patients || 0) / maxPatients) * 160 : 0;
+                        const y = 180 - barHeight;
+                        
+                        return (
+                          <g key={index}>
+                            <rect 
+                              x={x} 
+                              y={y} 
+                              width={barWidth} 
+                              height={barHeight} 
+                              fill="#f97316"
+                              rx="2"
+                            />
+                            <text x={x + barWidth/2} y="195" textAnchor="middle" fontSize="12" fill="#6b7280">
+                              {data.mois}
+                            </text>
+                            <text x={x + barWidth/2} y={y - 5} textAnchor="middle" fontSize="10" fill="#374151" fontWeight="bold">
+                              {data.nouveaux_patients || 0}
+                            </text>
+                          </g>
+                        );
+                      })}
+                    </svg>
                   </div>
                 </div>
               </div>
