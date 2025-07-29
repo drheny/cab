@@ -702,7 +702,7 @@ const Billing = ({ user }) => {
         </div>
       </div>
 
-      {/* Date Range Filter */}
+      {/* Date Range Filter - Simplified */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center space-x-4">
@@ -726,7 +726,7 @@ const Billing = ({ user }) => {
             </div>
           </div>
           <div className="text-right">
-            <div className="text-sm text-gray-600">Période sélectionnée</div>
+            <div className="text-sm text-gray-600">Période de filtrage</div>
             <div className="font-medium">
               {new Date(dateFilter.debut).toLocaleDateString('fr-FR')} - {new Date(dateFilter.fin).toLocaleDateString('fr-FR')}
             </div>
