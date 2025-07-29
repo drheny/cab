@@ -430,7 +430,6 @@ const Billing = ({ user }) => {
       return matchesName && matchesStatus && matchesAssurance;
     });
   }, [payments, searchFilters]);
-  };
 
   return (
     <div className="space-y-6">
