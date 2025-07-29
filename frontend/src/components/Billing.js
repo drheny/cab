@@ -702,66 +702,6 @@ const Billing = ({ user }) => {
         </div>
       </div>
 
-      {/* Date Range Filter - Simplified */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center space-x-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Du</label>
-              <input
-                type="date"
-                value={dateFilter.debut}
-                onChange={(e) => setDateFilter(prev => ({ ...prev, debut: e.target.value }))}
-                className="input-field"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Au</label>
-              <input
-                type="date"
-                value={dateFilter.fin}
-                onChange={(e) => setDateFilter(prev => ({ ...prev, fin: e.target.value }))}
-                className="input-field"
-              />
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="text-sm text-gray-600">Période de filtrage</div>
-            <div className="font-medium">
-              {new Date(dateFilter.debut).toLocaleDateString('fr-FR')} - {new Date(dateFilter.fin).toLocaleDateString('fr-FR')}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
-          {[
-            { id: 'dashboard', label: 'Tableau de bord', icon: PieChart },
-            { id: 'payments', label: 'Historique paiements', icon: CreditCard },
-            { id: 'caisse', label: 'Caisse', icon: DollarSign },
-            { id: 'stats', label: 'Statistiques avancées', icon: BarChart3 }
-          ].map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === tab.id
-                    ? 'border-primary-500 text-primary-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </nav>
-      </div>
-
       {/* Enhanced Statistics Cards */}
       {activeTab === 'dashboard' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
