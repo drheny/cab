@@ -1137,7 +1137,7 @@ const Consultation = ({ user }) => {
                       <User className="w-4 h-4 text-gray-500" />
                       <span className="text-sm font-medium text-gray-700">Âge</span>
                     </div>
-                    <p className="text-gray-900 ml-6">{calculateAge(selectedPatient.date_naissance)} ans</p>
+                    <p className="text-gray-900 ml-6">{calculateAge(selectedPatient.date_naissance) ? `${calculateAge(selectedPatient.date_naissance)} ans` : 'Non renseigné'}</p>
                   </div>
 
                   <div>
