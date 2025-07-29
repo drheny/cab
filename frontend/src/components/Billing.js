@@ -1058,8 +1058,290 @@ const Billing = ({ user }) => {
         </div>
       )}
 
-      {/* Dashboard Tab */}
-      {activeTab === 'dashboard' && (
+      {/* Advanced Statistics Tab */}
+      {activeTab === 'stats' && (
+        <div className="space-y-6">
+          {/* Top 10 Profitable Patients */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                <Award className="w-5 h-5 text-yellow-500 mr-2" />
+                Top 10 patients les plus rentables
+              </h3>
+              <button
+                onClick={fetchTopPatients}
+                className="btn-outline text-sm"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Actualiser
+              </button>
+            </div>
+            
+            {topPatients.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {topPatients.map((patient, index) => (
+                  <div
+                    key={patient.patient.id}
+                    className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
+                        index === 0 ? 'bg-yellow-500' : 
+                        index === 1 ? 'bg-gray-400' : 
+                        index === 2 ? 'bg-orange-500' : 'bg-blue-500'
+                      }`}>
+                        {index + 1}
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-900">
+                          {patient.patient.prenom} {patient.patient.nom}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {patient.nb_payments} paiement{patient.nb_payments > 1 ? 's' : ''}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-bold text-green-600">
+                        {formatCurrency(patient.total_montant)}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        Moy: {formatCurrency(patient.moyenne_paiement)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <Star className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                <p>Aucune donnée de patients disponible</p>
+              </div>
+            )}
+          </div>
+
+          {/* Evolution Graphs */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+              <LineChart className="w-5 h-5 text-blue-500 mr-2" />
+              Évolution par mois sur l'année
+            </h3>
+            
+            {evolutionData.length > 0 ? (
+              <div className="space-y-6">
+                {/* Revenue Evolution */}
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-3">Évolution de la recette</h4>
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-2">
+                    {evolutionData.map((data, index) => (
+                      <div key={index} className="text-center">
+                        <div className="mb-2">
+                          <div 
+                            className="bg-green-500 rounded-t"
+                            style={{ 
+                              height: `${Math.max(20, (data.recette / Math.max(...evolutionData.map(d => d.recette))) * 100)}px`,
+                              minHeight: '20px'
+                            }}
+                          ></div>
+                        </div>
+                        <div className="text-xs text-gray-600">
+                          {data.mois}
+                        </div>
+                        <div className="text-xs font-medium text-green-600">
+                          {formatCurrency(data.recette).replace(' TND', '')}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Consultations Evolution */}
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-3">Évolution des consultations</h4>
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-2">
+                    {evolutionData.map((data, index) => (
+                      <div key={index} className="text-center">
+                        <div className="mb-2">
+                          <div 
+                            className="bg-blue-500 rounded-t"
+                            style={{ 
+                              height: `${Math.max(20, (data.nb_consultations / Math.max(...evolutionData.map(d => d.nb_consultations))) * 100)}px`,
+                              minHeight: '20px'
+                            }}
+                          ></div>
+                        </div>
+                        <div className="text-xs text-gray-600">
+                          {data.mois}
+                        </div>
+                        <div className="text-xs font-medium text-blue-600">
+                          {data.nb_consultations}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* New Patients Evolution */}
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-3">Évolution des nouveaux patients</h4>
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-2">
+                    {evolutionData.map((data, index) => (
+                      <div key={index} className="text-center">
+                        <div className="mb-2">
+                          <div 
+                            className="bg-orange-500 rounded-t"
+                            style={{ 
+                              height: `${Math.max(20, (data.nouveaux_patients / Math.max(...evolutionData.map(d => d.nouveaux_patients || 0))) * 100)}px`,
+                              minHeight: '20px'
+                            }}
+                          ></div>
+                        </div>
+                        <div className="text-xs text-gray-600">
+                          {data.mois}
+                        </div>
+                        <div className="text-xs font-medium text-orange-600">
+                          {data.nouveaux_patients || 0}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <BarChart3 className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                <p>Aucune donnée d'évolution disponible</p>
+              </div>
+            )}
+          </div>
+
+          {/* Predictive Analysis */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+              <Target className="w-5 h-5 text-purple-500 mr-2" />
+              Analyse et prédiction des périodes de pics et de creux
+            </h3>
+            
+            {predictiveAnalysis ? (
+              <div className="space-y-6">
+                {/* AI Analysis */}
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                  <h4 className="font-medium text-purple-900 mb-2 flex items-center">
+                    <Activity className="w-4 h-4 mr-2" />
+                    Analyse {predictiveAnalysis.generation_method === 'ai' ? 'IA' : 'Statistique'}
+                  </h4>
+                  <p className="text-purple-800 text-sm leading-relaxed">
+                    {predictiveAnalysis.ai_analysis}
+                  </p>
+                </div>
+
+                {/* Peak and Trough Periods */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Peak Months */}
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-3 flex items-center">
+                      <TrendingUp className="w-4 h-4 text-green-500 mr-2" />
+                      Périodes de pic (Top 3)
+                    </h4>
+                    <div className="space-y-2">
+                      {predictiveAnalysis.peak_months?.map((month, index) => (
+                        <div
+                          key={month.month}
+                          className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <div className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                              {index + 1}
+                            </div>
+                            <span className="font-medium text-green-900">
+                              Mois {month.month}
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-bold text-green-600">
+                              {formatCurrency(month.avg_recette)}
+                            </div>
+                            <div className="text-xs text-green-600">
+                              {Math.round(month.avg_consultations)} consult./mois
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Trough Months */}
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-3 flex items-center">
+                      <TrendingUp className="w-4 h-4 text-red-500 mr-2 rotate-180" />
+                      Périodes de creux (Bottom 3)
+                    </h4>
+                    <div className="space-y-2">
+                      {predictiveAnalysis.trough_months?.map((month, index) => (
+                        <div
+                          key={month.month}
+                          className="flex items-center justify-between p-3 bg-red-50 border border-red-200 rounded-lg"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <div className="w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                              {index + 1}
+                            </div>
+                            <span className="font-medium text-red-900">
+                              Mois {month.month}
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-bold text-red-600">
+                              {formatCurrency(month.avg_recette)}
+                            </div>
+                            <div className="text-xs text-red-600">
+                              {Math.round(month.avg_consultations)} consult./mois
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Monthly Averages Chart */}
+                {predictiveAnalysis.monthly_averages && (
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-3">Moyennes mensuelles</h4>
+                    <div className="grid grid-cols-12 gap-1">
+                      {predictiveAnalysis.monthly_averages.map((data) => (
+                        <div key={data.month} className="text-center">
+                          <div className="mb-2">
+                            <div 
+                              className="bg-purple-500 rounded-t"
+                              style={{ 
+                                height: `${Math.max(20, (data.avg_recette / Math.max(...predictiveAnalysis.monthly_averages.map(d => d.avg_recette))) * 80)}px`,
+                                minHeight: '20px'
+                              }}
+                            ></div>
+                          </div>
+                          <div className="text-xs text-gray-600">{data.month}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <Target className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                <p>Analyse prédictive en cours de chargement...</p>
+                <button
+                  onClick={fetchPredictiveAnalysis}
+                  className="btn-primary mt-4"
+                >
+                  Charger l'analyse
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
         <div className="space-y-6">
           {/* Period Selector */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
