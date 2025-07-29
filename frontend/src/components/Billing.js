@@ -1020,10 +1020,22 @@ const Billing = ({ user }) => {
                     <div className="text-2xl font-bold text-blue-700">
                       {formatCurrency(monthlyStats.recette_mois)}
                     </div>
-                    <div className="text-xs text-blue-500 mt-2">
-                      {/* Placeholder for evolution percentage */}
-                      📈 Évolution vs mois précédent
-                    </div>
+                    {monthlyStats.evolution && (
+                      <div className="text-xs mt-2 flex items-center justify-center">
+                        {monthlyStats.evolution.evolution_pourcentage >= 0 ? (
+                          <span className="text-green-600 flex items-center">
+                            <TrendingUp className="w-3 h-3 mr-1" />
+                            +{monthlyStats.evolution.evolution_pourcentage}%
+                          </span>
+                        ) : (
+                          <span className="text-red-600 flex items-center">
+                            <TrendingUp className="w-3 h-3 mr-1 rotate-180" />
+                            {monthlyStats.evolution.evolution_pourcentage}%
+                          </span>
+                        )}
+                        <span className="text-gray-500 ml-1">vs {monthlyStats.evolution.mois_precedent}</span>
+                      </div>
+                    )}
                   </div>
                   <div className="bg-green-50 p-6 rounded-lg text-center">
                     <div className="text-sm text-green-600 font-medium mb-2">Visites</div>
