@@ -703,69 +703,67 @@ const Billing = ({ user }) => {
       </div>
 
       {/* Enhanced Statistics Cards */}
-      {activeTab === 'dashboard' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-          <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-100 text-sm font-medium">Recette du jour</p>
-                <p className="text-2xl font-bold">{formatCurrency(enhancedStats.recette_jour || 0)}</p>
-                <p className="text-green-100 text-xs mt-1">
-                  {new Date().toLocaleDateString('fr-FR')}
-                </p>
-              </div>
-              <div className="bg-green-400 bg-opacity-30 rounded-full p-3">
-                <DollarSign className="w-6 h-6" />
-              </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-green-100 text-sm font-medium">Recette du jour</p>
+              <p className="text-2xl font-bold">{formatCurrency(enhancedStats.recette_jour || 0)}</p>
+              <p className="text-green-100 text-xs mt-1">
+                {new Date().toLocaleDateString('fr-FR')}
+              </p>
             </div>
-          </div>
-
-          <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-sm font-medium">Recette du mois</p>
-                <p className="text-2xl font-bold">{formatCurrency(enhancedStats.recette_mois || 0)}</p>
-                <p className="text-blue-100 text-xs mt-1">
-                  {new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
-                </p>
-              </div>
-              <div className="bg-blue-400 bg-opacity-30 rounded-full p-3">
-                <Calendar className="w-6 h-6" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-purple-100 text-sm font-medium">Recette de l'année</p>
-                <p className="text-2xl font-bold">{formatCurrency(enhancedStats.recette_annee || 0)}</p>
-                <p className="text-purple-100 text-xs mt-1">
-                  {new Date().getFullYear()}
-                </p>
-              </div>
-              <div className="bg-purple-400 bg-opacity-30 rounded-full p-3">
-                <TrendingUp className="w-6 h-6" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-6 text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-orange-100 text-sm font-medium">Nouveaux patients</p>
-                <p className="text-2xl font-bold">{enhancedStats.nouveaux_patients_annee || 0}</p>
-                <p className="text-orange-100 text-xs mt-1">
-                  Depuis début {new Date().getFullYear()}
-                </p>
-              </div>
-              <div className="bg-orange-400 bg-opacity-30 rounded-full p-3">
-                <Users className="w-6 h-6" />
-              </div>
+            <div className="bg-green-400 bg-opacity-30 rounded-full p-3">
+              <DollarSign className="w-6 h-6" />
             </div>
           </div>
         </div>
-      )}
+
+        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-blue-100 text-sm font-medium">Recette du mois</p>
+              <p className="text-2xl font-bold">{formatCurrency(enhancedStats.recette_mois || 0)}</p>
+              <p className="text-blue-100 text-xs mt-1">
+                {new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+              </p>
+            </div>
+            <div className="bg-blue-400 bg-opacity-30 rounded-full p-3">
+              <Calendar className="w-6 h-6" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-purple-100 text-sm font-medium">Recette de l'année</p>
+              <p className="text-2xl font-bold">{formatCurrency(enhancedStats.recette_annee || 0)}</p>
+              <p className="text-purple-100 text-xs mt-1">
+                {new Date().getFullYear()}
+              </p>
+            </div>
+            <div className="bg-purple-400 bg-opacity-30 rounded-full p-3">
+              <TrendingUp className="w-6 h-6" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-orange-100 text-sm font-medium">Nouveaux patients</p>
+              <p className="text-2xl font-bold">{enhancedStats.nouveaux_patients_annee || 0}</p>
+              <p className="text-orange-100 text-xs mt-1">
+                Depuis début {new Date().getFullYear()}
+              </p>
+            </div>
+            <div className="bg-orange-400 bg-opacity-30 rounded-full p-3">
+              <Users className="w-6 h-6" />
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Enhanced Payment History Section */}
       {activeTab === 'dashboard' && (
