@@ -2794,6 +2794,106 @@ async def get_daily_payments(date: str = Query(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching daily payments: {str(e)}")
 
+@app.get("/api/facturation/monthly-stats-with-evolution")
+async def get_monthly_stats_with_evolution(year: int = Query(...), month: int = Query(...)):
+    """Get monthly statistics with evolution percentage compared to previous month"""
+    try:
+        # Calculate current month boundaries
+        current_month_start = datetime(year, month, 1).strftime("%Y-%m-%d")
+        if month == 12:
+            current_month_end = datetime(year + 1, 1, 1) - timedelta(days=1)
+        else:
+            current_month_end = datetime(year, month + 1, 1) - timedelta(days=1)
+        current_month_end_str = current_month_end.strftime("%Y-%m-%d")
+        
+        # Calculate previous month boundaries
+        if month == 1:
+            prev_year = year - 1
+            prev_month = 12
+        else:
+            prev_year = year
+            prev_month = month - 1
+            
+        prev_month_start = datetime(prev_year, prev_month, 1).strftime("%Y-%m-%d")
+        if prev_month == 12:
+            prev_month_end = datetime(prev_year + 1, 1, 1) - timedelta(days=1)
+        else:
+            prev_month_end = datetime(prev_year, prev_month + 1, 1) - timedelta(days=1)
+        prev_month_end_str = prev_month_end.strftime("%Y-%m-%d")
+        
+        # Get current month data
+        current_payments = list(payments_collection.find({
+            "date": {"$gte": current_month_start, "$lte": current_month_end_str},
+            "statut": "paye"
+        }, {"_id": 0}))
+        
+        current_appointments = list(appointments_collection.find({
+            "date": {"$gte": current_month_start, "$lte": current_month_end_str}
+        }, {"_id": 0}))
+        
+        current_cash_movements = list(cash_movements_collection.find({
+            "date": {"$gte": current_month_start, "$lte": current_month_end_str}
+        }, {"_id": 0}))
+        
+        # Get previous month data
+        prev_payments = list(payments_collection.find({
+            "date": {"$gte": prev_month_start, "$lte": prev_month_end_str},
+            "statut": "paye"
+        }, {"_id": 0}))
+        
+        prev_cash_movements = list(cash_movements_collection.find({
+            "date": {"$gte": prev_month_start, "$lte": prev_month_end_str}
+        }, {"_id": 0}))
+        
+        # Calculate current month totals
+        current_recette_payments = sum(p.get("montant", 0) for p in current_payments)
+        current_movements_total = 0
+        for movement in current_cash_movements:
+            if movement["type_mouvement"] == "ajout":
+                current_movements_total += movement["montant"]
+            else:
+                current_movements_total -= movement["montant"]
+        
+        current_recette_mois = current_recette_payments + current_movements_total
+        current_nb_visites = len([a for a in current_appointments if a.get("type_rdv") == "visite"])
+        current_nb_controles = len([a for a in current_appointments if a.get("type_rdv") == "controle"])
+        current_nb_assures = len([a for a in current_appointments if a.get("assure", False)])
+        
+        # Calculate previous month totals
+        prev_recette_payments = sum(p.get("montant", 0) for p in prev_payments)
+        prev_movements_total = 0
+        for movement in prev_cash_movements:
+            if movement["type_mouvement"] == "ajout":
+                prev_movements_total += movement["montant"]
+            else:
+                prev_movements_total -= movement["montant"]
+        
+        prev_recette_mois = prev_recette_payments + prev_movements_total
+        
+        # Calculate evolution percentages
+        recette_evolution = 0
+        if prev_recette_mois > 0:
+            recette_evolution = ((current_recette_mois - prev_recette_mois) / prev_recette_mois) * 100
+        
+        return {
+            "year": year,
+            "month": month,
+            "recette_mois": current_recette_mois,
+            "nb_visites": current_nb_visites,
+            "nb_controles": current_nb_controles,
+            "nb_assures": current_nb_assures,
+            "nb_total_rdv": len(current_appointments),
+            "evolution": {
+                "recette_precedente": prev_recette_mois,
+                "evolution_pourcentage": round(recette_evolution, 1),
+                "evolution_montant": current_recette_mois - prev_recette_mois,
+                "mois_precedent": f"{prev_month}/{prev_year}"
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error calculating monthly stats with evolution: {str(e)}")
+
 @app.get("/api/facturation/monthly-stats")
 async def get_monthly_stats(year: int = Query(...), month: int = Query(...)):
     """Get monthly statistics breakdown"""
