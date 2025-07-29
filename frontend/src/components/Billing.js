@@ -15,7 +15,13 @@ import {
   CheckCircle,
   XCircle,
   X,
-  Activity
+  Activity,
+  Calendar,
+  BarChart3,
+  LineChart,
+  Star,
+  Target,
+  Award
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
