@@ -295,6 +295,143 @@ const Billing = ({ user }) => {
     }
   };
 
+  // Advanced search functions
+  const handleAdvancedSearch = async (page = 1) => {
+    setIsSearching(true);
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/payments/search`, {
+        params: {
+          ...searchFilters,
+          page,
+          limit: 20
+        }
+      });
+      
+      setSearchResults(response.data?.payments || []);
+      setPagination({
+        currentPage: page,
+        totalPages: response.data?.totalPages || 1,
+        totalCount: response.data?.totalCount || 0
+      });
+    } catch (error) {
+      console.error('Error searching payments:', error);
+      toast.error('Erreur lors de la recherche');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const clearAdvancedSearch = () => {
+    setSearchFilters({
+      patientName: '',
+      dateDebut: '',
+      dateFin: '',
+      statutPaiement: '',
+      assure: ''
+    });
+    setSearchResults([]);
+    setPagination({
+      currentPage: 1,
+      totalPages: 1,
+      totalCount: 0
+    });
+  };
+
+  const handleViewPayment = (payment) => {
+    setSelectedPayment(payment);
+    setShowPaymentModal(true);
+  };
+
+  const handleEditPayment = (payment) => {
+    setEditingPayment(payment);
+    setShowEditModal(true);
+  };
+
+  const handleUpdatePayment = async (paymentId, updatedData) => {
+    try {
+      await axios.put(`${API_BASE_URL}/api/payments/${paymentId}`, updatedData);
+      toast.success('Paiement mis à jour avec succès');
+      fetchPayments();
+      setShowEditModal(false);
+      setEditingPayment(null);
+    } catch (error) {
+      console.error('Error updating payment:', error);
+      toast.error('Erreur lors de la mise à jour');
+    }
+  };
+
+  const handleDeletePayment = async (payment) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce paiement ?')) {
+      try {
+        await axios.delete(`${API_BASE_URL}/api/payments/${payment.id}`);
+        toast.success('Paiement supprimé avec succès');
+        fetchPayments();
+      } catch (error) {
+        console.error('Error deleting payment:', error);
+        toast.error('Erreur lors de la suppression');
+      }
+    }
+  };
+
+  // Cash management functions
+  const handleCreateCashMovement = async () => {
+    if (!cashForm.montant || !cashForm.motif) {
+      toast.error('Veuillez remplir tous les champs obligatoires');
+      return;
+    }
+
+    try {
+      await axios.post(`${API_BASE_URL}/api/cash-movements`, {
+        ...cashForm,
+        montant: parseFloat(cashForm.montant)
+      });
+      
+      toast.success('Mouvement de caisse enregistré');
+      setCashForm({
+        montant: '',
+        type_mouvement: 'ajout',
+        date: new Date().toISOString().split('T')[0],
+        motif: ''
+      });
+      setShowCashForm(false);
+      fetchCashMovements();
+    } catch (error) {
+      console.error('Error creating cash movement:', error);
+      toast.error('Erreur lors de l\'enregistrement');
+    }
+  };
+
+  const handleDeleteCashMovement = async (movementId) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce mouvement ?')) {
+      try {
+        await axios.delete(`${API_BASE_URL}/api/cash-movements/${movementId}`);
+        toast.success('Mouvement supprimé avec succès');
+        fetchCashMovements();
+      } catch (error) {
+        console.error('Error deleting cash movement:', error);
+        toast.error('Erreur lors de la suppression');
+      }
+    }
+  };
+
+  // Utility functions
+  const filteredPayments = useMemo(() => {
+    return payments.filter(payment => {
+      const matchesName = !searchFilters.patientName || 
+        `${payment.patient?.prenom} ${payment.patient?.nom}`.toLowerCase()
+        .includes(searchFilters.patientName.toLowerCase());
+      
+      const matchesStatus = !searchFilters.statutPaiement || 
+        payment.statut === searchFilters.statutPaiement;
+      
+      const matchesAssurance = searchFilters.assure === '' || 
+        payment.assure.toString() === searchFilters.assure;
+      
+      return matchesName && matchesStatus && matchesAssurance;
+    });
+  }, [payments, searchFilters]);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
