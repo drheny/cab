@@ -1023,11 +1023,10 @@ const Billing = ({ user }) => {
             )}
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Advanced Statistics Tab */}
-      {activeTab === 'stats' && (
-        <div className="space-y-6">
+      {/* Advanced Statistics Section */}
+      <div className="space-y-6">
           {/* Top 10 Profitable Patients */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-6">
