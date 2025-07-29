@@ -2108,6 +2108,21 @@ async def create_consultation(consultation: Consultation):
     """Create new consultation"""
     consultation_dict = consultation.dict()
     consultations_collection.insert_one(consultation_dict)
+    
+    # Mettre à jour le statut du rendez-vous à "terminé"
+    if consultation.appointment_id:
+        try:
+            result = appointments_collection.update_one(
+                {"id": consultation.appointment_id},
+                {"$set": {"statut": "termine"}}
+            )
+            if result.modified_count > 0:
+                print(f"✅ Rendez-vous {consultation.appointment_id} marqué comme terminé")
+            else:
+                print(f"⚠️ Rendez-vous {consultation.appointment_id} non trouvé pour mise à jour")
+        except Exception as e:
+            print(f"❌ Erreur mise à jour statut RDV: {e}")
+    
     return {"message": "Consultation created successfully", "consultation_id": consultation.id}
 
 @app.put("/api/consultations/{consultation_id}")
