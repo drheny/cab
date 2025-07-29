@@ -699,15 +699,24 @@ const Consultation = ({ user }) => {
 
   // Calculer l'âge
   const calculateAge = (dateOfBirth) => {
-    if (!dateOfBirth) return 'N/A';
-    const today = new Date();
-    const birth = new Date(dateOfBirth);
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-      age--;
+    if (!dateOfBirth || dateOfBirth === '') return '';
+    try {
+      const today = new Date();
+      const birth = new Date(dateOfBirth);
+      
+      // Vérifier si la date est valide
+      if (isNaN(birth.getTime())) return '';
+      
+      let age = today.getFullYear() - birth.getFullYear();
+      const monthDiff = today.getMonth() - birth.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        age--;
+      }
+      return age > 0 ? age : '';
+    } catch (error) {
+      console.warn('Error calculating age:', error);
+      return '';
     }
-    return age;
   };
 
   if (loading) {
