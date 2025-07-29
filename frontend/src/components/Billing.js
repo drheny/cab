@@ -659,7 +659,8 @@ const Billing = ({ user }) => {
           {[
             { id: 'dashboard', label: 'Tableau de bord', icon: PieChart },
             { id: 'payments', label: 'Historique paiements', icon: CreditCard },
-            { id: 'caisse', label: 'Caisse', icon: DollarSign }
+            { id: 'caisse', label: 'Caisse', icon: DollarSign },
+            { id: 'stats', label: 'Statistiques avancées', icon: BarChart3 }
           ].map((tab) => {
             const Icon = tab.icon;
             return (
@@ -679,6 +680,383 @@ const Billing = ({ user }) => {
           })}
         </nav>
       </div>
+
+      {/* Enhanced Statistics Cards */}
+      {activeTab === 'dashboard' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-sm font-medium">Recette du jour</p>
+                <p className="text-2xl font-bold">{formatCurrency(enhancedStats.recette_jour || 0)}</p>
+                <p className="text-green-100 text-xs mt-1">
+                  {new Date().toLocaleDateString('fr-FR')}
+                </p>
+              </div>
+              <div className="bg-green-400 bg-opacity-30 rounded-full p-3">
+                <DollarSign className="w-6 h-6" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 text-sm font-medium">Recette du mois</p>
+                <p className="text-2xl font-bold">{formatCurrency(enhancedStats.recette_mois || 0)}</p>
+                <p className="text-blue-100 text-xs mt-1">
+                  {new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+                </p>
+              </div>
+              <div className="bg-blue-400 bg-opacity-30 rounded-full p-3">
+                <Calendar className="w-6 h-6" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-100 text-sm font-medium">Recette de l'année</p>
+                <p className="text-2xl font-bold">{formatCurrency(enhancedStats.recette_annee || 0)}</p>
+                <p className="text-purple-100 text-xs mt-1">
+                  {new Date().getFullYear()}
+                </p>
+              </div>
+              <div className="bg-purple-400 bg-opacity-30 rounded-full p-3">
+                <TrendingUp className="w-6 h-6" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-orange-100 text-sm font-medium">Nouveaux patients</p>
+                <p className="text-2xl font-bold">{enhancedStats.nouveaux_patients_annee || 0}</p>
+                <p className="text-orange-100 text-xs mt-1">
+                  Depuis début {new Date().getFullYear()}
+                </p>
+              </div>
+              <div className="bg-orange-400 bg-opacity-30 rounded-full p-3">
+                <Users className="w-6 h-6" />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Enhanced Payment History Section */}
+      {activeTab === 'dashboard' && (
+        <div className="space-y-6">
+          {/* Calendar-based Payment History */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Historique de paiements</h3>
+            
+            {/* Date Selection */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Choisir un jour
+                </label>
+                <div className="flex space-x-2">
+                  <input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    className="input-field flex-1"
+                  />
+                  <button
+                    onClick={() => fetchDailyPayments(selectedDate)}
+                    className="btn-primary px-4"
+                  >
+                    Voir
+                  </button>
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Choisir un mois
+                </label>
+                <div className="flex space-x-2">
+                  <input
+                    type="month"
+                    onChange={(e) => {
+                      const [year, month] = e.target.value.split('-');
+                      fetchMonthlyStats(parseInt(year), parseInt(month));
+                    }}
+                    className="input-field flex-1"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Choisir une année
+                </label>
+                <div className="flex space-x-2">
+                  <input
+                    type="number"
+                    min="2020"
+                    max="2030"
+                    defaultValue={new Date().getFullYear()}
+                    onChange={(e) => fetchYearlyStats(parseInt(e.target.value))}
+                    className="input-field flex-1"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Daily Payments Results */}
+            {dailyPayments && (
+              <div className="border-t pt-4">
+                <h4 className="font-semibold text-gray-900 mb-3">
+                  Paiements du {new Date(dailyPayments.date).toLocaleDateString('fr-FR')}
+                </h4>
+                
+                {/* Daily Summary */}
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
+                  <div className="bg-green-50 p-3 rounded-lg">
+                    <div className="text-sm text-green-600 font-medium">Recette totale</div>
+                    <div className="text-lg font-bold text-green-700">
+                      {formatCurrency(dailyPayments.totals.recette_totale)}
+                    </div>
+                  </div>
+                  <div className="bg-blue-50 p-3 rounded-lg">
+                    <div className="text-sm text-blue-600 font-medium">Visites</div>
+                    <div className="text-lg font-bold text-blue-700">
+                      {dailyPayments.totals.nb_visites}
+                    </div>
+                  </div>
+                  <div className="bg-purple-50 p-3 rounded-lg">
+                    <div className="text-sm text-purple-600 font-medium">Contrôles</div>
+                    <div className="text-lg font-bold text-purple-700">
+                      {dailyPayments.totals.nb_controles}
+                    </div>
+                  </div>
+                  <div className="bg-indigo-50 p-3 rounded-lg">
+                    <div className="text-sm text-indigo-600 font-medium">Assurés</div>
+                    <div className="text-lg font-bold text-indigo-700">
+                      {dailyPayments.totals.nb_assures}
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <div className="text-sm text-gray-600 font-medium">Total</div>
+                    <div className="text-lg font-bold text-gray-700">
+                      {dailyPayments.totals.nb_total}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Daily Payments List */}
+                {dailyPayments.payments.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Patient</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Montant</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Assuré</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {dailyPayments.payments.map((payment, index) => (
+                          <tr key={index} className="hover:bg-gray-50">
+                            <td className="px-4 py-2">
+                              <button
+                                onClick={() => fetchPatientPayments(payment.patient_id)}
+                                className="text-blue-600 hover:text-blue-800 font-medium"
+                              >
+                                {payment.patient?.prenom} {payment.patient?.nom}
+                              </button>
+                            </td>
+                            <td className="px-4 py-2">
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                payment.type_visite === 'visite' ? 'bg-green-100 text-green-800' : 'bg-purple-100 text-purple-800'
+                              }`}>
+                                {payment.type_visite === 'visite' ? 'Visite' : 'Contrôle'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-2 font-medium">
+                              {formatCurrency(payment.montant)}
+                            </td>
+                            <td className="px-4 py-2">
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                payment.assure ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                              }`}>
+                                {payment.assure ? 'Oui' : 'Non'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-gray-500">
+                    Aucun paiement pour cette date
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Monthly Stats Results */}
+            {monthlyStats && (
+              <div className="border-t pt-4 mt-4">
+                <h4 className="font-semibold text-gray-900 mb-3">
+                  Statistiques de {monthlyStats.month}/{monthlyStats.year}
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  <div className="bg-green-50 p-3 rounded-lg text-center">
+                    <div className="text-sm text-green-600 font-medium">Recette du mois</div>
+                    <div className="text-lg font-bold text-green-700">
+                      {formatCurrency(monthlyStats.recette_mois)}
+                    </div>
+                  </div>
+                  <div className="bg-blue-50 p-3 rounded-lg text-center">
+                    <div className="text-sm text-blue-600 font-medium">Visites</div>
+                    <div className="text-lg font-bold text-blue-700">{monthlyStats.nb_visites}</div>
+                  </div>
+                  <div className="bg-purple-50 p-3 rounded-lg text-center">
+                    <div className="text-sm text-purple-600 font-medium">Contrôles</div>
+                    <div className="text-lg font-bold text-purple-700">{monthlyStats.nb_controles}</div>
+                  </div>
+                  <div className="bg-indigo-50 p-3 rounded-lg text-center">
+                    <div className="text-sm text-indigo-600 font-medium">Assurés</div>
+                    <div className="text-lg font-bold text-indigo-700">{monthlyStats.nb_assures}</div>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-lg text-center">
+                    <div className="text-sm text-gray-600 font-medium">Total RDV</div>
+                    <div className="text-lg font-bold text-gray-700">{monthlyStats.nb_total_rdv}</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Yearly Stats Results */}
+            {yearlyStats && (
+              <div className="border-t pt-4 mt-4">
+                <h4 className="font-semibold text-gray-900 mb-3">
+                  Statistiques de {yearlyStats.year}
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  <div className="bg-green-50 p-3 rounded-lg text-center">
+                    <div className="text-sm text-green-600 font-medium">Recette de l'année</div>
+                    <div className="text-lg font-bold text-green-700">
+                      {formatCurrency(yearlyStats.recette_annee)}
+                    </div>
+                  </div>
+                  <div className="bg-blue-50 p-3 rounded-lg text-center">
+                    <div className="text-sm text-blue-600 font-medium">Visites</div>
+                    <div className="text-lg font-bold text-blue-700">{yearlyStats.nb_visites}</div>
+                  </div>
+                  <div className="bg-purple-50 p-3 rounded-lg text-center">
+                    <div className="text-sm text-purple-600 font-medium">Contrôles</div>
+                    <div className="text-lg font-bold text-purple-700">{yearlyStats.nb_controles}</div>
+                  </div>
+                  <div className="bg-indigo-50 p-3 rounded-lg text-center">
+                    <div className="text-sm text-indigo-600 font-medium">Assurés</div>
+                    <div className="text-lg font-bold text-indigo-700">{yearlyStats.nb_assures}</div>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-lg text-center">
+                    <div className="text-sm text-gray-600 font-medium">Total RDV</div>
+                    <div className="text-lg font-bold text-gray-700">{yearlyStats.nb_total_rdv}</div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Patient-specific Payment Search */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Recherche par patient</h3>
+            
+            <div className="flex space-x-4 mb-4">
+              <select
+                value={selectedPatient}
+                onChange={(e) => setSelectedPatient(e.target.value)}
+                className="input-field flex-1"
+              >
+                <option value="">Sélectionner un patient...</option>
+                {patients.map((patient) => (
+                  <option key={patient.id} value={patient.id}>
+                    {patient.prenom} {patient.nom}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={() => selectedPatient && fetchPatientPayments(selectedPatient)}
+                disabled={!selectedPatient}
+                className="btn-primary px-6"
+              >
+                Rechercher
+              </button>
+            </div>
+
+            {/* Patient Payments Results */}
+            {patientPayments && (
+              <div className="border-t pt-4">
+                <div className="mb-4">
+                  <h4 className="font-semibold text-gray-900">
+                    Paiements de {patientPayments.patient.prenom} {patientPayments.patient.nom}
+                  </h4>
+                  <div className="flex space-x-6 mt-2 text-sm text-gray-600">
+                    <span>Total payé: <strong className="text-green-600">{formatCurrency(patientPayments.total_paye)}</strong></span>
+                    <span>Nombre de paiements: <strong>{patientPayments.nb_payments}</strong></span>
+                  </div>
+                </div>
+
+                {patientPayments.payments.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Montant</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Assuré</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {patientPayments.payments.map((payment, index) => (
+                          <tr key={index} className="hover:bg-gray-50">
+                            <td className="px-4 py-2">
+                              {new Date(payment.date).toLocaleDateString('fr-FR')}
+                            </td>
+                            <td className="px-4 py-2">
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                payment.type_visite === 'visite' ? 'bg-green-100 text-green-800' : 'bg-purple-100 text-purple-800'
+                              }`}>
+                                {payment.type_visite === 'visite' ? 'Visite' : 'Contrôle'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-2 font-medium">
+                              {formatCurrency(payment.montant)}
+                            </td>
+                            <td className="px-4 py-2">
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                payment.assure ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                              }`}>
+                                {payment.assure ? 'Oui' : 'Non'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-gray-500">
+                    Aucun paiement trouvé pour ce patient
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Dashboard Tab */}
       {activeTab === 'dashboard' && (
