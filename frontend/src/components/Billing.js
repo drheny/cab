@@ -209,7 +209,7 @@ const Billing = ({ user }) => {
 
   const fetchMonthlyStats = async (year, month) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/facturation/monthly-stats`, {
+      const response = await axios.get(`${API_BASE_URL}/api/facturation/monthly-stats-with-evolution`, {
         params: { year, month }
       });
       setMonthlyStats(response.data);
