@@ -379,7 +379,7 @@ const Consultation = ({ user }) => {
       setSearchTerm(`${currentPatient.prenom} ${currentPatient.nom}`);
       
       // Créer un rendez-vous pour cette consultation
-      let appointmentId = `consultation_${Date.now()}`;
+      let appointmentId = null;
       
       try {
         const appointmentData = {
@@ -393,46 +393,33 @@ const Consultation = ({ user }) => {
         };
         
         const appointmentResponse = await axios.post(`${API_BASE_URL}/api/appointments`, appointmentData);
-        appointmentId = appointmentResponse.data.id;
+        appointmentId = appointmentResponse.data.id || appointmentResponse.data.appointment_id;
+        console.log('✅ Rendez-vous créé avec succès:', appointmentId);
         
         // Créer le paiement directement via l'API payments si c'est une visite
         if (quickConsultationModal.data.visitType === 'visite' && quickConsultationModal.data.paymentAmount) {
           try {
             const paymentData = {
-              appointment_id: appointmentId,
-              patient_id: currentPatient.id,
+              paye: true,
               montant: parseFloat(quickConsultationModal.data.paymentAmount),
-              date: quickConsultationModal.data.date,
+              type_paiement: 'espece',
               assure: quickConsultationModal.data.isInsured,
-              statut: 'paye',
-              type_paiement: 'especes' // Par défaut
+              notes: 'Paiement consultation modal'
             };
             
-            // Utiliser l'endpoint payments directement
-            await axios.post(`${API_BASE_URL}/api/payments`, paymentData);
-            console.log('✅ Paiement créé avec succès');
+            // Utiliser l'endpoint PUT rdv/{id}/paiement
+            await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/paiement`, paymentData);
+            console.log('✅ Paiement créé avec succès via RDV');
           } catch (paymentError) {
-            console.warn('⚠️ Échec création paiement direct, tentative via RDV:', paymentError);
-            
-            // Fallback: essayer de mettre à jour le RDV avec le paiement
-            try {
-              const rdvPaymentData = {
-                montant: parseFloat(quickConsultationModal.data.paymentAmount),
-                assure: quickConsultationModal.data.isInsured,
-                type_paiement: 'especes'
-              };
-              
-              await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/paiement`, rdvPaymentData);
-              console.log('✅ Paiement créé via RDV avec succès');
-            } catch (rdvPaymentError) {
-              console.error('❌ Échec création paiement:', rdvPaymentError);
-              toast.warning('Consultation créée mais paiement non enregistré. Veuillez l\'ajouter manuellement.');
-            }
+            console.error('❌ Échec création paiement:', paymentError);
+            toast.error('Consultation créée mais paiement non enregistré. Veuillez l\'ajouter manuellement.');
           }
         }
       } catch (error) {
-        console.warn('Could not create appointment:', error);
-        // Continue anyway with manual appointment ID
+        console.error('❌ Erreur création rendez-vous:', error);
+        // Générer un ID de fallback si nécessaire
+        appointmentId = `consultation_${Date.now()}`;
+        console.log('🔄 Utilisation ID de fallback:', appointmentId);
       }
       
       // Configurer les données de consultation
