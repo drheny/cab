@@ -1,25 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   DollarSign, 
-  Search, 
   Download, 
   TrendingUp,
   Users,
-  FileText,
-  CreditCard,
-  Edit,
-  Trash2,
-  Eye,
   RefreshCw,
-  PieChart,
-  CheckCircle,
-  XCircle,
   X,
-  Activity,
   Calendar,
   BarChart3,
   LineChart,
-  Star,
   Target,
   Award
 } from 'lucide-react';
@@ -27,114 +16,45 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 
 const Billing = ({ user }) => {
+  // API Base URL
+  const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL;
+
   // States for data
-  const [payments, setPayments] = useState([]);
-  const [stats, setStats] = useState({});
-  const [advancedStats, setAdvancedStats] = useState({});
   const [enhancedStats, setEnhancedStats] = useState({});
-  const [cashMovements, setCashMovements] = useState([]);
-  const [cashBalance, setCashBalance] = useState(0);
   const [topPatients, setTopPatients] = useState([]);
   const [evolutionData, setEvolutionData] = useState([]);
   const [predictiveAnalysis, setPredictiveAnalysis] = useState(null);
   
   // States for UI
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('dashboard'); // dashboard, payments, caisse, stats
-  const [dateFilter, setDateFilter] = useState({
-    debut: new Date().toISOString().split('T')[0].substring(0, 7) + '-01', // First day of current month
-    fin: new Date().toISOString().split('T')[0] // Today
-  });
   
   // New states for enhanced features
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [dailyPayments, setDailyPayments] = useState(null);
   const [monthlyStats, setMonthlyStats] = useState(null);
   const [yearlyStats, setYearlyStats] = useState(null);
-  const [selectedPatient, setSelectedPatient] = useState('');
-  const [patientPayments, setPatientPayments] = useState(null);
-  const [patients, setPatients] = useState([]);
   
-  // States for advanced search
-  const [searchFilters, setSearchFilters] = useState({
-    patientName: '',
-    dateDebut: '',
-    dateFin: '',
-    statutPaiement: '',
-    assure: ''
-  });
-  
-  // Pagination states
-  const [pagination, setPagination] = useState({
-    currentPage: 1,
-    totalPages: 1,
-    totalCount: 0,
-    limit: 20
-  });
-  
-  const [searchResults, setSearchResults] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
-  
-  // Advanced stats filters
-  const [statsPeriod, setStatsPeriod] = useState('month'); // day, week, month, year
-  
-  // Modal states
-  const [selectedPayment, setSelectedPayment] = useState(null);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [editingPayment, setEditingPayment] = useState(null);
-  const [showEditModal, setShowEditModal] = useState(false);
-  
-  // Cash movement states
-  const [showCashForm, setShowCashForm] = useState(false);
-  const [cashForm, setCashForm] = useState({
-    montant: '',
-    type_mouvement: 'ajout',
-    motif: '',
-    date: new Date().toISOString().split('T')[0]
-  });
-  
-  // Export modal states
+  // Export states
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportOptions, setExportOptions] = useState({
     date: true,
     patient: true,
     montant: true,
-    methode: true,
     assurance: true,
-    notes: false,
-    periode: 'current', // current, custom
     indicateurs: {
       ca: true,
-      visites: true,
-      controles: true,
-      assures: true,
-      paiements: true
+      visites: true
     }
   });
 
-  const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
-
   useEffect(() => {
     fetchInitialData();
-    fetchPatients();
   }, []);
-
-  useEffect(() => {
-    if (dateFilter.debut && dateFilter.fin) {
-      fetchStats();
-      fetchAdvancedStats();
-      fetchCashMovements();
-    }
-  }, [dateFilter, statsPeriod]);
 
   const fetchInitialData = async () => {
     setLoading(true);
     try {
       await Promise.all([
-        fetchPayments(),
-        fetchStats(),
-        fetchAdvancedStats(),
-        fetchCashMovements(),
         fetchEnhancedStats(),
         fetchTopPatients(),
         fetchEvolutionData(),
@@ -186,15 +106,6 @@ const Billing = ({ user }) => {
     }
   };
 
-  const fetchPatients = async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/patients`);
-      setPatients(response.data?.patients || []);
-    } catch (error) {
-      console.error('Error fetching patients:', error);
-    }
-  };
-
   const fetchDailyPayments = async (date) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/api/facturation/daily-payments`, {
@@ -231,73 +142,14 @@ const Billing = ({ user }) => {
     }
   };
 
-  const fetchPatientPayments = async (patientId) => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/facturation/patient-payments`, {
-        params: { patient_id: patientId }
-      });
-      setPatientPayments(response.data);
-    } catch (error) {
-      console.error('Error fetching patient payments:', error);
-      toast.error('Erreur lors du chargement des paiements du patient');
-    }
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('fr-TN', {
+      style: 'currency',
+      currency: 'TND',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    }).format(amount);
   };
-
-  const fetchPayments = async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/payments`);
-      const paymentsData = response.data || [];
-      
-      setPayments(paymentsData);
-    } catch (error) {
-      console.error('Error fetching payments:', error);
-      toast.error('Erreur lors du chargement des paiements');
-    }
-  };
-
-  const fetchStats = async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/payments/stats`, {
-        params: {
-          date_debut: dateFilter.debut,
-          date_fin: dateFilter.fin
-        }
-      });
-      setStats(response.data || {});
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-    }
-  };
-
-  const fetchAdvancedStats = async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/payments/advanced-stats`, {
-        params: {
-          period: statsPeriod,
-          date_debut: dateFilter.debut,
-          date_fin: dateFilter.fin
-        }
-      });
-      setAdvancedStats(response.data || {});
-    } catch (error) {
-      console.error('Error fetching advanced stats:', error);
-    }
-  };
-
-  // Filtered payments based on search and filters
-  const filteredPayments = useMemo(() => {
-    let filtered = [...payments];
-
-    // Date filter
-    filtered = filtered.filter(payment => 
-      payment.date >= dateFilter.debut && payment.date <= dateFilter.fin
-    );
-
-    // Sort by date (most recent first)
-    filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-    return filtered;
-  }, [payments, dateFilter]);
 
   const exportToExcel = () => {
     setShowExportModal(true);
@@ -310,143 +162,50 @@ const Billing = ({ user }) => {
       if (exportOptions.date) headers.push('Date');
       if (exportOptions.patient) headers.push('Patient');
       if (exportOptions.montant) headers.push('Montant (TND)');
-      if (exportOptions.methode) headers.push('Méthode');
       if (exportOptions.assurance) headers.push('Assuré');
-      if (exportOptions.notes) headers.push('Notes');
       
-      // Prepare data rows
-      const csvData = filteredPayments.map(payment => {
-        const row = [];
-        if (exportOptions.date) row.push(new Date(payment.date).toLocaleDateString('fr-FR'));
-        if (exportOptions.patient) row.push(`${payment.patient?.prenom} ${payment.patient?.nom}`);
-        if (exportOptions.montant) row.push(`${payment.montant}`);
-        if (exportOptions.methode) row.push(payment.type_paiement);
-        if (exportOptions.assurance) row.push(payment.assure ? 'Oui' : 'Non');
-        if (exportOptions.notes) row.push(payment.notes || '');
-        return row;
-      });
-
-      // Add enhanced statistics section if requested
-      if (Object.values(exportOptions.indicateurs).some(v => v)) {
-        csvData.push([]); // Empty row
-        csvData.push(['=== STATISTIQUES ENHANCÉES ===']);
+      // Create simple CSV data
+      const csvData = [
+        ['=== STATISTIQUES ENHANCÉES ==='],
+        ['Recette du jour:', `${formatCurrency(enhancedStats.recette_jour || 0)}`],
+        ['Recette du mois:', `${formatCurrency(enhancedStats.recette_mois || 0)}`],
+        ['Recette de l\'année:', `${formatCurrency(enhancedStats.recette_annee || 0)}`],
+        ['Nouveaux patients cette année:', enhancedStats.nouveaux_patients_annee || 0],
+        []
+      ];
+      
+      // Add top patients section if available
+      if (topPatients.length > 0) {
+        csvData.push(['=== TOP 10 PATIENTS LES PLUS RENTABLES ===']);
+        csvData.push(['Rang', 'Patient', 'Total Payé (TND)', 'Nb Paiements', 'Moyenne']);
+        topPatients.forEach((patient, index) => {
+          csvData.push([
+            index + 1,
+            `${patient.patient.prenom} ${patient.patient.nom}`,
+            patient.total_montant,
+            patient.nb_payments,
+            patient.moyenne_paiement.toFixed(2)
+          ]);
+        });
         csvData.push([]);
-        
-        // Enhanced stats
-        if (enhancedStats) {
-          csvData.push(['Recette du jour:', `${formatCurrency(enhancedStats.recette_jour || 0)}`]);
-          csvData.push(['Recette du mois:', `${formatCurrency(enhancedStats.recette_mois || 0)}`]);
-          csvData.push(['Recette de l\'année:', `${formatCurrency(enhancedStats.recette_annee || 0)}`]);
-          csvData.push(['Nouveaux patients cette année:', enhancedStats.nouveaux_patients_annee || 0]);
-          csvData.push([]);
-        }
-        
-        // Legacy stats for compatibility
-        if (exportOptions.indicateurs.ca) {
-          csvData.push(['Chiffre d\'affaires total:', `${formatCurrency(stats.total_montant || 0)}`]);
-        }
-        if (exportOptions.indicateurs.paiements) {
-          csvData.push(['Nombre de paiements:', stats.nb_paiements || 0]);
-        }
-        if (exportOptions.indicateurs.visites) {
-          csvData.push(['Nombre de visites:', stats.consultations?.nb_visites || 0]);
-        }
-        if (exportOptions.indicateurs.controles) {
-          csvData.push(['Nombre de contrôles:', stats.consultations?.nb_controles || 0]);
-        }
-        if (exportOptions.indicateurs.assures) {
-          csvData.push(['Patients assurés:', stats.consultations?.nb_assures || 0]);
-        }
-        
-        // Add top patients section
-        if (topPatients.length > 0) {
-          csvData.push([]);
-          csvData.push(['=== TOP 10 PATIENTS LES PLUS RENTABLES ===']);
-          csvData.push(['Rang', 'Patient', 'Total Payé (TND)', 'Nb Paiements', 'Moyenne']);
-          topPatients.forEach((patient, index) => {
-            csvData.push([
-              index + 1,
-              `${patient.patient.prenom} ${patient.patient.nom}`,
-              patient.total_montant,
-              patient.nb_payments,
-              patient.moyenne_paiement.toFixed(2)
-            ]);
-          });
-        }
-        
-        // Add evolution data section
-        if (evolutionData.length > 0) {
-          csvData.push([]);
-          csvData.push(['=== ÉVOLUTION MENSUELLE ===']);
-          csvData.push(['Mois', 'Recette (TND)', 'Nb Consultations', 'Nouveaux Patients']);
-          evolutionData.forEach(data => {
-            csvData.push([
-              data.mois,
-              data.recette,
-              data.nb_consultations,
-              data.nouveaux_patients || 0
-            ]);
-          });
-        }
-        
-        // Add predictive analysis section
-        if (predictiveAnalysis) {
-          csvData.push([]);
-          csvData.push(['=== ANALYSE PRÉDICTIVE ===']);
-          csvData.push(['Type d\'analyse:', predictiveAnalysis.generation_method === 'ai' ? 'Intelligence Artificielle' : 'Statistique']);
-          csvData.push([]);
-          csvData.push(['Analyse:', predictiveAnalysis.ai_analysis]);
-          csvData.push([]);
-          
-          if (predictiveAnalysis.peak_months) {
-            csvData.push(['PÉRIODES DE PIC (TOP 3):']);
-            csvData.push(['Rang', 'Mois', 'Recette Moyenne (TND)', 'Consultations Moyennes']);
-            predictiveAnalysis.peak_months.forEach((month, index) => {
-              csvData.push([
-                index + 1,
-                month.month,
-                month.avg_recette.toFixed(2),
-                Math.round(month.avg_consultations)
-              ]);
-            });
-            csvData.push([]);
-          }
-          
-          if (predictiveAnalysis.trough_months) {
-            csvData.push(['PÉRIODES DE CREUX (BOTTOM 3):']);
-            csvData.push(['Rang', 'Mois', 'Recette Moyenne (TND)', 'Consultations Moyennes']);
-            predictiveAnalysis.trough_months.forEach((month, index) => {
-              csvData.push([
-                index + 1,
-                month.month,
-                month.avg_recette.toFixed(2),
-                Math.round(month.avg_consultations)
-              ]);
-            });
-          }
-        }
-        
-        // Add period breakdown if advanced stats are available
-        if (advancedStats.breakdown && advancedStats.breakdown.length > 0) {
-          csvData.push([]);
-          csvData.push([`=== RÉPARTITION PAR ${statsPeriod.toUpperCase()} ===`]);
-          csvData.push(['Période', 'CA', 'Paiements', 'Visites', 'Contrôles', 'Assurés']);
-          
-          advancedStats.breakdown.forEach(period => {
-            csvData.push([
-              period.periode || period.date,
-              period.ca,
-              period.nb_paiements,
-              period.nb_visites,
-              period.nb_controles,
-              period.nb_assures
-            ]);
-          });
-        }
+      }
+      
+      // Add evolution data section if available
+      if (evolutionData.length > 0) {
+        csvData.push(['=== ÉVOLUTION MENSUELLE ===']);
+        csvData.push(['Mois', 'Recette (TND)', 'Nb Consultations', 'Nouveaux Patients']);
+        evolutionData.forEach(data => {
+          csvData.push([
+            data.mois,
+            data.recette,
+            data.nb_consultations,
+            data.nouveaux_patients || 0
+          ]);
+        });
       }
 
       // Create CSV content
-      const csvContent = [headers, ...csvData]
+      const csvContent = csvData
         .map(row => row.map(field => `"${field}"`).join(','))
         .join('\n');
 
@@ -457,7 +216,7 @@ const Billing = ({ user }) => {
       link.setAttribute('href', url);
       
       const today = new Date().toISOString().split('T')[0];
-      const filename = `facturation_enhanced_${dateFilter.debut}_${dateFilter.fin}_${today}.csv`;
+      const filename = `facturation_enhanced_${today}.csv`;
       link.setAttribute('download', filename);
       link.style.visibility = 'hidden';
       document.body.appendChild(link);
@@ -472,214 +231,6 @@ const Billing = ({ user }) => {
       toast.error('Erreur lors de l\'export');
     }
   };
-
-  const handleEditPayment = async (payment) => {
-    setEditingPayment(payment);
-    setShowEditModal(true);
-  };
-
-  const handleViewPayment = (payment) => {
-    setSelectedPayment(payment);
-    setShowPaymentModal(true);
-  };
-
-  const handleAdvancedSearch = async (page = 1) => {
-    setIsSearching(true);
-    try {
-      const params = new URLSearchParams();
-      if (searchFilters.patientName) params.append('patient_name', searchFilters.patientName);
-      if (searchFilters.dateDebut) params.append('date_debut', searchFilters.dateDebut);
-      if (searchFilters.dateFin) params.append('date_fin', searchFilters.dateFin);
-      if (searchFilters.statutPaiement) params.append('statut_paiement', searchFilters.statutPaiement);
-      if (searchFilters.assure !== '') params.append('assure', searchFilters.assure);
-      params.append('page', page.toString());
-      params.append('limit', pagination.limit.toString());
-      
-      const response = await axios.get(`${API_BASE_URL}/api/payments/search?${params.toString()}`);
-      const data = response.data;
-      
-      setSearchResults(data.payments || []);
-      setPagination({
-        currentPage: data.pagination.current_page,
-        totalPages: data.pagination.total_pages,
-        totalCount: data.pagination.total_count,
-        limit: data.pagination.limit
-      });
-      
-    } catch (error) {
-      console.error('Error in advanced search:', error);
-      toast.error('Erreur lors de la recherche');
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  const clearAdvancedSearch = () => {
-    setSearchFilters({
-      patientName: '',
-      dateDebut: '',
-      dateFin: '',
-      statutPaiement: '',
-      assure: ''
-    });
-    setSearchResults([]);
-    setPagination({
-      currentPage: 1,
-      totalPages: 1,
-      totalCount: 0,
-      limit: 20
-    });
-  };
-
-  const handleDeletePayment = async (payment) => {
-    if (!window.confirm(`Êtes-vous sûr de vouloir supprimer ce paiement de ${payment.patient?.prenom} ${payment.patient?.nom} ?`)) {
-      return;
-    }
-    
-    try {
-      await axios.delete(`${API_BASE_URL}/api/payments/${payment.id}`);
-      
-      toast.success('Paiement supprimé avec succès');
-      
-      // Refresh data
-      await Promise.all([
-        fetchPayments(),
-        fetchStats(),
-        fetchAdvancedStats()
-      ]);
-      
-      // Refresh search results if searching
-      if (searchResults.length > 0) {
-        handleAdvancedSearch(pagination.currentPage);
-      }
-      
-    } catch (error) {
-      console.error('Error deleting payment:', error);
-      toast.error('Erreur lors de la suppression du paiement');
-    }
-  };
-
-  const handleUpdatePayment = async (paymentId, updatedData) => {
-    try {
-      const paymentData = {
-        paye: updatedData.paye,
-        montant: updatedData.montant,
-        type_paiement: 'espece', // Toujours espèces
-        assure: updatedData.assure,
-        notes: updatedData.notes || ''
-      };
-
-      await axios.put(`${API_BASE_URL}/api/payments/${paymentId}`, paymentData);
-      
-      toast.success('Paiement mis à jour avec succès');
-      
-      // Refresh data
-      await Promise.all([
-        fetchPayments(),
-        fetchStats()
-      ]);
-      
-      setShowEditModal(false);
-      setEditingPayment(null);
-      
-    } catch (error) {
-      console.error('Error updating payment:', error);
-      toast.error('Erreur lors de la mise à jour du paiement');
-    }
-  };
-
-  // Fonctions pour la gestion de caisse
-  const fetchCashMovements = async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/cash-movements`, {
-        params: {
-          date_debut: dateFilter.debut,
-          date_fin: dateFilter.fin
-        }
-      });
-      setCashMovements(response.data.movements || []);
-      setCashBalance(response.data.solde_jour || 0);
-    } catch (error) {
-      console.error('Error fetching cash movements:', error);
-      toast.error('Erreur lors du chargement des mouvements de caisse');
-    }
-  };
-
-  const handleCreateCashMovement = async () => {
-    try {
-      if (!cashForm.montant || !cashForm.motif) {
-        toast.error('Veuillez remplir tous les champs obligatoires');
-        return;
-      }
-
-      await axios.post(`${API_BASE_URL}/api/cash-movements`, {
-        montant: parseFloat(cashForm.montant),
-        type_mouvement: cashForm.type_mouvement,
-        motif: cashForm.motif,
-        date: cashForm.date
-      });
-
-      toast.success('Mouvement de caisse ajouté avec succès');
-      
-      // Reset form
-      setCashForm({
-        montant: '',
-        type_mouvement: 'ajout',
-        motif: '',
-        date: new Date().toISOString().split('T')[0]
-      });
-      
-      // Refresh data
-      await fetchCashMovements();
-      setShowCashForm(false);
-      
-    } catch (error) {
-      console.error('Error creating cash movement:', error);
-      toast.error('Erreur lors de la création du mouvement de caisse');
-    }
-  };
-
-  const handleDeleteCashMovement = async (movementId) => {
-    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce mouvement de caisse ?')) {
-      return;
-    }
-    
-    try {
-      await axios.delete(`${API_BASE_URL}/api/cash-movements/${movementId}`);
-      toast.success('Mouvement de caisse supprimé avec succès');
-      await fetchCashMovements();
-    } catch (error) {
-      console.error('Error deleting cash movement:', error);
-      toast.error('Erreur lors de la suppression du mouvement de caisse');
-    }
-  };
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('fr-TN', {
-      style: 'decimal',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(amount || 0) + ' TND';
-  };
-
-  const getPaymentMethodIcon = (method) => {
-    switch (method) {
-      case 'carte': return <CreditCard className="w-4 h-4" />;
-      case 'espece': return <DollarSign className="w-4 h-4" />;
-      case 'cheque': return <FileText className="w-4 h-4" />;
-      case 'virement': return <TrendingUp className="w-4 h-4" />;
-      case 'gratuit': return <CheckCircle className="w-4 h-4" />;
-      default: return <DollarSign className="w-4 h-4" />;
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -775,258 +326,572 @@ const Billing = ({ user }) => {
         {/* Optimized Payment History */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-6">Historique de paiements</h3>
+          
+          {/* Simplified Search Options */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            {/* Daily Search */}
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <h4 className="font-medium text-green-900 mb-3 flex items-center">
+                <Calendar className="w-4 h-4 mr-2" />
+                Recherche par jour
+              </h4>
+              <div className="space-y-3">
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="input-field w-full"
+                />
+                <button
+                  onClick={() => fetchDailyPayments(selectedDate)}
+                  className="btn-primary w-full"
+                >
+                  Voir
+                </button>
+              </div>
+            </div>
             
-            {/* Simplified Search Options */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              {/* Daily Search */}
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <h4 className="font-medium text-green-900 mb-3 flex items-center">
-                  <Calendar className="w-4 h-4 mr-2" />
-                  Recherche par jour
-                </h4>
-                <div className="space-y-3">
-                  <input
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    className="input-field w-full"
-                  />
-                  <button
-                    onClick={() => fetchDailyPayments(selectedDate)}
-                    className="btn-primary w-full"
-                  >
-                    Voir
-                  </button>
+            {/* Monthly Search */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h4 className="font-medium text-blue-900 mb-3 flex items-center">
+                <Calendar className="w-4 h-4 mr-2" />
+                Recherche par mois
+              </h4>
+              <div className="space-y-3">
+                <input
+                  type="month"
+                  onChange={(e) => {
+                    const [year, month] = e.target.value.split('-');
+                    setMonthlyStats(null);
+                    fetchMonthlyStats(parseInt(year), parseInt(month));
+                  }}
+                  className="input-field w-full"
+                />
+                <div className="text-xs text-blue-600">
+                  Stats avec % évolution
                 </div>
               </div>
+            </div>
+            
+            {/* Yearly Search */}
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <h4 className="font-medium text-purple-900 mb-3 flex items-center">
+                <Calendar className="w-4 h-4 mr-2" />
+                Recherche par année
+              </h4>
+              <div className="space-y-3">
+                <input
+                  type="number"
+                  min="2020"
+                  max="2030"
+                  defaultValue={new Date().getFullYear()}
+                  onChange={(e) => {
+                    setYearlyStats(null);
+                    fetchYearlyStats(parseInt(e.target.value));
+                  }}
+                  className="input-field w-full"
+                />
+                <div className="text-xs text-purple-600">
+                  Stats annuelles complètes
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Daily Results */}
+          {dailyPayments && (
+            <div className="border-t pt-6">
+              <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
+                <Calendar className="w-5 h-5 text-green-500 mr-2" />
+                Résultats du {new Date(dailyPayments.date).toLocaleDateString('fr-FR')}
+              </h4>
               
-              {/* Monthly Search */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="font-medium text-blue-900 mb-3 flex items-center">
-                  <Calendar className="w-4 h-4 mr-2" />
-                  Recherche par mois
-                </h4>
-                <div className="space-y-3">
-                  <input
-                    type="month"
-                    onChange={(e) => {
-                      const [year, month] = e.target.value.split('-');
-                      setMonthlyStats(null); // Reset previous data
-                      fetchMonthlyStats(parseInt(year), parseInt(month));
-                    }}
-                    className="input-field w-full"
-                  />
-                  <div className="text-xs text-blue-600">
-                    Stats avec % évolution
+              {/* Daily Stats Summary */}
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+                <div className="bg-green-50 p-4 rounded-lg text-center">
+                  <div className="text-sm text-green-600 font-medium">Recette totale</div>
+                  <div className="text-xl font-bold text-green-700">
+                    {formatCurrency(dailyPayments.totals.recette_totale)}
+                  </div>
+                </div>
+                <div className="bg-blue-50 p-4 rounded-lg text-center">
+                  <div className="text-sm text-blue-600 font-medium">Visites</div>
+                  <div className="text-xl font-bold text-blue-700">
+                    {dailyPayments.totals.nb_visites}
+                  </div>
+                </div>
+                <div className="bg-purple-50 p-4 rounded-lg text-center">
+                  <div className="text-sm text-purple-600 font-medium">Contrôles</div>
+                  <div className="text-xl font-bold text-purple-700">
+                    {dailyPayments.totals.nb_controles}
+                  </div>
+                </div>
+                <div className="bg-indigo-50 p-4 rounded-lg text-center">
+                  <div className="text-sm text-indigo-600 font-medium">Assurés</div>
+                  <div className="text-xl font-bold text-indigo-700">
+                    {dailyPayments.totals.nb_assures}
+                  </div>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg text-center">
+                  <div className="text-sm text-gray-600 font-medium">Total</div>
+                  <div className="text-xl font-bold text-gray-700">
+                    {dailyPayments.totals.nb_total}
                   </div>
                 </div>
               </div>
-              
-              {/* Yearly Search */}
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                <h4 className="font-medium text-purple-900 mb-3 flex items-center">
-                  <Calendar className="w-4 h-4 mr-2" />
-                  Recherche par année
-                </h4>
-                <div className="space-y-3">
-                  <input
-                    type="number"
-                    min="2020"
-                    max="2030"
-                    defaultValue={new Date().getFullYear()}
-                    onChange={(e) => {
-                      setYearlyStats(null); // Reset previous data
-                      fetchYearlyStats(parseInt(e.target.value));
-                    }}
-                    className="input-field w-full"
-                  />
-                  <div className="text-xs text-purple-600">
-                    Stats annuelles complètes
+
+              {/* Daily Patients List */}
+              {dailyPayments.payments.length > 0 ? (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h5 className="font-medium text-gray-900 mb-3">
+                    Liste des patients ({dailyPayments.payments.length})
+                  </h5>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-white">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Patient</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type visite</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Montant</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Statut paiement</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Assuré</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200 bg-white">
+                        {dailyPayments.payments.map((payment, index) => (
+                          <tr key={index} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 font-medium text-gray-900">
+                              {payment.patient?.prenom} {payment.patient?.nom}
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                payment.type_visite === 'visite' ? 'bg-green-100 text-green-800' : 'bg-purple-100 text-purple-800'
+                              }`}>
+                                {payment.type_visite === 'visite' ? 'Visite' : 'Contrôle'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 font-semibold text-green-600">
+                              {formatCurrency(payment.montant)}
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Payé
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                payment.assure ? 'bg-indigo-100 text-indigo-800' : 'bg-gray-100 text-gray-800'
+                              }`}>
+                                {payment.assure ? 'Oui' : 'Non'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
+                  <Calendar className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                  <p>Aucun paiement pour cette date</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Monthly Results */}
+          {monthlyStats && (
+            <div className="border-t pt-6">
+              <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
+                <Calendar className="w-5 h-5 text-blue-500 mr-2" />
+                Statistiques de {monthlyStats.month}/{monthlyStats.year}
+              </h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="bg-blue-50 p-6 rounded-lg text-center">
+                  <div className="text-sm text-blue-600 font-medium mb-2">Recette du mois</div>
+                  <div className="text-2xl font-bold text-blue-700">
+                    {formatCurrency(monthlyStats.recette_mois)}
+                  </div>
+                  {monthlyStats.evolution && (
+                    <div className="text-xs mt-2 flex items-center justify-center">
+                      {monthlyStats.evolution.evolution_pourcentage >= 0 ? (
+                        <span className="text-green-600 flex items-center">
+                          <TrendingUp className="w-3 h-3 mr-1" />
+                          +{monthlyStats.evolution.evolution_pourcentage}%
+                        </span>
+                      ) : (
+                        <span className="text-red-600 flex items-center">
+                          <TrendingUp className="w-3 h-3 mr-1 rotate-180" />
+                          {monthlyStats.evolution.evolution_pourcentage}%
+                        </span>
+                      )}
+                      <span className="text-gray-500 ml-1">vs {monthlyStats.evolution.mois_precedent}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="bg-green-50 p-6 rounded-lg text-center">
+                  <div className="text-sm text-green-600 font-medium mb-2">Visites</div>
+                  <div className="text-2xl font-bold text-green-700">{monthlyStats.nb_visites}</div>
+                </div>
+                <div className="bg-purple-50 p-6 rounded-lg text-center">
+                  <div className="text-sm text-purple-600 font-medium mb-2">Contrôles</div>
+                  <div className="text-2xl font-bold text-purple-700">{monthlyStats.nb_controles}</div>
+                </div>
+                <div className="bg-indigo-50 p-6 rounded-lg text-center">
+                  <div className="text-sm text-indigo-600 font-medium mb-2">Assurés</div>
+                  <div className="text-2xl font-bold text-indigo-700">{monthlyStats.nb_assures}</div>
+                  <div className="text-xs text-indigo-500 mt-1">
+                    sur {monthlyStats.nb_total_rdv} RDV
                   </div>
                 </div>
               </div>
             </div>
+          )}
 
-            {/* Daily Results */}
-            {dailyPayments && (
-              <div className="border-t pt-6">
-                <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
-                  <Calendar className="w-5 h-5 text-green-500 mr-2" />
-                  Résultats du {new Date(dailyPayments.date).toLocaleDateString('fr-FR')}
-                </h4>
-                
-                {/* Daily Stats Summary */}
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-                  <div className="bg-green-50 p-4 rounded-lg text-center">
-                    <div className="text-sm text-green-600 font-medium">Recette totale</div>
-                    <div className="text-xl font-bold text-green-700">
-                      {formatCurrency(dailyPayments.totals.recette_totale)}
-                    </div>
-                  </div>
-                  <div className="bg-blue-50 p-4 rounded-lg text-center">
-                    <div className="text-sm text-blue-600 font-medium">Visites</div>
-                    <div className="text-xl font-bold text-blue-700">
-                      {dailyPayments.totals.nb_visites}
-                    </div>
-                  </div>
-                  <div className="bg-purple-50 p-4 rounded-lg text-center">
-                    <div className="text-sm text-purple-600 font-medium">Contrôles</div>
-                    <div className="text-xl font-bold text-purple-700">
-                      {dailyPayments.totals.nb_controles}
-                    </div>
-                  </div>
-                  <div className="bg-indigo-50 p-4 rounded-lg text-center">
-                    <div className="text-sm text-indigo-600 font-medium">Assurés</div>
-                    <div className="text-xl font-bold text-indigo-700">
-                      {dailyPayments.totals.nb_assures}
-                    </div>
-                  </div>
-                  <div className="bg-gray-50 p-4 rounded-lg text-center">
-                    <div className="text-sm text-gray-600 font-medium">Total</div>
-                    <div className="text-xl font-bold text-gray-700">
-                      {dailyPayments.totals.nb_total}
-                    </div>
+          {/* Yearly Results */}
+          {yearlyStats && (
+            <div className="border-t pt-6">
+              <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
+                <Calendar className="w-5 h-5 text-purple-500 mr-2" />
+                Statistiques de {yearlyStats.year}
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-purple-50 p-6 rounded-lg text-center">
+                  <div className="text-sm text-purple-600 font-medium mb-2">Recette totale</div>
+                  <div className="text-3xl font-bold text-purple-700">
+                    {formatCurrency(yearlyStats.recette_annee)}
                   </div>
                 </div>
-
-                {/* Daily Patients List */}
-                {dailyPayments.payments.length > 0 ? (
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h5 className="font-medium text-gray-900 mb-3">
-                      Liste des patients ({dailyPayments.payments.length})
-                    </h5>
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-white">
-                          <tr>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Patient</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type visite</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Montant</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Statut paiement</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Assuré</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200 bg-white">
-                          {dailyPayments.payments.map((payment, index) => (
-                            <tr key={index} className="hover:bg-gray-50">
-                              <td className="px-4 py-3 font-medium text-gray-900">
-                                {payment.patient?.prenom} {payment.patient?.nom}
-                              </td>
-                              <td className="px-4 py-3">
-                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                  payment.type_visite === 'visite' ? 'bg-green-100 text-green-800' : 'bg-purple-100 text-purple-800'
-                                }`}>
-                                  {payment.type_visite === 'visite' ? 'Visite' : 'Contrôle'}
-                                </span>
-                              </td>
-                              <td className="px-4 py-3 font-semibold text-green-600">
-                                {formatCurrency(payment.montant)}
-                              </td>
-                              <td className="px-4 py-3">
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                  Payé
-                                </span>
-                              </td>
-                              <td className="px-4 py-3">
-                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                  payment.assure ? 'bg-indigo-100 text-indigo-800' : 'bg-gray-100 text-gray-800'
-                                }`}>
-                                  {payment.assure ? 'Oui' : 'Non'}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
-                    <Calendar className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                    <p>Aucun paiement pour cette date</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Monthly Results */}
-            {monthlyStats && (
-              <div className="border-t pt-6">
-                <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
-                  <Calendar className="w-5 h-5 text-blue-500 mr-2" />
-                  Statistiques de {monthlyStats.month}/{monthlyStats.year}
-                </h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                  <div className="bg-blue-50 p-6 rounded-lg text-center">
-                    <div className="text-sm text-blue-600 font-medium mb-2">Recette du mois</div>
-                    <div className="text-2xl font-bold text-blue-700">
-                      {formatCurrency(monthlyStats.recette_mois)}
-                    </div>
-                    {monthlyStats.evolution && (
-                      <div className="text-xs mt-2 flex items-center justify-center">
-                        {monthlyStats.evolution.evolution_pourcentage >= 0 ? (
-                          <span className="text-green-600 flex items-center">
-                            <TrendingUp className="w-3 h-3 mr-1" />
-                            +{monthlyStats.evolution.evolution_pourcentage}%
-                          </span>
-                        ) : (
-                          <span className="text-red-600 flex items-center">
-                            <TrendingUp className="w-3 h-3 mr-1 rotate-180" />
-                            {monthlyStats.evolution.evolution_pourcentage}%
-                          </span>
-                        )}
-                        <span className="text-gray-500 ml-1">vs {monthlyStats.evolution.mois_precedent}</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="bg-green-50 p-6 rounded-lg text-center">
-                    <div className="text-sm text-green-600 font-medium mb-2">Visites</div>
-                    <div className="text-2xl font-bold text-green-700">{monthlyStats.nb_visites}</div>
-                  </div>
-                  <div className="bg-purple-50 p-6 rounded-lg text-center">
-                    <div className="text-sm text-purple-600 font-medium mb-2">Contrôles</div>
-                    <div className="text-2xl font-bold text-purple-700">{monthlyStats.nb_controles}</div>
-                  </div>
-                  <div className="bg-indigo-50 p-6 rounded-lg text-center">
-                    <div className="text-sm text-indigo-600 font-medium mb-2">Assurés</div>
-                    <div className="text-2xl font-bold text-indigo-700">{monthlyStats.nb_assures}</div>
-                    <div className="text-xs text-indigo-500 mt-1">
-                      sur {monthlyStats.nb_total_rdv} RDV
-                    </div>
+                <div className="bg-green-50 p-6 rounded-lg text-center">
+                  <div className="text-sm text-green-600 font-medium mb-2">Total visites</div>
+                  <div className="text-3xl font-bold text-green-700">{yearlyStats.nb_visites}</div>
+                </div>
+                <div className="bg-indigo-50 p-6 rounded-lg text-center">
+                  <div className="text-sm text-indigo-600 font-medium mb-2">Patients assurés</div>
+                  <div className="text-3xl font-bold text-indigo-700">{yearlyStats.nb_assures}</div>
+                  <div className="text-xs text-indigo-500 mt-1">
+                    sur {yearlyStats.nb_total_rdv} RDV
                   </div>
                 </div>
               </div>
-            )}
+            </div>
+          )}
+        </div>
+      </div>
 
-            {/* Yearly Results */}
-            {yearlyStats && (
-              <div className="border-t pt-6">
-                <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
-                  <Calendar className="w-5 h-5 text-purple-500 mr-2" />
-                  Statistiques de {yearlyStats.year}
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="bg-purple-50 p-6 rounded-lg text-center">
-                    <div className="text-sm text-purple-600 font-medium mb-2">Recette totale</div>
-                    <div className="text-3xl font-bold text-purple-700">
-                      {formatCurrency(yearlyStats.recette_annee)}
-                    </div>
-                  </div>
-                  <div className="bg-green-50 p-6 rounded-lg text-center">
-                    <div className="text-sm text-green-600 font-medium mb-2">Total visites</div>
-                    <div className="text-3xl font-bold text-green-700">{yearlyStats.nb_visites}</div>
-                  </div>
-                  <div className="bg-indigo-50 p-6 rounded-lg text-center">
-                    <div className="text-sm text-indigo-600 font-medium mb-2">Patients assurés</div>
-                    <div className="text-3xl font-bold text-indigo-700">{yearlyStats.nb_assures}</div>
-                    <div className="text-xs text-indigo-500 mt-1">
-                      sur {yearlyStats.nb_total_rdv} RDV
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+      {/* Advanced Statistics Section */}
+      <div className="space-y-6">
+        {/* Top 10 Profitable Patients */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+              <Award className="w-5 h-5 text-yellow-500 mr-2" />
+              Top 10 patients les plus rentables
+            </h3>
+            <button
+              onClick={fetchTopPatients}
+              className="btn-outline text-sm"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Actualiser
+            </button>
           </div>
+          
+          {topPatients.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {topPatients.map((patient, index) => (
+                <div
+                  key={patient.patient.id}
+                  className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
+                      index === 0 ? 'bg-yellow-500' : 
+                      index === 1 ? 'bg-gray-400' : 
+                      index === 2 ? 'bg-orange-500' : 'bg-blue-500'
+                    }`}>
+                      {index + 1}
+                    </div>
+                    <div>
+                      <div className="font-semibold text-gray-900">
+                        {patient.patient.prenom} {patient.patient.nom}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {patient.nb_payments} paiement{patient.nb_payments > 1 ? 's' : ''}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-bold text-green-600">
+                      {formatCurrency(patient.total_montant)}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      Moy: {formatCurrency(patient.moyenne_paiement)}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <Award className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+              <p>Aucune donnée de patients disponible</p>
+            </div>
+          )}
+        </div>
+
+        {/* Evolution Graphs */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+            <LineChart className="w-5 h-5 text-blue-500 mr-2" />
+            Évolution par mois sur l'année
+          </h3>
+          
+          {evolutionData.length > 0 ? (
+            <div className="space-y-8">
+              {/* Revenue Evolution Chart */}
+              <div>
+                <h4 className="font-medium text-gray-900 mb-4">Évolution de la recette (TND)</h4>
+                <div className="h-64 w-full">
+                  <svg viewBox="0 0 800 200" className="w-full h-full">
+                    {/* Grid lines */}
+                    <defs>
+                      <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+                        <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#e5e7eb" strokeWidth="0.5"/>
+                      </pattern>
+                    </defs>
+                    <rect width="800" height="200" fill="url(#grid)" />
+                    
+                    {/* Line chart */}
+                    <polyline
+                      fill="none"
+                      stroke="#10b981"
+                      strokeWidth="3"
+                      points={evolutionData.map((data, index) => {
+                        const x = (index * 700) / (evolutionData.length - 1) + 50;
+                        const maxRevenue = Math.max(...evolutionData.map(d => d.recette));
+                        const y = 180 - ((data.recette / maxRevenue) * 160);
+                        return `${x},${y}`;
+                      }).join(' ')}
+                    />
+                    
+                    {/* Data points */}
+                    {evolutionData.map((data, index) => {
+                      const x = (index * 700) / (evolutionData.length - 1) + 50;
+                      const maxRevenue = Math.max(...evolutionData.map(d => d.recette));
+                      const y = 180 - ((data.recette / maxRevenue) * 160);
+                      return (
+                        <g key={index}>
+                          <circle cx={x} cy={y} r="4" fill="#10b981" />
+                          <text x={x} y="195" textAnchor="middle" fontSize="12" fill="#6b7280">
+                            {data.mois}
+                          </text>
+                          <text x={x} y={y - 8} textAnchor="middle" fontSize="10" fill="#374151" fontWeight="bold">
+                            {Math.round(data.recette)}
+                          </text>
+                        </g>
+                      );
+                    })}
+                  </svg>
+                </div>
+              </div>
+
+              {/* Consultations Evolution Chart */}
+              <div>
+                <h4 className="font-medium text-gray-900 mb-4">Évolution des consultations</h4>
+                <div className="h-64 w-full">
+                  <svg viewBox="0 0 800 200" className="w-full h-full">
+                    <rect width="800" height="200" fill="url(#grid)" />
+                    
+                    {/* Area chart */}
+                    <defs>
+                      <linearGradient id="blueGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3"/>
+                        <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.1"/>
+                      </linearGradient>
+                    </defs>
+                    
+                    <polygon 
+                      fill="url(#blueGradient)"
+                      stroke="#3b82f6"
+                      strokeWidth="2"
+                      points={`50,180 ${evolutionData.map((data, index) => {
+                        const x = (index * 700) / (evolutionData.length - 1) + 50;
+                        const maxConsultations = Math.max(...evolutionData.map(d => d.nb_consultations));
+                        const y = 180 - ((data.nb_consultations / maxConsultations) * 160);
+                        return `${x},${y}`;
+                      }).join(' ')} ${(evolutionData.length - 1) * 700 / (evolutionData.length - 1) + 50},180`}
+                    />
+                    
+                    {/* Data points */}
+                    {evolutionData.map((data, index) => {
+                      const x = (index * 700) / (evolutionData.length - 1) + 50;
+                      const maxConsultations = Math.max(...evolutionData.map(d => d.nb_consultations));
+                      const y = 180 - ((data.nb_consultations / maxConsultations) * 160);
+                      return (
+                        <g key={index}>
+                          <circle cx={x} cy={y} r="3" fill="#3b82f6" />
+                          <text x={x} y="195" textAnchor="middle" fontSize="12" fill="#6b7280">
+                            {data.mois}
+                          </text>
+                          <text x={x} y={y - 8} textAnchor="middle" fontSize="10" fill="#374151" fontWeight="bold">
+                            {data.nb_consultations}
+                          </text>
+                        </g>
+                      );
+                    })}
+                  </svg>
+                </div>
+              </div>
+
+              {/* New Patients Bar Chart */}
+              <div>
+                <h4 className="font-medium text-gray-900 mb-4">Évolution des nouveaux patients</h4>
+                <div className="h-64 w-full">
+                  <svg viewBox="0 0 800 200" className="w-full h-full">
+                    <rect width="800" height="200" fill="url(#grid)" />
+                    
+                    {/* Bar chart */}
+                    {evolutionData.map((data, index) => {
+                      const barWidth = 700 / evolutionData.length * 0.8;
+                      const x = (index * 700) / evolutionData.length + 50 + (700 / evolutionData.length * 0.1);
+                      const maxPatients = Math.max(...evolutionData.map(d => d.nouveaux_patients || 0));
+                      const barHeight = maxPatients > 0 ? ((data.nouveaux_patients || 0) / maxPatients) * 160 : 0;
+                      const y = 180 - barHeight;
+                      
+                      return (
+                        <g key={index}>
+                          <rect 
+                            x={x} 
+                            y={y} 
+                            width={barWidth} 
+                            height={barHeight} 
+                            fill="#f97316"
+                            rx="2"
+                          />
+                          <text x={x + barWidth/2} y="195" textAnchor="middle" fontSize="12" fill="#6b7280">
+                            {data.mois}
+                          </text>
+                          <text x={x + barWidth/2} y={y - 5} textAnchor="middle" fontSize="10" fill="#374151" fontWeight="bold">
+                            {data.nouveaux_patients || 0}
+                          </text>
+                        </g>
+                      );
+                    })}
+                  </svg>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <BarChart3 className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+              <p>Aucune donnée d'évolution disponible</p>
+            </div>
+          )}
+        </div>
+
+        {/* Predictive Analysis */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+            <Target className="w-5 h-5 text-purple-500 mr-2" />
+            Analyse et prédiction des périodes de pics et de creux
+          </h3>
+          
+          {predictiveAnalysis ? (
+            <div className="space-y-6">
+              {/* AI Analysis */}
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                <h4 className="font-medium text-purple-900 mb-2 flex items-center">
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  Analyse {predictiveAnalysis.generation_method === 'ai' ? 'IA' : 'Statistique'}
+                </h4>
+                <p className="text-purple-800 text-sm leading-relaxed">
+                  {predictiveAnalysis.ai_analysis}
+                </p>
+              </div>
+
+              {/* Peak and Trough Periods */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Peak Months */}
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-3 flex items-center">
+                    <TrendingUp className="w-4 h-4 text-green-500 mr-2" />
+                    Périodes de pic (Top 3)
+                  </h4>
+                  <div className="space-y-2">
+                    {predictiveAnalysis.peak_months?.map((month, index) => (
+                      <div
+                        key={month.month}
+                        className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <div className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                            {index + 1}
+                          </div>
+                          <span className="font-medium text-green-900">
+                            Mois {month.month}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-green-600">
+                            {formatCurrency(month.avg_recette)}
+                          </div>
+                          <div className="text-xs text-green-600">
+                            {Math.round(month.avg_consultations)} consult./mois
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Trough Months */}
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-3 flex items-center">
+                    <TrendingUp className="w-4 h-4 text-red-500 mr-2 rotate-180" />
+                    Périodes de creux (Bottom 3)
+                  </h4>
+                  <div className="space-y-2">
+                    {predictiveAnalysis.trough_months?.map((month, index) => (
+                      <div
+                        key={month.month}
+                        className="flex items-center justify-between p-3 bg-red-50 border border-red-200 rounded-lg"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <div className="w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                            {index + 1}
+                          </div>
+                          <span className="font-medium text-red-900">
+                            Mois {month.month}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-red-600">
+                            {formatCurrency(month.avg_recette)}
+                          </div>
+                          <div className="text-xs text-red-600">
+                            {Math.round(month.avg_consultations)} consult./mois
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <Target className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+              <p>Analyse prédictive en cours de chargement...</p>
+              <button
+                onClick={fetchPredictiveAnalysis}
+                className="btn-primary mt-4"
+              >
+                Charger l'analyse
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
