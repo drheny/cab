@@ -1472,6 +1472,8 @@ const Billing = ({ user }) => {
           </div>
         </div>
       )}
+      </>
+      )}
 
       {/* Payments Tab */}
       {activeTab === 'payments' && (
