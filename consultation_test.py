@@ -11,7 +11,7 @@ load_dotenv('/app/frontend/.env')
 class ConsultationSavingTest(unittest.TestCase):
     def setUp(self):
         # Use the correct backend URL from environment
-        backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://b41bbcdf-8fee-41b8-8d35-533fd4cb83fc.preview.emergentagent.com')
+        backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://cf4f91e9-01e0-4eb2-abf0-57caf9e2fae7.preview.emergentagent.com')
         self.base_url = backend_url
         print(f"Testing consultation saving at: {self.base_url}")
         # Initialize demo data before running tests
