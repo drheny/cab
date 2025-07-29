@@ -766,11 +766,10 @@ const Billing = ({ user }) => {
       </div>
 
       {/* Enhanced Payment History Section */}
-      {activeTab === 'dashboard' && (
-        <div className="space-y-6">
-          {/* Optimized Payment History */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">Historique de paiements</h3>
+      <div className="space-y-6">
+        {/* Optimized Payment History */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-6">Historique de paiements</h3>
             
             {/* Simplified Search Options */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
