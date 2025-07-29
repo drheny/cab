@@ -830,309 +830,246 @@ const Billing = ({ user }) => {
       {/* Enhanced Payment History Section */}
       {activeTab === 'dashboard' && (
         <div className="space-y-6">
-          {/* Calendar-based Payment History */}
+          {/* Optimized Payment History */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Historique de paiements</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Historique de paiements</h3>
             
-            {/* Date Selection */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Choisir un jour
-                </label>
-                <div className="flex space-x-2">
+            {/* Simplified Search Options */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              {/* Daily Search */}
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <h4 className="font-medium text-green-900 mb-3 flex items-center">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Recherche par jour
+                </h4>
+                <div className="space-y-3">
                   <input
                     type="date"
                     value={selectedDate}
                     onChange={(e) => setSelectedDate(e.target.value)}
-                    className="input-field flex-1"
+                    className="input-field w-full"
                   />
                   <button
                     onClick={() => fetchDailyPayments(selectedDate)}
-                    className="btn-primary px-4"
+                    className="btn-primary w-full"
                   >
                     Voir
                   </button>
                 </div>
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Choisir un mois
-                </label>
-                <div className="flex space-x-2">
+              {/* Monthly Search */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 className="font-medium text-blue-900 mb-3 flex items-center">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Recherche par mois
+                </h4>
+                <div className="space-y-3">
                   <input
                     type="month"
                     onChange={(e) => {
                       const [year, month] = e.target.value.split('-');
+                      setMonthlyStats(null); // Reset previous data
                       fetchMonthlyStats(parseInt(year), parseInt(month));
                     }}
-                    className="input-field flex-1"
+                    className="input-field w-full"
                   />
+                  <div className="text-xs text-blue-600">
+                    Stats avec % évolution
+                  </div>
                 </div>
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Choisir une année
-                </label>
-                <div className="flex space-x-2">
+              {/* Yearly Search */}
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                <h4 className="font-medium text-purple-900 mb-3 flex items-center">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Recherche par année
+                </h4>
+                <div className="space-y-3">
                   <input
                     type="number"
                     min="2020"
                     max="2030"
                     defaultValue={new Date().getFullYear()}
-                    onChange={(e) => fetchYearlyStats(parseInt(e.target.value))}
-                    className="input-field flex-1"
+                    onChange={(e) => {
+                      setYearlyStats(null); // Reset previous data
+                      fetchYearlyStats(parseInt(e.target.value));
+                    }}
+                    className="input-field w-full"
                   />
+                  <div className="text-xs text-purple-600">
+                    Stats annuelles complètes
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Daily Payments Results */}
+            {/* Daily Results */}
             {dailyPayments && (
-              <div className="border-t pt-4">
-                <h4 className="font-semibold text-gray-900 mb-3">
-                  Paiements du {new Date(dailyPayments.date).toLocaleDateString('fr-FR')}
+              <div className="border-t pt-6">
+                <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
+                  <Calendar className="w-5 h-5 text-green-500 mr-2" />
+                  Résultats du {new Date(dailyPayments.date).toLocaleDateString('fr-FR')}
                 </h4>
                 
-                {/* Daily Summary */}
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
-                  <div className="bg-green-50 p-3 rounded-lg">
+                {/* Daily Stats Summary */}
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+                  <div className="bg-green-50 p-4 rounded-lg text-center">
                     <div className="text-sm text-green-600 font-medium">Recette totale</div>
-                    <div className="text-lg font-bold text-green-700">
+                    <div className="text-xl font-bold text-green-700">
                       {formatCurrency(dailyPayments.totals.recette_totale)}
                     </div>
                   </div>
-                  <div className="bg-blue-50 p-3 rounded-lg">
+                  <div className="bg-blue-50 p-4 rounded-lg text-center">
                     <div className="text-sm text-blue-600 font-medium">Visites</div>
-                    <div className="text-lg font-bold text-blue-700">
+                    <div className="text-xl font-bold text-blue-700">
                       {dailyPayments.totals.nb_visites}
                     </div>
                   </div>
-                  <div className="bg-purple-50 p-3 rounded-lg">
+                  <div className="bg-purple-50 p-4 rounded-lg text-center">
                     <div className="text-sm text-purple-600 font-medium">Contrôles</div>
-                    <div className="text-lg font-bold text-purple-700">
+                    <div className="text-xl font-bold text-purple-700">
                       {dailyPayments.totals.nb_controles}
                     </div>
                   </div>
-                  <div className="bg-indigo-50 p-3 rounded-lg">
+                  <div className="bg-indigo-50 p-4 rounded-lg text-center">
                     <div className="text-sm text-indigo-600 font-medium">Assurés</div>
-                    <div className="text-lg font-bold text-indigo-700">
+                    <div className="text-xl font-bold text-indigo-700">
                       {dailyPayments.totals.nb_assures}
                     </div>
                   </div>
-                  <div className="bg-gray-50 p-3 rounded-lg">
+                  <div className="bg-gray-50 p-4 rounded-lg text-center">
                     <div className="text-sm text-gray-600 font-medium">Total</div>
-                    <div className="text-lg font-bold text-gray-700">
+                    <div className="text-xl font-bold text-gray-700">
                       {dailyPayments.totals.nb_total}
                     </div>
                   </div>
                 </div>
 
-                {/* Daily Payments List */}
+                {/* Daily Patients List */}
                 {dailyPayments.payments.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Patient</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Montant</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Assuré</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-200">
-                        {dailyPayments.payments.map((payment, index) => (
-                          <tr key={index} className="hover:bg-gray-50">
-                            <td className="px-4 py-2">
-                              <button
-                                onClick={() => fetchPatientPayments(payment.patient_id)}
-                                className="text-blue-600 hover:text-blue-800 font-medium"
-                              >
-                                {payment.patient?.prenom} {payment.patient?.nom}
-                              </button>
-                            </td>
-                            <td className="px-4 py-2">
-                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                payment.type_visite === 'visite' ? 'bg-green-100 text-green-800' : 'bg-purple-100 text-purple-800'
-                              }`}>
-                                {payment.type_visite === 'visite' ? 'Visite' : 'Contrôle'}
-                              </span>
-                            </td>
-                            <td className="px-4 py-2 font-medium">
-                              {formatCurrency(payment.montant)}
-                            </td>
-                            <td className="px-4 py-2">
-                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                payment.assure ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                              }`}>
-                                {payment.assure ? 'Oui' : 'Non'}
-                              </span>
-                            </td>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h5 className="font-medium text-gray-900 mb-3">
+                      Liste des patients ({dailyPayments.payments.length})
+                    </h5>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-white">
+                          <tr>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Patient</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type visite</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Montant</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Statut paiement</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Assuré</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200 bg-white">
+                          {dailyPayments.payments.map((payment, index) => (
+                            <tr key={index} className="hover:bg-gray-50">
+                              <td className="px-4 py-3 font-medium text-gray-900">
+                                {payment.patient?.prenom} {payment.patient?.nom}
+                              </td>
+                              <td className="px-4 py-3">
+                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                  payment.type_visite === 'visite' ? 'bg-green-100 text-green-800' : 'bg-purple-100 text-purple-800'
+                                }`}>
+                                  {payment.type_visite === 'visite' ? 'Visite' : 'Contrôle'}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 font-semibold text-green-600">
+                                {formatCurrency(payment.montant)}
+                              </td>
+                              <td className="px-4 py-3">
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                  Payé
+                                </span>
+                              </td>
+                              <td className="px-4 py-3">
+                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                  payment.assure ? 'bg-indigo-100 text-indigo-800' : 'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {payment.assure ? 'Oui' : 'Non'}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 ) : (
-                  <div className="text-center py-4 text-gray-500">
-                    Aucun paiement pour cette date
+                  <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
+                    <Calendar className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                    <p>Aucun paiement pour cette date</p>
                   </div>
                 )}
               </div>
             )}
 
-            {/* Monthly Stats Results */}
+            {/* Monthly Results */}
             {monthlyStats && (
-              <div className="border-t pt-4 mt-4">
-                <h4 className="font-semibold text-gray-900 mb-3">
+              <div className="border-t pt-6">
+                <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
+                  <Calendar className="w-5 h-5 text-blue-500 mr-2" />
                   Statistiques de {monthlyStats.month}/{monthlyStats.year}
                 </h4>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                  <div className="bg-green-50 p-3 rounded-lg text-center">
-                    <div className="text-sm text-green-600 font-medium">Recette du mois</div>
-                    <div className="text-lg font-bold text-green-700">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  <div className="bg-blue-50 p-6 rounded-lg text-center">
+                    <div className="text-sm text-blue-600 font-medium mb-2">Recette du mois</div>
+                    <div className="text-2xl font-bold text-blue-700">
                       {formatCurrency(monthlyStats.recette_mois)}
                     </div>
+                    <div className="text-xs text-blue-500 mt-2">
+                      {/* Placeholder for evolution percentage */}
+                      📈 Évolution vs mois précédent
+                    </div>
                   </div>
-                  <div className="bg-blue-50 p-3 rounded-lg text-center">
-                    <div className="text-sm text-blue-600 font-medium">Visites</div>
-                    <div className="text-lg font-bold text-blue-700">{monthlyStats.nb_visites}</div>
+                  <div className="bg-green-50 p-6 rounded-lg text-center">
+                    <div className="text-sm text-green-600 font-medium mb-2">Visites</div>
+                    <div className="text-2xl font-bold text-green-700">{monthlyStats.nb_visites}</div>
                   </div>
-                  <div className="bg-purple-50 p-3 rounded-lg text-center">
-                    <div className="text-sm text-purple-600 font-medium">Contrôles</div>
-                    <div className="text-lg font-bold text-purple-700">{monthlyStats.nb_controles}</div>
+                  <div className="bg-purple-50 p-6 rounded-lg text-center">
+                    <div className="text-sm text-purple-600 font-medium mb-2">Contrôles</div>
+                    <div className="text-2xl font-bold text-purple-700">{monthlyStats.nb_controles}</div>
                   </div>
-                  <div className="bg-indigo-50 p-3 rounded-lg text-center">
-                    <div className="text-sm text-indigo-600 font-medium">Assurés</div>
-                    <div className="text-lg font-bold text-indigo-700">{monthlyStats.nb_assures}</div>
-                  </div>
-                  <div className="bg-gray-50 p-3 rounded-lg text-center">
-                    <div className="text-sm text-gray-600 font-medium">Total RDV</div>
-                    <div className="text-lg font-bold text-gray-700">{monthlyStats.nb_total_rdv}</div>
+                  <div className="bg-indigo-50 p-6 rounded-lg text-center">
+                    <div className="text-sm text-indigo-600 font-medium mb-2">Assurés</div>
+                    <div className="text-2xl font-bold text-indigo-700">{monthlyStats.nb_assures}</div>
+                    <div className="text-xs text-indigo-500 mt-1">
+                      sur {monthlyStats.nb_total_rdv} RDV
+                    </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Yearly Stats Results */}
+            {/* Yearly Results */}
             {yearlyStats && (
-              <div className="border-t pt-4 mt-4">
-                <h4 className="font-semibold text-gray-900 mb-3">
+              <div className="border-t pt-6">
+                <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
+                  <Calendar className="w-5 h-5 text-purple-500 mr-2" />
                   Statistiques de {yearlyStats.year}
                 </h4>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                  <div className="bg-green-50 p-3 rounded-lg text-center">
-                    <div className="text-sm text-green-600 font-medium">Recette de l'année</div>
-                    <div className="text-lg font-bold text-green-700">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="bg-purple-50 p-6 rounded-lg text-center">
+                    <div className="text-sm text-purple-600 font-medium mb-2">Recette totale</div>
+                    <div className="text-3xl font-bold text-purple-700">
                       {formatCurrency(yearlyStats.recette_annee)}
                     </div>
                   </div>
-                  <div className="bg-blue-50 p-3 rounded-lg text-center">
-                    <div className="text-sm text-blue-600 font-medium">Visites</div>
-                    <div className="text-lg font-bold text-blue-700">{yearlyStats.nb_visites}</div>
+                  <div className="bg-green-50 p-6 rounded-lg text-center">
+                    <div className="text-sm text-green-600 font-medium mb-2">Total visites</div>
+                    <div className="text-3xl font-bold text-green-700">{yearlyStats.nb_visites}</div>
                   </div>
-                  <div className="bg-purple-50 p-3 rounded-lg text-center">
-                    <div className="text-sm text-purple-600 font-medium">Contrôles</div>
-                    <div className="text-lg font-bold text-purple-700">{yearlyStats.nb_controles}</div>
-                  </div>
-                  <div className="bg-indigo-50 p-3 rounded-lg text-center">
-                    <div className="text-sm text-indigo-600 font-medium">Assurés</div>
-                    <div className="text-lg font-bold text-indigo-700">{yearlyStats.nb_assures}</div>
-                  </div>
-                  <div className="bg-gray-50 p-3 rounded-lg text-center">
-                    <div className="text-sm text-gray-600 font-medium">Total RDV</div>
-                    <div className="text-lg font-bold text-gray-700">{yearlyStats.nb_total_rdv}</div>
+                  <div className="bg-indigo-50 p-6 rounded-lg text-center">
+                    <div className="text-sm text-indigo-600 font-medium mb-2">Patients assurés</div>
+                    <div className="text-3xl font-bold text-indigo-700">{yearlyStats.nb_assures}</div>
+                    <div className="text-xs text-indigo-500 mt-1">
+                      sur {yearlyStats.nb_total_rdv} RDV
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
-
-          {/* Patient-specific Payment Search */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Recherche par patient</h3>
-            
-            <div className="flex space-x-4 mb-4">
-              <select
-                value={selectedPatient}
-                onChange={(e) => setSelectedPatient(e.target.value)}
-                className="input-field flex-1"
-              >
-                <option value="">Sélectionner un patient...</option>
-                {patients.map((patient) => (
-                  <option key={patient.id} value={patient.id}>
-                    {patient.prenom} {patient.nom}
-                  </option>
-                ))}
-              </select>
-              <button
-                onClick={() => selectedPatient && fetchPatientPayments(selectedPatient)}
-                disabled={!selectedPatient}
-                className="btn-primary px-6"
-              >
-                Rechercher
-              </button>
-            </div>
-
-            {/* Patient Payments Results */}
-            {patientPayments && (
-              <div className="border-t pt-4">
-                <div className="mb-4">
-                  <h4 className="font-semibold text-gray-900">
-                    Paiements de {patientPayments.patient.prenom} {patientPayments.patient.nom}
-                  </h4>
-                  <div className="flex space-x-6 mt-2 text-sm text-gray-600">
-                    <span>Total payé: <strong className="text-green-600">{formatCurrency(patientPayments.total_paye)}</strong></span>
-                    <span>Nombre de paiements: <strong>{patientPayments.nb_payments}</strong></span>
-                  </div>
-                </div>
-
-                {patientPayments.payments.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Montant</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Assuré</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-200">
-                        {patientPayments.payments.map((payment, index) => (
-                          <tr key={index} className="hover:bg-gray-50">
-                            <td className="px-4 py-2">
-                              {new Date(payment.date).toLocaleDateString('fr-FR')}
-                            </td>
-                            <td className="px-4 py-2">
-                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                payment.type_visite === 'visite' ? 'bg-green-100 text-green-800' : 'bg-purple-100 text-purple-800'
-                              }`}>
-                                {payment.type_visite === 'visite' ? 'Visite' : 'Contrôle'}
-                              </span>
-                            </td>
-                            <td className="px-4 py-2 font-medium">
-                              {formatCurrency(payment.montant)}
-                            </td>
-                            <td className="px-4 py-2">
-                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                payment.assure ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                              }`}>
-                                {payment.assure ? 'Oui' : 'Non'}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="text-center py-4 text-gray-500">
-                    Aucun paiement trouvé pour ce patient
-                  </div>
-                )}
               </div>
             )}
           </div>
