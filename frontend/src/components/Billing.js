@@ -313,6 +313,18 @@ const Billing = ({ user }) => {
     setShowEditModal(true);
   };
 
+  const handleViewPatient = (patient) => {
+    // Navigate to patient details or show patient modal
+    console.log('View patient:', patient);
+    toast.info(`Affichage du patient: ${patient?.prenom} ${patient?.nom}`);
+  };
+
+  const handleViewConsultation = (payment) => {
+    // Navigate to consultation details or show consultation modal
+    console.log('View consultation:', payment);
+    toast.info(`Affichage de la consultation du ${new Date(payment.date).toLocaleDateString('fr-FR')}`);
+  };
+
   const handleDeletePayment = async (payment) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce paiement ?')) {
       try {
