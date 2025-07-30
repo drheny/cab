@@ -413,8 +413,11 @@ const Billing = ({ user }) => {
       
       const matchesAssurance = searchFilters.assure === '' || 
         payment.assure.toString() === searchFilters.assure;
+
+      const matchesType = !searchFilters.typeConsultation || 
+        payment.type_consultation === searchFilters.typeConsultation;
       
-      return matchesName && matchesStatus && matchesAssurance;
+      return matchesName && matchesStatus && matchesAssurance && matchesType;
     });
   }, [payments, searchFilters]);
 
