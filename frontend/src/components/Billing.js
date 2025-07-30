@@ -92,6 +92,12 @@ const Billing = ({ user }) => {
   const [chartsData, setChartsData] = useState(null);
   const [chartsLoading, setChartsLoading] = useState(false);
   
+  // Modal states for patient and consultation
+  const [showPatientModal, setShowPatientModal] = useState(false);
+  const [selectedPatientData, setSelectedPatientData] = useState(null);
+  const [showConsultationModal, setShowConsultationModal] = useState(false);
+  const [selectedConsultationData, setSelectedConsultationData] = useState(null);
+  
   // States for cash management (caisse)
   const [cashMovements, setCashMovements] = useState([]);
   const [showCashForm, setShowCashForm] = useState(false);
