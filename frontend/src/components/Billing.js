@@ -1134,7 +1134,7 @@ const Billing = ({ user }) => {
                               ? 'bg-green-100 text-green-800' 
                               : 'bg-red-100 text-red-800'
                           }`}>
-                            {payment.montant} TND
+                            {payment.type_rdv === 'controle' ? '0 TND' : `${payment.montant} TND`}
                           </span>
                         </td>
                         <td className="px-4 py-3">
