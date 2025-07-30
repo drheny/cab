@@ -716,23 +716,29 @@ const Billing = ({ user }) => {
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
               <input
                 type="text"
-                placeholder="Nom du patient..."
+                placeholder="Recherche patient en temps réel..."
                 value={searchFilters.patientName}
                 onChange={(e) => setSearchFilters(prev => ({ ...prev, patientName: e.target.value }))}
                 className="input-field"
               />
-              <input
-                type="date"
-                value={searchFilters.dateDebut}
-                onChange={(e) => setSearchFilters(prev => ({ ...prev, dateDebut: e.target.value }))}
-                className="input-field"
-              />
-              <input
-                type="date"
-                value={searchFilters.dateFin}
-                onChange={(e) => setSearchFilters(prev => ({ ...prev, dateFin: e.target.value }))}
-                className="input-field"
-              />
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Date début</label>
+                <input
+                  type="date"
+                  value={searchFilters.dateDebut}
+                  onChange={(e) => setSearchFilters(prev => ({ ...prev, dateDebut: e.target.value }))}
+                  className="input-field"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Date fin</label>
+                <input
+                  type="date"
+                  value={searchFilters.dateFin}
+                  onChange={(e) => setSearchFilters(prev => ({ ...prev, dateFin: e.target.value }))}
+                  className="input-field"
+                />
+              </div>
               <select
                 value={searchFilters.statutPaiement}
                 onChange={(e) => setSearchFilters(prev => ({ ...prev, statutPaiement: e.target.value }))}
