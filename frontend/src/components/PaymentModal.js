@@ -23,7 +23,8 @@ const PaymentModal = ({
     montant: 0,
     type_paiement: 'espece', // Toujours espèces
     assure: false,
-    notes: ''
+    notes: '',
+    type_rdv: 'visite' // Added to allow changing consultation type
   });
   
   const [loading, setLoading] = useState(false);
