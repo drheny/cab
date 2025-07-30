@@ -764,8 +764,8 @@ const Billing = ({ user }) => {
                       <div className="text-sm text-purple-600">Visites</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-purple-700">{yearlyStats.nb_controles}</div>
-                      <div className="text-sm text-purple-600">Contrôles</div>
+                      <div className="text-2xl font-bold text-purple-700">{yearlyStats.nb_assures}</div>
+                      <div className="text-sm text-purple-600">Assurés</div>
                     </div>
                   </div>
                 </div>
