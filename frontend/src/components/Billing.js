@@ -1224,7 +1224,7 @@ const Billing = ({ user }) => {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     <tr>
-                      <td colSpan="6" className="px-4 py-8 text-center text-gray-500">
+                      <td colSpan="7" className="px-4 py-8 text-center text-gray-500">
                         Aucun paiement trouvé pour les critères sélectionnés
                       </td>
                     </tr>
