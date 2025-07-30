@@ -74,10 +74,21 @@ const PaymentModal = ({
         montant: appointment.paye ? (appointment.montant_paye || defaultAmount) : defaultAmount,
         type_paiement: 'espece', // Toujours espèces
         assure: appointment.assure || false,
-        notes: ''
+        notes: '',
+        type_rdv: appointment.type_rdv || 'visite' // Initialize with current type
       });
     }
   }, [isOpen, appointment]);
+
+  // Handle consultation type change
+  const handleConsultationTypeChange = (newType) => {
+    setPaymentData(prev => ({
+      ...prev,
+      type_rdv: newType,
+      montant: newType === 'visite' ? 65 : 0, // Auto-adjust amount
+      paye: newType === 'controle' ? true : prev.paye // Contrôles are automatically paid (free)
+    }));
+  };
 
   const handleSave = async () => {
     setLoading(true);
