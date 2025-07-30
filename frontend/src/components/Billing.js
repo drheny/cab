@@ -224,10 +224,10 @@ const Billing = ({ user }) => {
   const handleAdvancedSearch = async () => {
     setIsSearching(true);
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/payments/search`, {
-        params: searchFilters
-      });
-      setSearchResults(response.data?.payments || []);
+      // Use the filteredPayments directly instead of making API call
+      // This avoids potential API errors and provides real-time filtering
+      setSearchResults(filteredPayments);
+      toast.success(`${filteredPayments.length} paiement(s) trouvé(s)`);
     } catch (error) {
       console.error('Error searching payments:', error);
       toast.error('Erreur lors de la recherche');
