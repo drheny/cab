@@ -50,7 +50,8 @@ const Billing = ({ user }) => {
     dateDebut: '',
     dateFin: '',
     statutPaiement: '',
-    assure: ''
+    assure: '',
+    typeConsultation: ''
   });
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
