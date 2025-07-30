@@ -242,7 +242,8 @@ const Billing = ({ user }) => {
       dateDebut: '',
       dateFin: '',
       statutPaiement: '',
-      assure: ''
+      assure: '',
+      typeConsultation: ''
     });
     setSearchResults([]);
   };
