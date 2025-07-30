@@ -89,20 +89,23 @@ const Billing = ({ user }) => {
 
   // Add real-time patient search effect
   useEffect(() => {
-    if (searchFilters.patientName) {
+    if (searchFilters.patientName && searchFilters.patientName.length >= 2) {
       // Real-time patient search with debounce
       const timer = setTimeout(() => {
-        // Filter payments in real-time based on patient name
-        const filtered = payments.filter(payment => {
-          const fullName = `${payment.patient?.prenom || ''} ${payment.patient?.nom || ''}`.toLowerCase();
+        const filtered = patients.filter(patient => {
+          const fullName = `${patient.prenom || ''} ${patient.nom || ''}`.toLowerCase();
           return fullName.includes(searchFilters.patientName.toLowerCase());
         });
-        // You could set a separate state for real-time results if needed
+        setPatientSuggestions(filtered.slice(0, 5)); // Limit to 5 suggestions
+        setShowSuggestions(filtered.length > 0);
       }, 300); // 300ms debounce
 
       return () => clearTimeout(timer);
+    } else {
+      setPatientSuggestions([]);
+      setShowSuggestions(false);
     }
-  }, [searchFilters.patientName, payments]);
+  }, [searchFilters.patientName, patients]);
 
   useEffect(() => {
     fetchInitialData();
