@@ -344,10 +344,18 @@ const Billing = ({ user }) => {
 
   const handleViewConsultation = async (payment) => {
     try {
-      // Fetch consultation data based on payment appointment_id
-      const response = await axios.get(`${API_BASE_URL}/api/consultations/${payment.appointment_id}`);
-      setSelectedConsultationData(response.data);
-      setShowConsultationModal(true);
+      // Get consultation data based on appointment_id
+      const response = await axios.get(`${API_BASE_URL}/api/consultations`);
+      const consultationData = response.data.find(c => c.appointment_id === payment.appointment_id);
+      
+      if (consultationData) {
+        // Add patient info to consultation data
+        consultationData.patient = payment.patient;
+        setSelectedConsultationData(consultationData);
+        setShowConsultationModal(true);
+      } else {
+        toast.error('Consultation non trouvée');
+      }
     } catch (error) {
       console.error('Error fetching consultation data:', error);
       toast.error('Erreur lors du chargement des données de consultation');
