@@ -105,11 +105,12 @@ const PaymentModal = ({
       
       toast.success('Paiement et type de consultation mis à jour avec succès');
       
-      // Callback to parent component
+      // Callback to parent component BEFORE closing
       if (onPaymentUpdate) {
         onPaymentUpdate(appointment.id, updateData);
       }
       
+      // Close modal after callback
       onClose();
       
     } catch (error) {
