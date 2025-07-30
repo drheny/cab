@@ -1793,22 +1793,24 @@ async def update_rdv_paiement(rdv_id: str, payment_data: PaymentUpdate):
         type_paiement = payment_data.type_paiement
         assure = payment_data.assure
         notes = payment_data.notes
+        type_rdv = payment_data.type_rdv or appointment.get("type_rdv", "visite")  # Use new type or keep current
         
         # Validate payment method - Seul espèces accepté
         if type_paiement != "espece" and type_paiement != "gratuit":
             type_paiement = "espece"  # Force espèces par défaut
         
-        # Business logic for payment handling
-        if appointment.get("type_rdv") == "controle":
+        # Business logic for payment handling based on (potentially new) consultation type
+        if type_rdv == "controle":
             # Contrôle is always free
             paye = True
             montant = 0
             type_paiement = "gratuit"
         
-        # Update appointment with basic payment status
+        # Update appointment with payment status AND consultation type
         update_data = {
             "paye": paye,
             "assure": assure,
+            "type_rdv": type_rdv,  # Update consultation type
             "updated_at": datetime.now()
         }
         
