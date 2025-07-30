@@ -1887,10 +1887,10 @@ const Billing = ({ user }) => {
       {/* Patient Modal */}
       {showPatientModal && selectedPatientData && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-gray-900">
-                👤 Fiche Patient
+                👤 Fiche Complète du Patient
               </h2>
               <button
                 onClick={() => setShowPatientModal(false)}
@@ -1900,46 +1900,168 @@ const Billing = ({ user }) => {
               </button>
             </div>
             
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Prénom</label>
-                  <p className="mt-1 text-sm text-gray-900 font-medium">{selectedPatientData.prenom}</p>
+            <div className="space-y-6">
+              {/* Informations personnelles */}
+              <div className="bg-blue-50 rounded-lg p-4">
+                <h3 className="text-lg font-semibold text-blue-900 mb-4">Informations Personnelles</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Prénom</label>
+                    <p className="mt-1 text-sm text-gray-900 font-medium">{selectedPatientData.prenom}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Nom</label>
+                    <p className="mt-1 text-sm text-gray-900 font-medium">{selectedPatientData.nom}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Sexe</label>
+                    <p className="mt-1 text-sm text-gray-900">{selectedPatientData.sexe || 'Non renseigné'}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Date de naissance</label>
+                    <p className="mt-1 text-sm text-gray-900">
+                      {selectedPatientData.date_naissance ? new Date(selectedPatientData.date_naissance).toLocaleDateString('fr-FR') : 'Non renseignée'}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Âge</label>
+                    <p className="mt-1 text-sm text-gray-900">{selectedPatientData.age || 'Non calculé'}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Téléphone</label>
+                    <p className="mt-1 text-sm text-gray-900">{selectedPatientData.telephone || 'Non renseigné'}</p>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Nom</label>
-                  <p className="mt-1 text-sm text-gray-900 font-medium">{selectedPatientData.nom}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Date de naissance</label>
-                  <p className="mt-1 text-sm text-gray-900">
-                    {selectedPatientData.date_naissance ? new Date(selectedPatientData.date_naissance).toLocaleDateString('fr-FR') : 'Non renseignée'}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">WhatsApp</label>
-                  <p className="mt-1 text-sm text-gray-900">{selectedPatientData.numero_whatsapp || 'Non renseigné'}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Assurance</label>
-                  <p className="mt-1 text-sm">
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                      selectedPatientData.assure 
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {selectedPatientData.assure ? 'Assuré' : 'Non assuré'}
-                    </span>
-                  </p>
+                
+                {selectedPatientData.adresse && (
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700">Adresse</label>
+                    <p className="mt-1 text-sm text-gray-900 bg-white p-2 rounded">{selectedPatientData.adresse}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Contact et Communication */}
+              <div className="bg-green-50 rounded-lg p-4">
+                <h3 className="text-lg font-semibold text-green-900 mb-4">Contact & Communication</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">WhatsApp</label>
+                    <p className="mt-1 text-sm text-gray-900">{selectedPatientData.numero_whatsapp || 'Non renseigné'}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Nom parent/tuteur</label>
+                    <p className="mt-1 text-sm text-gray-900">{selectedPatientData.nom_parent || 'Non renseigné'}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Téléphone parent</label>
+                    <p className="mt-1 text-sm text-gray-900">{selectedPatientData.telephone_parent || 'Non renseigné'}</p>
+                  </div>
                 </div>
               </div>
-              
-              {selectedPatientData.historique_medical && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Historique médical</label>
-                  <p className="mt-1 text-sm text-gray-900 bg-gray-50 p-3 rounded-lg">
-                    {selectedPatientData.historique_medical}
-                  </p>
+
+              {/* Parents (si disponibles) */}
+              {(selectedPatientData.pere || selectedPatientData.mere) && (
+                <div className="bg-yellow-50 rounded-lg p-4">
+                  <h3 className="text-lg font-semibold text-yellow-900 mb-4">Informations Parents</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {selectedPatientData.pere && (
+                      <div className="bg-white p-3 rounded">
+                        <h4 className="font-medium text-gray-800 mb-2">👨 Père</h4>
+                        <p><strong>Nom:</strong> {selectedPatientData.pere.nom}</p>
+                        <p><strong>Téléphone:</strong> {selectedPatientData.pere.telephone}</p>
+                        <p><strong>Fonction:</strong> {selectedPatientData.pere.fonction}</p>
+                      </div>
+                    )}
+                    {selectedPatientData.mere && (
+                      <div className="bg-white p-3 rounded">
+                        <h4 className="font-medium text-gray-800 mb-2">👩 Mère</h4>
+                        <p><strong>Nom:</strong> {selectedPatientData.mere.nom}</p>
+                        <p><strong>Téléphone:</strong> {selectedPatientData.mere.telephone}</p>
+                        <p><strong>Fonction:</strong> {selectedPatientData.mere.fonction}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Assurance et Santé */}
+              <div className="bg-purple-50 rounded-lg p-4">
+                <h3 className="text-lg font-semibold text-purple-900 mb-4">Assurance & Santé</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Assurance</label>
+                    <p className="mt-1 text-sm">
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        selectedPatientData.assurance 
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {selectedPatientData.assurance || 'Non assuré'}
+                      </span>
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Numéro assurance</label>
+                    <p className="mt-1 text-sm text-gray-900">{selectedPatientData.numero_assurance || 'Non renseigné'}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Allergies</label>
+                    <p className="mt-1 text-sm text-gray-900">{selectedPatientData.allergies || 'Aucune connue'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Notes et Antécédents */}
+              {(selectedPatientData.notes || selectedPatientData.antecedents) && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Notes & Antécédents</h3>
+                  {selectedPatientData.notes && (
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+                      <p className="text-sm text-gray-900 bg-white p-3 rounded-lg">{selectedPatientData.notes}</p>
+                    </div>
+                  )}
+                  {selectedPatientData.antecedents && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Antécédents</label>
+                      <p className="text-sm text-gray-900 bg-white p-3 rounded-lg">{selectedPatientData.antecedents}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Historique des consultations */}
+              {selectedPatientData.consultations && selectedPatientData.consultations.length > 0 && (
+                <div className="bg-indigo-50 rounded-lg p-4">
+                  <h3 className="text-lg font-semibold text-indigo-900 mb-4">Historique des Consultations</h3>
+                  <div className="space-y-2">
+                    {selectedPatientData.consultations.map((consultation, index) => (
+                      <div key={index} className="bg-white p-3 rounded-lg flex justify-between items-center">
+                        <div>
+                          <span className="font-medium">{consultation.date}</span>
+                          <span className={`ml-2 px-2 py-1 rounded-full text-xs ${
+                            consultation.type === 'visite' 
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-purple-100 text-purple-800'
+                          }`}>
+                            {consultation.type}
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-600">ID: {consultation.id_consultation}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Première consultation</label>
+                      <p className="mt-1 text-sm text-gray-900">{selectedPatientData.date_premiere_consultation || 'Non renseignée'}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Dernière consultation</label>
+                      <p className="mt-1 text-sm text-gray-900">{selectedPatientData.date_derniere_consultation || 'Non renseignée'}</p>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
