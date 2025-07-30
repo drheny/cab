@@ -138,6 +138,7 @@ const Billing = ({ user }) => {
   useEffect(() => {
     fetchInitialData();
     fetchPatients();  // Added this back
+    fetchChartsData();  // Added for statistics tab
   }, []);
 
   const fetchInitialData = async () => {
