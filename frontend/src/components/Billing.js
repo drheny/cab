@@ -683,8 +683,8 @@ const Billing = ({ user }) => {
                       <div className="text-sm text-green-600">Visites</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-green-700">{dailyPayments.totals.nb_controles}</div>
-                      <div className="text-sm text-green-600">Contrôles</div>
+                      <div className="text-2xl font-bold text-green-700">{dailyPayments.totals.nb_assures}</div>
+                      <div className="text-sm text-green-600">Assurés</div>
                     </div>
                   </div>
                   {dailyPayments.payments.length > 0 ? (
