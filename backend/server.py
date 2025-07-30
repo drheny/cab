@@ -1831,6 +1831,7 @@ async def update_rdv_paiement(rdv_id: str, payment_data: PaymentUpdate):
                 "appointment_id": rdv_id,
                 "montant": montant,
                 "type_paiement": type_paiement,
+                "type_rdv": type_rdv,  # Include the consultation type in payment record
                 "statut": "paye",
                 "assure": assure,
                 "date": datetime.now().strftime("%Y-%m-%d"),
@@ -1850,10 +1851,11 @@ async def update_rdv_paiement(rdv_id: str, payment_data: PaymentUpdate):
             payments_collection.delete_one({"appointment_id": rdv_id})
         
         return {
-            "message": "Payment updated successfully", 
+            "message": "Payment and consultation type updated successfully", 
             "paye": paye,
             "montant": montant,
             "type_paiement": type_paiement,
+            "type_rdv": type_rdv,  # Include in response
             "assure": assure
         }
         
