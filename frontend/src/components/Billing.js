@@ -422,8 +422,15 @@ const Billing = ({ user }) => {
 
       const matchesType = !searchFilters.typeConsultation || 
         payment.type_consultation === searchFilters.typeConsultation;
+
+      // Date filtering
+      const paymentDate = new Date(payment.date);
+      const matchesStartDate = !searchFilters.dateDebut || 
+        paymentDate >= new Date(searchFilters.dateDebut);
+      const matchesEndDate = !searchFilters.dateFin || 
+        paymentDate <= new Date(searchFilters.dateFin);
       
-      return matchesName && matchesStatus && matchesAssurance && matchesType;
+      return matchesName && matchesStatus && matchesAssurance && matchesType && matchesStartDate && matchesEndDate;
     });
   }, [payments, searchFilters]);
 
