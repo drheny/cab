@@ -321,10 +321,21 @@ const Billing = ({ user }) => {
 
   const handleViewPatient = async (patient) => {
     try {
-      // Fetch complete patient data
-      const response = await axios.get(`${API_BASE_URL}/api/patients/${patient.id}`);
-      setSelectedPatientData(response.data);
-      setShowPatientModal(true);
+      // Use the patient data already available in the payment object
+      if (patient && patient.id) {
+        // Find the patient in our patients list or fetch from API
+        const response = await axios.get(`${API_BASE_URL}/api/patients`);
+        const patientData = response.data.patients.find(p => p.id === patient.id);
+        
+        if (patientData) {
+          setSelectedPatientData(patientData);
+          setShowPatientModal(true);
+        } else {
+          toast.error('Patient non trouvé');
+        }
+      } else {
+        toast.error('Données patient non disponibles');
+      }
     } catch (error) {
       console.error('Error fetching patient data:', error);
       toast.error('Erreur lors du chargement des données du patient');
