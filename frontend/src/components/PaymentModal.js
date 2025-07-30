@@ -89,19 +89,25 @@ const PaymentModal = ({
     setLoading(true);
     try {
       // Validate data
-      if (paymentData.paye && paymentData.montant <= 0 && appointment.type_rdv === 'visite') {
+      if (paymentData.paye && paymentData.montant <= 0 && paymentData.type_rdv === 'visite') {
         toast.error('Le montant doit être supérieur à 0 pour une visite payée');
         return;
       }
 
-      // Call API to update payment
-      await axios.put(`${API_BASE_URL}/api/rdv/${appointment.id}/paiement`, paymentData);
+      // Prepare complete payment data including type change
+      const updateData = {
+        ...paymentData,
+        type_rdv: paymentData.type_rdv // Include the potentially changed consultation type
+      };
+
+      // Call API to update payment AND consultation type
+      await axios.put(`${API_BASE_URL}/api/rdv/${appointment.id}/paiement`, updateData);
       
-      toast.success('Paiement mis à jour avec succès');
+      toast.success('Paiement et type de consultation mis à jour avec succès');
       
       // Callback to parent component
       if (onPaymentUpdate) {
-        onPaymentUpdate(appointment.id, paymentData);
+        onPaymentUpdate(appointment.id, updateData);
       }
       
       onClose();
