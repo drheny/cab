@@ -1985,33 +1985,6 @@ const Billing = ({ user }) => {
                 </div>
               )}
 
-              {/* Assurance et Santé */}
-              <div className="bg-purple-50 rounded-lg p-4">
-                <h3 className="text-lg font-semibold text-purple-900 mb-4">Assurance & Santé</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Assurance</label>
-                    <p className="mt-1 text-sm">
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                        selectedPatientData.assurance 
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {selectedPatientData.assurance || 'Non assuré'}
-                      </span>
-                    </p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Numéro assurance</label>
-                    <p className="mt-1 text-sm text-gray-900">{selectedPatientData.numero_assurance || 'Non renseigné'}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Allergies</label>
-                    <p className="mt-1 text-sm text-gray-900">{selectedPatientData.allergies || 'Aucune connue'}</p>
-                  </div>
-                </div>
-              </div>
-
               {/* Notes et Antécédents */}
               {(selectedPatientData.notes || selectedPatientData.antecedents) && (
                 <div className="bg-gray-50 rounded-lg p-4">
