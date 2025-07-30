@@ -330,10 +330,10 @@ const Billing = ({ user }) => {
       try {
         await axios.delete(`${API_BASE_URL}/api/payments/${payment.id}`);
         toast.success('Paiement supprimé avec succès');
-        fetchPayments();
+        fetchPayments(); // Reload payments list
       } catch (error) {
         console.error('Error deleting payment:', error);
-        toast.error('Erreur lors de la suppression');
+        toast.error('Erreur lors de la suppression du paiement');
       }
     }
   };
