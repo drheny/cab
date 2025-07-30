@@ -565,14 +565,27 @@ const Billing = ({ user }) => {
                       type="month"
                       onChange={(e) => {
                         const [year, month] = e.target.value.split('-');
-                        setMonthlyStats(null);
-                        fetchMonthlyStats(parseInt(year), parseInt(month));
+                        if (year && month) {
+                          setMonthlyStats(null);
+                        }
                       }}
                       className="input-field w-full"
+                      id="monthlySearch"
                     />
-                    <div className="text-xs text-blue-600">
-                      Stats avec % évolution
-                    </div>
+                    <button
+                      onClick={() => {
+                        const monthInput = document.getElementById('monthlySearch');
+                        if (monthInput.value) {
+                          const [year, month] = monthInput.value.split('-');
+                          fetchMonthlyStats(parseInt(year), parseInt(month));
+                        } else {
+                          toast.error('Veuillez sélectionner un mois');
+                        }
+                      }}
+                      className="btn-primary w-full"
+                    >
+                      Voir
+                    </button>
                   </div>
                 </div>
                 
