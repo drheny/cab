@@ -335,16 +335,28 @@ const Billing = ({ user }) => {
   const handleViewPatient = async (patient) => {
     try {
       // Use the patient data already available in the payment object
-      if (patient && patient.id) {
-        // Find the patient in our patients list or fetch from API
-        const response = await axios.get(`${API_BASE_URL}/api/patients`);
-        const patientData = response.data.patients.find(p => p.id === patient.id);
+      if (patient) {
+        // Find the patient in our patients list using name matching if ID not available
+        let patientData = null;
+        
+        if (patient.id) {
+          // If we have an ID, use it
+          const response = await axios.get(`${API_BASE_URL}/api/patients`);
+          patientData = response.data.patients.find(p => p.id === patient.id);
+        } else if (patient.prenom && patient.nom) {
+          // If no ID, match by name
+          const response = await axios.get(`${API_BASE_URL}/api/patients`);
+          patientData = response.data.patients.find(p => 
+            p.prenom.toLowerCase() === patient.prenom.toLowerCase() && 
+            p.nom.toLowerCase() === patient.nom.toLowerCase()
+          );
+        }
         
         if (patientData) {
           setSelectedPatientData(patientData);
           setShowPatientModal(true);
         } else {
-          toast.error('Patient non trouvé');
+          toast.error('Patient non trouvé dans la base de données');
         }
       } else {
         toast.error('Données patient non disponibles');
