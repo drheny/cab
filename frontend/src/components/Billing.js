@@ -100,6 +100,10 @@ const Billing = ({ user }) => {
     }
   }, [searchFilters.patientName, payments]);
 
+  useEffect(() => {
+    fetchInitialData();
+  }, []);
+
   const fetchInitialData = async () => {
     setLoading(true);
     try {
