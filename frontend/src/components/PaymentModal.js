@@ -45,11 +45,6 @@ const PaymentModal = ({
       
       // Si la consultation est terminée, vérifier le statut de paiement
       if (appointment?.statut === 'termine') {
-        // Si c'est un contrôle, toujours non modifiable (gratuit)
-        if (appointment?.type_rdv === 'controle') {
-          return false;
-        }
-        
         // Pour les visites terminées :
         // - Si "non payé", la secrétaire peut encore modifier
         // - Si "payé" ou autre statut défini, la secrétaire ne peut plus modifier
