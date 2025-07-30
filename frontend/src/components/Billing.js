@@ -316,7 +316,19 @@ const Billing = ({ user }) => {
   };
 
   const handleEditPayment = (payment) => {
-    setEditingPayment(payment);
+    // Transform payment data to match appointment structure expected by PaymentModal
+    const appointmentData = {
+      id: payment.appointment_id,
+      patient: payment.patient,
+      date: payment.date,
+      heure: payment.heure || '09:00', // Default time if not available
+      type_rdv: payment.type_rdv,
+      paye: payment.statut === 'paye',
+      montant_paye: payment.montant,
+      assure: payment.assure
+    };
+    
+    setEditingPayment(appointmentData);
     setShowEditModal(true);
   };
 
