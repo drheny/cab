@@ -31690,6 +31690,728 @@ if __name__ == "__main__":
         
         print(f"🎉 CONSULTATION DATA PERSISTENCE TEST: ALL TESTS PASSED")
 
+    # ========== FACTURATION/BILLING ENDPOINTS COMPREHENSIVE TESTING ==========
+    
+    def test_facturation_enhanced_stats(self):
+        """Test GET /api/facturation/enhanced-stats - Enhanced statistics endpoint"""
+        print("\n🔍 Testing Facturation Enhanced Stats Endpoint")
+        
+        response = requests.get(f"{self.base_url}/api/facturation/enhanced-stats")
+        self.assertEqual(response.status_code, 200, f"Enhanced stats failed: {response.text}")
+        
+        data = response.json()
+        
+        # Verify response structure
+        self.assertIn("recette_jour", data)
+        self.assertIn("recette_mois", data)
+        self.assertIn("recette_annee", data)
+        self.assertIn("nouveaux_patients_annee", data)
+        
+        # Verify data types
+        self.assertIsInstance(data["recette_jour"], (int, float))
+        self.assertIsInstance(data["recette_mois"], (int, float))
+        self.assertIsInstance(data["recette_annee"], (int, float))
+        self.assertIsInstance(data["nouveaux_patients_annee"], int)
+        
+        # Verify non-negative values
+        self.assertGreaterEqual(data["recette_jour"], 0)
+        self.assertGreaterEqual(data["recette_mois"], 0)
+        self.assertGreaterEqual(data["recette_annee"], 0)
+        self.assertGreaterEqual(data["nouveaux_patients_annee"], 0)
+        
+        print(f"✅ Enhanced Stats retrieved successfully")
+        print(f"   - Daily revenue: {data['recette_jour']} TND")
+        print(f"   - Monthly revenue: {data['recette_mois']} TND")
+        print(f"   - Yearly revenue: {data['recette_annee']} TND")
+        print(f"   - New patients this year: {data['nouveaux_patients_annee']}")
+        print(f"🎉 Enhanced Stats Test: PASSED")
+    
+    def test_facturation_daily_payments(self):
+        """Test GET /api/facturation/daily-payments with date parameter"""
+        print("\n🔍 Testing Facturation Daily Payments Endpoint")
+        
+        # Test with today's date
+        today = datetime.now().strftime("%Y-%m-%d")
+        response = requests.get(f"{self.base_url}/api/facturation/daily-payments?date={today}")
+        self.assertEqual(response.status_code, 200, f"Daily payments failed: {response.text}")
+        
+        data = response.json()
+        
+        # Verify response structure
+        self.assertIn("date", data)
+        self.assertIn("payments", data)
+        self.assertIn("totals", data)
+        
+        # Verify date matches request
+        self.assertEqual(data["date"], today)
+        
+        # Verify payments structure
+        self.assertIsInstance(data["payments"], list)
+        
+        # Verify totals structure
+        totals = data["totals"]
+        self.assertIn("recette_totale", totals)
+        self.assertIn("nb_visites", totals)
+        self.assertIn("nb_controles", totals)
+        self.assertIn("nb_assures", totals)
+        self.assertIn("nb_total", totals)
+        
+        # Verify data types
+        self.assertIsInstance(totals["recette_totale"], (int, float))
+        self.assertIsInstance(totals["nb_visites"], int)
+        self.assertIsInstance(totals["nb_controles"], int)
+        self.assertIsInstance(totals["nb_assures"], int)
+        self.assertIsInstance(totals["nb_total"], int)
+        
+        # Test payment enrichment if payments exist
+        if len(data["payments"]) > 0:
+            payment = data["payments"][0]
+            self.assertIn("patient", payment)
+            self.assertIn("type_visite", payment)
+            
+            # Verify patient info structure
+            if "patient" in payment:
+                patient = payment["patient"]
+                self.assertIn("nom", patient)
+                self.assertIn("prenom", patient)
+                self.assertIn("telephone", patient)
+        
+        print(f"✅ Daily Payments retrieved successfully for {today}")
+        print(f"   - Total revenue: {totals['recette_totale']} TND")
+        print(f"   - Total payments: {totals['nb_total']}")
+        print(f"   - Visits: {totals['nb_visites']}, Controls: {totals['nb_controles']}")
+        print(f"   - Insured patients: {totals['nb_assures']}")
+        print(f"🎉 Daily Payments Test: PASSED")
+        
+        # Test with invalid date format
+        response = requests.get(f"{self.base_url}/api/facturation/daily-payments?date=invalid-date")
+        # Should still work but return empty results
+        self.assertEqual(response.status_code, 200)
+    
+    def test_facturation_monthly_stats_with_evolution(self):
+        """Test GET /api/facturation/monthly-stats-with-evolution with year and month parameters"""
+        print("\n🔍 Testing Facturation Monthly Stats with Evolution Endpoint")
+        
+        # Test with current month
+        current_date = datetime.now()
+        year = current_date.year
+        month = current_date.month
+        
+        response = requests.get(f"{self.base_url}/api/facturation/monthly-stats-with-evolution?year={year}&month={month}")
+        self.assertEqual(response.status_code, 200, f"Monthly stats with evolution failed: {response.text}")
+        
+        data = response.json()
+        
+        # Verify response structure
+        self.assertIn("year", data)
+        self.assertIn("month", data)
+        self.assertIn("recette_mois", data)
+        self.assertIn("nb_visites", data)
+        self.assertIn("nb_controles", data)
+        self.assertIn("nb_assures", data)
+        self.assertIn("nb_total_rdv", data)
+        self.assertIn("evolution", data)
+        
+        # Verify year and month match request
+        self.assertEqual(data["year"], year)
+        self.assertEqual(data["month"], month)
+        
+        # Verify data types
+        self.assertIsInstance(data["recette_mois"], (int, float))
+        self.assertIsInstance(data["nb_visites"], int)
+        self.assertIsInstance(data["nb_controles"], int)
+        self.assertIsInstance(data["nb_assures"], int)
+        self.assertIsInstance(data["nb_total_rdv"], int)
+        
+        # Verify evolution structure
+        evolution = data["evolution"]
+        self.assertIn("recette_precedente", evolution)
+        self.assertIn("evolution_pourcentage", evolution)
+        self.assertIn("evolution_montant", evolution)
+        self.assertIn("mois_precedent", evolution)
+        
+        # Verify evolution data types
+        self.assertIsInstance(evolution["recette_precedente"], (int, float))
+        self.assertIsInstance(evolution["evolution_pourcentage"], (int, float))
+        self.assertIsInstance(evolution["evolution_montant"], (int, float))
+        self.assertIsInstance(evolution["mois_precedent"], str)
+        
+        print(f"✅ Monthly Stats with Evolution retrieved for {month}/{year}")
+        print(f"   - Current month revenue: {data['recette_mois']} TND")
+        print(f"   - Previous month revenue: {evolution['recette_precedente']} TND")
+        print(f"   - Evolution: {evolution['evolution_pourcentage']}%")
+        print(f"   - Total appointments: {data['nb_total_rdv']}")
+        print(f"🎉 Monthly Stats with Evolution Test: PASSED")
+        
+        # Test with invalid parameters
+        response = requests.get(f"{self.base_url}/api/facturation/monthly-stats-with-evolution?year=invalid&month=invalid")
+        self.assertNotEqual(response.status_code, 200)  # Should return error for invalid params
+    
+    def test_facturation_yearly_stats(self):
+        """Test GET /api/facturation/yearly-stats with year parameter"""
+        print("\n🔍 Testing Facturation Yearly Stats Endpoint")
+        
+        # Test with current year
+        current_year = datetime.now().year
+        
+        response = requests.get(f"{self.base_url}/api/facturation/yearly-stats?year={current_year}")
+        self.assertEqual(response.status_code, 200, f"Yearly stats failed: {response.text}")
+        
+        data = response.json()
+        
+        # Verify response structure
+        self.assertIn("year", data)
+        self.assertIn("recette_annee", data)
+        self.assertIn("nb_visites", data)
+        self.assertIn("nb_controles", data)
+        self.assertIn("nb_assures", data)
+        self.assertIn("nb_total_rdv", data)
+        
+        # Verify year matches request
+        self.assertEqual(data["year"], current_year)
+        
+        # Verify data types
+        self.assertIsInstance(data["recette_annee"], (int, float))
+        self.assertIsInstance(data["nb_visites"], int)
+        self.assertIsInstance(data["nb_controles"], int)
+        self.assertIsInstance(data["nb_assures"], int)
+        self.assertIsInstance(data["nb_total_rdv"], int)
+        
+        # Verify non-negative values
+        self.assertGreaterEqual(data["recette_annee"], 0)
+        self.assertGreaterEqual(data["nb_visites"], 0)
+        self.assertGreaterEqual(data["nb_controles"], 0)
+        self.assertGreaterEqual(data["nb_assures"], 0)
+        self.assertGreaterEqual(data["nb_total_rdv"], 0)
+        
+        print(f"✅ Yearly Stats retrieved for {current_year}")
+        print(f"   - Annual revenue: {data['recette_annee']} TND")
+        print(f"   - Total appointments: {data['nb_total_rdv']}")
+        print(f"   - Visits: {data['nb_visites']}, Controls: {data['nb_controles']}")
+        print(f"   - Insured patients: {data['nb_assures']}")
+        print(f"🎉 Yearly Stats Test: PASSED")
+        
+        # Test with previous year
+        prev_year = current_year - 1
+        response = requests.get(f"{self.base_url}/api/facturation/yearly-stats?year={prev_year}")
+        self.assertEqual(response.status_code, 200)
+        
+        # Test with invalid year
+        response = requests.get(f"{self.base_url}/api/facturation/yearly-stats?year=invalid")
+        self.assertNotEqual(response.status_code, 200)  # Should return error for invalid year
+    
+    def test_payments_endpoint(self):
+        """Test GET /api/payments - Main payments endpoint"""
+        print("\n🔍 Testing Payments Endpoint")
+        
+        response = requests.get(f"{self.base_url}/api/payments")
+        self.assertEqual(response.status_code, 200, f"Payments endpoint failed: {response.text}")
+        
+        data = response.json()
+        
+        # Verify response is a list
+        self.assertIsInstance(data, list)
+        
+        # Test payment structure if payments exist
+        if len(data) > 0:
+            payment = data[0]
+            
+            # Verify required payment fields
+            self.assertIn("id", payment)
+            self.assertIn("montant", payment)
+            self.assertIn("type_paiement", payment)
+            self.assertIn("statut", payment)
+            self.assertIn("date", payment)
+            self.assertIn("appointment_id", payment)
+            
+            # Verify enriched data
+            self.assertIn("type_rdv", payment)
+            self.assertIn("patient_id", payment)
+            
+            # Verify patient info if available
+            if "patient" in payment:
+                patient = payment["patient"]
+                self.assertIn("nom", patient)
+                self.assertIn("prenom", patient)
+            
+            # Verify data types
+            self.assertIsInstance(payment["montant"], (int, float))
+            self.assertIsInstance(payment["type_paiement"], str)
+            self.assertIsInstance(payment["statut"], str)
+            self.assertIsInstance(payment["date"], str)
+            
+            print(f"✅ Payments retrieved successfully")
+            print(f"   - Total payments found: {len(data)}")
+            print(f"   - Sample payment amount: {payment['montant']} TND")
+            print(f"   - Sample payment type: {payment['type_paiement']}")
+        else:
+            print(f"✅ Payments endpoint working (no payments found)")
+        
+        print(f"🎉 Payments Endpoint Test: PASSED")
+    
+    def test_payments_search_functionality(self):
+        """Test GET /api/payments/search - Payment search functionality"""
+        print("\n🔍 Testing Payment Search Functionality")
+        
+        # Test basic search without filters
+        response = requests.get(f"{self.base_url}/api/payments/search")
+        self.assertEqual(response.status_code, 200, f"Payment search failed: {response.text}")
+        
+        data = response.json()
+        
+        # Verify response structure
+        self.assertIn("payments", data)
+        self.assertIn("pagination", data)
+        self.assertIn("total_found", data)
+        
+        # Verify pagination structure
+        pagination = data["pagination"]
+        self.assertIn("current_page", pagination)
+        self.assertIn("total_pages", pagination)
+        self.assertIn("total_count", pagination)
+        self.assertIn("limit", pagination)
+        
+        # Verify data types
+        self.assertIsInstance(data["payments"], list)
+        self.assertIsInstance(data["total_found"], int)
+        self.assertIsInstance(pagination["current_page"], int)
+        self.assertIsInstance(pagination["total_pages"], int)
+        self.assertIsInstance(pagination["total_count"], int)
+        self.assertIsInstance(pagination["limit"], int)
+        
+        print(f"✅ Basic payment search working")
+        print(f"   - Total payments found: {data['total_found']}")
+        print(f"   - Current page: {pagination['current_page']}")
+        print(f"   - Total pages: {pagination['total_pages']}")
+        
+        # Test search with date filter
+        today = datetime.now().strftime("%Y-%m-%d")
+        response = requests.get(f"{self.base_url}/api/payments/search?date_debut={today}&date_fin={today}")
+        self.assertEqual(response.status_code, 200)
+        
+        # Test search with status filter - visite
+        response = requests.get(f"{self.base_url}/api/payments/search?statut_paiement=visite")
+        self.assertEqual(response.status_code, 200)
+        
+        # Test search with status filter - controle
+        response = requests.get(f"{self.base_url}/api/payments/search?statut_paiement=controle")
+        self.assertEqual(response.status_code, 200)
+        
+        # Test search with status filter - impaye (unpaid)
+        response = requests.get(f"{self.base_url}/api/payments/search?statut_paiement=impaye")
+        self.assertEqual(response.status_code, 200)
+        impaye_data = response.json()
+        
+        # Verify unpaid payments structure
+        if len(impaye_data["payments"]) > 0:
+            unpaid_payment = impaye_data["payments"][0]
+            self.assertIn("statut", unpaid_payment)
+            self.assertEqual(unpaid_payment["statut"], "impaye")
+            print(f"   - Unpaid payments found: {len(impaye_data['payments'])}")
+        
+        # Test search with insurance filter
+        response = requests.get(f"{self.base_url}/api/payments/search?assure=true")
+        self.assertEqual(response.status_code, 200)
+        
+        response = requests.get(f"{self.base_url}/api/payments/search?assure=false")
+        self.assertEqual(response.status_code, 200)
+        
+        # Test pagination
+        response = requests.get(f"{self.base_url}/api/payments/search?page=1&limit=5")
+        self.assertEqual(response.status_code, 200)
+        page_data = response.json()
+        self.assertEqual(page_data["pagination"]["current_page"], 1)
+        self.assertEqual(page_data["pagination"]["limit"], 5)
+        
+        print(f"✅ Advanced payment search filters working")
+        print(f"🎉 Payment Search Functionality Test: PASSED")
+    
+    def test_cash_movements_get_endpoint(self):
+        """Test GET /api/cash-movements - Cash movements retrieval"""
+        print("\n🔍 Testing Cash Movements GET Endpoint")
+        
+        response = requests.get(f"{self.base_url}/api/cash-movements")
+        self.assertEqual(response.status_code, 200, f"Cash movements GET failed: {response.text}")
+        
+        data = response.json()
+        
+        # Verify response structure
+        self.assertIn("movements", data)
+        self.assertIn("pagination", data)
+        self.assertIn("solde_jour", data)
+        
+        # Verify movements structure
+        self.assertIsInstance(data["movements"], list)
+        
+        # Verify pagination structure
+        pagination = data["pagination"]
+        self.assertIn("current_page", pagination)
+        self.assertIn("total_pages", pagination)
+        self.assertIn("total_count", pagination)
+        self.assertIn("limit", pagination)
+        
+        # Verify data types
+        self.assertIsInstance(data["solde_jour"], (int, float))
+        self.assertIsInstance(pagination["current_page"], int)
+        self.assertIsInstance(pagination["total_pages"], int)
+        self.assertIsInstance(pagination["total_count"], int)
+        self.assertIsInstance(pagination["limit"], int)
+        
+        # Test movement structure if movements exist
+        if len(data["movements"]) > 0:
+            movement = data["movements"][0]
+            self.assertIn("id", movement)
+            self.assertIn("montant", movement)
+            self.assertIn("type_mouvement", movement)
+            self.assertIn("motif", movement)
+            self.assertIn("date", movement)
+            self.assertIn("created_at", movement)
+            
+            # Verify data types
+            self.assertIsInstance(movement["montant"], (int, float))
+            self.assertIsInstance(movement["type_mouvement"], str)
+            self.assertIsInstance(movement["motif"], str)
+            self.assertIsInstance(movement["date"], str)
+            
+            # Verify type_mouvement values
+            self.assertIn(movement["type_mouvement"], ["ajout", "soustraction"])
+            
+            print(f"   - Sample movement: {movement['type_mouvement']} {movement['montant']} TND")
+            print(f"   - Reason: {movement['motif']}")
+        
+        print(f"✅ Cash Movements retrieved successfully")
+        print(f"   - Total movements: {pagination['total_count']}")
+        print(f"   - Daily balance: {data['solde_jour']} TND")
+        
+        # Test with filters
+        today = datetime.now().strftime("%Y-%m-%d")
+        response = requests.get(f"{self.base_url}/api/cash-movements?date_debut={today}&date_fin={today}")
+        self.assertEqual(response.status_code, 200)
+        
+        # Test with type filter
+        response = requests.get(f"{self.base_url}/api/cash-movements?type_mouvement=ajout")
+        self.assertEqual(response.status_code, 200)
+        
+        response = requests.get(f"{self.base_url}/api/cash-movements?type_mouvement=soustraction")
+        self.assertEqual(response.status_code, 200)
+        
+        # Test pagination
+        response = requests.get(f"{self.base_url}/api/cash-movements?page=1&limit=10")
+        self.assertEqual(response.status_code, 200)
+        
+        print(f"✅ Cash Movements filters and pagination working")
+        print(f"🎉 Cash Movements GET Test: PASSED")
+    
+    def test_cash_movements_post_endpoint(self):
+        """Test POST /api/cash-movements - Cash movement creation"""
+        print("\n🔍 Testing Cash Movements POST Endpoint")
+        
+        # Test creating a cash addition
+        today = datetime.now().strftime("%Y-%m-%d")
+        addition_data = {
+            "montant": 100.0,
+            "type_mouvement": "ajout",
+            "motif": "Test cash addition",
+            "date": today
+        }
+        
+        response = requests.post(f"{self.base_url}/api/cash-movements", json=addition_data)
+        self.assertEqual(response.status_code, 200, f"Cash movement creation failed: {response.text}")
+        
+        data = response.json()
+        
+        # Verify response structure
+        self.assertIn("message", data)
+        self.assertIn("movement", data)
+        self.assertIn("solde_actuel", data)
+        
+        # Verify movement data
+        movement = data["movement"]
+        self.assertIn("id", movement)
+        self.assertIn("montant", movement)
+        self.assertIn("type_mouvement", movement)
+        self.assertIn("motif", movement)
+        self.assertIn("date", movement)
+        self.assertIn("created_at", movement)
+        
+        # Verify created movement matches input
+        self.assertEqual(movement["montant"], 100.0)
+        self.assertEqual(movement["type_mouvement"], "ajout")
+        self.assertEqual(movement["motif"], "Test cash addition")
+        self.assertEqual(movement["date"], today)
+        
+        # Verify data types
+        self.assertIsInstance(data["solde_actuel"], (int, float))
+        self.assertIsInstance(movement["id"], str)
+        
+        print(f"✅ Cash addition created successfully")
+        print(f"   - Amount: {movement['montant']} TND")
+        print(f"   - Type: {movement['type_mouvement']}")
+        print(f"   - Current balance: {data['solde_actuel']} TND")
+        
+        # Test creating a cash subtraction
+        subtraction_data = {
+            "montant": 50.0,
+            "type_mouvement": "soustraction",
+            "motif": "Test cash subtraction",
+            "date": today
+        }
+        
+        response = requests.post(f"{self.base_url}/api/cash-movements", json=subtraction_data)
+        self.assertEqual(response.status_code, 200, f"Cash subtraction creation failed: {response.text}")
+        
+        subtraction_result = response.json()
+        
+        # Verify subtraction was created
+        subtraction_movement = subtraction_result["movement"]
+        self.assertEqual(subtraction_movement["montant"], 50.0)
+        self.assertEqual(subtraction_movement["type_mouvement"], "soustraction")
+        self.assertEqual(subtraction_movement["motif"], "Test cash subtraction")
+        
+        print(f"✅ Cash subtraction created successfully")
+        print(f"   - Amount: {subtraction_movement['montant']} TND")
+        print(f"   - Type: {subtraction_movement['type_mouvement']}")
+        print(f"   - New balance: {subtraction_result['solde_actuel']} TND")
+        
+        # Test validation - missing required fields
+        invalid_data = {
+            "montant": 25.0,
+            # Missing type_mouvement, motif, date
+        }
+        
+        response = requests.post(f"{self.base_url}/api/cash-movements", json=invalid_data)
+        self.assertNotEqual(response.status_code, 200)  # Should return validation error
+        
+        # Test validation - invalid type_mouvement
+        invalid_type_data = {
+            "montant": 25.0,
+            "type_mouvement": "invalid_type",
+            "motif": "Test invalid type",
+            "date": today
+        }
+        
+        response = requests.post(f"{self.base_url}/api/cash-movements", json=invalid_type_data)
+        self.assertNotEqual(response.status_code, 200)  # Should return validation error
+        
+        print(f"✅ Cash movement validation working correctly")
+        print(f"🎉 Cash Movements POST Test: PASSED")
+    
+    def test_facturation_error_handling(self):
+        """Test error handling for invalid parameters in Facturation endpoints"""
+        print("\n🔍 Testing Facturation Error Handling")
+        
+        # Test daily payments with missing date parameter
+        response = requests.get(f"{self.base_url}/api/facturation/daily-payments")
+        self.assertNotEqual(response.status_code, 200)  # Should require date parameter
+        
+        # Test monthly stats with missing parameters
+        response = requests.get(f"{self.base_url}/api/facturation/monthly-stats-with-evolution")
+        self.assertNotEqual(response.status_code, 200)  # Should require year and month
+        
+        response = requests.get(f"{self.base_url}/api/facturation/monthly-stats-with-evolution?year=2024")
+        self.assertNotEqual(response.status_code, 200)  # Should require both year and month
+        
+        # Test yearly stats with missing parameter
+        response = requests.get(f"{self.base_url}/api/facturation/yearly-stats")
+        self.assertNotEqual(response.status_code, 200)  # Should require year parameter
+        
+        # Test with invalid parameter values
+        response = requests.get(f"{self.base_url}/api/facturation/monthly-stats-with-evolution?year=abc&month=xyz")
+        self.assertNotEqual(response.status_code, 200)  # Should return error for invalid params
+        
+        response = requests.get(f"{self.base_url}/api/facturation/yearly-stats?year=not_a_year")
+        self.assertNotEqual(response.status_code, 200)  # Should return error for invalid year
+        
+        # Test with out-of-range values
+        response = requests.get(f"{self.base_url}/api/facturation/monthly-stats-with-evolution?year=2024&month=13")
+        self.assertNotEqual(response.status_code, 200)  # Month should be 1-12
+        
+        response = requests.get(f"{self.base_url}/api/facturation/monthly-stats-with-evolution?year=2024&month=0")
+        self.assertNotEqual(response.status_code, 200)  # Month should be 1-12
+        
+        print(f"✅ Error handling working correctly for invalid parameters")
+        print(f"🎉 Facturation Error Handling Test: PASSED")
+    
+    def test_facturation_data_structure_validation(self):
+        """Test that all Facturation endpoints return proper JSON responses with expected data structure"""
+        print("\n🔍 Testing Facturation Data Structure Validation")
+        
+        # Test enhanced stats data structure
+        response = requests.get(f"{self.base_url}/api/facturation/enhanced-stats")
+        self.assertEqual(response.status_code, 200)
+        
+        # Verify JSON response
+        try:
+            data = response.json()
+            self.assertIsInstance(data, dict)
+        except ValueError:
+            self.fail("Enhanced stats endpoint did not return valid JSON")
+        
+        # Test daily payments data structure
+        today = datetime.now().strftime("%Y-%m-%d")
+        response = requests.get(f"{self.base_url}/api/facturation/daily-payments?date={today}")
+        self.assertEqual(response.status_code, 200)
+        
+        try:
+            data = response.json()
+            self.assertIsInstance(data, dict)
+            self.assertIsInstance(data.get("payments", []), list)
+            self.assertIsInstance(data.get("totals", {}), dict)
+        except ValueError:
+            self.fail("Daily payments endpoint did not return valid JSON")
+        
+        # Test monthly stats data structure
+        current_date = datetime.now()
+        response = requests.get(f"{self.base_url}/api/facturation/monthly-stats-with-evolution?year={current_date.year}&month={current_date.month}")
+        self.assertEqual(response.status_code, 200)
+        
+        try:
+            data = response.json()
+            self.assertIsInstance(data, dict)
+            self.assertIsInstance(data.get("evolution", {}), dict)
+        except ValueError:
+            self.fail("Monthly stats endpoint did not return valid JSON")
+        
+        # Test yearly stats data structure
+        response = requests.get(f"{self.base_url}/api/facturation/yearly-stats?year={current_date.year}")
+        self.assertEqual(response.status_code, 200)
+        
+        try:
+            data = response.json()
+            self.assertIsInstance(data, dict)
+        except ValueError:
+            self.fail("Yearly stats endpoint did not return valid JSON")
+        
+        # Test payments endpoint data structure
+        response = requests.get(f"{self.base_url}/api/payments")
+        self.assertEqual(response.status_code, 200)
+        
+        try:
+            data = response.json()
+            self.assertIsInstance(data, list)
+        except ValueError:
+            self.fail("Payments endpoint did not return valid JSON")
+        
+        # Test payments search data structure
+        response = requests.get(f"{self.base_url}/api/payments/search")
+        self.assertEqual(response.status_code, 200)
+        
+        try:
+            data = response.json()
+            self.assertIsInstance(data, dict)
+            self.assertIsInstance(data.get("payments", []), list)
+            self.assertIsInstance(data.get("pagination", {}), dict)
+        except ValueError:
+            self.fail("Payments search endpoint did not return valid JSON")
+        
+        # Test cash movements data structure
+        response = requests.get(f"{self.base_url}/api/cash-movements")
+        self.assertEqual(response.status_code, 200)
+        
+        try:
+            data = response.json()
+            self.assertIsInstance(data, dict)
+            self.assertIsInstance(data.get("movements", []), list)
+            self.assertIsInstance(data.get("pagination", {}), dict)
+        except ValueError:
+            self.fail("Cash movements endpoint did not return valid JSON")
+        
+        print(f"✅ All Facturation endpoints return valid JSON with proper structure")
+        print(f"🎉 Data Structure Validation Test: PASSED")
+    
+    def test_facturation_comprehensive_workflow(self):
+        """Test comprehensive Facturation workflow - End-to-end testing"""
+        print("\n🔍 Testing Facturation Comprehensive Workflow")
+        
+        # Step 1: Get enhanced stats overview
+        print("  Step 1: Getting enhanced statistics overview...")
+        response = requests.get(f"{self.base_url}/api/facturation/enhanced-stats")
+        self.assertEqual(response.status_code, 200)
+        enhanced_stats = response.json()
+        print(f"  ✅ Enhanced stats retrieved (Daily: {enhanced_stats['recette_jour']} TND)")
+        
+        # Step 2: Get daily payments breakdown
+        print("  Step 2: Getting daily payments breakdown...")
+        today = datetime.now().strftime("%Y-%m-%d")
+        response = requests.get(f"{self.base_url}/api/facturation/daily-payments?date={today}")
+        self.assertEqual(response.status_code, 200)
+        daily_payments = response.json()
+        print(f"  ✅ Daily payments retrieved ({daily_payments['totals']['nb_total']} payments)")
+        
+        # Step 3: Get monthly stats with evolution
+        print("  Step 3: Getting monthly statistics with evolution...")
+        current_date = datetime.now()
+        response = requests.get(f"{self.base_url}/api/facturation/monthly-stats-with-evolution?year={current_date.year}&month={current_date.month}")
+        self.assertEqual(response.status_code, 200)
+        monthly_stats = response.json()
+        print(f"  ✅ Monthly stats retrieved (Revenue: {monthly_stats['recette_mois']} TND, Evolution: {monthly_stats['evolution']['evolution_pourcentage']}%)")
+        
+        # Step 4: Get yearly statistics
+        print("  Step 4: Getting yearly statistics...")
+        response = requests.get(f"{self.base_url}/api/facturation/yearly-stats?year={current_date.year}")
+        self.assertEqual(response.status_code, 200)
+        yearly_stats = response.json()
+        print(f"  ✅ Yearly stats retrieved (Annual revenue: {yearly_stats['recette_annee']} TND)")
+        
+        # Step 5: Search payments with different filters
+        print("  Step 5: Testing payment search functionality...")
+        response = requests.get(f"{self.base_url}/api/payments/search?statut_paiement=visite")
+        self.assertEqual(response.status_code, 200)
+        visite_payments = response.json()
+        
+        response = requests.get(f"{self.base_url}/api/payments/search?statut_paiement=impaye")
+        self.assertEqual(response.status_code, 200)
+        unpaid_payments = response.json()
+        print(f"  ✅ Payment search tested (Visits: {visite_payments['total_found']}, Unpaid: {unpaid_payments['total_found']})")
+        
+        # Step 6: Get all payments
+        print("  Step 6: Getting all payments...")
+        response = requests.get(f"{self.base_url}/api/payments")
+        self.assertEqual(response.status_code, 200)
+        all_payments = response.json()
+        print(f"  ✅ All payments retrieved ({len(all_payments)} total payments)")
+        
+        # Step 7: Get cash movements
+        print("  Step 7: Getting cash movements...")
+        response = requests.get(f"{self.base_url}/api/cash-movements")
+        self.assertEqual(response.status_code, 200)
+        cash_movements = response.json()
+        print(f"  ✅ Cash movements retrieved ({cash_movements['pagination']['total_count']} movements, Balance: {cash_movements['solde_jour']} TND)")
+        
+        # Step 8: Create a test cash movement
+        print("  Step 8: Creating test cash movement...")
+        test_movement = {
+            "montant": 25.0,
+            "type_mouvement": "ajout",
+            "motif": "Test workflow cash addition",
+            "date": today
+        }
+        response = requests.post(f"{self.base_url}/api/cash-movements", json=test_movement)
+        self.assertEqual(response.status_code, 200)
+        new_movement = response.json()
+        print(f"  ✅ Test cash movement created (New balance: {new_movement['solde_actuel']} TND)")
+        
+        # Step 9: Verify data consistency across endpoints
+        print("  Step 9: Verifying data consistency...")
+        
+        # Re-fetch enhanced stats to see if they updated
+        response = requests.get(f"{self.base_url}/api/facturation/enhanced-stats")
+        self.assertEqual(response.status_code, 200)
+        updated_enhanced_stats = response.json()
+        
+        # The daily revenue should have increased by the cash movement amount
+        expected_increase = 25.0
+        actual_increase = updated_enhanced_stats['recette_jour'] - enhanced_stats['recette_jour']
+        self.assertAlmostEqual(actual_increase, expected_increase, places=1)
+        
+        print(f"  ✅ Data consistency verified (Revenue increased by {actual_increase} TND)")
+        
+        print(f"🎉 Facturation Comprehensive Workflow Test: PASSED")
+        print(f"   - All 8 Facturation endpoints tested successfully")
+        print(f"   - End-to-end workflow validated")
+        print(f"   - Data consistency confirmed")
+        print(f"   - Error handling verified")
+
 if __name__ == "__main__":
     unittest.main()
 
