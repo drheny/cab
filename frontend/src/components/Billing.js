@@ -217,6 +217,19 @@ const Billing = ({ user }) => {
     }
   };
 
+  const fetchChartsData = async () => {
+    try {
+      setChartsLoading(true);
+      const response = await axios.get(`${API_BASE_URL}/api/admin/charts/yearly-evolution`);
+      setChartsData(response.data);
+    } catch (error) {
+      console.error('Error fetching charts data:', error);
+      toast.error('Erreur lors du chargement des graphiques');
+    } finally {
+      setChartsLoading(false);
+    }
+  };
+
   const fetchCashMovements = async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/api/cash-movements`);
