@@ -319,16 +319,28 @@ const Billing = ({ user }) => {
     setShowEditModal(true);
   };
 
-  const handleViewPatient = (patient) => {
-    // Navigate to patient details or show patient modal
-    console.log('View patient:', patient);
-    toast(`Affichage du patient: ${patient?.prenom} ${patient?.nom}`);
+  const handleViewPatient = async (patient) => {
+    try {
+      // Fetch complete patient data
+      const response = await axios.get(`${API_BASE_URL}/api/patients/${patient.id}`);
+      setSelectedPatientData(response.data);
+      setShowPatientModal(true);
+    } catch (error) {
+      console.error('Error fetching patient data:', error);
+      toast.error('Erreur lors du chargement des données du patient');
+    }
   };
 
-  const handleViewConsultation = (payment) => {
-    // Navigate to consultation details or show consultation modal
-    console.log('View consultation:', payment);
-    toast(`Affichage de la consultation du ${new Date(payment.date).toLocaleDateString('fr-FR')}`);
+  const handleViewConsultation = async (payment) => {
+    try {
+      // Fetch consultation data based on payment appointment_id
+      const response = await axios.get(`${API_BASE_URL}/api/consultations/${payment.appointment_id}`);
+      setSelectedConsultationData(response.data);
+      setShowConsultationModal(true);
+    } catch (error) {
+      console.error('Error fetching consultation data:', error);
+      toast.error('Erreur lors du chargement des données de consultation');
+    }
   };
 
   const handleDeletePayment = async (payment) => {
