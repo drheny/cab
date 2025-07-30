@@ -1073,19 +1073,22 @@ const Billing = ({ user }) => {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Patient
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Date
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Montant
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Statut
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Type
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Assurance
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
@@ -1093,47 +1096,66 @@ const Billing = ({ user }) => {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredPayments.map((payment) => (
                       <tr key={payment.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="text-sm font-medium text-gray-900">
-                              {payment.patient?.prenom} {payment.patient?.nom}
-                            </div>
-                          </div>
+                        <td className="px-4 py-3">
+                          <button
+                            onClick={() => handleViewPatient(payment.patient)}
+                            className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                          >
+                            {payment.patient?.prenom} {payment.patient?.nom}
+                          </button>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-4 py-3 text-sm text-gray-900">
                           {new Date(payment.date).toLocaleDateString('fr-FR')}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
-                          {formatCurrency(payment.montant)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-4 py-3">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                             payment.statut === 'paye' 
                               ? 'bg-green-100 text-green-800' 
                               : 'bg-red-100 text-red-800'
                           }`}>
-                            {payment.statut === 'paye' ? 'Payé' : 'Impayé'}
+                            {payment.montant} TND
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            payment.type_rdv === 'visite'
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-purple-100 text-purple-800'
+                          }`}>
+                            {payment.type_rdv === 'visite' ? 'Visite' : 'Contrôle'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            payment.assure 
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {payment.assure ? 'Assuré' : 'Non assuré'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
                           <div className="flex items-center space-x-2">
                             <button
-                              onClick={() => handleViewPayment(payment)}
-                              className="text-blue-600 hover:text-blue-900"
+                              onClick={() => handleViewConsultation(payment)}
+                              className="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded hover:bg-blue-100"
+                              title="Voir la consultation"
                             >
-                              <Eye className="w-4 h-4" />
+                              👁️ Voir
                             </button>
                             <button
                               onClick={() => handleEditPayment(payment)}
-                              className="text-green-600 hover:text-green-900"
+                              className="inline-flex items-center px-2 py-1 text-xs font-medium text-yellow-600 bg-yellow-50 rounded hover:bg-yellow-100"
+                              title="Éditer le paiement"
                             >
-                              <Edit className="w-4 h-4" />
+                              ✏️ Éditer
                             </button>
                             <button
                               onClick={() => handleDeletePayment(payment)}
-                              className="text-red-600 hover:text-red-900"
+                              className="inline-flex items-center px-2 py-1 text-xs font-medium text-red-600 bg-red-50 rounded hover:bg-red-100"
+                              title="Supprimer le paiement"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              🗑️ Supprimer
                             </button>
                           </div>
                         </td>
