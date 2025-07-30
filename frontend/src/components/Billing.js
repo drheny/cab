@@ -935,8 +935,29 @@ const Billing = ({ user }) => {
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-600">
                 {filteredPayments.length} paiement{filteredPayments.length !== 1 ? 's' : ''} trouvé{filteredPayments.length !== 1 ? 's' : ''}
+                {/* Debug info */}
+                <span className="text-xs text-gray-400 ml-2">
+                  (Total DB: {payments.length})
+                </span>
               </div>
               <div className="flex items-center space-x-3">
+                <button
+                  onClick={() => {
+                    // Clear all filters to show all payments
+                    setSearchFilters({
+                      patientName: '',
+                      dateDebut: '',
+                      dateFin: '',
+                      statutPaiement: '',
+                      assure: '',
+                      typeConsultation: ''
+                    });
+                    setSearchResults([]);
+                  }}
+                  className="btn-outline text-sm bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
+                >
+                  Tout Afficher
+                </button>
                 <button
                   onClick={clearAdvancedSearch}
                   className="btn-outline text-sm"
