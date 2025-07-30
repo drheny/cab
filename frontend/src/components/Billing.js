@@ -727,8 +727,8 @@ const Billing = ({ user }) => {
                       <div className="text-sm text-blue-600">Visites</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-blue-700">{monthlyStats.nb_controles}</div>
-                      <div className="text-sm text-blue-600">Contrôles</div>
+                      <div className="text-2xl font-bold text-blue-700">{monthlyStats.nb_assures}</div>
+                      <div className="text-sm text-blue-600">Assurés</div>
                     </div>
                   </div>
                   {monthlyStats.evolution && (
