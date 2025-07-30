@@ -887,93 +887,119 @@ const Billing = ({ user }) => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Recherche avancée</h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-4">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Recherche patient en temps réel..."
-                  value={searchFilters.patientName}
-                  onChange={(e) => {
-                    setSearchFilters(prev => ({ ...prev, patientName: e.target.value }));
-                  }}
-                  onFocus={() => {
-                    if (patientSuggestions.length > 0) {
-                      setShowSuggestions(true);
-                    }
-                  }}
-                  onBlur={() => {
-                    // Delay hiding to allow clicking on suggestions
-                    setTimeout(() => setShowSuggestions(false), 150);
-                  }}
-                  className="input-field w-full"
-                />
-                {/* Patient Suggestions Dropdown */}
-                {showSuggestions && patientSuggestions.length > 0 && (
-                  <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto mt-1">
-                    {patientSuggestions.map((patient) => (
-                      <div
-                        key={patient.id}
-                        className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                        onMouseDown={() => {
-                          const fullName = `${patient.prenom} ${patient.nom}`;
-                          setSearchFilters(prev => ({ ...prev, patientName: fullName }));
-                          setShowSuggestions(false);
-                        }}
-                      >
-                        <div className="font-medium">{patient.prenom} {patient.nom}</div>
-                        {patient.numero_whatsapp && (
-                          <div className="text-xs text-gray-500">{patient.numero_whatsapp}</div>
-                        )}
-                      </div>
-                    ))}
+            {/* Advanced Search */}
+            <div className="bg-gray-50 rounded-lg p-6 mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">🔍 Recherche Avancée</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Patient Search */}
+                <div className="relative col-span-1 md:col-span-2 lg:col-span-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Recherche Patient
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Tapez le nom du patient..."
+                    value={searchFilters.patientName}
+                    onChange={(e) => {
+                      setSearchFilters(prev => ({ ...prev, patientName: e.target.value }));
+                    }}
+                    onFocus={() => {
+                      if (patientSuggestions.length > 0) {
+                        setShowSuggestions(true);
+                      }
+                    }}
+                    onBlur={() => {
+                      // Delay hiding to allow clicking on suggestions
+                      setTimeout(() => setShowSuggestions(false), 150);
+                    }}
+                    className="input-field w-full"
+                  />
+                  {/* Patient Suggestions Dropdown */}
+                  {showSuggestions && patientSuggestions.length > 0 && (
+                    <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto mt-1">
+                      {patientSuggestions.map((patient) => (
+                        <div
+                          key={patient.id}
+                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                          onMouseDown={() => {
+                            const fullName = `${patient.prenom} ${patient.nom}`;
+                            setSearchFilters(prev => ({ ...prev, patientName: fullName }));
+                            setShowSuggestions(false);
+                          }}
+                        >
+                          <div className="font-medium">{patient.prenom} {patient.nom}</div>
+                          {patient.numero_whatsapp && (
+                            <div className="text-xs text-gray-500">{patient.numero_whatsapp}</div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Date Range */}
+                <div className="grid grid-cols-2 gap-2 col-span-1 md:col-span-2 lg:col-span-1">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Date début</label>
+                    <input
+                      type="date"
+                      value={searchFilters.dateDebut}
+                      onChange={(e) => setSearchFilters(prev => ({ ...prev, dateDebut: e.target.value }))}
+                      className="input-field w-full"
+                    />
                   </div>
-                )}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Date fin</label>
+                    <input
+                      type="date"
+                      value={searchFilters.dateFin}
+                      onChange={(e) => setSearchFilters(prev => ({ ...prev, dateFin: e.target.value }))}
+                      className="input-field w-full"
+                    />
+                  </div>
+                </div>
+
+                {/* Filters Row */}
+                <div className="grid grid-cols-3 gap-2 col-span-1 md:col-span-2 lg:col-span-1">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
+                    <select
+                      value={searchFilters.typeConsultation}
+                      onChange={(e) => setSearchFilters(prev => ({ ...prev, typeConsultation: e.target.value }))}
+                      className="input-field text-xs"
+                    >
+                      <option value="">Tous</option>
+                      <option value="visite">Visite</option>
+                      <option value="controle">Contrôle</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Statut</label>
+                    <select
+                      value={searchFilters.statutPaiement}
+                      onChange={(e) => setSearchFilters(prev => ({ ...prev, statutPaiement: e.target.value }))}
+                      className="input-field text-xs"
+                    >
+                      <option value="">Tous</option>
+                      <option value="paye">Payé</option>
+                      <option value="impaye">Impayé</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Assurance</label>
+                    <select
+                      value={searchFilters.assure}
+                      onChange={(e) => setSearchFilters(prev => ({ ...prev, assure: e.target.value }))}
+                      className="input-field text-xs"
+                    >
+                      <option value="">Tous</option>
+                      <option value="true">Assuré</option>
+                      <option value="false">Non assuré</option>
+                    </select>
+                  </div>
+                </div>
               </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Date début</label>
-                <input
-                  type="date"
-                  value={searchFilters.dateDebut}
-                  onChange={(e) => setSearchFilters(prev => ({ ...prev, dateDebut: e.target.value }))}
-                  className="input-field"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Date fin</label>
-                <input
-                  type="date"
-                  value={searchFilters.dateFin}
-                  onChange={(e) => setSearchFilters(prev => ({ ...prev, dateFin: e.target.value }))}
-                  className="input-field"
-                />
-              </div>
-              <select
-                value={searchFilters.typeConsultation}
-                onChange={(e) => setSearchFilters(prev => ({ ...prev, typeConsultation: e.target.value }))}
-                className="input-field"
-              >
-                <option value="">Tous les types</option>
-                <option value="visite">Visite</option>
-                <option value="controle">Contrôle</option>
-              </select>
-              <select
-                value={searchFilters.statutPaiement}
-                onChange={(e) => setSearchFilters(prev => ({ ...prev, statutPaiement: e.target.value }))}
-                className="input-field"
-              >
-                <option value="">Tous les statuts</option>
-                <option value="paye">Payé</option>
-                <option value="impaye">Impayé</option>
-              </select>
-              <select
-                value={searchFilters.assure}
-                onChange={(e) => setSearchFilters(prev => ({ ...prev, assure: e.target.value }))}
-                className="input-field"
-              >
-                <option value="">Assurance</option>
-                <option value="true">Assuré</option>
-                <option value="false">Non assuré</option>
-              </select>
             </div>
 
             <div className="flex items-center justify-between">
