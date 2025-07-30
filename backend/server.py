@@ -201,6 +201,7 @@ class PaymentUpdate(BaseModel):
     type_paiement: str = "espece"  # Toujours espèces
     assure: bool = False
     notes: str = ""
+    type_rdv: Optional[str] = None  # Allow changing consultation type
 
 # Modèles pour la messagerie instantanée
 class Message(BaseModel):
