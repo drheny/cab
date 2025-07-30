@@ -714,7 +714,7 @@ const Billing = ({ user }) => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Recherche avancée</h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-4">
               <input
                 type="text"
                 placeholder="Recherche patient en temps réel..."
@@ -740,6 +740,15 @@ const Billing = ({ user }) => {
                   className="input-field"
                 />
               </div>
+              <select
+                value={searchFilters.typeConsultation}
+                onChange={(e) => setSearchFilters(prev => ({ ...prev, typeConsultation: e.target.value }))}
+                className="input-field"
+              >
+                <option value="">Tous les types</option>
+                <option value="visite">Visite</option>
+                <option value="controle">Contrôle</option>
+              </select>
               <select
                 value={searchFilters.statutPaiement}
                 onChange={(e) => setSearchFilters(prev => ({ ...prev, statutPaiement: e.target.value }))}
