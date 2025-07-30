@@ -88,6 +88,10 @@ const Billing = ({ user }) => {
   const [patientSuggestions, setPatientSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   
+  // Charts data states
+  const [chartsData, setChartsData] = useState(null);
+  const [chartsLoading, setChartsLoading] = useState(false);
+  
   // States for cash management (caisse)
   const [cashMovements, setCashMovements] = useState([]);
   const [showCashForm, setShowCashForm] = useState(false);
