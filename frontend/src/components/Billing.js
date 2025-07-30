@@ -602,14 +602,26 @@ const Billing = ({ user }) => {
                       max="2030"
                       defaultValue={new Date().getFullYear()}
                       onChange={(e) => {
-                        setYearlyStats(null);
-                        fetchYearlyStats(parseInt(e.target.value));
+                        if (e.target.value) {
+                          setYearlyStats(null);
+                        }
                       }}
                       className="input-field w-full"
+                      id="yearlySearch"
                     />
-                    <div className="text-xs text-purple-600">
-                      Stats annuelles complètes
-                    </div>
+                    <button
+                      onClick={() => {
+                        const yearInput = document.getElementById('yearlySearch');
+                        if (yearInput.value) {
+                          fetchYearlyStats(parseInt(yearInput.value));
+                        } else {
+                          toast.error('Veuillez sélectionner une année');
+                        }
+                      }}
+                      className="btn-primary w-full"
+                    >
+                      Voir
+                    </button>
                   </div>
                 </div>
               </div>
