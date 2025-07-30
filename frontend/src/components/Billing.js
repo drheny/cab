@@ -647,7 +647,113 @@ const Billing = ({ user }) => {
                 </div>
               </div>
 
-              {/* Results sections would go here - I'll keep this section compact for space */}
+              {/* Results Display Sections */}
+              {dailyPayments && (
+                <div className="mt-6 bg-green-50 rounded-lg p-4 border border-green-200">
+                  <h4 className="font-semibold text-green-900 mb-3">
+                    Résultats pour le {new Date(dailyPayments.date).toLocaleDateString('fr-FR')}
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-700">{dailyPayments.totals.recette_totale} DT</div>
+                      <div className="text-sm text-green-600">Recette totale</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-700">{dailyPayments.totals.nb_total}</div>
+                      <div className="text-sm text-green-600">Total paiements</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-700">{dailyPayments.totals.nb_visites}</div>
+                      <div className="text-sm text-green-600">Visites</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-700">{dailyPayments.totals.nb_controles}</div>
+                      <div className="text-sm text-green-600">Contrôles</div>
+                    </div>
+                  </div>
+                  {dailyPayments.payments.length > 0 ? (
+                    <div className="space-y-2">
+                      <div className="text-sm font-semibold text-green-900">Détail des paiements :</div>
+                      {dailyPayments.payments.slice(0, 5).map((payment, index) => (
+                        <div key={index} className="flex justify-between items-center bg-white p-2 rounded border">
+                          <span className="text-sm">{payment.patient?.prenom} {payment.patient?.nom}</span>
+                          <span className="font-semibold text-green-700">{payment.montant} DT</span>
+                        </div>
+                      ))}
+                      {dailyPayments.payments.length > 5 && (
+                        <div className="text-xs text-green-600 text-center">
+                          ... et {dailyPayments.payments.length - 5} autre(s) paiement(s)
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 text-green-600">Aucun paiement pour cette date</div>
+                  )}
+                </div>
+              )}
+
+              {monthlyStats && (
+                <div className="mt-6 bg-blue-50 rounded-lg p-4 border border-blue-200">
+                  <h4 className="font-semibold text-blue-900 mb-3">
+                    Résultats pour {monthlyStats.month}/{monthlyStats.year}
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-700">{monthlyStats.recette_mois} DT</div>
+                      <div className="text-sm text-blue-600">Recette mensuelle</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-700">{monthlyStats.nb_total_rdv}</div>
+                      <div className="text-sm text-blue-600">Total RDV</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-700">{monthlyStats.nb_visites}</div>
+                      <div className="text-sm text-blue-600">Visites</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-700">{monthlyStats.nb_controles}</div>
+                      <div className="text-sm text-blue-600">Contrôles</div>
+                    </div>
+                  </div>
+                  {monthlyStats.evolution && (
+                    <div className="bg-white p-3 rounded border">
+                      <div className="text-sm font-semibold text-blue-900 mb-2">Évolution par rapport au mois précédent :</div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Recette précédente: {monthlyStats.evolution.recette_precedente} DT</span>
+                        <span className={`font-semibold ${monthlyStats.evolution.evolution_pourcentage >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {monthlyStats.evolution.evolution_pourcentage >= 0 ? '+' : ''}{monthlyStats.evolution.evolution_pourcentage}%
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {yearlyStats && (
+                <div className="mt-6 bg-purple-50 rounded-lg p-4 border border-purple-200">
+                  <h4 className="font-semibold text-purple-900 mb-3">
+                    Résultats pour l'année {yearlyStats.year}
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-purple-700">{yearlyStats.recette_annee} DT</div>
+                      <div className="text-sm text-purple-600">Recette annuelle</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-purple-700">{yearlyStats.nb_total_rdv}</div>
+                      <div className="text-sm text-purple-600">Total RDV</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-purple-700">{yearlyStats.nb_visites}</div>
+                      <div className="text-sm text-purple-600">Visites</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-purple-700">{yearlyStats.nb_controles}</div>
+                      <div className="text-sm text-purple-600">Contrôles</div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
