@@ -172,7 +172,8 @@ const Billing = ({ user }) => {
   const fetchPayments = async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/api/payments`);
-      setPayments(response.data?.payments || []);
+      // API returns array directly, not wrapped in payments property
+      setPayments(Array.isArray(response.data) ? response.data : response.data?.payments || []);
     } catch (error) {
       console.error('Error fetching payments:', error);
     }
