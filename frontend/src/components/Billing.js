@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import PaymentModal from './PaymentModal';
 import {
   Chart as ChartJS,
   CategoryScale,
