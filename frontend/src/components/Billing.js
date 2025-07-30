@@ -2081,8 +2081,8 @@ const Billing = ({ user }) => {
       {/* Consultation Modal */}
       {showConsultationModal && selectedConsultationData && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-gray-900">
                 🩺 Détails de la Consultation
               </h2>
@@ -2094,61 +2094,123 @@ const Billing = ({ user }) => {
               </button>
             </div>
             
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Patient</label>
-                  <p className="mt-1 text-sm text-gray-900 font-medium">
-                    {selectedConsultationData.patient?.prenom} {selectedConsultationData.patient?.nom}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Date</label>
-                  <p className="mt-1 text-sm text-gray-900">
-                    {selectedConsultationData.date ? new Date(selectedConsultationData.date).toLocaleDateString('fr-FR') : 'Non renseignée'}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Heure</label>
-                  <p className="mt-1 text-sm text-gray-900">{selectedConsultationData.heure || 'Non renseignée'}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Type</label>
-                  <p className="mt-1 text-sm">
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                      selectedConsultationData.type_rdv === 'visite'
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-purple-100 text-purple-800'
-                    }`}>
-                      {selectedConsultationData.type_rdv === 'visite' ? 'Visite' : 'Contrôle'}
-                    </span>
-                  </p>
+            <div className="space-y-6">
+              {/* Informations générales */}
+              <div className="bg-blue-50 rounded-lg p-4">
+                <h3 className="text-lg font-semibold text-blue-900 mb-4">Informations Générales</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Patient</label>
+                    <p className="mt-1 text-sm text-gray-900 font-medium">
+                      {selectedConsultationData.patient?.prenom} {selectedConsultationData.patient?.nom}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Date</label>
+                    <p className="mt-1 text-sm text-gray-900">
+                      {selectedConsultationData.date ? new Date(selectedConsultationData.date).toLocaleDateString('fr-FR') : 'Non renseignée'}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Durée</label>
+                    <p className="mt-1 text-sm text-gray-900">{selectedConsultationData.duree || 'Non renseignée'} min</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Type</label>
+                    <p className="mt-1 text-sm">
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        selectedConsultationData.type_rdv === 'visite'
+                          ? 'bg-blue-100 text-blue-800'
+                          : 'bg-purple-100 text-purple-800'
+                      }`}>
+                        {selectedConsultationData.type_rdv === 'visite' ? 'Visite' : 'Contrôle'}
+                      </span>
+                    </p>
+                  </div>
                 </div>
               </div>
-              
-              {selectedConsultationData.motif && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Motif</label>
-                  <p className="mt-1 text-sm text-gray-900 bg-gray-50 p-3 rounded-lg">
-                    {selectedConsultationData.motif}
+
+              {/* Mesures physiques */}
+              <div className="bg-green-50 rounded-lg p-4">
+                <h3 className="text-lg font-semibold text-green-900 mb-4">Mesures Physiques</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Poids</label>
+                    <p className="mt-1 text-sm text-gray-900 font-medium">{selectedConsultationData.poids || 'Non renseigné'} kg</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Taille</label>
+                    <p className="mt-1 text-sm text-gray-900 font-medium">{selectedConsultationData.taille || 'Non renseignée'} cm</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Périmètre Crânien</label>
+                    <p className="mt-1 text-sm text-gray-900 font-medium">{selectedConsultationData.pc || 'Non renseigné'} cm</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Observations cliniques */}
+              {selectedConsultationData.observations && (
+                <div className="bg-yellow-50 rounded-lg p-4">
+                  <h3 className="text-lg font-semibold text-yellow-900 mb-4">Observations Cliniques</h3>
+                  <p className="text-sm text-gray-900 bg-white p-4 rounded-lg leading-relaxed">
+                    {selectedConsultationData.observations}
                   </p>
                 </div>
               )}
-              
-              {selectedConsultationData.diagnostic && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Diagnostic</label>
-                  <p className="mt-1 text-sm text-gray-900 bg-gray-50 p-3 rounded-lg">
-                    {selectedConsultationData.diagnostic}
+
+              {/* Diagnostic */}
+              {selectedConsultationData.bilan && (
+                <div className="bg-red-50 rounded-lg p-4">
+                  <h3 className="text-lg font-semibold text-red-900 mb-4">Bilan/Diagnostic</h3>
+                  <p className="text-sm text-gray-900 bg-white p-4 rounded-lg leading-relaxed">
+                    {selectedConsultationData.bilan}
                   </p>
                 </div>
               )}
-              
+
+              {/* Traitement */}
               {selectedConsultationData.traitement && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Traitement</label>
-                  <p className="mt-1 text-sm text-gray-900 bg-gray-50 p-3 rounded-lg">
+                <div className="bg-purple-50 rounded-lg p-4">
+                  <h3 className="text-lg font-semibold text-purple-900 mb-4">Traitement Prescrit</h3>
+                  <p className="text-sm text-gray-900 bg-white p-4 rounded-lg leading-relaxed">
                     {selectedConsultationData.traitement}
+                  </p>
+                </div>
+              )}
+
+              {/* Rappel vaccin */}
+              {selectedConsultationData.rappel_vaccin && (
+                <div className="bg-orange-50 rounded-lg p-4">
+                  <h3 className="text-lg font-semibold text-orange-900 mb-4">💉 Rappel Vaccin</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Nom du vaccin</label>
+                      <p className="mt-1 text-sm text-gray-900 font-medium">{selectedConsultationData.nom_vaccin || 'Non spécifié'}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Date prévue</label>
+                      <p className="mt-1 text-sm text-gray-900">
+                        {selectedConsultationData.date_vaccin ? new Date(selectedConsultationData.date_vaccin).toLocaleDateString('fr-FR') : 'Non spécifiée'}
+                      </p>
+                    </div>
+                  </div>
+                  {selectedConsultationData.rappel_whatsapp_vaccin && (
+                    <div className="mt-3 p-3 bg-white rounded-lg">
+                      <div className="flex items-center text-green-700">
+                        <span className="text-sm">📱 Rappel WhatsApp programmé</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Relance */}
+              {selectedConsultationData.relance_date && (
+                <div className="bg-indigo-50 rounded-lg p-4">
+                  <h3 className="text-lg font-semibold text-indigo-900 mb-4">📅 Relance Programmée</h3>
+                  <p className="text-sm text-gray-900">
+                    <strong>Date de relance:</strong> {new Date(selectedConsultationData.relance_date).toLocaleDateString('fr-FR')}
                   </p>
                 </div>
               )}
