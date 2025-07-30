@@ -844,13 +844,47 @@ const Billing = ({ user }) => {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Recherche avancée</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-4">
-              <input
-                type="text"
-                placeholder="Recherche patient en temps réel..."
-                value={searchFilters.patientName}
-                onChange={(e) => setSearchFilters(prev => ({ ...prev, patientName: e.target.value }))}
-                className="input-field"
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Recherche patient en temps réel..."
+                  value={searchFilters.patientName}
+                  onChange={(e) => {
+                    setSearchFilters(prev => ({ ...prev, patientName: e.target.value }));
+                  }}
+                  onFocus={() => {
+                    if (patientSuggestions.length > 0) {
+                      setShowSuggestions(true);
+                    }
+                  }}
+                  onBlur={() => {
+                    // Delay hiding to allow clicking on suggestions
+                    setTimeout(() => setShowSuggestions(false), 150);
+                  }}
+                  className="input-field w-full"
+                />
+                {/* Patient Suggestions Dropdown */}
+                {showSuggestions && patientSuggestions.length > 0 && (
+                  <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto mt-1">
+                    {patientSuggestions.map((patient) => (
+                      <div
+                        key={patient.id}
+                        className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                        onMouseDown={() => {
+                          const fullName = `${patient.prenom} ${patient.nom}`;
+                          setSearchFilters(prev => ({ ...prev, patientName: fullName }));
+                          setShowSuggestions(false);
+                        }}
+                      >
+                        <div className="font-medium">{patient.prenom} {patient.nom}</div>
+                        {patient.numero_whatsapp && (
+                          <div className="text-xs text-gray-500">{patient.numero_whatsapp}</div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Date début</label>
                 <input
