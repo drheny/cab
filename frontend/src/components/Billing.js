@@ -1209,27 +1209,27 @@ const Billing = ({ user }) => {
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-1">
                             <button
                               onClick={() => handleViewConsultation(payment)}
-                              className="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded hover:bg-blue-100"
+                              className="p-1 text-blue-600 hover:bg-blue-100 rounded"
                               title="Voir la consultation"
                             >
-                              👁️ Voir
+                              👁️
                             </button>
                             <button
                               onClick={() => handleEditPayment(payment)}
-                              className="inline-flex items-center px-2 py-1 text-xs font-medium text-yellow-600 bg-yellow-50 rounded hover:bg-yellow-100"
+                              className="p-1 text-yellow-600 hover:bg-yellow-100 rounded"
                               title="Éditer le paiement"
                             >
-                              ✏️ Éditer
+                              ✏️
                             </button>
                             <button
                               onClick={() => handleDeletePayment(payment)}
-                              className="inline-flex items-center px-2 py-1 text-xs font-medium text-red-600 bg-red-50 rounded hover:bg-red-100"
+                              className="p-1 text-red-600 hover:bg-red-100 rounded"
                               title="Supprimer le paiement"
                             >
-                              🗑️ Supprimer
+                              🗑️
                             </button>
                           </div>
                         </td>
