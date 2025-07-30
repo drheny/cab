@@ -421,7 +421,7 @@ const Billing = ({ user }) => {
         payment.assure.toString() === searchFilters.assure;
 
       const matchesType = !searchFilters.typeConsultation || 
-        payment.type_consultation === searchFilters.typeConsultation;
+        payment.type_rdv === searchFilters.typeConsultation;
 
       // Date filtering
       const paymentDate = new Date(payment.date);
