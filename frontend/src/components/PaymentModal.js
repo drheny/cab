@@ -154,15 +154,46 @@ const PaymentModal = ({
               <div>
                 <span className="text-sm text-gray-600">Type de RDV:</span>
                 <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
-                  isControle ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  paymentData.type_rdv === 'controle' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                 }`}>
-                  {isControle ? 'Contrôle' : 'Visite'}
+                  {paymentData.type_rdv === 'controle' ? 'Contrôle' : 'Visite'}
                 </span>
               </div>
               <div className="text-right">
                 <div className="text-sm text-gray-600">Date & Heure</div>
                 <div className="font-medium">{appointment.date} à {appointment.heure}</div>
               </div>
+            </div>
+          </div>
+
+          {/* Type de consultation - Editable */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Type de consultation
+            </label>
+            <div className="flex space-x-4 mb-4">
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="type_rdv"
+                  checked={paymentData.type_rdv === 'visite'}
+                  onChange={() => handleConsultationTypeChange('visite')}
+                  disabled={!canModifyPayment}
+                  className="mr-2"
+                />
+                <span className="text-sm text-gray-700">Visite (65 TND)</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="type_rdv"
+                  checked={paymentData.type_rdv === 'controle'}
+                  onChange={() => handleConsultationTypeChange('controle')}
+                  disabled={!canModifyPayment}
+                  className="mr-2"
+                />
+                <span className="text-sm text-gray-700">Contrôle (Gratuit)</span>
+              </label>
             </div>
           </div>
 
