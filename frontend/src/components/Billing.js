@@ -2206,10 +2206,12 @@ const Billing = ({ user }) => {
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
         appointment={editingPayment}
-        onPaymentUpdate={(appointmentId, paymentData) => {
-          // Reload payments after update
-          fetchPayments();
-          toast.success('Paiement mis à jour avec succès');
+        onPaymentUpdate={async (appointmentId, paymentData) => {
+          // Reload payments and dashboard data after update
+          await fetchPayments();
+          await fetchInitialData(); // Reload dashboard stats
+          setShowEditModal(false); // Close modal after successful update
+          toast.success('Paiement et consultation mis à jour avec succès');
         }}
         API_BASE_URL={API_BASE_URL}
         user={user}
