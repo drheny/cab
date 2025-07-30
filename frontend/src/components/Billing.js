@@ -1115,6 +1115,236 @@ const Billing = ({ user }) => {
         </div>
       )}
 
+      {/* Stats Tab Content */}
+      {activeTab === 'stats' && (
+        <div className="space-y-6">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center space-x-2 mb-6">
+              <TrendingUp className="w-5 h-5 text-gray-600" />
+              <h2 className="text-lg font-semibold text-gray-900">Évolution Annuelle {chartsData?.year || new Date().getFullYear()}</h2>
+              <button
+                onClick={fetchChartsData}
+                disabled={chartsLoading}
+                className="ml-auto flex items-center space-x-1 px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg disabled:opacity-50"
+              >
+                <RefreshCw className={`w-4 h-4 ${chartsLoading ? 'animate-spin' : ''}`} />
+                <span>Actualiser</span>
+              </button>
+            </div>
+
+            {chartsLoading ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+              </div>
+            ) : chartsData ? (
+              <div className="space-y-8">
+                {/* Summary Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-blue-50 rounded-lg p-4">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <DollarSign className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm font-medium text-blue-900">Recette Annuelle</span>
+                    </div>
+                    <p className="text-2xl font-bold text-blue-600">{chartsData.totals?.recette_annee || 0} TND</p>
+                  </div>
+                  
+                  <div className="bg-green-50 rounded-lg p-4">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <Users className="w-4 h-4 text-green-600" />
+                      <span className="text-sm font-medium text-green-900">Nouveaux Patients</span>
+                    </div>
+                    <p className="text-2xl font-bold text-green-600">{chartsData.totals?.nouveaux_patients_annee || 0}</p>
+                  </div>
+                  
+                  <div className="bg-purple-50 rounded-lg p-4">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <BarChart3 className="w-4 h-4 text-purple-600" />
+                      <span className="text-sm font-medium text-purple-900">Consultations</span>
+                    </div>
+                    <p className="text-2xl font-bold text-purple-600">{chartsData.totals?.consultations_annee || 0}</p>
+                  </div>
+                </div>
+
+                {/* Charts Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {/* Revenue Evolution Chart */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">Évolution de la Recette</h3>
+                    <div className="h-64">
+                      <Line
+                        data={{
+                          labels: chartsData.monthly_data?.map(d => d.month_short) || [],
+                          datasets: [
+                            {
+                              label: 'Recette (TND)',
+                              data: chartsData.monthly_data?.map(d => d.recette_mensuelle) || [],
+                              borderColor: 'rgb(59, 130, 246)',
+                              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                              tension: 0.1,
+                              fill: true
+                            }
+                          ]
+                        }}
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: {
+                            legend: {
+                              display: false
+                            }
+                          },
+                          scales: {
+                            y: {
+                              beginAtZero: true,
+                              ticks: {
+                                callback: function(value) {
+                                  return value + ' TND';
+                                }
+                              }
+                            }
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* New Patients Chart */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">Nouveaux Patients par Mois</h3>
+                    <div className="h-64">
+                      <Bar
+                        data={{
+                          labels: chartsData.monthly_data?.map(d => d.month_short) || [],
+                          datasets: [
+                            {
+                              label: 'Nouveaux Patients',
+                              data: chartsData.monthly_data?.map(d => d.nouveaux_patients) || [],
+                              backgroundColor: 'rgba(34, 197, 94, 0.8)',
+                              borderColor: 'rgb(34, 197, 94)',
+                              borderWidth: 1
+                            }
+                          ]
+                        }}
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: {
+                            legend: {
+                              display: false
+                            }
+                          },
+                          scales: {
+                            y: {
+                              beginAtZero: true,
+                              ticks: {
+                                stepSize: 1
+                              }
+                            }
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Consultations Evolution Chart */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">Évolution des Consultations</h3>
+                    <div className="h-64">
+                      <Line
+                        data={{
+                          labels: chartsData.monthly_data?.map(d => d.month_short) || [],
+                          datasets: [
+                            {
+                              label: 'Visites',
+                              data: chartsData.monthly_data?.map(d => d.nb_visites) || [],
+                              borderColor: 'rgb(147, 51, 234)',
+                              backgroundColor: 'rgba(147, 51, 234, 0.1)',
+                              tension: 0.1
+                            },
+                            {
+                              label: 'Contrôles',
+                              data: chartsData.monthly_data?.map(d => d.nb_controles) || [],
+                              borderColor: 'rgb(245, 158, 11)',
+                              backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                              tension: 0.1
+                            }
+                          ]
+                        }}
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: {
+                            legend: {
+                              position: 'top'
+                            }
+                          },
+                          scales: {
+                            y: {
+                              beginAtZero: true,
+                              ticks: {
+                                stepSize: 1
+                              }
+                            }
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Total Consultations Chart */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">Total Consultations par Mois</h3>
+                    <div className="h-64">
+                      <Bar
+                        data={{
+                          labels: chartsData.monthly_data?.map(d => d.month_short) || [],
+                          datasets: [
+                            {
+                              label: 'Total Consultations',
+                              data: chartsData.monthly_data?.map(d => d.consultations_totales) || [],
+                              backgroundColor: 'rgba(168, 85, 247, 0.8)',
+                              borderColor: 'rgb(168, 85, 247)',
+                              borderWidth: 1
+                            }
+                          ]
+                        }}
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: {
+                            legend: {
+                              display: false
+                            }
+                          },
+                          scales: {
+                            y: {
+                              beginAtZero: true,
+                              ticks: {
+                                stepSize: 1
+                              }
+                            }
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-500">Aucune donnée statistique disponible</p>
+                <button
+                  onClick={fetchChartsData}
+                  className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  Charger les statistiques
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Caisse Tab */}
       {activeTab === 'caisse' && (
         <div className="space-y-6">
