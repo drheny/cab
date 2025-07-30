@@ -60,6 +60,10 @@ const Billing = ({ user }) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingPayment, setEditingPayment] = useState(null);
   
+  // Real-time search states
+  const [patientSuggestions, setPatientSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  
   // States for cash management (caisse)
   const [cashMovements, setCashMovements] = useState([]);
   const [showCashForm, setShowCashForm] = useState(false);
