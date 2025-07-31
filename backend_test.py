@@ -2271,7 +2271,7 @@ class CabinetMedicalAPITest(unittest.TestCase):
         print(f"✅ Advanced Reports endpoint working correctly")
         print(f"   - Next month consultations: {next_month.get('consultations_estimees', 'N/A')}")
         print(f"   - Next month revenue: {next_month.get('revenue_estime', 'N/A')} TND")
-        print(f"   - Confidence level: {next_month.get('confidence', 'N/A')}%")
+        print(f"   - Confidence level: {next_month.get(confidence_field, 'N/A')}%")
         print(f"   - Insights count: {len(data['predictions'].get('insights', []))}")
         print(f"   - Risk factors: {len(data['predictions'].get('risk_factors', []))}")
         print(f"   - Recommendations: {len(data['predictions'].get('recommendations', []))}")
