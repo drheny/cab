@@ -2128,13 +2128,16 @@ const Billing = ({ user }) => {
         </div>
       )}
 
-      {/* Export Modal */}
+      {/* Advanced Export Modal */}
       {showExportModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">Export personnalisé</h3>
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900">Export CSV Avancé</h3>
+                  <p className="text-sm text-gray-600 mt-1">Configuration complète du rapport comptable</p>
+                </div>
                 <button
                   onClick={() => setShowExportModal(false)}
                   className="text-gray-400 hover:text-gray-600"
@@ -2143,93 +2146,247 @@ const Billing = ({ user }) => {
                 </button>
               </div>
               
-              <div className="space-y-6">
-                <div>
-                  <h4 className="text-md font-semibold text-gray-900 mb-3">Champs à inclure</h4>
-                  <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-8">
+                {/* Period Selection */}
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <h4 className="text-md font-semibold text-blue-900 mb-3 flex items-center">
+                    <Calendar className="w-4 h-4 mr-2" />
+                    Période d'export
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Date début</label>
+                      <input
+                        type="date"
+                        value={exportOptions.dateDebut}
+                        onChange={(e) => setExportOptions(prev => ({
+                          ...prev,
+                          dateDebut: e.target.value
+                        }))}
+                        className="input-field"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Date fin</label>
+                      <input
+                        type="date"
+                        value={exportOptions.dateFin}
+                        onChange={(e) => setExportOptions(prev => ({
+                          ...prev,
+                          dateFin: e.target.value
+                        }))}
+                        className="input-field"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Consultation Type Filter */}
+                <div className="bg-green-50 rounded-lg p-4">
+                  <h4 className="text-md font-semibold text-green-900 mb-3 flex items-center">
+                    <Users className="w-4 h-4 mr-2" />
+                    Filtres de consultation
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Type de visite</label>
+                      <select
+                        value={exportOptions.typeVisite}
+                        onChange={(e) => setExportOptions(prev => ({
+                          ...prev,
+                          typeVisite: e.target.value
+                        }))}
+                        className="input-field"
+                      >
+                        <option value="tous">Tous les types</option>
+                        <option value="visite">Visites uniquement</option>
+                        <option value="controle">Contrôles uniquement</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Type d'assurance</label>
+                      <select
+                        value={exportOptions.typeAssurance}
+                        onChange={(e) => setExportOptions(prev => ({
+                          ...prev,
+                          typeAssurance: e.target.value
+                        }))}
+                        className="input-field"
+                      >
+                        <option value="tous">Tous les patients</option>
+                        <option value="assure">Patients assurés</option>
+                        <option value="non_assure">Patients non assurés</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Fields to Include */}
+                <div className="bg-purple-50 rounded-lg p-4">
+                  <h4 className="text-md font-semibold text-purple-900 mb-3 flex items-center">
+                    <FileText className="w-4 h-4 mr-2" />
+                    Champs à inclure dans l'export
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     <label className="flex items-center">
                       <input
                         type="checkbox"
-                        checked={exportOptions.date}
+                        checked={exportOptions.inclureDate}
                         onChange={(e) => setExportOptions(prev => ({
                           ...prev,
-                          date: e.target.checked
+                          inclureDate: e.target.checked
                         }))}
-                        className="mr-2"
+                        className="mr-2 text-purple-600"
                       />
-                      <span className="text-sm">Date</span>
+                      <span className="text-sm">Date de consultation</span>
                     </label>
                     <label className="flex items-center">
                       <input
                         type="checkbox"
-                        checked={exportOptions.patient}
+                        checked={exportOptions.inclureNomPatient}
                         onChange={(e) => setExportOptions(prev => ({
                           ...prev,
-                          patient: e.target.checked
+                          inclureNomPatient: e.target.checked
                         }))}
-                        className="mr-2"
+                        className="mr-2 text-purple-600"
                       />
-                      <span className="text-sm">Patient</span>
+                      <span className="text-sm">Nom du patient</span>
                     </label>
                     <label className="flex items-center">
                       <input
                         type="checkbox"
-                        checked={exportOptions.montant}
+                        checked={exportOptions.inclureMontant}
                         onChange={(e) => setExportOptions(prev => ({
                           ...prev,
-                          montant: e.target.checked
+                          inclureMontant: e.target.checked
                         }))}
-                        className="mr-2"
+                        className="mr-2 text-purple-600"
                       />
                       <span className="text-sm">Montant</span>
                     </label>
                     <label className="flex items-center">
                       <input
                         type="checkbox"
-                        checked={exportOptions.assurance}
+                        checked={exportOptions.inclureType}
                         onChange={(e) => setExportOptions(prev => ({
                           ...prev,
-                          assurance: e.target.checked
+                          inclureType: e.target.checked
                         }))}
-                        className="mr-2"
+                        className="mr-2 text-purple-600"
                       />
-                      <span className="text-sm">Assurance</span>
+                      <span className="text-sm">Type consultation</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={exportOptions.inclureAssurance}
+                        onChange={(e) => setExportOptions(prev => ({
+                          ...prev,
+                          inclureAssurance: e.target.checked
+                        }))}
+                        className="mr-2 text-purple-600"
+                      />
+                      <span className="text-sm">Statut assurance</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={exportOptions.inclureStatutPaiement}
+                        onChange={(e) => setExportOptions(prev => ({
+                          ...prev,
+                          inclureStatutPaiement: e.target.checked
+                        }))}
+                        className="mr-2 text-purple-600"
+                      />
+                      <span className="text-sm">Statut paiement</span>
                     </label>
                   </div>
                 </div>
 
-                <div>
-                  <h4 className="text-md font-semibold text-gray-900 mb-3">Indicateurs statistiques</h4>
-                  <div className="grid grid-cols-2 gap-3">
+                {/* Advanced Options */}
+                <div className="bg-yellow-50 rounded-lg p-4">
+                  <h4 className="text-md font-semibold text-yellow-900 mb-3 flex items-center">
+                    <Target className="w-4 h-4 mr-2" />
+                    Options avancées
+                  </h4>
+                  <div className="space-y-3">
                     <label className="flex items-center">
                       <input
                         type="checkbox"
-                        checked={exportOptions.indicateurs?.ca}
+                        checked={exportOptions.inclureStatistiques}
                         onChange={(e) => setExportOptions(prev => ({
                           ...prev,
-                          indicateurs: { ...prev.indicateurs, ca: e.target.checked }
+                          inclureStatistiques: e.target.checked
                         }))}
-                        className="mr-2"
+                        className="mr-2 text-yellow-600"
                       />
-                      <span className="text-sm">Chiffre d'affaires</span>
+                      <span className="text-sm font-medium">Inclure les statistiques financières</span>
                     </label>
                     <label className="flex items-center">
                       <input
                         type="checkbox"
-                        checked={exportOptions.indicateurs?.visites}
+                        checked={exportOptions.inclureEvolution}
                         onChange={(e) => setExportOptions(prev => ({
                           ...prev,
-                          indicateurs: { ...prev.indicateurs, visites: e.target.checked }
+                          inclureEvolution: e.target.checked
                         }))}
-                        className="mr-2"
+                        className="mr-2 text-yellow-600"
                       />
-                      <span className="text-sm">Nombre de visites</span>
+                      <span className="text-sm font-medium">Inclure l'évolution mensuelle</span>
                     </label>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={exportOptions.includrePredictions}
+                        onChange={(e) => setExportOptions(prev => ({
+                          ...prev,
+                          includrePredictions: e.target.checked
+                        }))}
+                        className="mr-2 text-yellow-600"
+                      />
+                      <span className="text-sm font-medium">Inclure les prédictions IA</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={exportOptions.formatRapportComptable}
+                        onChange={(e) => setExportOptions(prev => ({
+                          ...prev,
+                          formatRapportComptable: e.target.checked
+                        }))}
+                        className="mr-2 text-yellow-600"
+                      />
+                      <span className="text-sm font-medium">Format rapport comptable professionnel</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Summary */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="text-md font-semibold text-gray-900 mb-3">Aperçu de l'export</h4>
+                  <div className="text-sm text-gray-700 space-y-1">
+                    <p><span className="font-medium">Période:</span> {
+                      exportOptions.dateDebut || exportOptions.dateFin 
+                        ? `${exportOptions.dateDebut || 'début'} → ${exportOptions.dateFin || 'fin'}`
+                        : 'Toute la période'
+                    }</p>
+                    <p><span className="font-medium">Type:</span> {
+                      exportOptions.typeVisite === 'tous' ? 'Tous les types' : 
+                      exportOptions.typeVisite === 'visite' ? 'Visites uniquement' : 'Contrôles uniquement'
+                    }</p>
+                    <p><span className="font-medium">Assurance:</span> {
+                      exportOptions.typeAssurance === 'tous' ? 'Tous' : 
+                      exportOptions.typeAssurance === 'assure' ? 'Assurés uniquement' : 'Non assurés uniquement'
+                    }</p>
+                    <p><span className="font-medium">Format:</span> {
+                      exportOptions.formatRapportComptable ? 'Rapport comptable professionnel' : 'Export détaillé standard'
+                    }</p>
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-3 mt-6">
+              {/* Action Buttons */}
+              <div className="flex items-center justify-end space-x-3 mt-8 pt-6 border-t border-gray-200">
                 <button
                   onClick={() => setShowExportModal(false)}
                   className="btn-outline"
@@ -2238,10 +2395,15 @@ const Billing = ({ user }) => {
                 </button>
                 <button
                   onClick={handleCustomExport}
+                  disabled={loading}
                   className="btn-primary flex items-center space-x-2"
                 >
-                  <Download className="w-4 h-4" />
-                  <span>Exporter CSV</span>
+                  {loading ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Download className="w-4 h-4" />
+                  )}
+                  <span>{loading ? 'Export en cours...' : 'Exporter CSV'}</span>
                 </button>
               </div>
             </div>
