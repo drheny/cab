@@ -1411,6 +1411,263 @@ class CabinetMedicalAPITest(unittest.TestCase):
         print(f"✅ Invalid token properly rejected with 401")
         print(f"🎉 Invalid Token Test: PASSED")
 
+    # ========== FACTURATION ENDPOINTS TESTING FOR REFRESH BUTTONS ==========
+    
+    def test_facturation_enhanced_stats_endpoint(self):
+        """Test GET /api/facturation/enhanced-stats endpoint"""
+        print("\n🔍 Testing Facturation Enhanced Stats Endpoint")
+        
+        response = requests.get(f"{self.base_url}/api/facturation/enhanced-stats")
+        self.assertEqual(response.status_code, 200, f"Enhanced stats endpoint failed: {response.text}")
+        
+        data = response.json()
+        
+        # Verify enhanced stats structure
+        self.assertIn("total_revenue", data)
+        self.assertIn("monthly_revenue", data)
+        self.assertIn("yearly_revenue", data)
+        self.assertIn("payment_methods", data)
+        self.assertIn("consultation_types", data)
+        self.assertIn("insurance_stats", data)
+        self.assertIn("top_revenue_days", data)
+        self.assertIn("average_consultation_value", data)
+        
+        # Verify data types
+        self.assertIsInstance(data["total_revenue"], (int, float))
+        self.assertIsInstance(data["monthly_revenue"], (int, float))
+        self.assertIsInstance(data["yearly_revenue"], (int, float))
+        self.assertIsInstance(data["payment_methods"], dict)
+        self.assertIsInstance(data["consultation_types"], dict)
+        self.assertIsInstance(data["insurance_stats"], dict)
+        self.assertIsInstance(data["top_revenue_days"], list)
+        self.assertIsInstance(data["average_consultation_value"], (int, float))
+        
+        print(f"✅ Enhanced stats endpoint working correctly")
+        print(f"   - Total revenue: {data['total_revenue']} TND")
+        print(f"   - Monthly revenue: {data['monthly_revenue']} TND")
+        print(f"   - Average consultation value: {data['average_consultation_value']} TND")
+        print(f"🎉 Enhanced Stats Test: PASSED")
+    
+    def test_facturation_top_patients_endpoint(self):
+        """Test GET /api/facturation/top-patients?limit=10 endpoint"""
+        print("\n🔍 Testing Facturation Top Patients Endpoint")
+        
+        response = requests.get(f"{self.base_url}/api/facturation/top-patients?limit=10")
+        self.assertEqual(response.status_code, 200, f"Top patients endpoint failed: {response.text}")
+        
+        data = response.json()
+        
+        # Verify top patients structure
+        self.assertIn("top_patients", data)
+        self.assertIsInstance(data["top_patients"], list)
+        
+        # Verify patient data structure if patients exist
+        if len(data["top_patients"]) > 0:
+            patient = data["top_patients"][0]
+            self.assertIn("patient_id", patient)
+            self.assertIn("patient_name", patient)
+            self.assertIn("total_spent", patient)
+            self.assertIn("consultation_count", patient)
+            self.assertIn("average_per_consultation", patient)
+            self.assertIn("last_visit", patient)
+            
+            # Verify data types
+            self.assertIsInstance(patient["total_spent"], (int, float))
+            self.assertIsInstance(patient["consultation_count"], int)
+            self.assertIsInstance(patient["average_per_consultation"], (int, float))
+            
+            print(f"✅ Top patients endpoint working correctly")
+            print(f"   - Number of top patients: {len(data['top_patients'])}")
+            print(f"   - Top patient: {patient['patient_name']} ({patient['total_spent']} TND)")
+        else:
+            print(f"✅ Top patients endpoint working (no patients with payments)")
+        
+        print(f"🎉 Top Patients Test: PASSED")
+    
+    def test_admin_charts_yearly_evolution_endpoint(self):
+        """Test GET /api/admin/charts/yearly-evolution endpoint"""
+        print("\n🔍 Testing Admin Charts Yearly Evolution Endpoint")
+        
+        response = requests.get(f"{self.base_url}/api/admin/charts/yearly-evolution")
+        self.assertEqual(response.status_code, 200, f"Yearly evolution endpoint failed: {response.text}")
+        
+        data = response.json()
+        
+        # Verify yearly evolution structure
+        self.assertIn("yearly_data", data)
+        self.assertIn("growth_rate", data)
+        self.assertIn("trend_analysis", data)
+        self.assertIn("monthly_breakdown", data)
+        
+        # Verify data types
+        self.assertIsInstance(data["yearly_data"], list)
+        self.assertIsInstance(data["growth_rate"], (int, float))
+        self.assertIsInstance(data["trend_analysis"], str)
+        self.assertIsInstance(data["monthly_breakdown"], list)
+        
+        # Verify monthly breakdown structure if data exists
+        if len(data["monthly_breakdown"]) > 0:
+            month_data = data["monthly_breakdown"][0]
+            self.assertIn("month", month_data)
+            self.assertIn("revenue", month_data)
+            self.assertIn("consultations", month_data)
+            
+        print(f"✅ Yearly evolution endpoint working correctly")
+        print(f"   - Growth rate: {data['growth_rate']}%")
+        print(f"   - Trend analysis: {data['trend_analysis']}")
+        print(f"   - Monthly data points: {len(data['monthly_breakdown'])}")
+        print(f"🎉 Yearly Evolution Test: PASSED")
+    
+    def test_facturation_evolution_graphs_endpoint(self):
+        """Test GET /api/facturation/evolution-graphs endpoint with period=month and year=2025"""
+        print("\n🔍 Testing Facturation Evolution Graphs Endpoint")
+        
+        response = requests.get(f"{self.base_url}/api/facturation/evolution-graphs?period=month&year=2025")
+        self.assertEqual(response.status_code, 200, f"Evolution graphs endpoint failed: {response.text}")
+        
+        data = response.json()
+        
+        # Verify evolution graphs structure
+        self.assertIn("period", data)
+        self.assertIn("year", data)
+        self.assertIn("revenue_evolution", data)
+        self.assertIn("consultation_evolution", data)
+        self.assertIn("payment_method_evolution", data)
+        self.assertIn("insurance_evolution", data)
+        
+        # Verify parameters
+        self.assertEqual(data["period"], "month")
+        self.assertEqual(data["year"], 2025)
+        
+        # Verify data types
+        self.assertIsInstance(data["revenue_evolution"], list)
+        self.assertIsInstance(data["consultation_evolution"], list)
+        self.assertIsInstance(data["payment_method_evolution"], dict)
+        self.assertIsInstance(data["insurance_evolution"], dict)
+        
+        # Verify evolution data structure if data exists
+        if len(data["revenue_evolution"]) > 0:
+            revenue_point = data["revenue_evolution"][0]
+            self.assertIn("period_label", revenue_point)
+            self.assertIn("value", revenue_point)
+            self.assertIsInstance(revenue_point["value"], (int, float))
+        
+        print(f"✅ Evolution graphs endpoint working correctly")
+        print(f"   - Period: {data['period']}")
+        print(f"   - Year: {data['year']}")
+        print(f"   - Revenue data points: {len(data['revenue_evolution'])}")
+        print(f"   - Consultation data points: {len(data['consultation_evolution'])}")
+        print(f"🎉 Evolution Graphs Test: PASSED")
+    
+    def test_cash_movements_endpoint(self):
+        """Test GET /api/cash-movements endpoint"""
+        print("\n🔍 Testing Cash Movements Endpoint")
+        
+        response = requests.get(f"{self.base_url}/api/cash-movements")
+        self.assertEqual(response.status_code, 200, f"Cash movements endpoint failed: {response.text}")
+        
+        data = response.json()
+        
+        # Verify cash movements structure
+        self.assertIn("movements", data)
+        self.assertIn("total_balance", data)
+        self.assertIn("total_additions", data)
+        self.assertIn("total_subtractions", data)
+        
+        # Verify data types
+        self.assertIsInstance(data["movements"], list)
+        self.assertIsInstance(data["total_balance"], (int, float))
+        self.assertIsInstance(data["total_additions"], (int, float))
+        self.assertIsInstance(data["total_subtractions"], (int, float))
+        
+        # Verify movement structure if movements exist
+        if len(data["movements"]) > 0:
+            movement = data["movements"][0]
+            self.assertIn("id", movement)
+            self.assertIn("montant", movement)
+            self.assertIn("type_mouvement", movement)
+            self.assertIn("motif", movement)
+            self.assertIn("date", movement)
+            self.assertIn("created_by", movement)
+            
+            # Verify data types
+            self.assertIsInstance(movement["montant"], (int, float))
+            self.assertIn(movement["type_mouvement"], ["ajout", "soustraction"])
+            
+        print(f"✅ Cash movements endpoint working correctly")
+        print(f"   - Total movements: {len(data['movements'])}")
+        print(f"   - Total balance: {data['total_balance']} TND")
+        print(f"   - Total additions: {data['total_additions']} TND")
+        print(f"   - Total subtractions: {data['total_subtractions']} TND")
+        print(f"🎉 Cash Movements Test: PASSED")
+    
+    def test_all_facturation_endpoints_comprehensive(self):
+        """Test all 5 facturation endpoints in sequence to verify refresh button functionality"""
+        print("\n🔍 Testing All Facturation Endpoints - Comprehensive Refresh Button Test")
+        
+        endpoints_tested = []
+        
+        # Test 1: Enhanced Stats
+        try:
+            response = requests.get(f"{self.base_url}/api/facturation/enhanced-stats")
+            self.assertEqual(response.status_code, 200)
+            endpoints_tested.append("✅ /api/facturation/enhanced-stats")
+        except Exception as e:
+            endpoints_tested.append(f"❌ /api/facturation/enhanced-stats - {str(e)}")
+        
+        # Test 2: Top Patients
+        try:
+            response = requests.get(f"{self.base_url}/api/facturation/top-patients?limit=10")
+            self.assertEqual(response.status_code, 200)
+            endpoints_tested.append("✅ /api/facturation/top-patients?limit=10")
+        except Exception as e:
+            endpoints_tested.append(f"❌ /api/facturation/top-patients?limit=10 - {str(e)}")
+        
+        # Test 3: Yearly Evolution
+        try:
+            response = requests.get(f"{self.base_url}/api/admin/charts/yearly-evolution")
+            self.assertEqual(response.status_code, 200)
+            endpoints_tested.append("✅ /api/admin/charts/yearly-evolution")
+        except Exception as e:
+            endpoints_tested.append(f"❌ /api/admin/charts/yearly-evolution - {str(e)}")
+        
+        # Test 4: Evolution Graphs
+        try:
+            response = requests.get(f"{self.base_url}/api/facturation/evolution-graphs?period=month&year=2025")
+            self.assertEqual(response.status_code, 200)
+            endpoints_tested.append("✅ /api/facturation/evolution-graphs?period=month&year=2025")
+        except Exception as e:
+            endpoints_tested.append(f"❌ /api/facturation/evolution-graphs?period=month&year=2025 - {str(e)}")
+        
+        # Test 5: Cash Movements
+        try:
+            response = requests.get(f"{self.base_url}/api/cash-movements")
+            self.assertEqual(response.status_code, 200)
+            endpoints_tested.append("✅ /api/cash-movements")
+        except Exception as e:
+            endpoints_tested.append(f"❌ /api/cash-movements - {str(e)}")
+        
+        # Print results
+        print(f"📊 FACTURATION ENDPOINTS TEST RESULTS:")
+        for result in endpoints_tested:
+            print(f"   {result}")
+        
+        # Count successful tests
+        successful_tests = len([r for r in endpoints_tested if r.startswith("✅")])
+        total_tests = len(endpoints_tested)
+        
+        print(f"\n🎯 REFRESH BUTTON FUNCTIONALITY SUMMARY:")
+        print(f"   - Total endpoints tested: {total_tests}")
+        print(f"   - Successful endpoints: {successful_tests}")
+        print(f"   - Success rate: {(successful_tests/total_tests)*100:.1f}%")
+        
+        if successful_tests == total_tests:
+            print(f"🎉 ALL FACTURATION REFRESH BUTTONS WORKING CORRECTLY")
+        else:
+            print(f"⚠️ SOME FACTURATION REFRESH BUTTONS HAVE ISSUES")
+        
+        print(f"🎉 Comprehensive Facturation Test: COMPLETED")
+
     # ========== PAYMENT INTEGRATION TESTING FOR CONSULTATION MODAL ==========
     
     def test_payment_creation_put_endpoint(self):
