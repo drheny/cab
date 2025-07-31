@@ -566,12 +566,17 @@ const Billing = ({ user }) => {
           <h1 className="text-2xl font-bold text-gray-900">Facturation & Paiements</h1>
           <p className="text-gray-600">Gestion financière du cabinet</p>
         </div>
+        {/* Refresh buttons fix - make sure they are properly connected */}
         <div className="flex items-center space-x-3">
           <button
-            onClick={() => fetchInitialData()}
+            onClick={() => {
+              setLoading(true);
+              fetchInitialData().finally(() => setLoading(false));
+            }}
+            disabled={loading}
             className="btn-outline flex items-center space-x-2"
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             <span>Actualiser</span>
           </button>
           <button
