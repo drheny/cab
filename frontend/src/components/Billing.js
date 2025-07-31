@@ -157,7 +157,6 @@ const Billing = ({ user }) => {
     try {
       await Promise.all([
         fetchEnhancedStats(),
-        fetchTopPatients(),
         fetchEvolutionData(),
         fetchPredictiveAnalysis(),
         fetchPayments(),
