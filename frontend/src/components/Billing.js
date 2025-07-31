@@ -316,10 +316,20 @@ const Billing = ({ user }) => {
 
   const fetchPredictiveAnalysis = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/admin/predictions`);
+      // Call with default parameters for monthly report of current year
+      const currentYear = new Date().getFullYear();
+      const currentMonth = new Date().getMonth() + 1;
+      const response = await axios.get(`${API_BASE_URL}/api/admin/advanced-reports`, {
+        params: {
+          period_type: 'monthly',
+          year: currentYear,
+          month: currentMonth
+        }
+      });
       setPredictiveAnalysis(response.data);
     } catch (error) {
       console.error('Error fetching predictive analysis:', error);
+      // Don't show error toast for this one as it's used in dashboard loading
     }
   };
 
