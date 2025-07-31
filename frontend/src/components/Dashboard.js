@@ -605,17 +605,26 @@ const Dashboard = ({ user }) => {
   }, [messages, user.role]);
 
   const StatCard = ({ icon: Icon, title, value, color, subtitle, gradientColors, iconBg }) => (
-    <div className={`bg-gradient-to-br ${gradientColors} rounded-xl shadow-lg border-none p-6 hover:shadow-xl hover:scale-105 transition-all duration-300 transform`}>
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-white/90">{title}</p>
-          <p className="text-3xl font-bold text-white drop-shadow-sm">{value}</p>
-          {subtitle && <p className="text-xs text-white/80 mt-1">{subtitle}</p>}
+    <div className={`relative bg-gradient-to-br ${gradientColors} rounded-2xl shadow-lg border-none p-8 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 transform aspect-square flex flex-col justify-between min-h-[200px]`}>
+      {/* Decorative corner elements */}
+      <div className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-bl-full"></div>
+      <div className="absolute bottom-0 left-0 w-12 h-12 bg-white/5 rounded-tr-full"></div>
+      
+      <div className="flex items-start justify-between h-full">
+        <div className="flex-1 z-10">
+          <p className="text-sm font-semibold text-white/95 mb-2 uppercase tracking-wide">{title}</p>
+          <p className="text-4xl font-black text-white drop-shadow-lg mb-1 leading-tight">{value}</p>
+          {subtitle && <p className="text-xs text-white/85 font-medium">{subtitle}</p>}
         </div>
-        <div className={`p-4 rounded-xl ${iconBg} shadow-lg backdrop-blur-sm`}>
-          <Icon className="w-7 h-7 text-white drop-shadow-sm" />
+        <div className={`p-4 rounded-2xl ${iconBg} shadow-xl backdrop-blur-sm border border-white/20 flex-shrink-0`}>
+          <Icon className="w-8 h-8 text-white drop-shadow-md" />
         </div>
       </div>
+      
+      {/* Bottom gradient overlay */}
+      <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-black/10 to-transparent rounded-b-2xl"></div>
+    </div>
+  );
 
       {/* Custom Delete Confirmation Dialog */}
       {deleteConfirmDialog.show && (
