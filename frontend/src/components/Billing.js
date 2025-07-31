@@ -467,22 +467,6 @@ const Billing = ({ user }) => {
         []
       ];
       
-      // Add top patients section if available
-      if (topPatients.length > 0) {
-        csvData.push(['=== TOP 10 PATIENTS LES PLUS RENTABLES ===']);
-        csvData.push(['Rang', 'Patient', 'Total Payé (TND)', 'Nb Paiements', 'Moyenne']);
-        topPatients.forEach((patient, index) => {
-          csvData.push([
-            index + 1,
-            `${patient.patient.prenom} ${patient.patient.nom}`,
-            patient.total_montant,
-            patient.nb_payments,
-            patient.moyenne_paiement.toFixed(2)
-          ]);
-        });
-        csvData.push([]);
-      }
-      
       // Add evolution data section if available
       if (evolutionData.length > 0) {
         csvData.push(['=== ÉVOLUTION MENSUELLE ===']);
