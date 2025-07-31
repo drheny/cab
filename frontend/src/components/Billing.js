@@ -355,14 +355,15 @@ const Billing = ({ user }) => {
 
   const fetchAnalysisData = async () => {
     try {
-      // Call with default parameters for current month
-      const currentYear = new Date().getFullYear();
-      const currentMonth = new Date().getMonth() + 1;
+      // Call with default date range (last 30 days)
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - 30);
+      
       const response = await axios.get(`${API_BASE_URL}/api/admin/ai-medical-report`, {
         params: {
-          period_type: 'monthly',
-          year: currentYear,
-          month: currentMonth
+          start_date: startDate.toISOString().split('T')[0],
+          end_date: endDate.toISOString().split('T')[0]
         }
       });
       setAnalysisData(response.data);
