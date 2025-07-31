@@ -197,7 +197,21 @@ const Dashboard = ({ user }) => {
   }, []);
 
   useEffect(() => {
-    scrollToBottom();
+    // Only scroll to bottom if there are messages and user hasn't manually scrolled up
+    if (messages.length > 0) {
+      // Add a small delay to ensure DOM is updated and avoid initial auto-scroll
+      const timer = setTimeout(() => {
+        const messagesContainer = messagesEndRef.current?.parentElement;
+        if (messagesContainer) {
+          const isNearBottom = messagesContainer.scrollTop + messagesContainer.clientHeight >= messagesContainer.scrollHeight - 100;
+          if (isNearBottom) {
+            scrollToBottom();
+          }
+        }
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
   }, [messages]);
 
   const scrollToBottom = () => {
