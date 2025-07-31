@@ -17,7 +17,10 @@ import {
   Edit,
   Trash2,
   Eye,
-  PieChart
+  PieChart,
+  Brain,
+  Lightbulb,
+  AlertTriangle
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
