@@ -685,6 +685,8 @@ const Dashboard = ({ user }) => {
           value={stats.total_rdv}
           color="text-blue-600"
           subtitle="Total des rendez-vous"
+          gradientColors="from-blue-500 to-blue-700"
+          iconBg="bg-white/20"
         />
         <StatCard
           icon={Clock}
@@ -692,6 +694,8 @@ const Dashboard = ({ user }) => {
           value={stats.rdv_attente}
           color="text-yellow-600"
           subtitle="Patients en salle d'attente"
+          gradientColors="from-yellow-500 to-orange-500"
+          iconBg="bg-white/20"
         />
         <StatCard
           icon={Users}
@@ -699,6 +703,8 @@ const Dashboard = ({ user }) => {
           value={stats.rdv_restants}
           color="text-orange-600"
           subtitle="Non encore arrivés"
+          gradientColors="from-orange-500 to-red-500"
+          iconBg="bg-white/20"
         />
         <StatCard
           icon={Clock}
@@ -706,6 +712,8 @@ const Dashboard = ({ user }) => {
           value={`${stats.duree_attente_moyenne} min`}
           color="text-teal-600"
           subtitle="Temps d'attente moyen"
+          gradientColors="from-teal-500 to-cyan-600"
+          iconBg="bg-white/20"
         />
         <StatCard
           icon={DollarSign}
@@ -713,6 +721,8 @@ const Dashboard = ({ user }) => {
           value={`${stats.recette_jour} TND`}
           color="text-purple-600"
           subtitle="Paiements encaissés"
+          gradientColors="from-purple-500 to-indigo-600"
+          iconBg="bg-white/20"
         />
       </div>
 
