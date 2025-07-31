@@ -2305,51 +2305,54 @@ class CabinetMedicalAPITest(unittest.TestCase):
         data = response.json()
         
         # Verify response structure for analysis data
-        self.assertIn("executive_summary", data)
-        self.assertIn("performance_analysis", data)
-        self.assertIn("insights", data)
-        self.assertIn("risk_assessment", data)
-        self.assertIn("opportunities", data)
-        self.assertIn("action_plan", data)
-        self.assertIn("predictions", data)
+        self.assertIn("ai_analysis", data)
+        ai_analysis = data["ai_analysis"]
+        
+        self.assertIn("executive_summary", ai_analysis)
+        self.assertIn("performance_analysis", ai_analysis)
+        self.assertIn("deep_insights", ai_analysis)
+        self.assertIn("risk_assessment", ai_analysis)
+        self.assertIn("opportunities", ai_analysis)
+        self.assertIn("strategic_recommendations", ai_analysis)
+        self.assertIn("predictions", ai_analysis)
         self.assertIn("data_summary", data)
         
         # Verify executive summary structure
-        executive_summary = data["executive_summary"]
+        executive_summary = ai_analysis["executive_summary"]
         self.assertIn("overall_score", executive_summary)
         self.assertIn("performance_trend", executive_summary)
-        self.assertIn("key_highlights", executive_summary)
+        self.assertIn("key_highlight", executive_summary)
         self.assertIn("urgency_level", executive_summary)
         
         # Verify performance analysis structure
-        performance_analysis = data["performance_analysis"]
+        performance_analysis = ai_analysis["performance_analysis"]
         self.assertIn("consultation_efficiency", performance_analysis)
         self.assertIn("revenue_stability", performance_analysis)
         self.assertIn("patient_retention", performance_analysis)
         
         # Verify insights structure
-        insights = data["insights"]
+        insights = ai_analysis["deep_insights"]
         self.assertIsInstance(insights, list)
         
         # Verify risk assessment structure
-        risk_assessment = data["risk_assessment"]
+        risk_assessment = ai_analysis["risk_assessment"]
         self.assertIn("financial_risks", risk_assessment)
         self.assertIn("operational_risks", risk_assessment)
         self.assertIn("market_risks", risk_assessment)
         
         # Verify opportunities structure
-        opportunities = data["opportunities"]
-        self.assertIn("immediate", opportunities)
-        self.assertIn("medium_term", opportunities)
-        self.assertIn("strategic", opportunities)
+        opportunities = ai_analysis["opportunities"]
+        self.assertIn("immediate_opportunities", opportunities)
+        self.assertIn("medium_term_opportunities", opportunities)
+        self.assertIn("strategic_opportunities", opportunities)
         
-        # Verify action plan structure
-        action_plan = data["action_plan"]
-        self.assertIsInstance(action_plan, list)
+        # Verify action plan structure (strategic_recommendations)
+        action_plan = ai_analysis["strategic_recommendations"]
+        self.assertIn("priority_actions", action_plan)
         
         # Verify predictions structure
-        predictions = data["predictions"]
-        self.assertIn("next_quarter", predictions)
+        predictions = ai_analysis["predictions"]
+        self.assertIn("next_quarter_forecast", predictions)
         self.assertIn("annual_projection", predictions)
         
         # Verify data summary structure
