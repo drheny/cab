@@ -50,6 +50,104 @@ ChartJS.register(
   Legend
 );
 
+// TopPatientsWidget Component
+const TopPatientsWidget = () => {
+  const [topPatients, setTopPatients] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL;
+
+  const fetchTopPatients = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/facturation/top-patients?limit=10`);
+      setTopPatients(response.data?.top_patients || []);
+    } catch (error) {
+      console.error('Error fetching top patients:', error);
+      toast.error('Erreur lors du chargement des patients rentables');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatCurrency = (amount) => {
+    return parseFloat(amount || 0).toFixed(2);
+  };
+
+  useEffect(() => {
+    fetchTopPatients();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <RefreshCw className="w-6 h-6 animate-spin text-purple-500" />
+        <span className="ml-2 text-gray-600">Chargement des patients...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg p-4">
+      <div className="flex items-center justify-between mb-4">
+        <h4 className="font-semibold text-yellow-900 flex items-center">
+          <Award className="w-4 h-4 mr-2" />
+          Top 10 Patients Rentables
+        </h4>
+        <button
+          onClick={fetchTopPatients}
+          disabled={loading}
+          className="btn-outline text-xs px-2 py-1"
+        >
+          <RefreshCw className={`w-3 h-3 mr-1 ${loading ? 'animate-spin' : ''}`} />
+          Actualiser
+        </button>
+      </div>
+      
+      {topPatients.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {topPatients.slice(0, 6).map((patient, index) => (
+            <div
+              key={patient.patient.id}
+              className="flex items-center justify-between p-3 bg-white rounded-lg border border-yellow-100 hover:shadow-sm transition-shadow"
+            >
+              <div className="flex items-center space-x-3">
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold ${
+                  index === 0 ? 'bg-yellow-500' : 
+                  index === 1 ? 'bg-gray-400' : 
+                  index === 2 ? 'bg-orange-500' : 'bg-blue-500'
+                }`}>
+                  {index + 1}
+                </div>
+                <div>
+                  <div className="font-medium text-gray-900 text-sm">
+                    {patient.patient.prenom} {patient.patient.nom}
+                  </div>
+                  <div className="text-xs text-gray-600">
+                    {patient.nb_payments} paiement{patient.nb_payments > 1 ? 's' : ''}
+                  </div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="font-bold text-green-600 text-sm">
+                  {formatCurrency(patient.total_montant)} TND
+                </div>
+                <div className="text-xs text-gray-500">
+                  Moy: {formatCurrency(patient.moyenne_paiement)} TND
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-6 text-yellow-700">
+          <Award className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
+          <p className="text-sm">Aucune donnée de patients disponible</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const Billing = ({ user }) => {
   // API Base URL
   const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL;
