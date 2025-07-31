@@ -14,7 +14,7 @@ load_dotenv('/app/frontend/.env')
 
 class AuthenticationBackendTest:
     def __init__(self):
-        self.base_url = os.getenv('REACT_APP_BACKEND_URL', 'https://cf4f91e9-01e0-4eb2-abf0-57caf9e2fae7.preview.emergentagent.com')
+        self.base_url = os.getenv('REACT_APP_BACKEND_URL', 'https://4b217b17-873e-4b0f-ae18-7cc0e70848d9.preview.emergentagent.com')
         print(f"🔧 Testing backend at: {self.base_url}")
         
     def test_auth_login_medecin(self):

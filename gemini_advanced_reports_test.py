@@ -21,7 +21,7 @@ class GeminiAdvancedReportsTest(unittest.TestCase):
     def setUp(self):
         """Set up test environment"""
         # Use the correct backend URL from environment
-        backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://cf4f91e9-01e0-4eb2-abf0-57caf9e2fae7.preview.emergentagent.com')
+        backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://4b217b17-873e-4b0f-ae18-7cc0e70848d9.preview.emergentagent.com')
         self.base_url = backend_url
         print(f"Testing Gemini Advanced Reports at: {self.base_url}")
         

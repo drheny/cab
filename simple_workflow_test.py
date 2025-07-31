@@ -5,7 +5,7 @@ import json
 from datetime import datetime
 
 def test_workflow():
-    base_url = "https://cf4f91e9-01e0-4eb2-abf0-57caf9e2fae7.preview.emergentagent.com"
+    base_url = "https://4b217b17-873e-4b0f-ae18-7cc0e70848d9.preview.emergentagent.com"
     
     print("🔍 TESTING CONSULTATION WORKFLOW")
     print("=" * 50)

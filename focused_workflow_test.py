@@ -11,7 +11,7 @@ def test_consultation_workflow():
     """
     Focused test for the consultation workflow issues mentioned in the review request
     """
-    base_url = os.getenv('REACT_APP_BACKEND_URL', 'https://cf4f91e9-01e0-4eb2-abf0-57caf9e2fae7.preview.emergentagent.com')
+    base_url = os.getenv('REACT_APP_BACKEND_URL', 'https://4b217b17-873e-4b0f-ae18-7cc0e70848d9.preview.emergentagent.com')
     print(f"Testing backend at: {base_url}")
     
     # Initialize demo data
