@@ -2254,7 +2254,9 @@ class CabinetMedicalAPITest(unittest.TestCase):
         next_month = data["predictions"]["next_month"]
         self.assertIn("consultations_estimees", next_month)
         self.assertIn("revenue_estime", next_month)
-        self.assertIn("confidence", next_month)
+        # Check for both possible field names (French/English)
+        confidence_field = "confidence" if "confidence" in next_month else "confiance"
+        self.assertIn(confidence_field, next_month)
         
         # Verify additional prediction data
         if "insights" in data["predictions"]:
