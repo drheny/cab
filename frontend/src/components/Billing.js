@@ -1463,6 +1463,244 @@ const Billing = ({ user }) => {
         </div>
       )}
 
+      {/* Predictions Tab */}
+      {activeTab === 'predictions' && (
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <TrendingUp className="w-6 h-6 text-purple-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">Prédictions & Analyses Avancées</h2>
+                  <p className="text-gray-600">Analyses ML, périodes de creux/pics et diagnostics fréquents</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setLoading(true);
+                  Promise.all([fetchPredictions(), fetchAnalysisData()]).finally(() => setLoading(false));
+                }}
+                disabled={loading}
+                className="btn-outline flex items-center space-x-2"
+              >
+                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                <span>Actualiser</span>
+              </button>
+            </div>
+
+            {/* AI Predictions Section */}
+            {predictions && (
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+                  Prédictions Gemini AI
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-blue-900">Consultations Prévues</p>
+                        <p className="text-2xl font-bold text-blue-700">{predictions.next_month?.consultations_estimees || 0}</p>
+                        <p className="text-xs text-blue-600 mt-1">Mois prochain</p>
+                      </div>
+                      <div className="p-2 bg-blue-500 bg-opacity-20 rounded-full">
+                        <Calendar className="w-5 h-5 text-blue-700" />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gradient-to-r from-green-50 to-green-100 border border-green-200 rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-green-900">Revenus Estimés</p>
+                        <p className="text-2xl font-bold text-green-700">{predictions.next_month?.revenue_estime || 0} TND</p>
+                        <p className="text-xs text-green-600 mt-1">Mois prochain</p>
+                      </div>
+                      <div className="p-2 bg-green-500 bg-opacity-20 rounded-full">
+                        <DollarSign className="w-5 h-5 text-green-700" />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gradient-to-r from-purple-50 to-purple-100 border border-purple-200 rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-purple-900">Confiance IA</p>
+                        <p className="text-2xl font-bold text-purple-700">{predictions.next_month?.confiance || 0}%</p>
+                        <p className="text-xs text-purple-600 mt-1">Niveau de précision</p>
+                      </div>
+                      <div className="p-2 bg-purple-500 bg-opacity-20 rounded-full">
+                        <Brain className="w-5 h-5 text-purple-700" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* AI Insights */}
+                {predictions.insights && predictions.insights.length > 0 && (
+                  <div className="bg-gradient-to-r from-indigo-50 to-indigo-100 border border-indigo-200 rounded-lg p-4 mb-4">
+                    <h4 className="font-semibold text-indigo-900 mb-3 flex items-center">
+                      <Lightbulb className="w-4 h-4 mr-2" />
+                      Insights IA
+                    </h4>
+                    <div className="space-y-2">
+                      {predictions.insights.slice(0, 3).map((insight, index) => (
+                        <div key={index} className="flex items-start space-x-2">
+                          <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full mt-2"></div>
+                          <p className="text-sm text-indigo-800">{insight}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Top Patients Section */}
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <div className="w-2 h-2 bg-yellow-500 rounded-full mr-2"></div>
+                Patients les Plus Rentables
+              </h3>
+              <TopPatientsWidget />
+            </div>
+
+            {/* Analysis Periods Section */}
+            {analysisData && (
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <div className="w-2 h-2 bg-red-500 rounded-full mr-2"></div>
+                  Analyse des Périodes & Diagnostics
+                </h3>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Performance Analysis */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                      <BarChart3 className="w-4 h-4 mr-2" />
+                      Analyse de Performance
+                    </h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Score Global</span>
+                        <span className="font-semibold text-lg text-blue-600">{analysisData.executive_summary?.overall_score || 0}/100</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Tendance</span>
+                        <span className={`font-medium capitalize ${
+                          analysisData.executive_summary?.performance_trend === 'positive' ? 'text-green-600' : 
+                          analysisData.executive_summary?.performance_trend === 'negative' ? 'text-red-600' : 'text-yellow-600'
+                        }`}>
+                          {analysisData.executive_summary?.performance_trend === 'positive' ? '📈 Positive' :
+                           analysisData.executive_summary?.performance_trend === 'negative' ? '📉 Négative' : '➡️ Stable'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Risk Assessment */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                      <AlertTriangle className="w-4 h-4 mr-2" />
+                      Évaluation des Risques
+                    </h4>
+                    {analysisData.risk_assessment && (
+                      <div className="space-y-2">
+                        {Object.entries(analysisData.risk_assessment).map(([category, risks]) => (
+                          <div key={category} className="text-sm">
+                            <span className="font-medium text-gray-700 capitalize">{category}:</span>
+                            <span className="ml-2 text-gray-600">{Array.isArray(risks) ? risks.length : 0} risque(s)</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Strategic Opportunities */}
+                {analysisData.strategic_opportunities && (
+                  <div className="mt-6 bg-green-50 rounded-lg p-4">
+                    <h4 className="font-semibold text-green-900 mb-3 flex items-center">
+                      <Target className="w-4 h-4 mr-2" />
+                      Opportunités Stratégiques
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {analysisData.strategic_opportunities.immediate && (
+                        <div>
+                          <h5 className="font-medium text-green-800 mb-2">Immédiates</h5>
+                          <ul className="text-sm text-green-700 space-y-1">
+                            {analysisData.strategic_opportunities.immediate.slice(0, 3).map((opp, index) => (
+                              <li key={index} className="flex items-start">
+                                <span className="text-green-500 mr-1">•</span>
+                                {opp}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {analysisData.strategic_opportunities.medium_term && (
+                        <div>
+                          <h5 className="font-medium text-green-800 mb-2">Moyen terme</h5>
+                          <ul className="text-sm text-green-700 space-y-1">
+                            {analysisData.strategic_opportunities.medium_term.slice(0, 3).map((opp, index) => (
+                              <li key={index} className="flex items-start">
+                                <span className="text-green-500 mr-1">•</span>
+                                {opp}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {analysisData.strategic_opportunities.strategic && (
+                        <div>
+                          <h5 className="font-medium text-green-800 mb-2">Stratégiques</h5>
+                          <ul className="text-sm text-green-700 space-y-1">
+                            {analysisData.strategic_opportunities.strategic.slice(0, 3).map((opp, index) => (
+                              <li key={index} className="flex items-start">
+                                <span className="text-green-500 mr-1">•</span>
+                                {opp}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Loading State */}
+            {loading && (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+                <span className="ml-3 text-gray-600">Chargement des prédictions...</span>
+              </div>
+            )}
+
+            {/* Empty State */}
+            {!loading && !predictions && !analysisData && (
+              <div className="text-center py-12">
+                <TrendingUp className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-500 mb-4">Aucune donnée de prédiction disponible</p>
+                <button
+                  onClick={() => {
+                    setLoading(true);
+                    Promise.all([fetchPredictions(), fetchAnalysisData()]).finally(() => setLoading(false));
+                  }}
+                  className="btn-primary"
+                >
+                  Charger les prédictions
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Caisse Tab */}
       {activeTab === 'caisse' && (
         <div className="space-y-6">
