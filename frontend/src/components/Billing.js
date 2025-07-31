@@ -894,68 +894,6 @@ const Billing = ({ user }) => {
               )}
             </div>
           </div>
-
-          {/* Advanced Statistics Section */}
-          <div className="space-y-6">
-            {/* Top 10 Profitable Patients */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <Award className="w-5 h-5 text-yellow-500 mr-2" />
-                  Top 10 patients les plus rentables
-                </h3>
-                <button
-                  onClick={fetchTopPatients}
-                  className="btn-outline text-sm"
-                >
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Actualiser
-                </button>
-              </div>
-              
-              {topPatients.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {topPatients.map((patient, index) => (
-                    <div
-                      key={patient.patient.id}
-                      className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
-                          index === 0 ? 'bg-yellow-500' : 
-                          index === 1 ? 'bg-gray-400' : 
-                          index === 2 ? 'bg-orange-500' : 'bg-blue-500'
-                        }`}>
-                          {index + 1}
-                        </div>
-                        <div>
-                          <div className="font-semibold text-gray-900">
-                            {patient.patient.prenom} {patient.patient.nom}
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            {patient.nb_payments} paiement{patient.nb_payments > 1 ? 's' : ''}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-bold text-green-600">
-                          {formatCurrency(patient.total_montant)}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          Moy: {formatCurrency(patient.moyenne_paiement)}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <Award className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                  <p>Aucune donnée de patients disponible</p>
-                </div>
-              )}
-            </div>
-          </div>
         </div>
       )}
 
