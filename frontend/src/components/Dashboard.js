@@ -648,8 +648,8 @@ const Dashboard = ({ user }) => {
         </div>
       </div>
 
-      {/* Stats Grid - Responsive */}
-      <div className="responsive-grid-stats mb-4 sm:mb-6">
+      {/* Stats Grid - Responsive with square cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-6">`
         <StatCard
           icon={Calendar}
           title="RDV Aujourd'hui"
