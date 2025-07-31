@@ -213,14 +213,29 @@ const Billing = ({ user }) => {
   // Export states
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportOptions, setExportOptions] = useState({
-    date: true,
-    patient: true,
-    montant: true,
-    assurance: true,
-    indicateurs: {
-      ca: true,
-      visites: true
-    }
+    // Période
+    dateDebut: '',
+    dateFin: '',
+    
+    // Types de consultations
+    typeVisite: 'tous', // tous, visite, controle
+    
+    // Assurance
+    typeAssurance: 'tous', // tous, assure, non_assure
+    
+    // Champs à inclure
+    inclureNomPatient: true,
+    inclureDate: true,
+    inclureMontant: true,
+    inclureType: true,
+    inclureAssurance: true,
+    inclureStatutPaiement: true,
+    
+    // Options avancées
+    inclureStatistiques: true,
+    inclureEvolution: true,
+    includrePredictions: true,
+    formatRapportComptable: false
   });
   
   // New states for predictions section
