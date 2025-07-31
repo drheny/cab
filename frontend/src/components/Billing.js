@@ -121,6 +121,10 @@ const Billing = ({ user }) => {
       visites: true
     }
   });
+  
+  // New states for predictions section
+  const [predictions, setPredictions] = useState(null);
+  const [analysisData, setAnalysisData] = useState(null);
 
   // Add real-time patient search effect
   useEffect(() => {
