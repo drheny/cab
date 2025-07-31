@@ -227,6 +227,14 @@ const Billing = ({ user }) => {
   const [predictions, setPredictions] = useState(null);
   const [analysisData, setAnalysisData] = useState(null);
 
+  // Load predictions data when predictions tab is active
+  useEffect(() => {
+    if (activeTab === 'predictions' && !predictions && !analysisData) {
+      fetchPredictions();
+      fetchAnalysisData();
+    }
+  }, [activeTab]);
+
   // Add real-time patient search effect
   useEffect(() => {
     if (searchFilters.patientName && searchFilters.patientName.length >= 2) {
