@@ -2364,7 +2364,7 @@ class CabinetMedicalAPITest(unittest.TestCase):
         print(f"✅ AI Medical Report endpoint working correctly")
         print(f"   - Overall score: {executive_summary.get('overall_score', 'N/A')}")
         print(f"   - Performance trend: {executive_summary.get('performance_trend', 'N/A')}")
-        print(f"   - AI confidence: {data.get('ai_confidence', 'N/A')}")
+        print(f"   - AI confidence: {ai_analysis.get('ai_confidence', 'N/A')}")
         print(f"   - Appointments analyzed: {data_summary.get('appointments_analyzed', 'N/A')}")
         print(f"   - Consultations analyzed: {data_summary.get('consultations_analyzed', 'N/A')}")
         print(f"   - Patients in database: {data_summary.get('patients_in_database', 'N/A')}")
