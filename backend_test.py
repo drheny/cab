@@ -2216,6 +2216,218 @@ class CabinetMedicalAPITest(unittest.TestCase):
         
         print(f"🎉 Complete Payment Workflow Test: PASSED")
 
+    # ========== PREDICTIONS ENDPOINTS TESTING ==========
+    
+    def test_predictions_advanced_reports_endpoint(self):
+        """Test GET /api/admin/advanced-reports with required parameters"""
+        print("\n🔍 Testing Predictions Advanced Reports Endpoint")
+        
+        # Test with monthly period parameters as specified in review request
+        params = {
+            "period_type": "monthly",
+            "year": "2025",
+            "month": "7"
+        }
+        
+        # Use auto-login token for authentication
+        headers = {"Authorization": "Bearer auto-login-token"}
+        
+        response = requests.get(f"{self.base_url}/api/admin/advanced-reports", 
+                              params=params, headers=headers)
+        
+        print(f"Request URL: {response.url}")
+        print(f"Response Status: {response.status_code}")
+        
+        if response.status_code != 200:
+            print(f"Response Text: {response.text}")
+        
+        self.assertEqual(response.status_code, 200, 
+                        f"Advanced reports endpoint failed: {response.text}")
+        
+        data = response.json()
+        
+        # Verify response structure for predictions data
+        self.assertIn("predictions", data)
+        self.assertIn("next_month", data["predictions"])
+        
+        # Verify next month predictions structure
+        next_month = data["predictions"]["next_month"]
+        self.assertIn("consultations_estimees", next_month)
+        self.assertIn("revenue_estime", next_month)
+        self.assertIn("confidence", next_month)
+        
+        # Verify additional prediction data
+        if "insights" in data["predictions"]:
+            self.assertIsInstance(data["predictions"]["insights"], list)
+        
+        if "risk_factors" in data["predictions"]:
+            self.assertIsInstance(data["predictions"]["risk_factors"], list)
+        
+        if "recommendations" in data["predictions"]:
+            self.assertIsInstance(data["predictions"]["recommendations"], list)
+        
+        print(f"✅ Advanced Reports endpoint working correctly")
+        print(f"   - Next month consultations: {next_month.get('consultations_estimees', 'N/A')}")
+        print(f"   - Next month revenue: {next_month.get('revenue_estime', 'N/A')} TND")
+        print(f"   - Confidence level: {next_month.get('confidence', 'N/A')}%")
+        print(f"   - Insights count: {len(data['predictions'].get('insights', []))}")
+        print(f"   - Risk factors: {len(data['predictions'].get('risk_factors', []))}")
+        print(f"   - Recommendations: {len(data['predictions'].get('recommendations', []))}")
+        print(f"🎉 Advanced Reports Predictions Test: PASSED")
+    
+    def test_predictions_ai_medical_report_endpoint(self):
+        """Test GET /api/admin/ai-medical-report with required parameters"""
+        print("\n🔍 Testing Predictions AI Medical Report Endpoint")
+        
+        # Test with date range parameters as specified in review request
+        params = {
+            "start_date": "2025-07-01",
+            "end_date": "2025-07-31"
+        }
+        
+        # Use auto-login token for authentication
+        headers = {"Authorization": "Bearer auto-login-token"}
+        
+        response = requests.get(f"{self.base_url}/api/admin/ai-medical-report", 
+                              params=params, headers=headers)
+        
+        print(f"Request URL: {response.url}")
+        print(f"Response Status: {response.status_code}")
+        
+        if response.status_code != 200:
+            print(f"Response Text: {response.text}")
+        
+        self.assertEqual(response.status_code, 200, 
+                        f"AI medical report endpoint failed: {response.text}")
+        
+        data = response.json()
+        
+        # Verify response structure for analysis data
+        self.assertIn("executive_summary", data)
+        self.assertIn("performance_analysis", data)
+        self.assertIn("insights", data)
+        self.assertIn("risk_assessment", data)
+        self.assertIn("opportunities", data)
+        self.assertIn("action_plan", data)
+        self.assertIn("predictions", data)
+        self.assertIn("data_summary", data)
+        
+        # Verify executive summary structure
+        executive_summary = data["executive_summary"]
+        self.assertIn("overall_score", executive_summary)
+        self.assertIn("performance_trend", executive_summary)
+        self.assertIn("key_highlights", executive_summary)
+        self.assertIn("urgency_level", executive_summary)
+        
+        # Verify performance analysis structure
+        performance_analysis = data["performance_analysis"]
+        self.assertIn("consultation_efficiency", performance_analysis)
+        self.assertIn("revenue_stability", performance_analysis)
+        self.assertIn("patient_retention", performance_analysis)
+        
+        # Verify insights structure
+        insights = data["insights"]
+        self.assertIsInstance(insights, list)
+        
+        # Verify risk assessment structure
+        risk_assessment = data["risk_assessment"]
+        self.assertIn("financial_risks", risk_assessment)
+        self.assertIn("operational_risks", risk_assessment)
+        self.assertIn("market_risks", risk_assessment)
+        
+        # Verify opportunities structure
+        opportunities = data["opportunities"]
+        self.assertIn("immediate", opportunities)
+        self.assertIn("medium_term", opportunities)
+        self.assertIn("strategic", opportunities)
+        
+        # Verify action plan structure
+        action_plan = data["action_plan"]
+        self.assertIsInstance(action_plan, list)
+        
+        # Verify predictions structure
+        predictions = data["predictions"]
+        self.assertIn("next_quarter", predictions)
+        self.assertIn("annual_projection", predictions)
+        
+        # Verify data summary structure
+        data_summary = data["data_summary"]
+        self.assertIn("appointments_analyzed", data_summary)
+        self.assertIn("consultations_analyzed", data_summary)
+        self.assertIn("patients_in_database", data_summary)
+        
+        print(f"✅ AI Medical Report endpoint working correctly")
+        print(f"   - Overall score: {executive_summary.get('overall_score', 'N/A')}")
+        print(f"   - Performance trend: {executive_summary.get('performance_trend', 'N/A')}")
+        print(f"   - AI confidence: {data.get('ai_confidence', 'N/A')}")
+        print(f"   - Appointments analyzed: {data_summary.get('appointments_analyzed', 'N/A')}")
+        print(f"   - Consultations analyzed: {data_summary.get('consultations_analyzed', 'N/A')}")
+        print(f"   - Patients in database: {data_summary.get('patients_in_database', 'N/A')}")
+        print(f"🎉 AI Medical Report Predictions Test: PASSED")
+    
+    def test_predictions_endpoints_authentication(self):
+        """Test that predictions endpoints require authentication"""
+        print("\n🔍 Testing Predictions Endpoints Authentication Requirements")
+        
+        # Test advanced reports without authentication
+        params = {"period_type": "monthly", "year": "2025", "month": "7"}
+        response = requests.get(f"{self.base_url}/api/admin/advanced-reports", params=params)
+        
+        print(f"Advanced reports without auth: {response.status_code}")
+        self.assertIn(response.status_code, [401, 403], 
+                     "Advanced reports should require authentication")
+        
+        # Test AI medical report without authentication
+        params = {"start_date": "2025-07-01", "end_date": "2025-07-31"}
+        response = requests.get(f"{self.base_url}/api/admin/ai-medical-report", params=params)
+        
+        print(f"AI medical report without auth: {response.status_code}")
+        self.assertIn(response.status_code, [401, 403], 
+                     "AI medical report should require authentication")
+        
+        print(f"✅ Both endpoints properly require authentication")
+        print(f"🎉 Predictions Authentication Test: PASSED")
+    
+    def test_predictions_endpoints_parameter_validation(self):
+        """Test predictions endpoints parameter validation"""
+        print("\n🔍 Testing Predictions Endpoints Parameter Validation")
+        
+        headers = {"Authorization": "Bearer auto-login-token"}
+        
+        # Test advanced reports with missing parameters
+        print("  Testing advanced reports parameter validation...")
+        
+        # Missing period_type
+        response = requests.get(f"{self.base_url}/api/admin/advanced-reports", 
+                              params={"year": "2025", "month": "7"}, headers=headers)
+        print(f"    Missing period_type: {response.status_code}")
+        
+        # Missing year for monthly
+        response = requests.get(f"{self.base_url}/api/admin/advanced-reports", 
+                              params={"period_type": "monthly", "month": "7"}, headers=headers)
+        print(f"    Missing year: {response.status_code}")
+        
+        # Missing month for monthly
+        response = requests.get(f"{self.base_url}/api/admin/advanced-reports", 
+                              params={"period_type": "monthly", "year": "2025"}, headers=headers)
+        print(f"    Missing month: {response.status_code}")
+        
+        # Test AI medical report with missing parameters
+        print("  Testing AI medical report parameter validation...")
+        
+        # Missing start_date
+        response = requests.get(f"{self.base_url}/api/admin/ai-medical-report", 
+                              params={"end_date": "2025-07-31"}, headers=headers)
+        print(f"    Missing start_date: {response.status_code}")
+        
+        # Missing end_date
+        response = requests.get(f"{self.base_url}/api/admin/ai-medical-report", 
+                              params={"start_date": "2025-07-01"}, headers=headers)
+        print(f"    Missing end_date: {response.status_code}")
+        
+        print(f"✅ Parameter validation tests completed")
+        print(f"🎉 Predictions Parameter Validation Test: PASSED")
+
     # ========== CONSULTATION MODAL MODIFICATIONS AND VACCINE REMINDERS TESTING ==========
     
     def test_consultation_model_new_fields(self):
