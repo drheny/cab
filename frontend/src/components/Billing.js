@@ -603,27 +603,100 @@ const Billing = ({ user }) => {
     setShowExportModal(true);
   };
 
-  const handleCustomExport = () => {
+  const handleCustomExport = async () => {
     try {
-      // Prepare headers based on selected options
-      const headers = [];
-      if (exportOptions.date) headers.push('Date');
-      if (exportOptions.patient) headers.push('Patient');
-      if (exportOptions.montant) headers.push('Montant (TND)');
-      if (exportOptions.assurance) headers.push('Assuré');
+      setLoading(true);
       
-      // Create simple CSV data
-      const csvData = [
-        ['=== STATISTIQUES ENHANCÉES ==='],
-        ['Recette du jour:', `${formatCurrency(enhancedStats.recette_jour || 0)}`],
-        ['Recette du mois:', `${formatCurrency(enhancedStats.recette_mois || 0)}`],
-        ['Recette de l\'année:', `${formatCurrency(enhancedStats.recette_annee || 0)}`],
-        ['Nouveaux patients cette année:', enhancedStats.nouveaux_patients_annee || 0],
-        []
-      ];
+      // Get filtered payments based on export criteria
+      let exportPayments = [...payments];
       
-      // Add evolution data section if available
-      if (evolutionData.length > 0) {
+      // Apply date filters
+      if (exportOptions.dateDebut) {
+        exportPayments = exportPayments.filter(p => new Date(p.date) >= new Date(exportOptions.dateDebut));
+      }
+      if (exportOptions.dateFin) {
+        exportPayments = exportPayments.filter(p => new Date(p.date) <= new Date(exportOptions.dateFin));
+      }
+      
+      // Apply consultation type filter
+      if (exportOptions.typeVisite !== 'tous') {
+        exportPayments = exportPayments.filter(p => p.type_rdv === exportOptions.typeVisite);
+      }
+      
+      // Apply insurance filter
+      if (exportOptions.typeAssurance !== 'tous') {
+        const isAssured = exportOptions.typeAssurance === 'assure';
+        exportPayments = exportPayments.filter(p => p.assure === isAssured);
+      }
+
+      // Prepare CSV data
+      const csvData = [];
+      
+      // Add header with export parameters
+      csvData.push(['=== RAPPORT COMPTABLE CABINET MÉDICAL ===']);
+      csvData.push(['Date d\'export:', new Date().toLocaleString('fr-FR')]);
+      
+      if (exportOptions.dateDebut || exportOptions.dateFin) {
+        csvData.push(['Période:', `${exportOptions.dateDebut || 'début'} - ${exportOptions.dateFin || 'fin'}`]);
+      }
+      csvData.push(['Type de consultation:', exportOptions.typeVisite === 'tous' ? 'Toutes' : exportOptions.typeVisite]);
+      csvData.push(['Type d\'assurance:', exportOptions.typeAssurance === 'tous' ? 'Tous' : exportOptions.typeAssurance]);
+      csvData.push(['Nombre de paiements:', exportPayments.length]);
+      csvData.push([]);
+
+      // Add payment details if requested
+      if (exportPayments.length > 0) {
+        const headers = [];
+        if (exportOptions.inclureDate) headers.push('Date');
+        if (exportOptions.inclureNomPatient) headers.push('Patient');
+        if (exportOptions.inclureMontant) headers.push('Montant (TND)');
+        if (exportOptions.inclureType) headers.push('Type Consultation');
+        if (exportOptions.inclureAssurance) headers.push('Assuré');
+        if (exportOptions.inclureStatutPaiement) headers.push('Statut Paiement');
+        
+        csvData.push(['=== DÉTAIL DES PAIEMENTS ===']);
+        csvData.push(headers);
+        
+        exportPayments.forEach(payment => {
+          const row = [];
+          if (exportOptions.inclureDate) row.push(new Date(payment.date).toLocaleDateString('fr-FR'));
+          if (exportOptions.inclureNomPatient) {
+            row.push(payment.patient ? `${payment.patient.prenom} ${payment.patient.nom}` : 'Patient inconnu');
+          }
+          if (exportOptions.inclureMontant) row.push(payment.type_rdv === 'controle' ? '0' : payment.montant);
+          if (exportOptions.inclureType) row.push(payment.type_rdv === 'visite' ? 'Visite' : 'Contrôle');
+          if (exportOptions.inclureAssurance) row.push(payment.assure ? 'Oui' : 'Non');
+          if (exportOptions.inclureStatutPaiement) row.push(payment.statut === 'paye' ? 'Payé' : 'Impayé');
+          csvData.push(row);
+        });
+        csvData.push([]);
+      }
+
+      // Add statistics if requested
+      if (exportOptions.inclureStatistiques && enhancedStats) {
+        csvData.push(['=== STATISTIQUES FINANCIÈRES ===']);
+        csvData.push(['Recette du jour:', `${formatCurrency(enhancedStats.recette_jour || 0)} TND`]);
+        csvData.push(['Recette du mois:', `${formatCurrency(enhancedStats.recette_mois || 0)} TND`]);
+        csvData.push(['Recette de l\'année:', `${formatCurrency(enhancedStats.recette_annee || 0)} TND`]);
+        csvData.push(['Nouveaux patients cette année:', enhancedStats.nouveaux_patients_annee || 0]);
+        
+        // Calculate period-specific statistics
+        const totalMontant = exportPayments.reduce((sum, p) => sum + (p.type_rdv === 'controle' ? 0 : parseFloat(p.montant || 0)), 0);
+        const nbVisites = exportPayments.filter(p => p.type_rdv === 'visite').length;
+        const nbControles = exportPayments.filter(p => p.type_rdv === 'controle').length;
+        const nbAssures = exportPayments.filter(p => p.assure).length;
+        
+        csvData.push(['--- Statistiques de la période sélectionnée ---']);
+        csvData.push(['Total période:', `${totalMontant.toFixed(2)} TND`]);
+        csvData.push(['Nombre de visites:', nbVisites]);
+        csvData.push(['Nombre de contrôles:', nbControles]);
+        csvData.push(['Patients assurés:', nbAssures]);
+        csvData.push(['Patients non assurés:', exportPayments.length - nbAssures]);
+        csvData.push([]);
+      }
+
+      // Add evolution data if requested
+      if (exportOptions.inclureEvolution && evolutionData.length > 0) {
         csvData.push(['=== ÉVOLUTION MENSUELLE ===']);
         csvData.push(['Mois', 'Recette (TND)', 'Nb Consultations', 'Nouveaux Patients']);
         evolutionData.forEach(data => {
@@ -634,33 +707,68 @@ const Billing = ({ user }) => {
             data.nouveaux_patients || 0
           ]);
         });
+        csvData.push([]);
       }
 
-      // Create CSV content
-      const csvContent = csvData
+      // Add predictions if requested
+      if (exportOptions.includrePredictions && predictions) {
+        csvData.push(['=== PRÉDICTIONS IA ===']);
+        csvData.push(['Consultations estimées (mois prochain):', predictions.next_month?.consultations_estimees || 0]);
+        csvData.push(['Revenus estimés (mois prochain):', `${predictions.next_month?.revenue_estime || 0} TND`]);
+        csvData.push(['Niveau de confiance:', `${predictions.next_month?.confiance || 0}%`]);
+        if (predictions.insights && predictions.insights.length > 0) {
+          csvData.push(['--- Insights IA ---']);
+          predictions.insights.forEach((insight, index) => {
+            csvData.push([`Insight ${index + 1}:`, insight]);
+          });
+        }
+        csvData.push([]);
+      }
+
+      // Add accounting format summary if requested
+      if (exportOptions.formatRapportComptable) {
+        csvData.push(['=== RAPPORT COMPTABLE SYNTHÈSE ===']);
+        csvData.push(['RECETTES']);
+        csvData.push(['Consultations:', `${exportPayments.filter(p => p.type_rdv === 'visite' && p.statut === 'paye').reduce((sum, p) => sum + parseFloat(p.montant || 0), 0).toFixed(2)} TND`]);
+        csvData.push(['Contrôles:', '0.00 TND']);
+        csvData.push(['Total HT:', `${exportPayments.filter(p => p.statut === 'paye').reduce((sum, p) => sum + (p.type_rdv === 'controle' ? 0 : parseFloat(p.montant || 0)), 0).toFixed(2)} TND`]);
+        csvData.push(['TVA (19%):', '0.00 TND']); // Assuming medical services are not subject to VAT
+        csvData.push(['Total TTC:', `${exportPayments.filter(p => p.statut === 'paye').reduce((sum, p) => sum + (p.type_rdv === 'controle' ? 0 : parseFloat(p.montant || 0)), 0).toFixed(2)} TND`]);
+        csvData.push([]);
+        csvData.push(['CRÉANCES (Impayés)']);
+        csvData.push(['Montant impayé:', `${exportPayments.filter(p => p.statut === 'impaye').reduce((sum, p) => sum + (p.type_rdv === 'controle' ? 0 : parseFloat(p.montant || 0)), 0).toFixed(2)} TND`]);
+      }
+
+      // Create CSV content with UTF-8 BOM for proper encoding
+      const BOM = '\uFEFF';
+      const csvContent = BOM + csvData
         .map(row => row.map(field => `"${field}"`).join(','))
         .join('\n');
 
-      // Download file with enhanced filename
+      // Download file
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
       link.setAttribute('href', url);
       
       const today = new Date().toISOString().split('T')[0];
-      const filename = `facturation_enhanced_${today}.csv`;
+      const filename = exportOptions.formatRapportComptable 
+        ? `rapport_comptable_${today}.csv`
+        : `facturation_detaillee_${today}.csv`;
       link.setAttribute('download', filename);
       link.style.visibility = 'hidden';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       
-      toast.success('Export CSV avancé téléchargé avec succès');
+      toast.success(`Export CSV complet téléchargé (${exportPayments.length} paiements)`);
       setShowExportModal(false);
       
     } catch (error) {
       console.error('Export error:', error);
       toast.error('Erreur lors de l\'export');
+    } finally {
+      setLoading(false);
     }
   };
 
