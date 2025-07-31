@@ -326,7 +326,16 @@ const Billing = ({ user }) => {
   // New functions for predictions section
   const fetchPredictions = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/admin/advanced-reports`);
+      // Call with default parameters for monthly report of current year
+      const currentYear = new Date().getFullYear();
+      const currentMonth = new Date().getMonth() + 1;
+      const response = await axios.get(`${API_BASE_URL}/api/admin/advanced-reports`, {
+        params: {
+          period_type: 'monthly',
+          year: currentYear,
+          month: currentMonth
+        }
+      });
       setPredictions(response.data);
     } catch (error) {
       console.error('Error fetching predictions:', error);
@@ -336,7 +345,16 @@ const Billing = ({ user }) => {
 
   const fetchAnalysisData = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/admin/ai-medical-report`);
+      // Call with default parameters for current month
+      const currentYear = new Date().getFullYear();
+      const currentMonth = new Date().getMonth() + 1;
+      const response = await axios.get(`${API_BASE_URL}/api/admin/ai-medical-report`, {
+        params: {
+          period_type: 'monthly',
+          year: currentYear,
+          month: currentMonth
+        }
+      });
       setAnalysisData(response.data);
     } catch (error) {
       console.error('Error fetching analysis data:', error);
