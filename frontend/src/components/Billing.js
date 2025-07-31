@@ -605,6 +605,7 @@ const Billing = ({ user }) => {
             { id: 'dashboard', label: 'Tableau de bord', icon: PieChart },
             { id: 'payments', label: 'Historique paiements', icon: CreditCard },
             { id: 'stats', label: 'Statistiques', icon: BarChart3 },
+            { id: 'predictions', label: 'Prédictions', icon: TrendingUp },
             { id: 'caisse', label: 'Caisse', icon: DollarSign }
           ].map((tab) => {
             const Icon = tab.icon;
