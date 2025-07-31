@@ -626,44 +626,6 @@ const Dashboard = ({ user }) => {
     </div>
   );
 
-      {/* Custom Delete Confirmation Dialog */}
-      {deleteConfirmDialog.show && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4 shadow-xl">
-            <div className="text-center">
-              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
-                <span className="text-2xl">🗑️</span>
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Supprimer le message
-              </h3>
-              <p className="text-sm text-gray-500 mb-2">
-                Êtes-vous sûr de vouloir supprimer ce message ?
-              </p>
-              <p className="text-xs text-gray-400 bg-gray-50 p-2 rounded italic mb-4">
-                "{deleteConfirmDialog.messageContent.substring(0, 60)}..."
-              </p>
-              <div className="flex space-x-3">
-                <button
-                  onClick={cancelDelete}
-                  className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
-                >
-                  Annuler
-                </button>
-                <button
-                  onClick={confirmDelete}
-                  className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                >
-                  Supprimer
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
