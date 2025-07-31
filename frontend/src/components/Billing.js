@@ -179,15 +179,6 @@ const Billing = ({ user }) => {
     }
   };
 
-  const fetchTopPatients = async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/facturation/top-patients?limit=10`);
-      setTopPatients(response.data?.top_patients || []);
-    } catch (error) {
-      console.error('Error fetching top patients:', error);
-    }
-  };
-
   const fetchEvolutionData = async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/api/facturation/evolution-graphs`, {
