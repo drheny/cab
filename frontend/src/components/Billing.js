@@ -192,10 +192,41 @@ const Billing = ({ user }) => {
 
   const fetchPredictiveAnalysis = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/facturation/predictive-analysis`);
+      const response = await axios.get(`${API_BASE_URL}/api/admin/predictions`);
       setPredictiveAnalysis(response.data);
     } catch (error) {
       console.error('Error fetching predictive analysis:', error);
+    }
+  };
+
+  // New functions for predictions section
+  const fetchPredictions = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/admin/advanced-reports`);
+      setPredictions(response.data);
+    } catch (error) {
+      console.error('Error fetching predictions:', error);
+      toast.error('Erreur lors du chargement des prédictions');
+    }
+  };
+
+  const fetchAnalysisData = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/admin/ai-medical-report`);
+      setAnalysisData(response.data);
+    } catch (error) {
+      console.error('Error fetching analysis data:', error);
+      toast.error('Erreur lors du chargement des analyses');
+    }
+  };
+
+  const fetchTopPatients = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/facturation/top-patients?limit=10`);
+      return response.data?.top_patients || [];
+    } catch (error) {
+      console.error('Error fetching top patients:', error);
+      return [];
     }
   };
 
