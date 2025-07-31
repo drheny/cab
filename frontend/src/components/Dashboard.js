@@ -604,16 +604,16 @@ const Dashboard = ({ user }) => {
     });
   }, [messages, user.role]);
 
-  const StatCard = ({ icon: Icon, title, value, color, subtitle }) => (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+  const StatCard = ({ icon: Icon, title, value, color, subtitle, gradientColors, iconBg }) => (
+    <div className={`bg-gradient-to-br ${gradientColors} rounded-xl shadow-lg border-none p-6 hover:shadow-xl hover:scale-105 transition-all duration-300 transform`}>
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className={`text-2xl font-bold ${color}`}>{value}</p>
-          {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
+          <p className="text-sm font-medium text-white/90">{title}</p>
+          <p className="text-3xl font-bold text-white drop-shadow-sm">{value}</p>
+          {subtitle && <p className="text-xs text-white/80 mt-1">{subtitle}</p>}
         </div>
-        <div className={`p-3 rounded-full ${color.replace('text-', 'bg-').replace('-600', '-100')}`}>
-          <Icon className={`w-6 h-6 ${color}`} />
+        <div className={`p-4 rounded-xl ${iconBg} shadow-lg backdrop-blur-sm`}>
+          <Icon className="w-7 h-7 text-white drop-shadow-sm" />
         </div>
       </div>
 
