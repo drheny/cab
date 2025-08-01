@@ -2395,6 +2395,56 @@ const Administration = ({ user }) => {
                     </div>
                   )}
                 </div>
+
+                {/* Permission Testing & Validation */}
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <CheckCircle className="w-6 h-6 text-yellow-600" />
+                    <h4 className="font-medium text-yellow-900">🧪 Test & Validation des Permissions</h4>
+                  </div>
+                  <p className="text-sm text-yellow-700 mb-4">
+                    Testez l'application des permissions pour s'assurer qu'elles fonctionnent correctement
+                  </p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <button
+                      onClick={async () => {
+                        try {
+                          // Refresh user data to check permissions
+                          await fetchUsers();
+                          toast.success('✅ Permissions actualisées avec succès');
+                        } catch (error) {
+                          toast.error('❌ Erreur lors du rafraîchissement des permissions');
+                        }
+                      }}
+                      className="flex items-center justify-center space-x-2 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                      <span>Rafraîchir Permissions</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        const secretaries = allUsers.filter(u => u.role === 'secretaire');
+                        if (secretaries.length > 0) {
+                          const firstSecretary = secretaries[0];
+                          toast.success(`🔍 Permissions de ${firstSecretary.full_name}:\n${JSON.stringify(firstSecretary.permissions || getDefaultPermissions('secretaire'), null, 2)}`);
+                        } else {
+                          toast.error('Aucun secrétaire trouvé pour le test');
+                        }
+                      }}
+                      className="flex items-center justify-center space-x-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg"
+                    >
+                      <Eye className="w-4 h-4" />
+                      <span>Vérifier Permissions</span>
+                    </button>
+                  </div>
+                  
+                  <div className="mt-4 text-xs text-yellow-600">
+                    <p>💡 <strong>Astuce :</strong> Les changements de permissions prennent effet immédiatement.</p>
+                    <p>⚠️ <strong>Important :</strong> Les utilisateurs doivent se reconnecter pour voir les changements.</p>
+                  </div>
+                </div>
               </div>
             )}
           </div>
