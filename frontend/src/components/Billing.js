@@ -248,10 +248,33 @@ const Billing = ({ user }) => {
   // Load predictions data when predictions tab is active
   useEffect(() => {
     if (activeTab === 'predictions' && !predictions && !analysisData) {
-      fetchPredictions();
-      fetchAnalysisData();
+      loadAllPredictionsData();
     }
   }, [activeTab]);
+
+  const loadAllPredictionsData = async () => {
+    setLoading(true);
+    try {
+      const [predictionsRes, analysisRes, seasonalRes, peaksRes, revenueRes] = await Promise.all([
+        fetchPredictions(),
+        fetchAnalysisData(),
+        fetchSeasonalPredictions(),
+        fetchActivityPeaksAndLows(),
+        fetchRevenuePredictions()
+      ]);
+      
+      if (predictionsRes) setPredictions(predictionsRes);
+      if (analysisRes) setAnalysisData(analysisRes);
+      if (seasonalRes) setSeasonalData(seasonalRes);
+      if (peaksRes.length > 0) setActivityPeaks(peaksRes);
+      if (revenueRes) setRevenuePredictions(revenueRes);
+    } catch (error) {
+      console.error('Error loading predictions data:', error);
+      toast.error('Erreur lors du chargement des données de prédiction');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Add real-time patient search effect
   useEffect(() => {
