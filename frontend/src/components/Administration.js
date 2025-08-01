@@ -2313,10 +2313,28 @@ const Administration = ({ user }) => {
                             <td className="px-6 py-4 whitespace-nowrap text-center">
                               <select
                                 defaultValue={getDefaultPermissions('secretaire')[permission.key] ? 'true' : 'false'}
-                                className="text-xs border border-gray-300 rounded px-2 py-1"
+                                className="text-xs border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500"
                                 onChange={(e) => {
-                                  // Handle permission change for secretary role
-                                  console.log(`Changing ${permission.key} to ${e.target.value}`);
+                                  // Find all secretary users and update their permissions
+                                  const secretaryUsers = allUsers.filter(u => u.role === 'secretaire');
+                                  const newPermissionValue = e.target.value === 'true';
+                                  
+                                  secretaryUsers.forEach(async (user) => {
+                                    try {
+                                      const updatedPermissions = {
+                                        ...user.permissions,
+                                        [permission.key]: newPermissionValue
+                                      };
+                                      
+                                      await handleUpdatePermissions(user.id, updatedPermissions);
+                                      console.log(`✅ Updated ${permission.key} for ${user.full_name}: ${newPermissionValue}`);
+                                    } catch (error) {
+                                      console.error(`❌ Failed to update ${permission.key} for ${user.full_name}:`, error);
+                                      toast.error(`Erreur mise à jour permission ${user.full_name}`);
+                                    }
+                                  });
+                                  
+                                  toast.success(`Permission "${permission.label}" mise à jour pour tous les secrétaires`);
                                 }}
                               >
                                 <option value="true">✅ Autorisé</option>
