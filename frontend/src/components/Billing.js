@@ -373,13 +373,72 @@ const Billing = ({ user }) => {
     }
   };
 
-  const fetchTopPatients = async () => {
+  // Enhanced ML prediction functions
+  const fetchSeasonalPredictions = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/facturation/top-patients?limit=10`);
-      return response.data?.top_patients || [];
+      // Get seasonal analysis for the full year
+      const response = await axios.get(`${API_BASE_URL}/api/admin/advanced-reports`, {
+        params: {
+          period_type: 'annual',
+          year: new Date().getFullYear()
+        }
+      });
+      return response.data;
     } catch (error) {
-      console.error('Error fetching top patients:', error);
+      console.error('Error fetching seasonal predictions:', error);
+      return null;
+    }
+  };
+
+  const fetchActivityPeaksAndLows = async () => {
+    try {
+      // Get monthly data for peak/low analysis
+      const currentYear = new Date().getFullYear();
+      const promises = [];
+      for (let month = 1; month <= 12; month++) {
+        promises.push(
+          axios.get(`${API_BASE_URL}/api/admin/advanced-reports`, {
+            params: {
+              period_type: 'monthly',
+              year: currentYear,
+              month: month
+            }
+          })
+        );
+      }
+      const responses = await Promise.all(promises);
+      return responses.map(r => r.data);
+    } catch (error) {
+      console.error('Error fetching activity peaks:', error);
       return [];
+    }
+  };
+
+  const fetchRevenuePredictions = async () => {
+    try {
+      // Get semester-based revenue predictions
+      const currentYear = new Date().getFullYear();
+      const semester1 = await axios.get(`${API_BASE_URL}/api/admin/advanced-reports`, {
+        params: {
+          period_type: 'semester',
+          year: currentYear,
+          semester: 1
+        }
+      });
+      const semester2 = await axios.get(`${API_BASE_URL}/api/admin/advanced-reports`, {
+        params: {
+          period_type: 'semester',
+          year: currentYear,
+          semester: 2
+        }
+      });
+      return {
+        semester1: semester1.data,
+        semester2: semester2.data
+      };
+    } catch (error) {
+      console.error('Error fetching revenue predictions:', error);
+      return null;
     }
   };
 
