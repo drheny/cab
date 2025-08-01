@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 import sys
 
 # Configuration
-BACKEND_URL = "https://4b217b17-873e-4b0f-ae18-7cc0e70848d9.preview.emergentagent.com"
+BACKEND_URL = "https://f310bc43-97b2-405e-8eb3-271aa9c20e28.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 # Authentication token (auto-login for testing)

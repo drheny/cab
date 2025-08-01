@@ -5,7 +5,7 @@ Testing all 8 new facturation endpoints with comprehensive validation
 """
 
 # Configuration
-BACKEND_URL="https://4b217b17-873e-4b0f-ae18-7cc0e70848d9.preview.emergentagent.com"
+BACKEND_URL="https://f310bc43-97b2-405e-8eb3-271aa9c20e28.preview.emergentagent.com"
 API_BASE="${BACKEND_URL}/api"
 AUTH_HEADER="Authorization: Bearer auto-login-token"
 

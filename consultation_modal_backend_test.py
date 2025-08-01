@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 load_dotenv('/app/frontend/.env')
 
 # Configuration
-BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://4b217b17-873e-4b0f-ae18-7cc0e70848d9.preview.emergentagent.com')
+BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://f310bc43-97b2-405e-8eb3-271aa9c20e28.preview.emergentagent.com')
 API_BASE = f"{BACKEND_URL}/api"
 
 # Use auto-login token for testing (as per existing backend implementation)

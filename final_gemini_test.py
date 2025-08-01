@@ -16,7 +16,7 @@ load_dotenv('/app/frontend/.env')
 def test_gemini_advanced_reports():
     """Comprehensive test of Gemini 2.0 Flash enrichment"""
     
-    backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://4b217b17-873e-4b0f-ae18-7cc0e70848d9.preview.emergentagent.com')
+    backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://f310bc43-97b2-405e-8eb3-271aa9c20e28.preview.emergentagent.com')
     headers = {'Authorization': 'Bearer test-token', 'Content-Type': 'application/json'}
     
     print("🚀 COMPREHENSIVE GEMINI 2.0 FLASH ENRICHMENT TEST")

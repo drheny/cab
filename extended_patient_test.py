@@ -16,7 +16,7 @@ load_dotenv('/app/frontend/.env')
 
 class ExtendedPatientWorkflowTest(unittest.TestCase):
     def setUp(self):
-        backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://4b217b17-873e-4b0f-ae18-7cc0e70848d9.preview.emergentagent.com')
+        backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://f310bc43-97b2-405e-8eb3-271aa9c20e28.preview.emergentagent.com')
         self.base_url = backend_url
         self.auth_token = "auto-login-token"
         self.headers = {"Authorization": f"Bearer {self.auth_token}"}
