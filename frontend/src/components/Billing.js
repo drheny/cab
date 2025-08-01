@@ -241,6 +241,9 @@ const Billing = ({ user }) => {
   // New states for predictions section
   const [predictions, setPredictions] = useState(null);
   const [analysisData, setAnalysisData] = useState(null);
+  const [seasonalData, setSeasonalData] = useState(null);
+  const [activityPeaks, setActivityPeaks] = useState([]);
+  const [revenuePredictions, setRevenuePredictions] = useState(null);
 
   // Load predictions data when predictions tab is active
   useEffect(() => {
