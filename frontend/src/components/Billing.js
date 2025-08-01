@@ -245,12 +245,16 @@ const Billing = ({ user }) => {
   const [activityPeaks, setActivityPeaks] = useState([]);
   const [revenuePredictions, setRevenuePredictions] = useState(null);
 
-  // Load predictions data when predictions tab is active
+  // Load predictions data when predictions tab is active (only once)
   useEffect(() => {
-    if (activeTab === 'predictions' && !predictions && !analysisData) {
+    if (activeTab === 'predictions' && 
+        (!predictions || predictions.status === undefined) && 
+        (!analysisData || analysisData.status === undefined) && 
+        !loading) {
+      console.log('🚀 Triggering predictions data load for first time');
       loadAllPredictionsData();
     }
-  }, [activeTab]);
+  }, [activeTab, predictions, analysisData, loading]);
 
   const loadAllPredictionsData = async () => {
     setLoading(true);
