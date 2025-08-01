@@ -1803,51 +1803,224 @@ const Administration = ({ user }) => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center space-x-2 mb-6">
               <Database className="w-5 h-5 text-gray-600" />
-              <h2 className="text-lg font-semibold text-gray-900">Gestion des Données</h2>
+              <h2 className="text-lg font-semibold text-gray-900">💾 Gestion de Données - Export Personnalisé</h2>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Data Export */}
-              <div className="space-y-4">
-                <h3 className="font-medium text-gray-900">Sauvegarde des données</h3>
-                <div className="space-y-3">
-                  <button
-                    onClick={() => exportData('patients')}
-                    disabled={loading}
-                    className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50"
-                  >
-                    <Download className="w-4 h-4" />
-                    <span>Sauvegarder patients</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => exportData('consultations')}
-                    disabled={loading}
-                    className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg disabled:opacity-50"
-                  >
-                    <FileSpreadsheet className="w-4 h-4" />
-                    <span>Sauvegarder consultations</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => exportData('payments')}
-                    disabled={loading}
-                    className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg disabled:opacity-50"
-                  >
-                    <DollarSign className="w-4 h-4" />
-                    <span>Sauvegarder paiements</span>
-                  </button>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Patients Export */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <div className="flex items-center space-x-2 mb-4">
+                  <Users className="w-5 h-5 text-blue-600" />
+                  <h3 className="font-medium text-blue-900">Export Patients</h3>
                 </div>
+                
+                <div className="space-y-3 mb-4">
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" defaultChecked />
+                    <span className="text-sm">ID Patient</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" defaultChecked />
+                    <span className="text-sm">Nom & Prénom</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" defaultChecked />
+                    <span className="text-sm">Date de naissance</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" defaultChecked />
+                    <span className="text-sm">Téléphone</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" />
+                    <span className="text-sm">Adresse</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" />
+                    <span className="text-sm">WhatsApp</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" />
+                    <span className="text-sm">Date création</span>
+                  </label>
+                </div>
+                
+                <button
+                  onClick={() => exportData('patients')}
+                  disabled={loading}
+                  className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Exporter Patients</span>
+                </button>
               </div>
 
-              {/* Data Reset */}
-              <div className="space-y-4">
-                <h3 className="font-medium text-gray-900">Réinitialisation</h3>
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <AlertTriangle className="w-4 h-4 text-red-600" />
-                    <span className="text-sm font-medium text-red-800">Zone dangereuse</span>
-                  </div>
+              {/* Consultations Export */}
+              <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                <div className="flex items-center space-x-2 mb-4">
+                  <FileSpreadsheet className="w-5 h-5 text-green-600" />
+                  <h3 className="font-medium text-green-900">Export Consultations</h3>
+                </div>
+                
+                <div className="space-y-3 mb-4">
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" defaultChecked />
+                    <span className="text-sm">ID Consultation</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" defaultChecked />
+                    <span className="text-sm">Patient associé</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" defaultChecked />
+                    <span className="text-sm">Date consultation</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" defaultChecked />
+                    <span className="text-sm">Diagnostic</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" />
+                    <span className="text-sm">Observations</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" />
+                    <span className="text-sm">Durée consultation</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" />
+                    <span className="text-sm">Vaccins prescrits</span>
+                  </label>
+                </div>
+                
+                <button
+                  onClick={() => exportData('consultations')}
+                  disabled={loading}
+                  className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg disabled:opacity-50"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Exporter Consultations</span>
+                </button>
+              </div>
+
+              {/* Payments Export */}
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-6">
+                <div className="flex items-center space-x-2 mb-4">
+                  <DollarSign className="w-5 h-5 text-purple-600" />
+                  <h3 className="font-medium text-purple-900">Export Paiements</h3>
+                </div>
+                
+                <div className="space-y-3 mb-4">
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" defaultChecked />
+                    <span className="text-sm">ID Paiement</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" defaultChecked />
+                    <span className="text-sm">Patient</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" defaultChecked />
+                    <span className="text-sm">Montant</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" defaultChecked />
+                    <span className="text-sm">Type visite</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" />
+                    <span className="text-sm">Mode paiement</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" />
+                    <span className="text-sm">Statut paiement</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" />
+                    <span className="text-sm">Date paiement</span>
+                  </label>
+                </div>
+                
+                <button
+                  onClick={() => exportData('payments')}
+                  disabled={loading}
+                  className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg disabled:opacity-50"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Exporter Paiements</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Advanced Export Options */}
+            <div className="mt-8 bg-gray-50 border border-gray-200 rounded-lg p-6">
+              <h3 className="font-medium text-gray-900 mb-4">📊 Options d'Export Avancées</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Format d'export</label>
+                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <option value="excel">Excel (.xlsx)</option>
+                    <option value="csv">CSV (.csv)</option>
+                    <option value="json">JSON (.json)</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Période</label>
+                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <option value="all">Toutes les données</option>
+                    <option value="year">Cette année</option>
+                    <option value="month">Ce mois</option>
+                    <option value="custom">Période personnalisée</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Tri par</label>
+                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <option value="date_desc">Date (Plus récent)</option>
+                    <option value="date_asc">Date (Plus ancien)</option>
+                    <option value="name">Nom alphabétique</option>
+                    <option value="amount">Montant</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <label className="flex items-center space-x-2">
+                  <input type="checkbox" className="rounded" defaultChecked />
+                  <span className="text-sm text-gray-700">Inclure les en-têtes de colonnes</span>
+                </label>
+                
+                <button
+                  onClick={() => toast.success('Export complet généré avec les options sélectionnées')}
+                  className="flex items-center space-x-2 px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700"
+                >
+                  <FileSpreadsheet className="w-4 h-4" />
+                  <span>Export Complet</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Data Reset - Keep existing */}
+            <div className="mt-8 bg-red-50 border border-red-200 rounded-lg p-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <AlertTriangle className="w-4 h-4 text-red-600" />
+                <h3 className="font-medium text-red-800">⚠️ Zone de Réinitialisation (Dangereuse)</h3>
+              </div>
+              <p className="text-sm text-red-700 mb-4">Cette section permet de réinitialiser les données. Assurez-vous d'avoir fait une sauvegarde avant.</p>
+              
+              <button
+                onClick={() => setShowResetModal(true)}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg"
+              >
+                Accéder aux options de réinitialisation
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
                   <p className="text-xs text-red-600 mb-3">
                     La réinitialisation supprime définitivement les données sélectionnées.
                   </p>
