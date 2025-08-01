@@ -2036,7 +2036,6 @@ const Administration = ({ user }) => {
               <nav className="-mb-px flex space-x-8">
                 {[
                   { id: 'users-list', label: '👤 Utilisateurs', icon: Users },
-                  { id: 'access-management', label: '🔐 Gestion Accès', icon: Settings },
                   { id: 'permissions', label: '🛡️ Droits & Permissions', icon: Shield }
                 ].map((subTab) => {
                   const Icon = subTab.icon;
