@@ -1936,10 +1936,16 @@ const Billing = ({ user }) => {
               <button
                 onClick={() => {
                   setLoading(true);
+                  // Reset states before reloading to prevent stale data
+                  setPredictions(null);
+                  setAnalysisData(null);
+                  setSeasonalData(null);
+                  setActivityPeaks([]);
+                  setRevenuePredictions(null);
                   loadAllPredictionsData().finally(() => setLoading(false));
                 }}
                 disabled={loading}
-                className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-6 py-3 rounded-xl hover:from-purple-600 hover:to-indigo-700 transition-all duration-300 flex items-center space-x-2 shadow-lg"
+                className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-6 py-3 rounded-xl hover:from-purple-600 hover:to-indigo-700 transition-all duration-300 flex items-center space-x-2 shadow-lg disabled:opacity-50"
               >
                 <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
                 <span>Actualiser ML</span>
