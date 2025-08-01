@@ -255,6 +255,8 @@ const Billing = ({ user }) => {
   const loadAllPredictionsData = async () => {
     setLoading(true);
     try {
+      console.log('🔄 Loading all predictions data...');
+      
       const [predictionsRes, analysisRes, seasonalRes, peaksRes, revenueRes] = await Promise.all([
         fetchPredictions(),
         fetchAnalysisData(),
@@ -263,14 +265,32 @@ const Billing = ({ user }) => {
         fetchRevenuePredictions()
       ]);
       
-      if (predictionsRes) setPredictions(predictionsRes);
-      if (analysisRes) setAnalysisData(analysisRes);
-      if (seasonalRes) setSeasonalData(seasonalRes);
-      if (peaksRes.length > 0) setActivityPeaks(peaksRes);
-      if (revenueRes) setRevenuePredictions(revenueRes);
+      console.log('📊 Predictions results:', { 
+        predictions: !!predictionsRes, 
+        analysis: !!analysisRes, 
+        seasonal: !!seasonalRes, 
+        peaks: peaksRes?.length || 0, 
+        revenue: !!revenueRes 
+      });
+      
+      // Set data with fallbacks to prevent null states that trigger reloads
+      setPredictions(predictionsRes || { status: 'no_data' });
+      setAnalysisData(analysisRes || { status: 'no_data' });
+      setSeasonalData(seasonalRes || { status: 'no_data' });
+      setActivityPeaks(Array.isArray(peaksRes) && peaksRes.length > 0 ? peaksRes : []);
+      setRevenuePredictions(revenueRes || { status: 'no_data' });
+      
+      console.log('✅ All predictions data loaded successfully');
     } catch (error) {
-      console.error('Error loading predictions data:', error);
+      console.error('❌ Error loading predictions data:', error);
       toast.error('Erreur lors du chargement des données de prédiction');
+      
+      // Set fallback data to prevent endless loading loops
+      setPredictions({ status: 'error', error: error.message });
+      setAnalysisData({ status: 'error', error: error.message });
+      setSeasonalData({ status: 'error', error: error.message });
+      setActivityPeaks([]);
+      setRevenuePredictions({ status: 'error', error: error.message });
     } finally {
       setLoading(false);
     }
