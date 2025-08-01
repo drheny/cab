@@ -2290,18 +2290,17 @@ const Administration = ({ user }) => {
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
                         {[
-                          { key: 'view_dashboard', label: '🏠 Dashboard', desc: 'Accès à la page d\'accueil' },
-                          { key: 'view_patients', label: '👥 Fiches Patients', desc: 'Voir la liste des patients' },
-                          { key: 'manage_patients', label: '✏️ Gestion Patients', desc: 'Créer/modifier les patients' },
-                          { key: 'view_calendar', label: '📅 Gestion RDV', desc: 'Voir le calendrier des RDV' },
-                          { key: 'manage_appointments', label: '📝 Gestion RDV', desc: 'Créer/modifier les RDV' },
-                          { key: 'view_consultations', label: '🩺 Historique Consultations', desc: 'Voir les consultations' },
-                          { key: 'view_messages', label: '💬 Messages Tel', desc: 'Accès aux messages' },
-                          { key: 'view_billing', label: '💰 Facturation', desc: 'Voir la facturation' },
-                          { key: 'modify_payments', label: '💳 Modifier Paiements', desc: 'Modifier les paiements' },
-                          { key: 'view_ai_room', label: '🤖 IA Room', desc: 'Accès aux fonctionnalités d\'IA' },
-                          { key: 'view_administration', label: '⚙️ Administration', desc: 'Accès à l\'administration' }
-                        ].map((permission) => (
+                          { key: 'view_dashboard', label: '🏠 Dashboard', desc: 'Accès à la page d\'accueil', active: true },
+                          { key: 'view_patients', label: '👥 Fiches Patients', desc: 'Voir la liste des patients', active: true },
+                          { key: 'manage_patients', label: '✏️ Gestion Patients', desc: 'Créer/modifier les patients', active: true },
+                          { key: 'view_calendar', label: '📅 Gestion RDV', desc: 'Voir le calendrier des RDV', active: true },
+                          { key: 'manage_appointments', label: '📝 Gestion RDV', desc: 'Créer/modifier les RDV', active: true },
+                          { key: 'view_consultations', label: '🩺 Historique Consultations', desc: 'Voir les consultations', active: true },
+                          { key: 'view_messages', label: '💬 Messages Tel', desc: 'Accès aux messages', active: true },
+                          { key: 'view_billing', label: '💰 Facturation', desc: 'Voir la facturation', active: true },
+                          { key: 'modify_payments', label: '💳 Modifier Paiements', desc: 'Modifier les paiements', active: true },
+                          { key: 'view_administration', label: '⚙️ Administration', desc: 'Accès à l\'administration', active: true }
+                        ].filter(permission => permission.active).map((permission) => (
                           <tr key={permission.key}>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                               {permission.label}
