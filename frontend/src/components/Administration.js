@@ -2021,22 +2021,6 @@ const Administration = ({ user }) => {
           </div>
         </div>
       )}
-                  <p className="text-xs text-red-600 mb-3">
-                    La réinitialisation supprime définitivement les données sélectionnées.
-                  </p>
-                  <button
-                    onClick={() => setShowResetModal(true)}
-                    className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    <span>Réinitialiser base</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {activeTab === 'utilisateurs' && (
         <div className="space-y-6">
