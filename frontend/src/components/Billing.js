@@ -515,6 +515,44 @@ const Billing = ({ user }) => {
     return forecast;
   };
 
+  const fetchRevenuePredictions = async () => {
+    try {
+      // Get semester-based revenue predictions
+      const currentYear = new Date().getFullYear();
+      const semester1 = await axios.get(`${API_BASE_URL}/api/admin/advanced-reports`, {
+        params: {
+          period_type: 'semester',
+          year: currentYear,
+          semester: 1
+        }
+      });
+      const semester2 = await axios.get(`${API_BASE_URL}/api/admin/advanced-reports`, {
+        params: {
+          period_type: 'semester',
+          year: currentYear,
+          semester: 2
+        }
+      });
+      return {
+        semester1: semester1.data,
+        semester2: semester2.data
+      };
+    } catch (error) {
+      console.error('Error fetching revenue predictions:', error);
+      return null;
+    }
+  };
+
+  const fetchTopPatients = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/facturation/top-patients?limit=10`);
+      return response.data?.top_patients || [];
+    } catch (error) {
+      console.error('Error fetching top patients:', error);
+      return [];
+    }
+  };
+
   const fetchPayments = async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/api/payments`);
