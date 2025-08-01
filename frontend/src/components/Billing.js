@@ -517,29 +517,29 @@ const Billing = ({ user }) => {
 
   const fetchRevenuePredictions = async () => {
     try {
-      // Get semester-based revenue predictions
+      // Get monthly revenue predictions (more reliable than semester)
       const currentYear = new Date().getFullYear();
-      const semester1 = await axios.get(`${API_BASE_URL}/api/admin/advanced-reports`, {
+      const currentMonth = new Date().getMonth() + 1;
+      
+      const response = await axios.get(`${API_BASE_URL}/api/admin/advanced-reports`, {
         params: {
-          period_type: 'semester',
+          period_type: 'monthly',
           year: currentYear,
-          semester: 1
+          month: currentMonth
         }
       });
-      const semester2 = await axios.get(`${API_BASE_URL}/api/admin/advanced-reports`, {
-        params: {
-          period_type: 'semester',
-          year: currentYear,
-          semester: 2
-        }
-      });
+      
+      // Return structured revenue predictions
       return {
-        semester1: semester1.data,
-        semester2: semester2.data
+        current_month: response.data,
+        has_predictions: response.data?.predictions?.next_month ? true : false
       };
     } catch (error) {
       console.error('Error fetching revenue predictions:', error);
-      return null;
+      return {
+        current_month: null,
+        has_predictions: false
+      };
     }
   };
 
