@@ -680,24 +680,21 @@ const Dashboard = ({ user }) => {
   }, [messages, user.role]);
 
   const StatCard = ({ icon: Icon, title, value, color, subtitle, gradientColors, iconBg }) => (
-    <div className={`relative bg-gradient-to-br ${gradientColors} rounded-lg shadow-lg border-none p-3 hover:shadow-2xl hover:scale-105 hover:-translate-y-1 transition-all duration-300 transform aspect-square flex flex-col justify-between min-h-[140px] w-[140px] flex-shrink-0 group`}>
-      {/* Animated gradient overlay on hover */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg"></div>
-      
-      {/* Decorative corner elements */}
-      <div className="absolute top-0 right-0 w-6 h-6 bg-white/10 rounded-bl-full group-hover:w-8 group-hover:h-8 transition-all duration-300"></div>
-      <div className="absolute bottom-0 left-0 w-4 h-4 bg-white/5 rounded-tr-full group-hover:w-6 group-hover:h-6 transition-all duration-300"></div>
-      
-      <div className="flex flex-col h-full justify-between z-10">
-        {/* Top section with icon */}
-        <div className="flex justify-end mb-1">
-          <div className={`p-1.5 rounded-lg ${iconBg} shadow-lg backdrop-blur-sm border border-white/20 group-hover:scale-110 transition-transform duration-300`}>
-            <Icon className="w-4 h-4 text-white drop-shadow-md" />
-          </div>
+    <div className={`bg-gradient-to-r ${gradientColors} rounded-xl p-6 text-white shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 group`}>
+      <div className="flex items-center justify-between">
+        <div className="flex-1">
+          <p className="text-white/80 text-sm font-medium">{title}</p>
+          <p className="text-2xl font-bold mt-1">{value}</p>
+          {subtitle && (
+            <p className="text-white/70 text-xs mt-1">{subtitle}</p>
+          )}
         </div>
-        
-        {/* Content section */}
-        <div className="flex-1 flex flex-col justify-center text-center">
+        <div className={`${iconBg} bg-opacity-30 rounded-full p-3 group-hover:scale-110 transition-transform duration-300`}>
+          <Icon className="w-6 h-6 text-white" />
+        </div>
+      </div>
+    </div>
+  );
           <p className="text-xs font-semibold text-white/95 mb-1 uppercase tracking-wider leading-tight">{title}</p>
           <p className="text-xl font-black text-white drop-shadow-lg mb-0.5 leading-tight group-hover:text-2xl transition-all duration-300">{value}</p>
           {subtitle && <p className="text-xs text-white/85 font-medium leading-tight">{subtitle}</p>}
