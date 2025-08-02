@@ -295,6 +295,16 @@ const PatientsListComponent = ({ user }) => {
       setShowModal(false);
       resetForm();
       fetchPatients();
+      
+      // 🔄 Emit custom event to notify Dashboard of patient data update
+      console.log('📡 Emitting patientDataUpdated event for Dashboard refresh');
+      window.dispatchEvent(new CustomEvent('patientDataUpdated', {
+        detail: { 
+          patientId: selectedPatient.id,
+          updatedData: formData,
+          timestamp: new Date().toISOString()
+        }
+      }));
     } catch (error) {
       console.error('Error updating patient:', error);
       toast.error('Erreur lors de la mise à jour du patient');
