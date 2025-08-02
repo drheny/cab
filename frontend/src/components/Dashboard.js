@@ -718,55 +718,53 @@ const Dashboard = ({ user }) => {
         </div>
       </div>
 
-      {/* Stats Grid - Fixed layout for 5 cards on same line */}
-      <div className="flex justify-center items-center gap-3 mb-6 px-2 overflow-x-auto">
-        <div className="flex gap-3 min-w-fit">
-          <StatCard
-            icon={Calendar}
-            title="RDV Aujourd'hui"
-            value={stats.total_rdv}
-            color="text-blue-600"
-            subtitle="Total des rendez-vous"
-            gradientColors="from-blue-500 via-blue-600 to-purple-700"
-            iconBg="bg-white/20"
-          />
-          <StatCard
-            icon={Clock}
-            title="Salle attente"
-            value={stats.rdv_attente}
-            color="text-yellow-600"
-            subtitle="Patients en salle d'attente"
-            gradientColors="from-amber-500 via-orange-500 to-pink-600"
-            iconBg="bg-white/20"
-          />
-          <StatCard
-            icon={Users}
-            title="Patients Restants"
-            value={stats.rdv_restants}
-            color="text-orange-600"
-            subtitle="Non encore arrivés"
-            gradientColors="from-orange-500 via-red-500 to-pink-700"
-            iconBg="bg-white/20"
-          />
-          <StatCard
-            icon={Clock}
-            title="Temps d'attente"
-            value={`${stats.duree_attente_moyenne} min`}
-            color="text-teal-600"
-            subtitle="Temps d'attente moyen"
-            gradientColors="from-teal-500 via-cyan-600 to-blue-700"
-            iconBg="bg-white/20"
-          />
-          <StatCard
-            icon={DollarSign}
-            title="Recette du jour"
-            value={`${stats.recette_jour} TND`}
-            color="text-purple-600"
-            subtitle="Paiements encaissés"
-            gradientColors="from-purple-500 via-indigo-600 to-blue-800"
-            iconBg="bg-white/20"
-          />
-        </div>
+      {/* Stats Grid - Modern cards like Facturation page */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6 mb-6">
+        <StatCard
+          icon={Calendar}
+          title="RDV Aujourd'hui"
+          value={stats.total_rdv}
+          color="text-blue-600"
+          subtitle="Total des rendez-vous"
+          gradientColors="from-blue-500 to-blue-600"
+          iconBg="bg-blue-400"
+        />
+        <StatCard
+          icon={Clock}
+          title="Salle attente"
+          value={stats.rdv_attente}
+          color="text-yellow-600"
+          subtitle="Patients en salle d'attente"
+          gradientColors="from-amber-500 to-orange-600"
+          iconBg="bg-orange-400"
+        />
+        <StatCard
+          icon={Users}
+          title="Patients Restants"
+          value={stats.rdv_restants}
+          color="text-orange-600"
+          subtitle="Non encore arrivés"
+          gradientColors="from-orange-500 to-red-600"
+          iconBg="bg-red-400"
+        />
+        <StatCard
+          icon={Clock}
+          title="Temps d'attente"
+          value={`${stats.duree_attente_moyenne} min`}
+          color="text-teal-600"
+          subtitle="Temps d'attente moyen"
+          gradientColors="from-teal-500 to-cyan-600"
+          iconBg="bg-cyan-400"
+        />
+        <StatCard
+          icon={DollarSign}
+          title="Recette du jour"
+          value={`${stats.recette_jour} TND`}
+          color="text-purple-600"
+          subtitle="Paiements encaissés"
+          gradientColors="from-purple-500 to-indigo-600"
+          iconBg="bg-indigo-400"
+        />
       </div>
 
 
