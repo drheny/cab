@@ -619,9 +619,17 @@ async def cleanup_phone_messages_daily():
         return 0
 
 def create_demo_data():
-    """Create demo data for testing"""
+    """Create demo data for testing - ONLY if data doesn't already exist"""
     # Create default users first
     create_default_users()
+    
+    # 🔄 CRITICAL FIX: Check if demo data already exists, don't overwrite existing data
+    existing_patients_count = patients_collection.count_documents({})
+    if existing_patients_count > 0:
+        print(f"✅ Demo data already exists ({existing_patients_count} patients), skipping recreation to preserve user changes")
+        return
+    
+    print("🔄 Creating initial demo data (no existing data found)")
     
     # Demo patients
     demo_patients = [
