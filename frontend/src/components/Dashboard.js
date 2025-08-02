@@ -379,13 +379,38 @@ const Dashboard = ({ user }) => {
     }
   };
 
-  const sendWhatsAppVaccineReminder = (vaccineReminder) => {
-    if (vaccineReminder.numero_whatsapp) {
-      const message = `🩺 Rappel Vaccin - Cabinet Médical\n\nBonjour ${vaccineReminder.patient_prenom},\n\nNous vous rappelons que le vaccin ${vaccineReminder.nom_vaccin} est prévu pour le ${new Date(vaccineReminder.date_vaccin).toLocaleDateString('fr-FR')}.\n\nMerci de prendre rendez-vous si ce n'est pas encore fait.\n\nÉquipe du cabinet`;
-      const whatsappUrl = `https://wa.me/${vaccineReminder.numero_whatsapp}?text=${encodeURIComponent(message)}`;
-      window.open(whatsappUrl, '_blank');
-    } else {
-      toast.error('Numéro WhatsApp non disponible pour ce patient');
+  const sendWhatsAppVaccineReminder = async (vaccineReminder) => {
+    try {
+      // 🔄 ALWAYS fetch fresh patient data to ensure we have the latest WhatsApp number
+      const response = await axios.get(`${API_BASE_URL}/api/patients/${vaccineReminder.patient_id}`);
+      const freshPatientData = response.data;
+      
+      const currentWhatsAppNumber = freshPatientData.numero_whatsapp;
+      
+      if (currentWhatsAppNumber) {
+        console.log(`📱 Using FRESH WhatsApp number for ${vaccineReminder.patient_prenom}: ${currentWhatsAppNumber}`);
+        
+        const message = `🩺 Rappel Vaccin - Cabinet Médical\n\nBonjour ${vaccineReminder.patient_prenom},\n\nNous vous rappelons que le vaccin ${vaccineReminder.nom_vaccin} est prévu pour le ${new Date(vaccineReminder.date_vaccin).toLocaleDateString('fr-FR')}.\n\nMerci de prendre rendez-vous si ce n'est pas encore fait.\n\nÉquipe du cabinet`;
+        const whatsappUrl = `https://wa.me/${currentWhatsAppNumber}?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
+        
+        toast.success(`✅ WhatsApp ouvert avec le numéro ${currentWhatsAppNumber}`);
+      } else {
+        toast.error('Numéro WhatsApp non disponible pour ce patient');
+      }
+    } catch (error) {
+      console.error('Error fetching fresh patient data:', error);
+      // Fallback to cached data if API fails
+      if (vaccineReminder.numero_whatsapp) {
+        console.log(`⚠️ Using CACHED WhatsApp number as fallback: ${vaccineReminder.numero_whatsapp}`);
+        const message = `🩺 Rappel Vaccin - Cabinet Médical\n\nBonjour ${vaccineReminder.patient_prenom},\n\nNous vous rappelons que le vaccin ${vaccineReminder.nom_vaccin} est prévu pour le ${new Date(vaccineReminder.date_vaccin).toLocaleDateString('fr-FR')}.\n\nMerci de prendre rendez-vous si ce n'est pas encore fait.\n\nÉquipe du cabinet`;
+        const whatsappUrl = `https://wa.me/${vaccineReminder.numero_whatsapp}?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
+        
+        toast.warning('⚠️ Utilisation du numéro en cache (données peut-être obsolètes)');
+      } else {
+        toast.error('Impossible de récupérer le numéro WhatsApp du patient');
+      }
     }
   };
 
