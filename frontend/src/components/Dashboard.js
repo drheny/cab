@@ -369,13 +369,38 @@ const Dashboard = ({ user }) => {
     }
   };
 
-  const sendWhatsAppReminder = (reminder) => {
-    if (reminder.numero_whatsapp) {
-      const message = `Bonjour ${reminder.patient_prenom}, nous vous contactons pour le suivi de votre consultation du ${new Date(reminder.date_rdv).toLocaleDateString('fr-FR')}. Merci de nous rappeler pour planifier votre prochain rendez-vous si nécessaire.`;
-      const whatsappUrl = `https://wa.me/${reminder.numero_whatsapp}?text=${encodeURIComponent(message)}`;
-      window.open(whatsappUrl, '_blank');
-    } else {
-      toast.error('Numéro WhatsApp non disponible pour ce patient');
+  const sendWhatsAppReminder = async (reminder) => {
+    try {
+      // 🔄 ALWAYS fetch fresh patient data to ensure we have the latest WhatsApp number
+      const response = await axios.get(`${API_BASE_URL}/api/patients/${reminder.patient_id}`);
+      const freshPatientData = response.data;
+      
+      const currentWhatsAppNumber = freshPatientData.numero_whatsapp;
+      
+      if (currentWhatsAppNumber) {
+        console.log(`📱 Using FRESH WhatsApp number for ${reminder.patient_prenom}: ${currentWhatsAppNumber}`);
+        
+        const message = `Bonjour ${reminder.patient_prenom}, nous vous contactons pour le suivi de votre consultation du ${new Date(reminder.date_rdv).toLocaleDateString('fr-FR')}. Merci de nous rappeler pour planifier votre prochain rendez-vous si nécessaire.`;
+        const whatsappUrl = `https://wa.me/${currentWhatsAppNumber}?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
+        
+        toast.success(`✅ WhatsApp ouvert avec le numéro ${currentWhatsAppNumber}`);
+      } else {
+        toast.error('Numéro WhatsApp non disponible pour ce patient');
+      }
+    } catch (error) {
+      console.error('Error fetching fresh patient data:', error);
+      // Fallback to cached data if API fails
+      if (reminder.numero_whatsapp) {
+        console.log(`⚠️ Using CACHED WhatsApp number as fallback: ${reminder.numero_whatsapp}`);
+        const message = `Bonjour ${reminder.patient_prenom}, nous vous contactons pour le suivi de votre consultation du ${new Date(reminder.date_rdv).toLocaleDateString('fr-FR')}. Merci de nous rappeler pour planifier votre prochain rendez-vous si nécessaire.`;
+        const whatsappUrl = `https://wa.me/${reminder.numero_whatsapp}?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
+        
+        toast.warning('⚠️ Utilisation du numéro en cache (données peut-être obsolètes)');
+      } else {
+        toast.error('Impossible de récupérer le numéro WhatsApp du patient');
+      }
     }
   };
 
