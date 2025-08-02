@@ -189,21 +189,29 @@ const Dashboard = ({ user }) => {
     // Initialize WebSocket with singleton manager
     initializeWebSocket();
     
-    // 🔄 Add event listener for patient data updates
+    // 🔄 Add event listeners for patient and consultation data updates
     const handlePatientUpdate = () => {
       console.log('🔄 Patient data updated, refreshing dashboard reminders...');
       fetchPhoneReminders();
       fetchVaccineReminders();
     };
     
-    // Listen for custom patient update events
+    const handleConsultationUpdate = (event) => {
+      console.log('🔄 Consultation data updated, refreshing dashboard reminders...', event.detail);
+      fetchPhoneReminders();
+      fetchVaccineReminders();
+    };
+    
+    // Listen for custom events
     window.addEventListener('patientDataUpdated', handlePatientUpdate);
+    window.addEventListener('consultationDataUpdated', handleConsultationUpdate);
     
     // Cleanup function
     return () => {
       console.log('🧹 Dashboard cleanup - removing WebSocket listener');
       wsManager.removeListener(handleWebSocketMessage);
       window.removeEventListener('patientDataUpdated', handlePatientUpdate);
+      window.removeEventListener('consultationDataUpdated', handleConsultationUpdate);
     };
   }, []);
 
