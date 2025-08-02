@@ -695,16 +695,6 @@ const Dashboard = ({ user }) => {
       </div>
     </div>
   );
-          <p className="text-xs font-semibold text-white/95 mb-1 uppercase tracking-wider leading-tight">{title}</p>
-          <p className="text-xl font-black text-white drop-shadow-lg mb-0.5 leading-tight group-hover:text-2xl transition-all duration-300">{value}</p>
-          {subtitle && <p className="text-xs text-white/85 font-medium leading-tight">{subtitle}</p>}
-        </div>
-      </div>
-      
-      {/* Animated pulse effect on hover */}
-      <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-20 transition-opacity duration-300 bg-gradient-to-r from-transparent via-white to-transparent animate-pulse"></div>
-    </div>
-  );
 
   if (loading) {
     return (
