@@ -1049,10 +1049,25 @@ async def root():
 
 @app.get("/api/init-demo")
 async def init_demo_data():
-    """Initialize demo data including default users"""
+    """Initialize demo data including default users - Only if data doesn't exist"""
     try:
+        # 🔄 CRITICAL FIX: Check if data already exists
+        existing_patients_count = patients_collection.count_documents({})
+        existing_appointments_count = appointments_collection.count_documents({})
+        
+        if existing_patients_count > 0 or existing_appointments_count > 0:
+            return {
+                "message": f"Demo data already exists ({existing_patients_count} patients, {existing_appointments_count} appointments). Use /api/reset-demo to force recreation.",
+                "patients_count": existing_patients_count,
+                "appointments_count": existing_appointments_count,
+                "action": "skipped"
+            }
+        
         create_demo_data()
-        return {"message": "Demo data initialized successfully"}
+        return {
+            "message": "Demo data initialized successfully",
+            "action": "created"
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error initializing demo data: {str(e)}")
 
