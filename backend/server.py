@@ -1047,6 +1047,28 @@ def create_demo_data():
 async def root():
     return {"message": "Cabinet Médical API"}
 
+@app.get("/api/reset-demo")
+async def reset_demo_data():
+    """Force reset and recreate demo data - USE WITH CAUTION"""
+    try:
+        # Clear existing data
+        patients_collection.delete_many({})
+        appointments_collection.delete_many({})
+        consultations_collection.delete_many({})
+        users_collection.delete_many({})
+        messages_collection.delete_many({})
+        
+        # Recreate demo data
+        create_demo_data()
+        
+        return {
+            "message": "Demo data reset and recreated successfully",
+            "action": "reset_and_created",
+            "warning": "All existing data has been deleted"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error resetting demo data: {str(e)}")
+
 @app.get("/api/init-demo")
 async def init_demo_data():
     """Initialize demo data including default users - Only if data doesn't exist"""
