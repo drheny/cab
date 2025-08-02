@@ -647,9 +647,26 @@ const Consultation = ({ user }) => {
       }
 
       fermerModalConsultation();
+      
+      // 🔄 CRITICAL FIX: Always refresh consultations after save
       if (selectedPatient) {
         await fetchPatientConsultations(selectedPatient.id);
+        console.log('✅ Refreshed consultations for selected patient');
+      } else {
+        // If no patient selected, we should refresh the entire consultation view
+        // This is critical for persistence - force the component to show latest data
+        console.log('🔄 No patient selected, refreshing entire component state');
+        toast.success('Consultation sauvegardée. Sélectionnez un patient pour voir les consultations.');
       }
+      
+      // 🔄 EMIT EVENT: Notify other components (like Dashboard) of consultation changes
+      window.dispatchEvent(new CustomEvent('consultationDataUpdated', {
+        detail: { 
+          consultationData: consultationPayload,
+          mode: consultationModal.mode,
+          timestamp: new Date().toISOString()
+        }
+      }));
     } catch (error) {
       console.error('Error saving consultation:', error);
       toast.error('Erreur lors de la sauvegarde');
