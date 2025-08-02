@@ -241,6 +241,23 @@ const PatientsListComponent = ({ user }) => {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
+  // 🔄 CRITICAL FIX: Refresh data when page becomes visible again (tab focus)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('🔄 Page visible again, refreshing patient data...');
+        // Refresh current page data when user returns to tab
+        fetchPatients(currentPage, debouncedSearchTerm);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [currentPage, debouncedSearchTerm, fetchPatients]);
+
   // Reset to page 1 when search changes
   useEffect(() => {
     if (debouncedSearchTerm !== searchTerm) return;
