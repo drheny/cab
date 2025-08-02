@@ -180,11 +180,14 @@ const PatientsListComponent = ({ user }) => {
       // Only format and search if should trigger search
       const formattedSearch = shouldTriggerSearch(search) ? formatDateForSearch(search) : search;
       
+      // 🔄 CRITICAL FIX: Add timestamp to prevent caching issues
+      const timestamp = Date.now();
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/patients`, {
         params: {
           page,
           limit: 10,
-          search: formattedSearch || undefined
+          search: formattedSearch || undefined,
+          _t: timestamp // Force fresh data, prevent browser caching
         }
       });
       
