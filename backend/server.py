@@ -127,7 +127,36 @@ except Exception as e:
     print(f"❌ MongoDB connection error: {e}")
     # Create a fallback for deployment testing
     client = MongoClient('mongodb://localhost:27017/cabinet_medical')
-db = client.cabinet_medical
+
+# Extract database name from MongoDB URL for Atlas compatibility
+if "mongodb+srv://" in MONGO_URL or "mongodb://" in MONGO_URL:
+    # For Atlas, try different database names if cabinet_medical doesn't work
+    try:
+        # First try the default database name from URL
+        if "/" in MONGO_URL.split("?")[0]:
+            db_name = MONGO_URL.split("?")[0].split("/")[-1]
+            if db_name and db_name != "":
+                db = client.get_database(db_name)
+                # Test access
+                db.command("ping")
+                print(f"✅ Using database: {db_name}")
+            else:
+                raise Exception("No database name in URL")
+        else:
+            raise Exception("No database specified in URL")
+    except Exception as e:
+        print(f"⚠️  Database access error: {e}")
+        # Try default database (usually 'test' or first available)
+        try:
+            db = client.get_default_database()
+            db.command("ping")
+            print(f"✅ Using default database: {db.name}")
+        except:
+            # Last resort - use 'test' database
+            db = client.get_database("test")
+            print("✅ Using test database as fallback")
+else:
+    db = client.get_database("cabinet_medical")  # Local development fallback
 
 # Collections
 patients_collection = db.patients
