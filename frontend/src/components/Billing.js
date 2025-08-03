@@ -449,10 +449,6 @@ const Billing = ({ user }) => {
       toast.error('Erreur lors du chargement des analyses');
     }
   };
-      console.error('Error fetching analysis data:', error);
-      toast.error('Erreur lors du chargement des analyses');
-    }
-  };
 
   // Enhanced ML prediction functions
   const fetchSeasonalPredictions = async () => {
