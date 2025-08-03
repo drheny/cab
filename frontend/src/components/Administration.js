@@ -1840,6 +1840,14 @@ const Administration = ({ user }) => {
                   </label>
                   <label className="flex items-center space-x-2">
                     <input type="checkbox" className="rounded" defaultChecked />
+                    <span className="text-sm">Âge</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" defaultChecked />
+                    <span className="text-sm">Sexe</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" defaultChecked />
                     <span className="text-sm">Téléphone</span>
                   </label>
                   <label className="flex items-center space-x-2">
@@ -1852,11 +1860,31 @@ const Administration = ({ user }) => {
                   </label>
                   <label className="flex items-center space-x-2">
                     <input type="checkbox" className="rounded" />
-                    <span className="text-sm">Date création</span>
+                    <span className="text-sm">Père (Nom)</span>
                   </label>
                   <label className="flex items-center space-x-2">
                     <input type="checkbox" className="rounded" />
-                    <span className="text-sm">Diagnostic</span>
+                    <span className="text-sm">Père (Téléphone)</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" />
+                    <span className="text-sm">Père (Fonction)</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" />
+                    <span className="text-sm">Mère (Nom)</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" />
+                    <span className="text-sm">Mère (Téléphone)</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" />
+                    <span className="text-sm">Mère (Fonction)</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" />
+                    <span className="text-sm">Notes générales</span>
                   </label>
                   <label className="flex items-center space-x-2">
                     <input type="checkbox" className="rounded" />
@@ -1868,15 +1896,15 @@ const Administration = ({ user }) => {
                   </label>
                   <label className="flex items-center space-x-2">
                     <input type="checkbox" className="rounded" />
-                    <span className="text-sm">Profession</span>
+                    <span className="text-sm">Date première consultation</span>
                   </label>
                   <label className="flex items-center space-x-2">
                     <input type="checkbox" className="rounded" />
-                    <span className="text-sm">Statut marital</span>
+                    <span className="text-sm">Date dernière consultation</span>
                   </label>
                   <label className="flex items-center space-x-2">
                     <input type="checkbox" className="rounded" />
-                    <span className="text-sm">Contact d'urgence</span>
+                    <span className="text-sm">Date création</span>
                   </label>
                 </div>
                 
