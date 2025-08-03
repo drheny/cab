@@ -11,7 +11,20 @@ import {
   Search,
   CreditCard,
   Trash2,
-  PieChart
+  PieChart,
+  Brain,
+  Target,
+  X,
+  FileText,
+  Lightbulb,
+  BarChart,
+  CalendarDays,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Filter,
+  User,
+  Plus
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
