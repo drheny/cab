@@ -1950,6 +1950,10 @@ const Administration = ({ user }) => {
                     <input type="checkbox" className="rounded" />
                     <span className="text-sm">Date paiement</span>
                   </label>
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" defaultChecked />
+                    <span className="text-sm">État assurance</span>
+                  </label>
                 </div>
                 
                 <button
