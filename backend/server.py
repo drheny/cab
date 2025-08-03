@@ -1031,6 +1031,65 @@ def create_demo_data():
 async def root():
     return {"message": "Cabinet Médical API"}
 
+@app.post("/api/admin/force-create-users")
+async def force_create_users():
+    """Force create default users - for emergency login fix"""
+    try:
+        # Clear existing users first
+        users_collection.delete_many({})
+        
+        # Create default doctor
+        doctor_permissions = UserPermissions(
+            administration=True,
+            delete_appointment=True,
+            delete_payments=True,
+            export_data=True,
+            reset_data=True,
+            manage_users=True
+        )
+        
+        doctor = User(
+            username="medecin",
+            full_name="Dr Heni Dridi",
+            role="medecin",
+            hashed_password=hash_password("medecin123"),
+            permissions=doctor_permissions
+        )
+        
+        # Create default secretary
+        secretary_permissions = UserPermissions(
+            administration=False,
+            delete_appointment=False,
+            delete_payments=False,
+            export_data=False,
+            reset_data=False,
+            manage_users=False,
+            consultation_read_only=True
+        )
+        
+        secretary = User(
+            username="secretaire",
+            full_name="Secrétaire Médicale",
+            role="secretaire",
+            hashed_password=hash_password("secretaire123"),
+            permissions=secretary_permissions
+        )
+        
+        # Insert users
+        users_collection.insert_one(doctor.dict())
+        users_collection.insert_one(secretary.dict())
+        
+        return {
+            "message": "Default users created successfully",
+            "users": [
+                {"username": "medecin", "password": "medecin123", "role": "medecin"},
+                {"username": "secretaire", "password": "secretaire123", "role": "secretaire"}
+            ]
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating users: {str(e)}")
+
 @app.get("/api/reset-demo")
 async def reset_demo_data():
     """Force reset and recreate demo data - USE WITH CAUTION"""
