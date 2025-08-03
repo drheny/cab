@@ -21,7 +21,7 @@ load_dotenv('/app/frontend/.env')
 
 class ReviewBackendTest:
     def __init__(self):
-        self.base_url = os.getenv('REACT_APP_BACKEND_URL', 'https://f310bc43-97b2-405e-8eb3-271aa9c20e28.preview.emergentagent.com')
+        self.base_url = os.getenv('REACT_APP_BACKEND_URL', 'https://0698237d-0754-4aa4-881e-3c8e5387d3e6.preview.emergentagent.com')
         self.test_results = []
         print(f"🔧 Testing backend at: {self.base_url}")
         print(f"📅 Test started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")

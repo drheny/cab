@@ -9,7 +9,7 @@ def comprehensive_workflow_test():
     Comprehensive test for the complete workflow from quick consultation modal 
     to calendar and billing display as requested in the review.
     """
-    base_url = "https://f310bc43-97b2-405e-8eb3-271aa9c20e28.preview.emergentagent.com"
+    base_url = "https://0698237d-0754-4aa4-881e-3c8e5387d3e6.preview.emergentagent.com"
     
     print("🔍 COMPREHENSIVE CONSULTATION WORKFLOW TEST")
     print("=" * 70)

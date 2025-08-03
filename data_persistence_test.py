@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://f310bc43-97b2-405e-8eb3-271aa9c20e28.preview.emergentagent.com"
+BACKEND_URL = "https://0698237d-0754-4aa4-881e-3c8e5387d3e6.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 # Test authentication token (auto-login for testing)

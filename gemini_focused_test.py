@@ -15,7 +15,7 @@ load_dotenv('/app/frontend/.env')
 def test_gemini_enrichment():
     """Test Gemini 2.0 Flash enrichment in advanced reports"""
     
-    backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://f310bc43-97b2-405e-8eb3-271aa9c20e28.preview.emergentagent.com')
+    backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://0698237d-0754-4aa4-881e-3c8e5387d3e6.preview.emergentagent.com')
     
     print("🚀 TESTING GEMINI 2.0 FLASH ENRICHMENT IN ADVANCED REPORTS")
     print("=" * 70)

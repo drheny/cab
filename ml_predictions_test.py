@@ -23,7 +23,7 @@ load_dotenv('/app/frontend/.env')
 class MLPredictionsTest:
     def __init__(self):
         # Use the correct backend URL from environment
-        backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://f310bc43-97b2-405e-8eb3-271aa9c20e28.preview.emergentagent.com')
+        backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://0698237d-0754-4aa4-881e-3c8e5387d3e6.preview.emergentagent.com')
         self.base_url = backend_url
         self.headers = {"Authorization": "Bearer auto-login-token"}
         print(f"🔍 Testing ML/Predictions endpoints at: {self.base_url}")
