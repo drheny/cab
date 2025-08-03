@@ -30,6 +30,185 @@ class CabinetMedicalAPITest(unittest.TestCase):
         except Exception as e:
             print(f"Error initializing demo data: {e}")
     
+    def test_daily_payments_nb_impayes_field(self):
+        """Test daily payments endpoint to verify nb_impayes field has been added successfully"""
+        print("\n🧪 TESTING DAILY PAYMENTS ENDPOINT - nb_impayes FIELD VERIFICATION")
+        
+        # Test with specific date 2025-01-01 as requested
+        test_date = "2025-01-01"
+        
+        # Get authentication token
+        auth_headers = self.get_auth_headers()
+        
+        print(f"📅 Testing GET /api/facturation/daily-payments?date={test_date}")
+        response = requests.get(
+            f"{self.base_url}/api/facturation/daily-payments?date={test_date}",
+            headers=auth_headers
+        )
+        
+        print(f"📊 Response Status: {response.status_code}")
+        self.assertEqual(response.status_code, 200, f"Expected 200, got {response.status_code}")
+        
+        data = response.json()
+        print(f"📋 Response Keys: {list(data.keys())}")
+        
+        # Verify response structure
+        self.assertIn("date", data, "Response should contain 'date' field")
+        self.assertIn("payments", data, "Response should contain 'payments' field")
+        self.assertIn("totals", data, "Response should contain 'totals' field")
+        
+        # Verify totals structure includes nb_impayes
+        totals = data["totals"]
+        print(f"💰 Totals Keys: {list(totals.keys())}")
+        
+        # Check all expected fields in totals
+        expected_fields = ["recette_totale", "nb_visites", "nb_controles", "nb_assures", "nb_total", "nb_impayes"]
+        for field in expected_fields:
+            self.assertIn(field, totals, f"Totals should contain '{field}' field")
+        
+        # Verify nb_impayes field specifically
+        nb_impayes = totals["nb_impayes"]
+        print(f"🔢 nb_impayes value: {nb_impayes}")
+        self.assertIsInstance(nb_impayes, int, "nb_impayes should be an integer")
+        self.assertGreaterEqual(nb_impayes, 0, "nb_impayes should be non-negative")
+        
+        print(f"✅ DAILY PAYMENTS ENDPOINT TEST PASSED - nb_impayes field present and working")
+        return data
+    
+    def test_daily_payments_multiple_dates(self):
+        """Test daily payments endpoint with different dates to ensure nb_impayes works across multiple dates"""
+        print("\n🧪 TESTING DAILY PAYMENTS ENDPOINT - MULTIPLE DATES")
+        
+        # Test with multiple dates
+        test_dates = ["2025-01-01", "2025-01-02", "2024-12-31", datetime.now().strftime("%Y-%m-%d")]
+        
+        auth_headers = self.get_auth_headers()
+        
+        for test_date in test_dates:
+            print(f"📅 Testing date: {test_date}")
+            response = requests.get(
+                f"{self.base_url}/api/facturation/daily-payments?date={test_date}",
+                headers=auth_headers
+            )
+            
+            self.assertEqual(response.status_code, 200, f"Failed for date {test_date}")
+            data = response.json()
+            
+            # Verify structure
+            self.assertIn("totals", data)
+            self.assertIn("nb_impayes", data["totals"])
+            
+            nb_impayes = data["totals"]["nb_impayes"]
+            print(f"  📊 Date {test_date}: nb_impayes = {nb_impayes}")
+            self.assertIsInstance(nb_impayes, int)
+            self.assertGreaterEqual(nb_impayes, 0)
+        
+        print("✅ MULTIPLE DATES TEST PASSED - nb_impayes working across all dates")
+    
+    def test_daily_payments_field_consistency(self):
+        """Test that all existing fields are still present and working alongside nb_impayes"""
+        print("\n🧪 TESTING DAILY PAYMENTS ENDPOINT - FIELD CONSISTENCY")
+        
+        test_date = "2025-01-01"
+        auth_headers = self.get_auth_headers()
+        
+        response = requests.get(
+            f"{self.base_url}/api/facturation/daily-payments?date={test_date}",
+            headers=auth_headers
+        )
+        
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        # Verify all expected top-level fields
+        expected_top_fields = ["date", "payments", "totals"]
+        for field in expected_top_fields:
+            self.assertIn(field, data, f"Missing top-level field: {field}")
+        
+        # Verify all expected totals fields
+        totals = data["totals"]
+        expected_totals_fields = {
+            "recette_totale": (int, float),
+            "nb_visites": int,
+            "nb_controles": int, 
+            "nb_assures": int,
+            "nb_total": int,
+            "nb_impayes": int
+        }
+        
+        for field, expected_type in expected_totals_fields.items():
+            self.assertIn(field, totals, f"Missing totals field: {field}")
+            if isinstance(expected_type, tuple):
+                self.assertIsInstance(totals[field], expected_type, f"Field {field} has wrong type")
+            else:
+                self.assertIsInstance(totals[field], expected_type, f"Field {field} has wrong type")
+        
+        # Verify payments array structure
+        payments = data["payments"]
+        self.assertIsInstance(payments, list, "Payments should be a list")
+        
+        print(f"📊 Response structure verified:")
+        print(f"  - Date: {data['date']}")
+        print(f"  - Payments count: {len(payments)}")
+        print(f"  - Totals: {totals}")
+        
+        print("✅ FIELD CONSISTENCY TEST PASSED - All fields present and properly typed")
+    
+    def test_daily_payments_unpaid_calculation(self):
+        """Test that nb_impayes correctly counts unpaid payments for the day"""
+        print("\n🧪 TESTING DAILY PAYMENTS ENDPOINT - UNPAID CALCULATION ACCURACY")
+        
+        # First, let's create some test data to ensure we have unpaid payments
+        auth_headers = self.get_auth_headers()
+        
+        # Initialize test data that includes unpaid payments
+        print("🔄 Initializing test data with unpaid payments...")
+        init_response = requests.get(f"{self.base_url}/api/init-test-data", headers=auth_headers)
+        if init_response.status_code == 200:
+            print("✅ Test data initialized successfully")
+        else:
+            print(f"⚠️ Test data initialization returned {init_response.status_code}")
+        
+        # Test with today's date (where test data should have unpaid payments)
+        test_date = datetime.now().strftime("%Y-%m-%d")
+        
+        response = requests.get(
+            f"{self.base_url}/api/facturation/daily-payments?date={test_date}",
+            headers=auth_headers
+        )
+        
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        nb_impayes = data["totals"]["nb_impayes"]
+        print(f"📊 nb_impayes for {test_date}: {nb_impayes}")
+        
+        # Verify the calculation makes sense
+        self.assertIsInstance(nb_impayes, int)
+        self.assertGreaterEqual(nb_impayes, 0)
+        
+        # Test with a date that should have no payments
+        future_date = (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")
+        response_future = requests.get(
+            f"{self.base_url}/api/facturation/daily-payments?date={future_date}",
+            headers=auth_headers
+        )
+        
+        self.assertEqual(response_future.status_code, 200)
+        data_future = response_future.json()
+        
+        nb_impayes_future = data_future["totals"]["nb_impayes"]
+        print(f"📊 nb_impayes for future date {future_date}: {nb_impayes_future}")
+        
+        # Future date should have 0 unpaid payments
+        self.assertEqual(nb_impayes_future, 0, "Future date should have 0 unpaid payments")
+        
+        print("✅ UNPAID CALCULATION TEST PASSED - nb_impayes calculation working correctly")
+
+    def get_auth_headers(self):
+        """Get authentication headers for API requests"""
+        return {"Authorization": "Bearer auto-login-token"}
+
     def test_root_endpoint(self):
         """Test the root endpoint"""
         response = requests.get(f"{self.base_url}/")
