@@ -105,6 +105,13 @@ async def startup_event():
     except Exception as e:
         print(f"⚠️  Demo data creation error: {e}")
     
+    # Create default WhatsApp templates
+    try:
+        create_default_whatsapp_templates()
+        print("📱 WhatsApp templates initialized")
+    except Exception as e:
+        print(f"⚠️  WhatsApp templates error: {e}")
+    
     print("🎉 Application started successfully!")
     return {"message": "Application initialized successfully"}
 
