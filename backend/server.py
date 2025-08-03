@@ -159,12 +159,9 @@ class Consultation(BaseModel):
     taille: Optional[float] = None
     pc: Optional[float] = None  # périmètre crânien
     temperature: Optional[float] = None
-    # Nouveaux champs simplifiés
+    # Champs médicaux actuels
     diagnostic: Optional[str] = ""
     observation_clinique: Optional[str] = ""
-    # Anciens champs pour compatibilité
-    observation_medicale: Optional[str] = ""  # Deprecated, use observation_clinique
-    traitement: Optional[str] = ""  # Deprecated, use diagnostic
     bilans: Optional[str] = ""  # Kept for compatibility
     notes: Optional[str] = ""
     relance_telephonique: Optional[bool] = False
