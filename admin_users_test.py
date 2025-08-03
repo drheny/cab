@@ -23,30 +23,9 @@ class AdminUsersTest:
         """Get authentication token for testing"""
         print("\n🔐 Getting authentication token...")
         
-        # Try auto-login token first
-        try:
-            headers = {"Authorization": "Bearer auto-login-token"}
-            response = requests.get(f"{self.base_url}/api/auth/me", headers=headers)
-            if response.status_code == 200:
-                print("✅ Auto-login token working")
-                return "auto-login-token"
-        except:
-            pass
-        
-        # Login with medecin credentials
-        login_data = {
-            "username": "medecin",
-            "password": "medecin123"
-        }
-        
-        response = requests.post(f"{self.base_url}/api/auth/login", json=login_data)
-        if response.status_code == 200:
-            token = response.json()["access_token"]
-            print("✅ Login successful with medecin credentials")
-            return token
-        else:
-            print(f"❌ Login failed: {response.status_code} - {response.text}")
-            return None
+        # Use auto-login token which has manage_users permission
+        print("✅ Using auto-login token with admin permissions")
+        return "auto-login-token"
     
     def test_admin_users_endpoint(self):
         """Test GET /api/admin/users endpoint"""
