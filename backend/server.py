@@ -616,7 +616,7 @@ async def cleanup_phone_messages_daily():
 
 def create_demo_data():
     """Create demo data for testing - ONLY if data doesn't already exist"""
-    # Create default users first
+    # Create default users first - call the synchronous version (line 412)
     create_default_users()
     
     # 🔄 CRITICAL FIX: Check if demo data already exists, don't overwrite existing data
