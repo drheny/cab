@@ -5318,8 +5318,8 @@ async def calculate_advanced_statistics(start_date: str, end_date: str):
                 consultation_durations.append(consultation["duree"])
         
         durees = {
-            "attente_moyenne": round(np.mean(waiting_times) if waiting_times else 0, 1),
-            "consultation_moyenne": round(np.mean(consultation_durations) if consultation_durations else 0, 1),
+            "attente_moyenne": round(sum(waiting_times) / len(waiting_times) if waiting_times else 0, 1),
+            "consultation_moyenne": round(sum(consultation_durations) / len(consultation_durations) if consultation_durations else 0, 1),
             "attente_max": max(waiting_times) if waiting_times else 0,
             "consultation_max": max(consultation_durations) if consultation_durations else 0
         }
