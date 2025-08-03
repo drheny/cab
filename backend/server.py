@@ -10438,3 +10438,32 @@ async def create_default_users():
 @app.on_event("startup")
 async def startup_event():
     await create_default_users()
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for Kubernetes liveness/readiness probes"""
+    try:
+        # Check database connection
+        db.command("ping")
+        return {
+            "status": "healthy",
+            "database": "connected",
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Service unhealthy: {str(e)}")
+
+@app.get("/ready")
+async def readiness_check():
+    """Readiness check endpoint for Kubernetes"""
+    try:
+        # Check if all critical services are ready
+        patients_count = patients_collection.count_documents({})
+        return {
+            "status": "ready",
+            "database": "connected",
+            "collections_accessible": True,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Service not ready: {str(e)}")
+
