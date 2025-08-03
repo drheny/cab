@@ -286,12 +286,14 @@ class BackendTester:
             
             if response.status_code == 200:
                 data = response.json()
-                required_fields = ["daily_revenue", "monthly_revenue", "yearly_revenue"]
+                # Check for actual field names from API
+                required_fields = ["recette_jour", "recette_mois", "recette_annee"]
                 if any(field in data for field in required_fields):
-                    daily = data.get("daily_revenue", 0)
-                    monthly = data.get("monthly_revenue", 0)
-                    yearly = data.get("yearly_revenue", 0)
-                    details = f"Daily: {daily} TND, Monthly: {monthly} TND, Yearly: {yearly} TND"
+                    daily = data.get("recette_jour", 0)
+                    monthly = data.get("recette_mois", 0)
+                    yearly = data.get("recette_annee", 0)
+                    nouveaux = data.get("nouveaux_patients_annee", 0)
+                    details = f"Daily: {daily} TND, Monthly: {monthly} TND, Yearly: {yearly} TND, New patients: {nouveaux}"
                     self.log_test("Enhanced Billing Stats", True, details, response_time)
                 else:
                     self.log_test("Enhanced Billing Stats", False, f"Missing revenue fields in response", response_time)
