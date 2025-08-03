@@ -10737,6 +10737,7 @@ async def create_debug_user():
         
         # Create medecin user
         medecin_user = {
+            "id": "medecin_001",
             "username": "medecin",
             "full_name": "Dr Heni Dridi",
             "role": "medecin",
