@@ -389,6 +389,13 @@ const Billing = ({ user }) => {
       // Call with default parameters for monthly report of current year
       const currentYear = new Date().getFullYear();
       const currentMonth = new Date().getMonth() + 1;
+      
+      console.log('🔄 Fetching predictions with params:', { 
+        period_type: 'monthly', 
+        year: currentYear, 
+        month: currentMonth 
+      });
+      
       const response = await axios.get(`${API_BASE_URL}/api/admin/advanced-reports`, {
         params: {
           period_type: 'monthly',
@@ -396,9 +403,17 @@ const Billing = ({ user }) => {
           month: currentMonth
         }
       });
+      
+      console.log('✅ Predictions loaded successfully:', response.data);
       setPredictions(response.data);
     } catch (error) {
-      console.error('Error fetching predictions:', error);
+      console.error('❌ Error fetching predictions:', error);
+      console.error('❌ Request details:', {
+        url: `${API_BASE_URL}/api/admin/advanced-reports`,
+        status: error.response?.status,
+        data: error.response?.data
+      });
+      setPredictions({ status: 'error', error: error.message });
       toast.error('Erreur lors du chargement des prédictions');
     }
   };
