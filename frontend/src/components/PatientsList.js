@@ -1024,9 +1024,12 @@ const PatientsListComponent = ({ user }) => {
             setShowAppointmentModal(false);
             setSelectedPatient(null);
           }}
-          onSave={handleSaveAppointment}
+          appointment={null} // New appointment creation
+          patients={patients} // Pass patients list for patient selection
           formData={appointmentFormData}
           setFormData={setAppointmentFormData}
+          onSave={handleSaveAppointment}
+          onRefresh={() => fetchPatients(currentPage, debouncedSearchTerm)} // Refresh patients list after appointment creation
           selectedPatient={selectedPatient}
         />
       )}
