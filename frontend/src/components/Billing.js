@@ -1738,33 +1738,6 @@ const Billing = ({ user }) => {
               </div>
             ) : chartsData ? (
               <div className="space-y-8">
-                {/* Summary Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="bg-blue-50 rounded-lg p-4">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <DollarSign className="w-4 h-4 text-blue-600" />
-                      <span className="text-sm font-medium text-blue-900">Recette Annuelle</span>
-                    </div>
-                    <p className="text-2xl font-bold text-blue-600">{chartsData.totals?.recette_annee || 0} TND</p>
-                  </div>
-                  
-                  <div className="bg-green-50 rounded-lg p-4">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <Users className="w-4 h-4 text-green-600" />
-                      <span className="text-sm font-medium text-green-900">Nouveaux Patients</span>
-                    </div>
-                    <p className="text-2xl font-bold text-green-600">{chartsData.totals?.nouveaux_patients_annee || 0}</p>
-                  </div>
-                  
-                  <div className="bg-purple-50 rounded-lg p-4">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <BarChart3 className="w-4 h-4 text-purple-600" />
-                      <span className="text-sm font-medium text-purple-900">Consultations</span>
-                    </div>
-                    <p className="text-2xl font-bold text-purple-600">{chartsData.totals?.consultations_annee || 0}</p>
-                  </div>
-                </div>
-
                 {/* Charts Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   {/* Revenue Evolution Chart */}
