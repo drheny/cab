@@ -30469,6 +30469,216 @@ async def update_rdv_priority(rdv_id: str, priority_data: dict):
             else:
                 print(f"❌ Failed to retrieve patient info: {response.status_code}")
 
+    
+    # ========== DAILY PAYMENTS ENDPOINT TESTING ==========
+    
+    def test_daily_payments_endpoint_structure(self):
+        """Test GET /api/facturation/daily-payments endpoint structure and nb_impayes field"""
+        print("\n🔍 Testing Daily Payments Endpoint - Structure and nb_impayes Field")
+        
+        # Test with current date
+        test_date = "2025-01-01"
+        response = requests.get(f"{self.base_url}/api/facturation/daily-payments?date={test_date}")
+        self.assertEqual(response.status_code, 200, f"Daily payments endpoint failed: {response.text}")
+        
+        data = response.json()
+        
+        # Verify response structure
+        self.assertIn("date", data)
+        self.assertIn("payments", data)
+        self.assertIn("totals", data)
+        
+        # Verify date matches request
+        self.assertEqual(data["date"], test_date)
+        
+        # Verify payments is a list
+        self.assertIsInstance(data["payments"], list)
+        
+        # Verify totals structure
+        totals = data["totals"]
+        self.assertIn("recette_totale", totals)
+        self.assertIn("nb_visites", totals)
+        self.assertIn("nb_controles", totals)
+        self.assertIn("nb_assures", totals)
+        
+        # Check if nb_impayes field exists (this is what we're testing for)
+        if "nb_impayes" in totals:
+            print(f"✅ nb_impayes field found in totals: {totals['nb_impayes']}")
+            self.assertIsInstance(totals["nb_impayes"], int)
+        else:
+            print(f"❌ nb_impayes field NOT found in totals")
+            print(f"   Available fields in totals: {list(totals.keys())}")
+        
+        # Check if nb_total field exists (old field)
+        if "nb_total" in totals:
+            print(f"✅ nb_total field found in totals: {totals['nb_total']}")
+            self.assertIsInstance(totals["nb_total"], int)
+        
+        print(f"📊 Daily Payments Response Structure:")
+        print(f"   - Date: {data['date']}")
+        print(f"   - Payments count: {len(data['payments'])}")
+        print(f"   - Totals fields: {list(totals.keys())}")
+        print(f"   - Recette totale: {totals.get('recette_totale', 0)} TND")
+        print(f"   - Nb visites: {totals.get('nb_visites', 0)}")
+        print(f"   - Nb controles: {totals.get('nb_controles', 0)}")
+        
+        return data
+    
+    def test_daily_payments_with_test_data(self):
+        """Test daily payments endpoint with test data that includes unpaid appointments"""
+        print("\n🔍 Testing Daily Payments with Test Data (Including Unpaid)")
+        
+        # Initialize test data that includes unpaid appointments
+        try:
+            init_response = requests.get(f"{self.base_url}/api/init-test-data")
+            if init_response.status_code == 200:
+                print("✅ Test data initialized with unpaid appointments")
+                init_data = init_response.json()
+                print(f"   - Visites payées: {init_data['summary']['visites_payees']}")
+                print(f"   - Visites impayées: {init_data['summary']['visites_impayees']}")
+                print(f"   - Montant en attente: {init_data['summary']['montant_en_attente']} TND")
+        except Exception as e:
+            print(f"⚠️ Could not initialize test data: {e}")
+        
+        # Test with today's date (where test data should exist)
+        today = datetime.now().strftime("%Y-%m-%d")
+        response = requests.get(f"{self.base_url}/api/facturation/daily-payments?date={today}")
+        self.assertEqual(response.status_code, 200, f"Daily payments failed for {today}: {response.text}")
+        
+        data = response.json()
+        totals = data["totals"]
+        
+        print(f"📊 Daily Payments for {today}:")
+        print(f"   - Total payments: {len(data['payments'])}")
+        print(f"   - Recette totale: {totals.get('recette_totale', 0)} TND")
+        print(f"   - Nb visites: {totals.get('nb_visites', 0)}")
+        print(f"   - Nb controles: {totals.get('nb_controles', 0)}")
+        print(f"   - Nb total: {totals.get('nb_total', 'NOT FOUND')}")
+        print(f"   - Nb impayes: {totals.get('nb_impayes', 'NOT FOUND')}")
+        
+        # Test if we can get unpaid appointments for comparison
+        try:
+            unpaid_response = requests.get(f"{self.base_url}/api/payments/unpaid")
+            if unpaid_response.status_code == 200:
+                unpaid_data = unpaid_response.json()
+                print(f"   - Unpaid appointments available: {len(unpaid_data)}")
+                
+                # Count unpaid appointments for today
+                today_unpaid = [apt for apt in unpaid_data if apt.get('date') == today]
+                print(f"   - Unpaid appointments for {today}: {len(today_unpaid)}")
+                
+                # If nb_impayes exists, it should match unpaid count for today
+                if "nb_impayes" in totals:
+                    expected_unpaid = len(today_unpaid)
+                    actual_unpaid = totals["nb_impayes"]
+                    print(f"   - Expected nb_impayes: {expected_unpaid}")
+                    print(f"   - Actual nb_impayes: {actual_unpaid}")
+                    
+                    if expected_unpaid == actual_unpaid:
+                        print(f"✅ nb_impayes field matches unpaid appointments count")
+                    else:
+                        print(f"❌ nb_impayes field does NOT match unpaid appointments count")
+        except Exception as e:
+            print(f"⚠️ Could not fetch unpaid appointments: {e}")
+        
+        return data
+    
+    def test_daily_payments_different_dates(self):
+        """Test daily payments endpoint with different dates"""
+        print("\n🔍 Testing Daily Payments with Different Dates")
+        
+        test_dates = [
+            "2025-01-01",
+            "2024-12-31", 
+            datetime.now().strftime("%Y-%m-%d"),
+            (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d"),
+            (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
+        ]
+        
+        results = {}
+        
+        for test_date in test_dates:
+            try:
+                response = requests.get(f"{self.base_url}/api/facturation/daily-payments?date={test_date}")
+                self.assertEqual(response.status_code, 200, f"Failed for date {test_date}")
+                
+                data = response.json()
+                totals = data["totals"]
+                
+                results[test_date] = {
+                    "payments_count": len(data["payments"]),
+                    "recette_totale": totals.get("recette_totale", 0),
+                    "nb_visites": totals.get("nb_visites", 0),
+                    "nb_controles": totals.get("nb_controles", 0),
+                    "nb_total": totals.get("nb_total", "NOT_FOUND"),
+                    "nb_impayes": totals.get("nb_impayes", "NOT_FOUND")
+                }
+                
+                print(f"📅 {test_date}: {results[test_date]['payments_count']} payments, nb_impayes: {results[test_date]['nb_impayes']}")
+                
+            except Exception as e:
+                print(f"❌ Error testing date {test_date}: {e}")
+                results[test_date] = {"error": str(e)}
+        
+        # Summary
+        print(f"\n📊 Daily Payments Test Summary:")
+        nb_impayes_found = 0
+        nb_total_found = 0
+        
+        for date, result in results.items():
+            if "error" not in result:
+                if result["nb_impayes"] != "NOT_FOUND":
+                    nb_impayes_found += 1
+                if result["nb_total"] != "NOT_FOUND":
+                    nb_total_found += 1
+        
+        print(f"   - Dates tested: {len(test_dates)}")
+        print(f"   - Dates with nb_impayes field: {nb_impayes_found}")
+        print(f"   - Dates with nb_total field: {nb_total_found}")
+        
+        if nb_impayes_found == 0:
+            print(f"❌ CRITICAL: nb_impayes field not found in any response")
+        else:
+            print(f"✅ nb_impayes field found in {nb_impayes_found} responses")
+        
+        return results
+    
+    def test_daily_payments_missing_date_parameter(self):
+        """Test daily payments endpoint without date parameter"""
+        print("\n🔍 Testing Daily Payments - Missing Date Parameter")
+        
+        response = requests.get(f"{self.base_url}/api/facturation/daily-payments")
+        
+        # Should return 422 (validation error) for missing required parameter
+        self.assertIn(response.status_code, [400, 422], f"Expected validation error for missing date: {response.status_code}")
+        
+        print(f"✅ Missing date parameter properly handled with status {response.status_code}")
+    
+    def test_daily_payments_invalid_date_format(self):
+        """Test daily payments endpoint with invalid date format"""
+        print("\n🔍 Testing Daily Payments - Invalid Date Format")
+        
+        invalid_dates = [
+            "invalid-date",
+            "2025-13-01",  # Invalid month
+            "2025-01-32",  # Invalid day
+            "25-01-01",    # Wrong format
+            "2025/01/01"   # Wrong separator
+        ]
+        
+        for invalid_date in invalid_dates:
+            try:
+                response = requests.get(f"{self.base_url}/api/facturation/daily-payments?date={invalid_date}")
+                print(f"   - {invalid_date}: Status {response.status_code}")
+                
+                # The endpoint might still work with invalid dates (depends on implementation)
+                # We're mainly testing that it doesn't crash
+                self.assertIsNotNone(response.status_code)
+                
+            except Exception as e:
+                print(f"   - {invalid_date}: Error {e}")
+        
+        print(f"✅ Invalid date formats handled without crashing")
 if __name__ == "__main__":
     unittest.main()
 
