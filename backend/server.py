@@ -10506,10 +10506,7 @@ async def create_default_users():
     except Exception as e:
         print(f"❌ Error creating default users: {e}")
 
-# Run default user creation on startup
-@app.on_event("startup")
-async def startup_event():
-    await create_default_users()
+# Default user creation is now handled in the main startup event
 @app.get("/")
 async def root():
     """Root endpoint to verify backend is running"""
