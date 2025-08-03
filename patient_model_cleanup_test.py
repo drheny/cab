@@ -12,7 +12,7 @@ from datetime import datetime
 import uuid
 
 # Configuration
-BACKEND_URL = "https://0698237d-0754-4aa4-881e-3c8e5387d3e6.preview.emergentagent.com/api"
+BACKEND_URL = "http://localhost:8001/api"
 AUTH_TOKEN = "auto-login-token"  # Using auto-login for testing
 
 # Headers for authenticated requests
