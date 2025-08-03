@@ -46,8 +46,17 @@ async def startup_event():
     return {"message": "Application initialized successfully"}
 
 # MongoDB connection
+# MongoDB connection with fallback for deployment
 MONGO_URL = os.getenv("MONGO_URL", "mongodb://localhost:27017/cabinet_medical")
-client = MongoClient(MONGO_URL)
+print(f"🔧 Using MongoDB URL: {MONGO_URL[:30]}...")
+
+try:
+    client = MongoClient(MONGO_URL)
+    print("📊 MongoDB client created successfully")
+except Exception as e:
+    print(f"❌ MongoDB connection error: {e}")
+    # Create a fallback for deployment testing
+    client = MongoClient('mongodb://localhost:27017/cabinet_medical')
 db = client.cabinet_medical
 
 # Collections
