@@ -5638,7 +5638,7 @@ def get_seasonal_reason(month: int, pattern_type: str):
         return trough_reasons.get(month, "Creux saisonnier")
 
 async def calculate_predictions(evolution_data: list):
-    """Calculate predictions using linear regression"""
+    """Calculate predictions using simple linear regression"""
     try:
         if len(evolution_data) < 3:
             return {
@@ -5650,34 +5650,49 @@ async def calculate_predictions(evolution_data: list):
                 "message": "Pas assez de données pour les prédictions"
             }
         
+        # Simple linear regression implementation
+        def simple_linear_regression(x_values, y_values):
+            n = len(x_values)
+            sum_x = sum(x_values)
+            sum_y = sum(y_values)
+            sum_xy = sum(x_values[i] * y_values[i] for i in range(n))
+            sum_x2 = sum(x * x for x in x_values)
+            
+            # Calculate slope and intercept
+            slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x * sum_x)
+            intercept = (sum_y - slope * sum_x) / n
+            
+            return slope, intercept
+        
         # Prepare data for prediction
-        X = np.array(range(len(evolution_data))).reshape(-1, 1)
-        y_consultations = np.array([month["visites"] + month["controles"] for month in evolution_data])
-        y_revenue = np.array([month["revenue"] for month in evolution_data])
+        x_values = list(range(len(evolution_data)))
+        y_consultations = [month["visites"] + month["controles"] for month in evolution_data]
+        y_revenue = [month["revenue"] for month in evolution_data]
         
-        # Train models
-        consultation_model = LinearRegression()
-        revenue_model = LinearRegression()
-        
-        consultation_model.fit(X, y_consultations)
-        revenue_model.fit(X, y_revenue)
+        # Calculate linear regression for consultations and revenue
+        consultation_slope, consultation_intercept = simple_linear_regression(x_values, y_consultations)
+        revenue_slope, revenue_intercept = simple_linear_regression(x_values, y_revenue)
         
         # Predict next month
         next_month_index = len(evolution_data)
-        predicted_consultations = consultation_model.predict([[next_month_index]])[0]
-        predicted_revenue = revenue_model.predict([[next_month_index]])[0]
+        predicted_consultations = consultation_slope * next_month_index + consultation_intercept
+        predicted_revenue = revenue_slope * next_month_index + revenue_intercept
         
-        # Calculate confidence (simplified R² score)
-        consultation_predictions = consultation_model.predict(X)
-        revenue_predictions = revenue_model.predict(X)
+        # Calculate predictions for existing data points to measure accuracy
+        consultation_predictions = [consultation_slope * x + consultation_intercept for x in x_values]
+        revenue_predictions = [revenue_slope * x + revenue_intercept for x in x_values]
         
         # Calculate mean absolute error manually
         consultation_mae = sum(abs(y_consultations[i] - consultation_predictions[i]) for i in range(len(y_consultations))) / len(y_consultations)
         revenue_mae = sum(abs(y_revenue[i] - revenue_predictions[i]) for i in range(len(y_revenue))) / len(y_revenue)
         
+        # Calculate means manually
+        consultation_mean = sum(y_consultations) / len(y_consultations)
+        revenue_mean = sum(y_revenue) / len(y_revenue)
+        
         # Simplified confidence calculation (inverse of normalized MAE)
-        consultation_conf = max(0, 100 - (consultation_mae / max(np.mean(y_consultations), 1)) * 100)
-        revenue_conf = max(0, 100 - (revenue_mae / max(np.mean(y_revenue), 1)) * 100)
+        consultation_conf = max(0, 100 - (consultation_mae / max(consultation_mean, 1)) * 100)
+        revenue_conf = max(0, 100 - (revenue_mae / max(revenue_mean, 1)) * 100)
         
         average_confidence = (consultation_conf + revenue_conf) / 2
         
@@ -5688,10 +5703,10 @@ async def calculate_predictions(evolution_data: list):
                 "confiance": round(min(average_confidence, 95), 1)  # Cap at 95%
             },
             "trend_analysis": {
-                "direction": "croissant" if consultation_model.coef_[0] > 0 else "décroissant",
-                "slope_consultations": round(consultation_model.coef_[0], 2),
-                "slope_revenue": round(revenue_model.coef_[0], 2),
-                "growth_rate": f"{round(consultation_model.coef_[0] * 12 / max(np.mean(y_consultations), 1) * 100, 1)}% annuel"
+                "direction": "croissant" if consultation_slope > 0 else "décroissant",
+                "slope_consultations": round(consultation_slope, 2),
+                "slope_revenue": round(revenue_slope, 2),
+                "growth_rate": f"{round(consultation_slope * 12 / max(consultation_mean, 1) * 100, 1)}% annuel"
             },
             "model_performance": {
                 "consultation_accuracy": round(consultation_conf, 1),
@@ -5702,11 +5717,11 @@ async def calculate_predictions(evolution_data: list):
             "forecasts": {
                 "next_3_months": {
                     "consultations": [
-                        max(5, round(consultation_model.predict([[next_month_index + i]])[0])) 
+                        max(5, round(consultation_slope * (next_month_index + i) + consultation_intercept)) 
                         for i in range(3)
                     ],
                     "revenue": [
-                        max(300, round(revenue_model.predict([[next_month_index + i]])[0])) 
+                        max(300, round(revenue_slope * (next_month_index + i) + revenue_intercept)) 
                         for i in range(3)
                     ]
                 }
@@ -5716,8 +5731,9 @@ async def calculate_predictions(evolution_data: list):
         
     except Exception as e:
         # Fallback to simple average-based prediction
-        avg_consultations = np.mean([month["visites"] + month["controles"] for month in evolution_data[-3:]])
-        avg_revenue = np.mean([month["revenue"] for month in evolution_data[-3:]])
+        recent_data = evolution_data[-3:]
+        avg_consultations = sum(month["visites"] + month["controles"] for month in recent_data) / len(recent_data)
+        avg_revenue = sum(month["revenue"] for month in recent_data) / len(recent_data)
         
         return {
             "next_month": {
