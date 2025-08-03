@@ -5,22 +5,13 @@ import {
   TrendingUp,
   Users,
   RefreshCw,
-  X,
   Calendar,
   BarChart3,
-  LineChart,
-  Target,
   Award,
   Search,
-  FileText,
   CreditCard,
-  Edit,
   Trash2,
-  Eye,
-  PieChart,
-  Brain,
-  Lightbulb,
-  AlertTriangle
+  PieChart
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
