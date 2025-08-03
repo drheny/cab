@@ -121,13 +121,9 @@ class Patient(BaseModel):
     consultations: List[ConsultationInfo] = []
     date_premiere_consultation: str = ""
     date_derniere_consultation: str = ""
-    # Garder les anciens champs pour compatibilité
+    # Champs principaux
     sexe: str = ""
     telephone: str = ""
-    nom_parent: str = ""
-    telephone_parent: str = ""
-    assurance: str = ""
-    numero_assurance: str = ""
     allergies: str = ""
     photo_url: str = ""
     created_at: datetime = Field(default_factory=datetime.now)
