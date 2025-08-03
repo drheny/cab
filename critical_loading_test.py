@@ -48,10 +48,10 @@ class CriticalLoadingIssuesTest(unittest.TestCase):
     # ========== 1. TEST UTILISATEURS - PAGE ADMINISTRATION ==========
     
     def test_users_list_endpoint(self):
-        """Test GET /api/users pour récupérer la liste des utilisateurs"""
+        """Test GET /api/admin/users pour récupérer la liste des utilisateurs"""
         print("\n🔍 CRITICAL TEST 1: Users List Endpoint - Page Administration")
         
-        response = requests.get(f"{self.base_url}/api/users", headers=self.headers)
+        response = requests.get(f"{self.base_url}/api/admin/users", headers=self.headers)
         
         print(f"   - Status Code: {response.status_code}")
         print(f"   - Response Headers: {dict(response.headers)}")
