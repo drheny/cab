@@ -10438,6 +10438,32 @@ async def create_default_users():
 @app.on_event("startup")
 async def startup_event():
     await create_default_users()
+@app.get("/")
+async def root():
+    """Root endpoint to verify backend is running"""
+    return {
+        "message": "Medical Cabinet Backend is running",
+        "status": "online",
+        "timestamp": datetime.now().isoformat(),
+        "version": "1.0.0"
+    }
+
+@app.get("/api/status")
+async def api_status():
+    """Simple API status check"""
+    try:
+        return {
+            "api_status": "running",
+            "database_connection": "checking...",
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        return {
+            "api_status": "error",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
 @app.get("/debug/deployment")
 async def deployment_debug():
     """Debug endpoint to check deployment state"""
