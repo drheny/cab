@@ -44,6 +44,7 @@ async def startup_event():
             
             # Create medecin user
             medecin_user = {
+                "id": "medecin_001",
                 "username": "medecin",
                 "full_name": "Dr Heni Dridi",
                 "role": "medecin",
@@ -64,6 +65,7 @@ async def startup_event():
             
             # Create secretaire user  
             secretaire_user = {
+                "id": "secretaire_001",
                 "username": "secretaire",
                 "full_name": "Secrétaire Médicale",
                 "role": "secretaire",
