@@ -10561,6 +10561,47 @@ async def root():
         "version": "1.0.0"
     }
 
+@app.post("/api/debug/fix-users")
+async def fix_users():
+    """Fix existing users by adding missing 'id' field"""
+    try:
+        # Find users without 'id' field
+        users_without_id = list(users_collection.find({"id": {"$exists": False}}))
+        
+        if not users_without_id:
+            return {
+                "status": "no_fix_needed",
+                "message": "All users already have 'id' field",
+                "users_checked": users_collection.count_documents({})
+            }
+        
+        fixed_count = 0
+        for user in users_without_id:
+            # Generate id based on username
+            user_id = f"{user['username']}_001"
+            
+            # Update user with id field
+            result = users_collection.update_one(
+                {"_id": user["_id"]},
+                {"$set": {"id": user_id}}
+            )
+            
+            if result.modified_count > 0:
+                fixed_count += 1
+        
+        return {
+            "status": "fixed",
+            "message": f"Fixed {fixed_count} users by adding 'id' field",
+            "users_fixed": fixed_count,
+            "total_users": users_collection.count_documents({})
+        }
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e)
+        }
+
 @app.get("/api/debug/database")
 async def debug_database():
     """Debug database connection and permissions"""
