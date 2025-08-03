@@ -115,13 +115,28 @@ async def startup_event():
     print("🎉 Application started successfully!")
     return {"message": "Application initialized successfully"}
 
-# MongoDB connection
-# MongoDB connection with fallback for deployment
-MONGO_URL = os.getenv("MONGO_URL", "mongodb://localhost:27017/cabinet_medical")
-print(f"🔧 Using MongoDB URL: {MONGO_URL[:30]}...")
+# MongoDB connection with Atlas support
+MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017/cabinet_medical')
+print(f"🔧 Connecting to MongoDB: {MONGO_URL[:30]}...")
 
 try:
-    client = MongoClient(MONGO_URL)
+    # Create MongoDB client with Atlas-optimized settings
+    client = MongoClient(
+        MONGO_URL,
+        serverSelectionTimeoutMS=10000,  # 10 seconds timeout
+        connectTimeoutMS=10000,
+        maxPoolSize=10,
+        retryWrites=True
+    )
+    
+    # Test the connection
+    client.admin.command('ping')
+    print("✅ MongoDB connection successful")
+    
+except Exception as e:
+    print(f"❌ MongoDB connection failed: {e}")
+    print("🔄 Falling back to local connection for development")
+    client = MongoClient('mongodb://localhost:27017/cabinet_medical')
     print("📊 MongoDB client created successfully")
 except Exception as e:
     print(f"❌ MongoDB connection error: {e}")
@@ -136,27 +151,26 @@ if "mongodb+srv://" in MONGO_URL or "mongodb://" in MONGO_URL:
         if "/" in MONGO_URL.split("?")[0]:
             db_name = MONGO_URL.split("?")[0].split("/")[-1]
             if db_name and db_name != "":
-                db = client.get_database(db_name)
-                # Test access
-                db.command("ping")
-                print(f"✅ Using database: {db_name}")
-            else:
-                raise Exception("No database name in URL")
+                # Database selection with Atlas compatibility
+if "mongodb+srv://" in MONGO_URL or "mongodb://" in MONGO_URL:
+    # Extract database name from connection string
+    try:
+        if "/" in MONGO_URL.split("?")[0] and MONGO_URL.split("?")[0].split("/")[-1]:
+            db_name = MONGO_URL.split("?")[0].split("/")[-1]
+            db = client.get_database(db_name)
+            print(f"✅ Using database: {db_name}")
         else:
-            raise Exception("No database specified in URL")
-    except Exception as e:
-        print(f"⚠️  Database access error: {e}")
-        # Try default database (usually 'test' or first available)
-        try:
+            # Use default database if no specific name in URL
             db = client.get_default_database()
-            db.command("ping")
             print(f"✅ Using default database: {db.name}")
-        except:
-            # Last resort - use 'test' database
-            db = client.get_database("test")
-            print("✅ Using test database as fallback")
+    except Exception as e:
+        print(f"⚠️  Database selection error: {e}")
+        db = client.get_database("cabinet_medical")
+        print("✅ Using fallback database: cabinet_medical")
 else:
-    db = client.get_database("test")  # Local development fallback
+    # Local development
+    db = client.get_database("cabinet_medical")
+    print("✅ Using local database: cabinet_medical")
 
 # Collections
 patients_collection = db.patients
