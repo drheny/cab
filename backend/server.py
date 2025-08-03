@@ -10553,6 +10553,115 @@ async def root():
         "version": "1.0.0"
     }
 
+@app.get("/api/debug/database")
+async def debug_database():
+    """Debug database connection and permissions"""
+    try:
+        # Test basic connection
+        client.server_info()
+        
+        # Test database access
+        db.command("ping")
+        
+        # List available databases
+        available_dbs = client.list_database_names()
+        
+        # Test collection access
+        collections_info = {}
+        try:
+            collection_names = ['users', 'patients', 'appointments', 'consultations', 'payments']
+            for collection_name in collection_names:
+                try:
+                    collection = db[collection_name]
+                    count = collection.count_documents({})
+                    collections_info[collection_name] = {
+                        "accessible": True,
+                        "count": count
+                    }
+                except Exception as e:
+                    collections_info[collection_name] = {
+                        "accessible": False,
+                        "error": str(e)
+                    }
+        except Exception as e:
+            collections_info = {"error": str(e)}
+        
+        return {
+            "status": "success",
+            "connection": "working",
+            "database_name": db.name,
+            "available_databases": available_dbs,
+            "collections": collections_info,
+            "mongo_url_type": "Atlas" if "mongodb+srv" in MONGO_URL else "Local",
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "database_name": getattr(db, 'name', 'unknown'),
+            "mongo_url_type": "Atlas" if "mongodb+srv" in str(MONGO_URL) else "Local",
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.post("/api/debug/force-create-user")
+async def force_create_user():
+    """Force create medecin user - emergency endpoint"""
+    try:
+        # Try to access users collection
+        users_collection = db.users
+        
+        # Check if user already exists
+        existing_user = users_collection.find_one({"username": "medecin"})
+        if existing_user:
+            return {
+                "status": "exists",
+                "message": "medecin user already exists",
+                "database": db.name
+            }
+        
+        # Create medecin user
+        medecin_user = {
+            "username": "medecin",
+            "full_name": "Dr Heni Dridi",
+            "role": "medecin",
+            "hashed_password": bcrypt.hashpw("medecin123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8'),
+            "is_active": True,
+            "permissions": {
+                "administration": True,
+                "delete_appointment": True,
+                "delete_payments": True,
+                "export_data": True,
+                "reset_data": True,
+                "manage_users": True,
+                "consultation_read_only": False
+            },
+            "created_at": datetime.now(),
+            "last_login": None
+        }
+        
+        # Insert user
+        result = users_collection.insert_one(medecin_user)
+        
+        return {
+            "status": "created",
+            "message": "medecin user created successfully",
+            "user_id": str(result.inserted_id),
+            "database": db.name,
+            "credentials": {
+                "username": "medecin",
+                "password": "medecin123"
+            }
+        }
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "database": getattr(db, 'name', 'unknown')
+        }
+
 @app.get("/api/status")
 async def api_status():
     """Simple API status check"""
