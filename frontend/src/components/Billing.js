@@ -1289,8 +1289,8 @@ const Billing = ({ user }) => {
                       <div className="text-sm text-green-600">Recette totale</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-green-700">{dailyPayments.totals.nb_total}</div>
-                      <div className="text-sm text-green-600">Total paiements</div>
+                      <div className="text-2xl font-bold text-green-700">{dailyPayments.totals.nb_impayes || 0}</div>
+                      <div className="text-sm text-green-600">nb d'impayés</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-green-700">{dailyPayments.totals.nb_visites}</div>
