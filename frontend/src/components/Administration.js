@@ -29,6 +29,17 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
 
 // 🔄 CRITICAL FIX: Define API_BASE_URL for consistent API calls
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
