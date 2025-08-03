@@ -145,15 +145,7 @@ except Exception as e:
 
 # Extract database name from MongoDB URL for Atlas compatibility
 if "mongodb+srv://" in MONGO_URL or "mongodb://" in MONGO_URL:
-    # For Atlas, try different database names if cabinet_medical doesn't work
-    try:
-        # First try the default database name from URL
-        if "/" in MONGO_URL.split("?")[0]:
-            db_name = MONGO_URL.split("?")[0].split("/")[-1]
-            if db_name and db_name != "":
-                # Database selection with Atlas compatibility
-if "mongodb+srv://" in MONGO_URL or "mongodb://" in MONGO_URL:
-    # Extract database name from connection string
+    # For Atlas, extract database name from connection string
     try:
         if "/" in MONGO_URL.split("?")[0] and MONGO_URL.split("?")[0].split("/")[-1]:
             db_name = MONGO_URL.split("?")[0].split("/")[-1]
