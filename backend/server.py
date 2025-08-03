@@ -728,10 +728,6 @@ def create_demo_data():
             "consultations": [],
             "date_premiere_consultation": "",
             "date_derniere_consultation": "",
-            "nom_parent": "Khalid Tazi",
-            "telephone_parent": "0611223344",
-            "assurance": "",
-            "numero_assurance": "",
             "allergies": ""
         }
     ]
