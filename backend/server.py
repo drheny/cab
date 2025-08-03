@@ -32,17 +32,80 @@ app.add_middleware(
 # Application startup event
 @app.on_event("startup")
 async def startup_event():
-    """Initialize application on startup"""
-    # Check if demo data should be initialized
-    should_init_demo = os.getenv("INIT_DEMO_DATA", "false").lower() == "true"
+    """Initialize the application with demo data and default users"""
+    print("🚀 Starting Medical Cabinet Backend...")
     
-    # Initialize demo data if needed
-    if should_init_demo:
-        await init_demo_data()
+    # Force create default users for deployment
+    try:
+        # Check if users exist
+        users_count = users_collection.count_documents({})
+        if users_count == 0:
+            print("👤 Creating default users for deployment...")
+            
+            # Create medecin user
+            medecin_user = {
+                "username": "medecin",
+                "full_name": "Dr Heni Dridi",
+                "role": "medecin",
+                "hashed_password": bcrypt.hashpw("medecin123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8'),
+                "is_active": True,
+                "permissions": {
+                    "administration": True,
+                    "delete_appointment": True,
+                    "delete_payments": True,
+                    "export_data": True,
+                    "reset_data": True,
+                    "manage_users": True,
+                    "consultation_read_only": False
+                },
+                "created_at": datetime.now(),
+                "last_login": None
+            }
+            
+            # Create secretaire user  
+            secretaire_user = {
+                "username": "secretaire",
+                "full_name": "Secrétaire Médicale",
+                "role": "secretaire",
+                "hashed_password": bcrypt.hashpw("secretaire123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8'),
+                "is_active": True,
+                "permissions": {
+                    "administration": False,
+                    "delete_appointment": False,
+                    "delete_payments": False,
+                    "export_data": False,
+                    "reset_data": False,
+                    "manage_users": False,
+                    "consultation_read_only": True
+                },
+                "created_at": datetime.now(),
+                "last_login": None
+            }
+            
+            # Insert users
+            users_collection.insert_many([medecin_user, secretaire_user])
+            print("✅ Default users created successfully")
+        
+        else:
+            print(f"👤 Found {users_count} existing users")
+            
+    except Exception as e:
+        print(f"⚠️  User creation error: {e}")
     
-    # Create default WhatsApp templates
-    create_default_whatsapp_templates()
+    # Create demo data if needed
+    try:
+        patients_count = patients_collection.count_documents({})
+        if patients_count == 0:
+            print("📊 Creating minimal demo data...")
+            create_demo_data()
+            print("✅ Demo data created successfully")
+        else:
+            print(f"📊 Found {patients_count} existing patients")
+            
+    except Exception as e:
+        print(f"⚠️  Demo data creation error: {e}")
     
+    print("🎉 Application started successfully!")
     return {"message": "Application initialized successfully"}
 
 # MongoDB connection
