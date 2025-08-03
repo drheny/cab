@@ -9747,6 +9747,79 @@ async def ai_room_websocket_endpoint(websocket: WebSocket):
         print(f"AI Room WebSocket error: {e}")
         ai_manager.disconnect(websocket)
 
+# ==================== ADMIN EXPORT API ====================
+
+@app.get("/api/admin/export/{data_type}")
+async def export_admin_data(data_type: str):
+    """Export data for administration (patients, consultations, payments)"""
+    try:
+        if data_type == "patients":
+            # Get all patients with only the valid fields (excluding removed fields)
+            patients = list(patients_collection.find({}, {"_id": 0}))
+            
+            # Clean the data to remove any remaining references to old fields
+            for patient in patients:
+                # Remove old fields if they exist
+                patient.pop('assurance', None)
+                patient.pop('numero_assurance', None)
+                patient.pop('nom_parent', None)
+                patient.pop('telephone_parent', None)
+                
+                # Ensure all valid fields are present with defaults
+                patient.setdefault('id', '')
+                patient.setdefault('nom', '')
+                patient.setdefault('prenom', '')
+                patient.setdefault('date_naissance', '')
+                patient.setdefault('age', '')
+                patient.setdefault('sexe', '')
+                patient.setdefault('telephone', '')
+                patient.setdefault('adresse', '')
+                patient.setdefault('numero_whatsapp', '')
+                patient.setdefault('pere', {"nom": "", "telephone": "", "fonction": ""})
+                patient.setdefault('mere', {"nom": "", "telephone": "", "fonction": ""})
+                patient.setdefault('notes', '')
+                patient.setdefault('antecedents', '')
+                patient.setdefault('allergies', '')
+                patient.setdefault('date_premiere_consultation', '')
+                patient.setdefault('date_derniere_consultation', '')
+                patient.setdefault('created_at', '')
+            
+            return {
+                "data": patients,
+                "count": len(patients),
+                "collection": "patients",
+                "fields": [
+                    "id", "nom", "prenom", "date_naissance", "age", "sexe", 
+                    "telephone", "adresse", "numero_whatsapp", "pere", "mere",
+                    "notes", "antecedents", "allergies", "date_premiere_consultation", 
+                    "date_derniere_consultation", "created_at"
+                ]
+            }
+            
+        elif data_type == "consultations":
+            consultations = list(consultations_collection.find({}, {"_id": 0}))
+            return {
+                "data": consultations,
+                "count": len(consultations),
+                "collection": "consultations"
+            }
+            
+        elif data_type == "payments":
+            payments = list(payments_collection.find({}, {"_id": 0}))
+            return {
+                "data": payments,
+                "count": len(payments),
+                "collection": "payments"
+            }
+            
+        else:
+            raise HTTPException(status_code=400, detail="Invalid data type")
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error exporting {data_type}: {str(e)}")
+
+# ==================== END ADMIN EXPORT API ====================
+
 # ==================== END AI ROOM API ====================
 
 # ==================== AUTOMATION ENGINE API ====================
