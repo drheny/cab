@@ -666,10 +666,6 @@ def create_demo_data():
             ],
             "date_premiere_consultation": "",  # sera calculé
             "date_derniere_consultation": "",  # sera calculé
-            "nom_parent": "Ahmed Ben Ahmed",
-            "telephone_parent": "0612345678",
-            "assurance": "CNSS",
-            "numero_assurance": "123456789",
             "allergies": "Aucune"
         },
         {
