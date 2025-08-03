@@ -364,7 +364,11 @@ const PatientsListComponent = ({ user }) => {
       const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/appointments`, formData);
       
       if (response.status === 200 || response.status === 201) {
-        toast.success(`Rendez-vous créé avec succès pour ${selectedPatient.prenom} ${selectedPatient.nom}`);
+        // 🔄 CRITICAL FIX: Get patient info from formData if selectedPatient is null
+        const patientInfo = selectedPatient || patients.find(p => p.id === formData.patient_id);
+        const patientName = patientInfo ? `${patientInfo.prenom} ${patientInfo.nom}` : 'le patient';
+        
+        toast.success(`Rendez-vous créé avec succès pour ${patientName}`);
         setShowAppointmentModal(false);
         setSelectedPatient(null);
         setAppointmentFormData({
@@ -376,6 +380,10 @@ const PatientsListComponent = ({ user }) => {
           notes: '',
           statut: 'programme'
         });
+        
+        // 🔄 Refresh patients list to show updated appointment count
+        fetchPatients(currentPage, debouncedSearchTerm);
+        
         return { success: true };
       } else {
         return { success: false, error: 'Erreur lors de la création du rendez-vous' };
