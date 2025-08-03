@@ -411,14 +411,40 @@ The system is ready for production use with all critical functionality operation
 
 **Detailed Test Results:**
 
-**CORE VERIFICATION RESULTS: ✅ ALL REQUIREMENTS MET**
-1. **Authentication:** ✅ medecin/medecin123 login working (0.330s response time)
-2. **Patient Management:** ✅ CRUD operations, patient list (3 patients), patient search working perfectly
+**COMPREHENSIVE REGRESSION TESTING RESULTS: ✅ ALL REQUIREMENTS MET**
+1. **Authentication:** ✅ medecin/medecin123 login working (0.299s response time)
+2. **Patient Management:** ✅ CRUD operations, patient list (3 patients), patient search working perfectly (0.010s avg)
 3. **Dashboard Stats:** ✅ Main dashboard stats load correctly (RDV: 5, Attente: 1, Recette: 65.0 TND)
 4. **Appointments:** ✅ Today's appointments (5) and weekly appointments retrieval working
 5. **Billing System:** ✅ Payment stats working, daily payments with nb_impayes field functional
 6. **Export Functionality:** ✅ Patient export endpoint working (exported 3 patients, 6 consultations, 6 payments)
-7. **Database Performance:** ✅ Optimized indexes working (patient list: 0.010s, search: 0.049s)
+7. **Database Performance:** ✅ Optimized indexes working (patient list: 0.010s, search: 0.013s)
+8. **Admin Users:** ✅ 2 users found with proper permissions (medecin has manage_users: true)
+
+**ML/AI PREDICTIONS REGRESSION TESTING: ✅ NUMPY/SKLEARN REPLACEMENT SUCCESSFUL**
+- ✅ **Advanced Reports Monthly**: Working correctly with Gemini AI (7.34s response, consultations: 15, revenue: 1200 TND, confidence: 60%)
+- ✅ **Advanced Reports Annual**: Working correctly with comprehensive data structure (12.12s response)
+- ✅ **AI Medical Report**: Working correctly with deep insights (7.26s response, overall score: 75, trend: stable)
+- ✅ **Parameter Validation**: Robust validation working (422 errors for missing params, 400 for invalid params)
+- ✅ **Gemini AI Integration**: Successfully replaced numpy/sklearn with Gemini AI system
+
+**CONSULTATION MANAGEMENT REGRESSION TESTING: ✅ DEPRECATED FIELDS REMOVED**
+- ✅ **Consultation Creation**: New consultations created without deprecated fields (observation_medicale, traitement)
+- ✅ **Consultation Retrieval**: No deprecated fields in new consultation responses
+- ✅ **Consultation Update**: Update operations working correctly without deprecated fields
+- ✅ **Patient Consultations**: Retrieval working (existing data may still contain deprecated fields from before cleanup)
+- ✅ **Consultation Export**: Export functionality working correctly
+
+**CRITICAL SYSTEMS VERIFICATION: ✅ ALL 8/8 ENDPOINTS OPERATIONAL**
+- ✅ Authentication System: Working
+- ✅ Patient Management: Working  
+- ✅ Dashboard Stats: Working
+- ✅ Admin Users: Working
+- ✅ Patient Export: Working
+- ✅ ML Predictions: Working
+- ✅ AI Medical Report: Working
+- ✅ Billing Stats: Working
+- ✅ Cash Movements: Working
 
 **REGRESSION TESTING RESULTS: ✅ NO REGRESSIONS FOUND**
 - ✅ No functionality broken during cleanup
