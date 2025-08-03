@@ -10631,6 +10631,7 @@ async def force_create_user():
         
         # Create medecin user
         medecin_user = {
+            "id": "medecin_001",
             "username": "medecin",
             "full_name": "Dr Heni Dridi",
             "role": "medecin",
