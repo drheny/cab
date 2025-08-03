@@ -13586,7 +13586,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Consultation Modal System Cross-Component Integration"
+    - "Daily Payments nb_impayes Field Testing"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
