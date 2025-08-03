@@ -5674,8 +5674,9 @@ async def calculate_predictions(evolution_data: list):
         consultation_predictions = consultation_model.predict(X)
         revenue_predictions = revenue_model.predict(X)
         
-        consultation_mae = mean_absolute_error(y_consultations, consultation_predictions)
-        revenue_mae = mean_absolute_error(y_revenue, revenue_predictions)
+        # Calculate mean absolute error manually
+        consultation_mae = sum(abs(y_consultations[i] - consultation_predictions[i]) for i in range(len(y_consultations))) / len(y_consultations)
+        revenue_mae = sum(abs(y_revenue[i] - revenue_predictions[i]) for i in range(len(y_revenue))) / len(y_revenue)
         
         # Simplified confidence calculation (inverse of normalized MAE)
         consultation_conf = max(0, 100 - (consultation_mae / max(np.mean(y_consultations), 1)) * 100)
