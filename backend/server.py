@@ -700,10 +700,6 @@ def create_demo_data():
             ],
             "date_premiere_consultation": "",  # sera calculé
             "date_derniere_consultation": "",  # sera calculé
-            "nom_parent": "Fatima Alami",
-            "telephone_parent": "0687654321",
-            "assurance": "CNOPS",
-            "numero_assurance": "987654321",
             "allergies": "Pénicilline"
         },
         {
