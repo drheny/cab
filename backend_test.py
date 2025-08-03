@@ -1,0 +1,594 @@
+#!/usr/bin/env python3
+"""
+FINAL POST-CLEANUP PRODUCTION READINESS TEST
+Backend API Testing Suite for Cabinet Médical
+
+This test suite verifies that all critical functionality still works after complete code cleanup and optimization.
+"""
+
+import requests
+import json
+import time
+from datetime import datetime, timedelta
+import sys
+import os
+
+# Configuration
+BACKEND_URL = "https://0698237d-0754-4aa4-881e-3c8e5387d3e6.preview.emergentagent.com/api"
+TEST_CREDENTIALS = {
+    "username": "medecin",
+    "password": "medecin123"
+}
+
+class BackendTester:
+    def __init__(self):
+        self.session = requests.Session()
+        self.auth_token = None
+        self.test_results = []
+        self.start_time = time.time()
+        
+    def log_test(self, test_name, success, details="", response_time=0):
+        """Log test result"""
+        status = "✅ PASS" if success else "❌ FAIL"
+        self.test_results.append({
+            "test": test_name,
+            "success": success,
+            "details": details,
+            "response_time": response_time,
+            "status": status
+        })
+        print(f"{status} {test_name} ({response_time:.3f}s)")
+        if details and not success:
+            print(f"    Details: {details}")
+    
+    def test_authentication(self):
+        """Test 1: Authentication - medecin login (medecin/medecin123)"""
+        print("\n🔐 TESTING AUTHENTICATION")
+        start_time = time.time()
+        
+        try:
+            response = self.session.post(
+                f"{BACKEND_URL}/auth/login",
+                json=TEST_CREDENTIALS,
+                timeout=10
+            )
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "access_token" in data and "user" in data:
+                    self.auth_token = data["access_token"]
+                    self.session.headers.update({
+                        "Authorization": f"Bearer {self.auth_token}"
+                    })
+                    user_info = data["user"]
+                    details = f"User: {user_info.get('full_name', 'Unknown')}, Role: {user_info.get('role', 'Unknown')}"
+                    self.log_test("Authentication Login", True, details, response_time)
+                    return True
+                else:
+                    self.log_test("Authentication Login", False, "Missing access_token or user in response", response_time)
+                    return False
+            else:
+                self.log_test("Authentication Login", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                return False
+                
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Authentication Login", False, f"Exception: {str(e)}", response_time)
+            return False
+    
+    def test_patient_management(self):
+        """Test 2: Patient Management - CRUD operations, patient list, patient search"""
+        print("\n👥 TESTING PATIENT MANAGEMENT")
+        
+        # Test patient list
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BACKEND_URL}/patients", timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "patients" in data and "total_count" in data:
+                    patient_count = len(data["patients"])
+                    total_count = data["total_count"]
+                    details = f"Found {patient_count} patients (total: {total_count})"
+                    self.log_test("Patient List Retrieval", True, details, response_time)
+                else:
+                    self.log_test("Patient List Retrieval", False, "Missing patients or total_count in response", response_time)
+            else:
+                self.log_test("Patient List Retrieval", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Patient List Retrieval", False, f"Exception: {str(e)}", response_time)
+        
+        # Test patient search
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BACKEND_URL}/patients/search?q=Ben", timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "patients" in data:
+                    search_results = len(data["patients"])
+                    details = f"Search 'Ben' returned {search_results} results"
+                    self.log_test("Patient Search", True, details, response_time)
+                else:
+                    self.log_test("Patient Search", False, "Missing patients in search response", response_time)
+            else:
+                self.log_test("Patient Search", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Patient Search", False, f"Exception: {str(e)}", response_time)
+        
+        # Test patient count
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BACKEND_URL}/patients/count", timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "count" in data:
+                    count = data["count"]
+                    details = f"Total patient count: {count}"
+                    self.log_test("Patient Count", True, details, response_time)
+                else:
+                    self.log_test("Patient Count", False, "Missing count in response", response_time)
+            else:
+                self.log_test("Patient Count", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Patient Count", False, f"Exception: {str(e)}", response_time)
+    
+    def test_dashboard_stats(self):
+        """Test 3: Dashboard Stats - Verify main dashboard stats load correctly"""
+        print("\n📊 TESTING DASHBOARD STATS")
+        
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BACKEND_URL}/dashboard", timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["total_rdv", "rdv_restants", "rdv_attente", "recette_jour", "total_patients"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if not missing_fields:
+                    details = f"RDV: {data['total_rdv']}, Attente: {data['rdv_attente']}, Recette: {data['recette_jour']} TND, Patients: {data['total_patients']}"
+                    self.log_test("Dashboard Stats", True, details, response_time)
+                else:
+                    self.log_test("Dashboard Stats", False, f"Missing fields: {missing_fields}", response_time)
+            else:
+                self.log_test("Dashboard Stats", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Dashboard Stats", False, f"Exception: {str(e)}", response_time)
+        
+        # Test birthday reminders
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BACKEND_URL}/dashboard/birthdays", timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "birthdays" in data:
+                    birthday_count = len(data["birthdays"])
+                    details = f"Birthday reminders: {birthday_count}"
+                    self.log_test("Birthday Reminders", True, details, response_time)
+                else:
+                    self.log_test("Birthday Reminders", False, "Missing birthdays in response", response_time)
+            else:
+                self.log_test("Birthday Reminders", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Birthday Reminders", False, f"Exception: {str(e)}", response_time)
+        
+        # Test phone reminders
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BACKEND_URL}/dashboard/phone-reminders", timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "reminders" in data:
+                    reminder_count = len(data["reminders"])
+                    details = f"Phone reminders: {reminder_count}"
+                    self.log_test("Phone Reminders", True, details, response_time)
+                else:
+                    self.log_test("Phone Reminders", False, "Missing reminders in response", response_time)
+            else:
+                self.log_test("Phone Reminders", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Phone Reminders", False, f"Exception: {str(e)}", response_time)
+        
+        # Test vaccine reminders
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BACKEND_URL}/dashboard/vaccine-reminders", timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "vaccine_reminders" in data:
+                    vaccine_count = len(data["vaccine_reminders"])
+                    details = f"Vaccine reminders: {vaccine_count}"
+                    self.log_test("Vaccine Reminders", True, details, response_time)
+                else:
+                    self.log_test("Vaccine Reminders", False, "Missing vaccine_reminders in response", response_time)
+            else:
+                self.log_test("Vaccine Reminders", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Vaccine Reminders", False, f"Exception: {str(e)}", response_time)
+    
+    def test_appointments(self):
+        """Test 4: Appointments - Test appointment retrieval and basic operations"""
+        print("\n📅 TESTING APPOINTMENTS")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Test today's appointments
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                appointments = response.json()
+                if isinstance(appointments, list):
+                    appointment_count = len(appointments)
+                    details = f"Today's appointments: {appointment_count}"
+                    self.log_test("Today's Appointments", True, details, response_time)
+                else:
+                    self.log_test("Today's Appointments", False, "Response is not a list", response_time)
+            else:
+                self.log_test("Today's Appointments", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Today's Appointments", False, f"Exception: {str(e)}", response_time)
+        
+        # Test weekly appointments
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BACKEND_URL}/rdv/semaine/{today}", timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "week_dates" in data and "appointments" in data:
+                    week_appointments = len(data["appointments"])
+                    week_days = len(data["week_dates"])
+                    details = f"Week appointments: {week_appointments} across {week_days} days"
+                    self.log_test("Weekly Appointments", True, details, response_time)
+                else:
+                    self.log_test("Weekly Appointments", False, "Missing week_dates or appointments", response_time)
+            else:
+                self.log_test("Weekly Appointments", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Weekly Appointments", False, f"Exception: {str(e)}", response_time)
+    
+    def test_billing_system(self):
+        """Test 5: Billing System - Test payment stats, daily payments with nb_impayes field"""
+        print("\n💰 TESTING BILLING SYSTEM")
+        
+        # Test enhanced stats
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BACKEND_URL}/facturation/enhanced-stats", timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["daily_revenue", "monthly_revenue", "yearly_revenue"]
+                if any(field in data for field in required_fields):
+                    daily = data.get("daily_revenue", 0)
+                    monthly = data.get("monthly_revenue", 0)
+                    yearly = data.get("yearly_revenue", 0)
+                    details = f"Daily: {daily} TND, Monthly: {monthly} TND, Yearly: {yearly} TND"
+                    self.log_test("Enhanced Billing Stats", True, details, response_time)
+                else:
+                    self.log_test("Enhanced Billing Stats", False, f"Missing revenue fields in response", response_time)
+            else:
+                self.log_test("Enhanced Billing Stats", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Enhanced Billing Stats", False, f"Exception: {str(e)}", response_time)
+        
+        # Test cash movements
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BACKEND_URL}/cash-movements", timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "movements" in data and "daily_balance" in data:
+                    movement_count = len(data["movements"])
+                    daily_balance = data["daily_balance"]
+                    details = f"Cash movements: {movement_count}, Daily balance: {daily_balance} TND"
+                    self.log_test("Cash Movements", True, details, response_time)
+                else:
+                    self.log_test("Cash Movements", False, "Missing movements or daily_balance", response_time)
+            else:
+                self.log_test("Cash Movements", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Cash Movements", False, f"Exception: {str(e)}", response_time)
+        
+        # Test daily payments with nb_impayes
+        start_time = time.time()
+        try:
+            today = datetime.now().strftime("%Y-%m-%d")
+            response = self.session.get(f"{BACKEND_URL}/facturation/daily-payments?date={today}", timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "payments" in data:
+                    payment_count = len(data["payments"])
+                    nb_impayes = data.get("nb_impayes", 0)
+                    details = f"Daily payments: {payment_count}, Unpaid: {nb_impayes}"
+                    self.log_test("Daily Payments with nb_impayes", True, details, response_time)
+                else:
+                    self.log_test("Daily Payments with nb_impayes", False, "Missing payments in response", response_time)
+            else:
+                # If endpoint doesn't exist, try alternative
+                self.log_test("Daily Payments with nb_impayes", False, f"HTTP {response.status_code} - endpoint may not exist", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Daily Payments with nb_impayes", False, f"Exception: {str(e)}", response_time)
+    
+    def test_export_functionality(self):
+        """Test 6: Export Functionality - Test patient export endpoint"""
+        print("\n📤 TESTING EXPORT FUNCTIONALITY")
+        
+        # Test patient export
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BACKEND_URL}/admin/export/patients", timeout=15)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "data" in data and "count" in data:
+                    export_count = data["count"]
+                    collection_name = data.get("collection", "patients")
+                    details = f"Exported {export_count} {collection_name}"
+                    self.log_test("Patient Export", True, details, response_time)
+                else:
+                    self.log_test("Patient Export", False, "Missing data or count in export response", response_time)
+            else:
+                self.log_test("Patient Export", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Patient Export", False, f"Exception: {str(e)}", response_time)
+        
+        # Test consultation export
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BACKEND_URL}/admin/export/consultations", timeout=15)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "data" in data and "count" in data:
+                    export_count = data["count"]
+                    collection_name = data.get("collection", "consultations")
+                    details = f"Exported {export_count} {collection_name}"
+                    self.log_test("Consultation Export", True, details, response_time)
+                else:
+                    self.log_test("Consultation Export", False, "Missing data or count in export response", response_time)
+            else:
+                self.log_test("Consultation Export", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Consultation Export", False, f"Exception: {str(e)}", response_time)
+        
+        # Test payment export
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BACKEND_URL}/admin/export/payments", timeout=15)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "data" in data and "count" in data:
+                    export_count = data["count"]
+                    collection_name = data.get("collection", "payments")
+                    details = f"Exported {export_count} {collection_name}"
+                    self.log_test("Payment Export", True, details, response_time)
+                else:
+                    self.log_test("Payment Export", False, "Missing data or count in export response", response_time)
+            else:
+                self.log_test("Payment Export", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Payment Export", False, f"Exception: {str(e)}", response_time)
+    
+    def test_database_performance(self):
+        """Test 7: Database Performance - Verify optimized indexes are working"""
+        print("\n⚡ TESTING DATABASE PERFORMANCE")
+        
+        # Test patient list performance (should be fast with indexes)
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BACKEND_URL}/patients?limit=50", timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "patients" in data:
+                    patient_count = len(data["patients"])
+                    if response_time < 0.5:  # Should be fast with proper indexing
+                        details = f"Retrieved {patient_count} patients in {response_time:.3f}s (Good performance)"
+                        self.log_test("Patient List Performance", True, details, response_time)
+                    else:
+                        details = f"Retrieved {patient_count} patients in {response_time:.3f}s (Slow - may need index optimization)"
+                        self.log_test("Patient List Performance", False, details, response_time)
+                else:
+                    self.log_test("Patient List Performance", False, "Missing patients in response", response_time)
+            else:
+                self.log_test("Patient List Performance", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Patient List Performance", False, f"Exception: {str(e)}", response_time)
+        
+        # Test search performance
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BACKEND_URL}/patients/search?q=Ahmed", timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "patients" in data:
+                    search_count = len(data["patients"])
+                    if response_time < 0.3:  # Search should be very fast
+                        details = f"Search returned {search_count} results in {response_time:.3f}s (Good performance)"
+                        self.log_test("Search Performance", True, details, response_time)
+                    else:
+                        details = f"Search returned {search_count} results in {response_time:.3f}s (Slow - may need index optimization)"
+                        self.log_test("Search Performance", False, details, response_time)
+                else:
+                    self.log_test("Search Performance", False, "Missing patients in search response", response_time)
+            else:
+                self.log_test("Search Performance", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Search Performance", False, f"Exception: {str(e)}", response_time)
+    
+    def test_admin_users_endpoint(self):
+        """Test Admin Users Endpoint - Critical for administration functionality"""
+        print("\n👨‍💼 TESTING ADMIN USERS ENDPOINT")
+        
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BACKEND_URL}/admin/users", timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "users" in data and "count" in data:
+                    user_count = data["count"]
+                    users = data["users"]
+                    details = f"Found {user_count} users in system"
+                    self.log_test("Admin Users Endpoint", True, details, response_time)
+                    
+                    # Verify medecin user has proper permissions
+                    medecin_user = next((u for u in users if u.get("username") == "medecin"), None)
+                    if medecin_user:
+                        permissions = medecin_user.get("permissions", {})
+                        manage_users = permissions.get("manage_users", False)
+                        if manage_users:
+                            self.log_test("Medecin User Permissions", True, "manage_users permission verified", 0)
+                        else:
+                            self.log_test("Medecin User Permissions", False, "Missing manage_users permission", 0)
+                    else:
+                        self.log_test("Medecin User Permissions", False, "Medecin user not found", 0)
+                else:
+                    self.log_test("Admin Users Endpoint", False, "Missing users or count in response", response_time)
+            else:
+                self.log_test("Admin Users Endpoint", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Admin Users Endpoint", False, f"Exception: {str(e)}", response_time)
+    
+    def run_all_tests(self):
+        """Run all production readiness tests"""
+        print("🚀 STARTING FINAL POST-CLEANUP PRODUCTION READINESS TEST")
+        print("=" * 80)
+        
+        # Test 1: Authentication (Critical)
+        if not self.test_authentication():
+            print("\n❌ CRITICAL FAILURE: Authentication failed. Cannot proceed with other tests.")
+            return self.generate_report()
+        
+        # Test 2: Patient Management
+        self.test_patient_management()
+        
+        # Test 3: Dashboard Stats
+        self.test_dashboard_stats()
+        
+        # Test 4: Appointments
+        self.test_appointments()
+        
+        # Test 5: Billing System
+        self.test_billing_system()
+        
+        # Test 6: Export Functionality
+        self.test_export_functionality()
+        
+        # Test 7: Database Performance
+        self.test_database_performance()
+        
+        # Test 8: Admin Users Endpoint
+        self.test_admin_users_endpoint()
+        
+        return self.generate_report()
+    
+    def generate_report(self):
+        """Generate final test report"""
+        total_time = time.time() - self.start_time
+        total_tests = len(self.test_results)
+        passed_tests = len([t for t in self.test_results if t["success"]])
+        failed_tests = total_tests - passed_tests
+        
+        print("\n" + "=" * 80)
+        print("📋 FINAL POST-CLEANUP PRODUCTION READINESS TEST REPORT")
+        print("=" * 80)
+        print(f"⏱️  Total execution time: {total_time:.2f} seconds")
+        print(f"📊 Total tests: {total_tests}")
+        print(f"✅ Passed: {passed_tests}")
+        print(f"❌ Failed: {failed_tests}")
+        print(f"📈 Success rate: {(passed_tests/total_tests*100):.1f}%")
+        
+        print("\n📝 DETAILED RESULTS:")
+        print("-" * 80)
+        
+        for result in self.test_results:
+            print(f"{result['status']} {result['test']} ({result['response_time']:.3f}s)")
+            if result['details']:
+                print(f"    {result['details']}")
+        
+        print("\n" + "=" * 80)
+        
+        if failed_tests == 0:
+            print("🎉 ALL TESTS PASSED - SYSTEM IS PRODUCTION READY!")
+            print("✅ Post-cleanup verification successful")
+            print("✅ All critical functionality working correctly")
+            print("✅ Performance within acceptable limits")
+            print("✅ Ready for deployment")
+        else:
+            print("⚠️  SOME TESTS FAILED - REVIEW REQUIRED")
+            print("❌ Post-cleanup verification found issues")
+            print("🔧 Fix failing tests before production deployment")
+        
+        return {
+            "total_tests": total_tests,
+            "passed": passed_tests,
+            "failed": failed_tests,
+            "success_rate": passed_tests/total_tests*100,
+            "execution_time": total_time,
+            "all_passed": failed_tests == 0,
+            "results": self.test_results
+        }
+
+if __name__ == "__main__":
+    print("🏥 Cabinet Médical - Final Post-Cleanup Production Readiness Test")
+    print("Testing backend API endpoints after complete code cleanup and optimization")
+    print(f"Backend URL: {BACKEND_URL}")
+    print(f"Test Credentials: {TEST_CREDENTIALS['username']}")
+    print()
+    
+    tester = BackendTester()
+    report = tester.run_all_tests()
+    
+    # Exit with appropriate code
+    sys.exit(0 if report["all_passed"] else 1)
