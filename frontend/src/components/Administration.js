@@ -1854,6 +1854,30 @@ const Administration = ({ user }) => {
                     <input type="checkbox" className="rounded" />
                     <span className="text-sm">Date création</span>
                   </label>
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" />
+                    <span className="text-sm">Diagnostic</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" />
+                    <span className="text-sm">Antécédents médicaux</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" />
+                    <span className="text-sm">Allergies</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" />
+                    <span className="text-sm">Profession</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" />
+                    <span className="text-sm">Statut marital</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" />
+                    <span className="text-sm">Contact d'urgence</span>
+                  </label>
                 </div>
                 
                 <button
