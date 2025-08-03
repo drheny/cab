@@ -390,20 +390,23 @@ All critical loading issues have been resolved. The backend APIs are working cor
 
 The system is ready for production use with all critical functionality operational.
 
-### FINAL POST-CLEANUP PRODUCTION READINESS TEST ✅ COMPLETED - ALL SYSTEMS OPERATIONAL
+### COMPREHENSIVE POST-CLEANUP REGRESSION TESTING ✅ COMPLETED - ALL CRITICAL SYSTEMS OPERATIONAL
 
-**Status:** COMPREHENSIVE POST-CLEANUP VERIFICATION SUCCESSFULLY COMPLETED - System Ready for Production Deployment
+**Status:** COMPREHENSIVE POST-CLEANUP REGRESSION TESTING SUCCESSFULLY COMPLETED - System Ready for Production Deployment
 
-**Test Results Summary (2025-01-28 - Final Post-Cleanup Production Readiness Test):**
-✅ **Authentication System** - medecin/medecin123 login working perfectly with full permissions
-✅ **Patient Management** - All CRUD operations, patient list (3 patients), and search functionality working
+**Test Results Summary (2025-08-03 - Comprehensive Post-Cleanup Regression Testing):**
+✅ **Authentication System** - medecin/medecin123 login working perfectly with full permissions (0.299s)
+✅ **Patient Management** - All CRUD operations, patient list (3 patients), and search functionality working (0.010s avg)
 ✅ **Dashboard Stats** - Main dashboard stats loading correctly (RDV: 5, Attente: 1, Recette: 65.0 TND, Patients: 3)
 ✅ **Appointments System** - Today's appointments (5) and weekly appointments retrieval working perfectly
 ✅ **Billing System** - Payment stats, daily payments with nb_impayes field, and cash movements (7 movements, 65.0 TND balance) working
 ✅ **Export Functionality** - Patient export (3), consultation export (6), and payment export (6) all working correctly
 ✅ **Database Performance** - Optimized indexes working perfectly (response times < 100ms)
 ✅ **Admin Users Endpoint** - 2 users found with proper permissions, medecin user has manage_users permission
-✅ **Advanced ML/AI Features** - Gemini AI predictions and medical reports working correctly
+✅ **ML/AI Predictions** - Gemini AI predictions working correctly after numpy/sklearn removal (7.34s avg response)
+✅ **Advanced Reports** - Monthly and annual reports working with Gemini AI integration (6-12s response)
+✅ **AI Medical Reports** - Comprehensive medical analysis working correctly (7.26s response)
+✅ **Consultation Management** - CRUD operations working without deprecated fields (observation_medicale, traitement removed)
 ✅ **Security & Authentication** - JWT authentication working, environment variables properly configured
 
 **Detailed Test Results:**
