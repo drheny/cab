@@ -99,16 +99,16 @@ class CriticalLoadingIssuesTest(unittest.TestCase):
         print("\n🔍 CRITICAL TEST 1b: Users Authentication Levels")
         
         # Test without authentication
-        response_no_auth = requests.get(f"{self.base_url}/api/users")
+        response_no_auth = requests.get(f"{self.base_url}/api/admin/users")
         print(f"   - No Auth Status: {response_no_auth.status_code}")
         
         # Test with invalid token
         invalid_headers = {"Authorization": "Bearer invalid_token"}
-        response_invalid = requests.get(f"{self.base_url}/api/users", headers=invalid_headers)
+        response_invalid = requests.get(f"{self.base_url}/api/admin/users", headers=invalid_headers)
         print(f"   - Invalid Token Status: {response_invalid.status_code}")
         
         # Test with valid token
-        response_valid = requests.get(f"{self.base_url}/api/users", headers=self.headers)
+        response_valid = requests.get(f"{self.base_url}/api/admin/users", headers=self.headers)
         print(f"   - Valid Token Status: {response_valid.status_code}")
         
         # Authentication should be required (401/403 without proper auth)
