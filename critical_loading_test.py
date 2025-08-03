@@ -411,7 +411,7 @@ class CriticalLoadingIssuesTest(unittest.TestCase):
         endpoints_to_test = [
             {
                 "name": "Users List",
-                "url": f"{self.base_url}/api/users",
+                "url": f"{self.base_url}/api/admin/users",
                 "headers": self.headers,
                 "params": None
             },
