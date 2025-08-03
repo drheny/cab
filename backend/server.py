@@ -156,7 +156,7 @@ if "mongodb+srv://" in MONGO_URL or "mongodb://" in MONGO_URL:
             db = client.get_database("test")
             print("✅ Using test database as fallback")
 else:
-    db = client.get_database("cabinet_medical")  # Local development fallback
+    db = client.get_database("test")  # Local development fallback
 
 # Collections
 patients_collection = db.patients
