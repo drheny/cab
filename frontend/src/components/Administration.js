@@ -48,10 +48,6 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-
-// 🔄 CRITICAL FIX: Define API_BASE_URL for consistent API calls
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
-
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -64,6 +60,9 @@ import {
   Legend,
 } from 'chart.js';
 import { Line, Bar } from 'react-chartjs-2';
+
+// 🔄 CRITICAL FIX: Define API_BASE_URL for consistent API calls
+const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
 // Register Chart.js components
 ChartJS.register(
