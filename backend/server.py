@@ -2823,11 +2823,18 @@ async def get_daily_payments(date: str = Query(...)):
             if appointment:
                 payment["type_visite"] = appointment.get("type_rdv", "visite")
         
+        # Get unpaid payments for the same day
+        unpaid_payments = list(payments_collection.find({
+            "date": date,
+            "statut": "impaye"
+        }, {"_id": 0}))
+        
         # Calculate daily totals
         total_montant = sum(p.get("montant", 0) for p in payments)
         nb_visites = len([p for p in payments if p.get("type_visite") == "visite"])
         nb_controles = len([p for p in payments if p.get("type_visite") == "controle"])
         nb_assures = len([p for p in payments if p.get("assure", False)])
+        nb_impayes = len(unpaid_payments)
         
         return {
             "date": date,
@@ -2837,7 +2844,8 @@ async def get_daily_payments(date: str = Query(...)):
                 "nb_visites": nb_visites,
                 "nb_controles": nb_controles,
                 "nb_assures": nb_assures,
-                "nb_total": len(payments)
+                "nb_total": len(payments),
+                "nb_impayes": nb_impayes
             }
         }
         
