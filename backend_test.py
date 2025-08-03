@@ -311,13 +311,13 @@ class BackendTester:
             
             if response.status_code == 200:
                 data = response.json()
-                if "movements" in data and "daily_balance" in data:
+                if "movements" in data and "solde_jour" in data:
                     movement_count = len(data["movements"])
-                    daily_balance = data["daily_balance"]
+                    daily_balance = data["solde_jour"]
                     details = f"Cash movements: {movement_count}, Daily balance: {daily_balance} TND"
                     self.log_test("Cash Movements", True, details, response_time)
                 else:
-                    self.log_test("Cash Movements", False, "Missing movements or daily_balance", response_time)
+                    self.log_test("Cash Movements", False, "Missing movements or solde_jour", response_time)
             else:
                 self.log_test("Cash Movements", False, f"HTTP {response.status_code}: {response.text}", response_time)
         except Exception as e:
