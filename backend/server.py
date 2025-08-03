@@ -10438,6 +10438,85 @@ async def create_default_users():
 @app.on_event("startup")
 async def startup_event():
     await create_default_users()
+@app.get("/debug/deployment")
+async def deployment_debug():
+    """Debug endpoint to check deployment state"""
+    try:
+        # Check database connection
+        db.command("ping")
+        
+        # Check collections
+        collections_info = {}
+        collection_names = ['users', 'patients', 'appointments', 'consultations', 'payments']
+        
+        for collection_name in collection_names:
+            collection = db[collection_name]
+            count = collection.count_documents({})
+            collections_info[collection_name] = count
+            
+            # Special check for users
+            if collection_name == 'users' and count > 0:
+                users = list(collection.find({}, {'username': 1, 'role': 1, 'is_active': 1}))
+                collections_info['users_details'] = users
+        
+        # Check environment variables
+        env_vars = {
+            'MONGO_URL_SET': bool(os.environ.get('MONGO_URL')),
+            'EMERGENT_LLM_KEY_SET': bool(os.environ.get('EMERGENT_LLM_KEY')),
+            'DATABASE_NAME': db.name
+        }
+        
+        return {
+            "status": "debug_success",
+            "database_connected": True,
+            "collections": collections_info,
+            "environment": env_vars,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Debug failed: {str(e)}")
+
+@app.post("/debug/create-user")
+async def create_debug_user():
+    """Emergency endpoint to create medecin user if missing"""
+    try:
+        # Check if medecin user exists
+        existing_user = users_collection.find_one({"username": "medecin"})
+        if existing_user:
+            return {"message": "medecin user already exists", "user_id": existing_user.get('username')}
+        
+        # Create medecin user
+        medecin_user = {
+            "username": "medecin",
+            "full_name": "Dr Heni Dridi",
+            "role": "medecin",
+            "hashed_password": bcrypt.hashpw("medecin123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8'),
+            "is_active": True,
+            "permissions": {
+                "administration": True,
+                "delete_appointment": True,
+                "delete_payments": True,
+                "export_data": True,
+                "reset_data": True,
+                "manage_users": True,
+                "consultation_read_only": False
+            },
+            "created_at": datetime.now(),
+            "last_login": None
+        }
+        
+        result = users_collection.insert_one(medecin_user)
+        return {
+            "message": "medecin user created successfully",
+            "user_id": str(result.inserted_id),
+            "username": "medecin",
+            "password": "medecin123"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create user: {str(e)}")
+
 @app.get("/health")
 async def health_check():
     """Health check endpoint for Kubernetes liveness/readiness probes"""
