@@ -211,10 +211,17 @@ const Administration = ({ user }) => {
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get('/api/admin/users');
+      // 🔄 CRITICAL FIX: Use full API URL with environment variable
+      const response = await axios.get(`${API_BASE_URL}/api/admin/users`);
+      console.log('✅ Users loaded successfully:', response.data);
       setAllUsers(response.data.users || []);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error('❌ Error fetching users:', error);
+      console.error('❌ Request details:', {
+        url: `${API_BASE_URL}/api/admin/users`,
+        status: error.response?.status,
+        data: error.response?.data
+      });
       toast.error('Erreur lors du chargement des utilisateurs');
     }
   };
