@@ -10777,6 +10777,23 @@ async def health_check():
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Service unhealthy: {str(e)}")
 
+@app.get("/api/health")
+async def api_health_check():
+    """API health check endpoint"""
+    try:
+        # Check database connection
+        db.command("ping")
+        users_count = users_collection.count_documents({})
+        return {
+            "status": "healthy",
+            "api": "operational",
+            "database": "connected",
+            "users_count": users_count,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"API unhealthy: {str(e)}")
+
 @app.get("/ready")
 async def readiness_check():
     """Readiness check endpoint for Kubernetes"""
