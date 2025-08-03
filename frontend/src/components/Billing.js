@@ -425,14 +425,30 @@ const Billing = ({ user }) => {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - 30);
       
+      const params = {
+        start_date: startDate.toISOString().split('T')[0],
+        end_date: endDate.toISOString().split('T')[0]
+      };
+      
+      console.log('🔄 Fetching analysis data with params:', params);
+      
       const response = await axios.get(`${API_BASE_URL}/api/admin/ai-medical-report`, {
-        params: {
-          start_date: startDate.toISOString().split('T')[0],
-          end_date: endDate.toISOString().split('T')[0]
-        }
+        params: params
       });
+      
+      console.log('✅ Analysis data loaded successfully:', response.data);
       setAnalysisData(response.data);
     } catch (error) {
+      console.error('❌ Error fetching analysis data:', error);
+      console.error('❌ Request details:', {
+        url: `${API_BASE_URL}/api/admin/ai-medical-report`,
+        status: error.response?.status,
+        data: error.response?.data
+      });
+      setAnalysisData({ status: 'error', error: error.message });
+      toast.error('Erreur lors du chargement des analyses');
+    }
+  };
       console.error('Error fetching analysis data:', error);
       toast.error('Erreur lors du chargement des analyses');
     }
