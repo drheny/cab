@@ -349,7 +349,7 @@ class CriticalLoadingIssuesTest(unittest.TestCase):
         
         # Test 1: Users endpoint
         try:
-            response = requests.get(f"{self.base_url}/api/users", headers=self.headers)
+            response = requests.get(f"{self.base_url}/api/admin/users", headers=self.headers)
             if response.status_code != 200:
                 errors_found.append(f"Users endpoint failed: {response.status_code}")
             else:
