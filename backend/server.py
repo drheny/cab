@@ -9195,8 +9195,6 @@ async def get_whatsapp_queue(date: str = Query(...)):
 
 # ==================== AI ROOM API ====================
 
-import numpy as np
-from sklearn.linear_model import LinearRegression
 import random
 from collections import defaultdict
 
