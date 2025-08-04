@@ -1694,50 +1694,34 @@ const Consultation = ({ user }) => {
                         </div>
                       </div>
 
-                      {/* Diagnostic - Taille standard */}
-                      <div className="mb-6">
+                      {/* Diagnostic - Avec support manuscrit */}
+                      <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Diagnostic
                         </label>
-                        <input
+                        <HandwritingField
                           value={consultationData.diagnostic}
-                          onChange={(e) => setConsultationData({...consultationData, diagnostic: e.target.value})}
-                          className="input-stylus"
-                          placeholder="Diagnostic médical - Optimisé pour Apple Pencil"
-                          inputMode="text"
-                          autoCapitalize="sentences"
-                          spellCheck="true"
-                          autoComplete="off"
-                          data-gramm="false"
+                          onChange={(newValue) => setConsultationData({...consultationData, diagnostic: newValue})}
+                          placeholder="Diagnostic médical"
+                          rows={3}
+                          medicalContext={true}
+                          enableOCR={true}
                         />
                       </div>
 
-                      {/* Observation Clinique - Grande taille avec fond strié comme papier */}
+                      {/* Observation Clinique - Avec support manuscrit avancé */}
                       <div className="mb-6">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Observation Clinique
                         </label>
-                        <textarea
+                        <HandwritingField
                           value={consultationData.observation_clinique}
-                          onChange={(e) => setConsultationData({...consultationData, observation_clinique: e.target.value})}
-                          className="textarea-stylus bg-white bg-striped-paper border-2 border-gray-300 rounded-lg p-4 text-gray-900 shadow-inner"
-                          style={{
-                            backgroundImage: `repeating-linear-gradient(
-                              transparent,
-                              transparent 24px,
-                              #e5e7eb 24px,
-                              #e5e7eb 25px
-                            )`,
-                            lineHeight: '25px',
-                            paddingTop: '4px'
-                          }}
-                          rows="12"
-                          placeholder="Observations cliniques détaillées - Optimisé pour Apple Pencil"
-                          inputMode="text"
-                          autoCapitalize="sentences"
-                          spellCheck="true"
-                          autoComplete="off"
-                          data-gramm="false"
+                          onChange={(newValue) => setConsultationData({...consultationData, observation_clinique: newValue})}
+                          placeholder="Observations cliniques détaillées"
+                          rows={12}
+                          medicalContext={true}
+                          enableOCR={true}
+                          className="bg-striped-paper"
                         />
                       </div>
 
