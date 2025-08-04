@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import HandwritingField from './HandwritingField';
 
 // Move API_BASE_URL outside of component to avoid re-initialization
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
