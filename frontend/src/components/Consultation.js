@@ -1727,6 +1727,14 @@ const Consultation = ({ user }) => {
                           medicalContext={true}
                           enableOCR={true}
                           onFormInteraction={setPreventFormSubmission}
+                          savedHandwritingData={consultationData.diagnostic_handwriting_data}
+                          onHandwritingDataChange={(data) => 
+                            setConsultationData({...consultationData, diagnostic_handwriting_data: data})
+                          }
+                          initialMode={consultationData.diagnostic_mode}
+                          onModeChange={(mode) =>
+                            setConsultationData({...consultationData, diagnostic_mode: mode})
+                          }
                         />
                       </div>
 
@@ -1744,6 +1752,14 @@ const Consultation = ({ user }) => {
                           enableOCR={true}
                           className="bg-striped-paper"
                           onFormInteraction={setPreventFormSubmission}
+                          savedHandwritingData={consultationData.observation_handwriting_data}
+                          onHandwritingDataChange={(data) => 
+                            setConsultationData({...consultationData, observation_handwriting_data: data})
+                          }
+                          initialMode={consultationData.observation_mode}
+                          onModeChange={(mode) =>
+                            setConsultationData({...consultationData, observation_mode: mode})
+                          }
                         />
                       </div>
 
