@@ -16,12 +16,35 @@ const HandwritingField = ({
   initialMode = "typing", // Mode initial depuis la base de données
   onModeChange = () => {} // Callback pour sauvegarder le mode
 }) => {
-  const [mode, setMode] = useState('typing'); // 'typing' | 'handwriting'
+  const [mode, setMode] = useState(initialMode); // Use initial mode from database
   const [isProcessing, setIsProcessing] = useState(false);
   const [handwritingData, setHandwritingData] = useState(null);
   const [isErasing, setIsErasing] = useState(false); // New eraser mode
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
+
+  // EFFET POUR RESTAURER LES DONNÉES DU CANVAS DEPUIS LA BASE DE DONNÉES
+  useEffect(() => {
+    if (savedHandwritingData && mode === 'handwriting' && canvasRef.current) {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      img.onload = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      };
+      img.src = savedHandwritingData;
+    }
+  }, [savedHandwritingData, mode]);
+
+  // EFFET POUR SAUVEGARDER LES DONNÉES DU CANVAS
+  const saveCanvasData = () => {
+    if (mode === 'handwriting' && canvasRef.current) {
+      const canvas = canvasRef.current;
+      const imageData = canvas.toDataURL('image/png');
+      onHandwritingDataChange(imageData);
+    }
+  };
 
   // Configuration différentielle selon le mode
   const typingConfig = {
