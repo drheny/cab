@@ -188,13 +188,18 @@ const HandwritingField = ({
   };
 
   const toggleMode = (e) => {
+    // Multiple layers of event prevention
     e.preventDefault();
     e.stopPropagation();
+    e.stopImmediatePropagation();
+    
+    console.log('🔄 HandwritingField toggleMode called - preventing form submission');
     
     // Activer la prévention de soumission du formulaire
     onFormInteraction(true);
     
     const newMode = mode === 'typing' ? 'handwriting' : 'typing';
+    console.log(`🔄 Switching from ${mode} to ${newMode}`);
     setMode(newMode);
     
     // Si passage en mode manuscrit, configurer le canvas
@@ -204,14 +209,19 @@ const HandwritingField = ({
         if (canvas) {
           canvas.width = canvas.offsetWidth;
           canvas.height = canvas.offsetHeight;
+          console.log('🎨 Canvas configured for handwriting mode');
         }
       }, 100);
     }
     
-    // Désactiver la prévention après un court délai
+    // Désactiver la prévention après un délai plus long pour être sûr
     setTimeout(() => {
       onFormInteraction(false);
-    }, 500);
+      console.log('✅ Form submission prevention disabled');
+    }, 1000);
+    
+    // Return false to be extra sure
+    return false;
   };
 
   const currentConfig = mode === 'handwriting' ? handwritingConfig : typingConfig;
