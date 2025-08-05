@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Edit3, Type, Wand2, Save, RotateCcw } from 'lucide-react';
+import { Edit3, Type, Wand2, Save, RotateCcw, Eraser } from 'lucide-react';
 
 const HandwritingField = ({ 
   value, 
