@@ -120,7 +120,10 @@ const HandwritingField = ({
     }
   };
 
-  const clearCanvas = () => {
+  const clearCanvas = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
