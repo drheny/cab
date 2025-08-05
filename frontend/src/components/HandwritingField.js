@@ -65,8 +65,18 @@ const HandwritingField = ({
     
     const ctx = canvas.getContext('2d');
     ctx.lineTo(x, y);
-    ctx.strokeStyle = '#1f2937';
-    ctx.lineWidth = 2;
+    
+    if (isErasing) {
+      // Eraser mode - use clear/destination-out blend mode
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.lineWidth = 10; // Larger eraser size
+    } else {
+      // Drawing mode - normal drawing
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.strokeStyle = '#1f2937';
+      ctx.lineWidth = 2;
+    }
+    
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.stroke();
