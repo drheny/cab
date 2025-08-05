@@ -3268,7 +3268,6 @@ async def get_predictive_analysis():
         
         try:
             # Use Gemini AI for analysis if available
-            from emergentintegrations import GeminiAIService
             
             gemini_service = GeminiAIService()
             ai_response = gemini_service.get_response(analysis_context)
