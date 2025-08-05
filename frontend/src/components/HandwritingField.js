@@ -47,12 +47,21 @@ const HandwritingField = ({
     setIsDrawing(true);
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const x = (e.clientX || e.pageX) - rect.left;
+    const y = (e.clientY || e.pageY) - rect.top;
     
     const ctx = canvas.getContext('2d');
     ctx.beginPath();
     ctx.moveTo(x, y);
+    
+    // Set the appropriate drawing mode
+    if (isErasing) {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.lineWidth = 10;
+    } else {
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.lineWidth = 2;
+    }
   };
 
   const draw = (e) => {
