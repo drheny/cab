@@ -208,15 +208,30 @@ const HandwritingField = ({
         {mode === 'handwriting' && (
           <div className="flex space-x-1">
             <button
+              type="button"
+              onClick={toggleEraser}
+              className={`p-1 rounded text-sm transition-all ${
+                isErasing 
+                  ? 'bg-red-100 text-red-700 border border-red-300' 
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+              title="Gomme"
+            >
+              <Eraser className="w-4 h-4" />
+            </button>
+            
+            <button
+              type="button"
               onClick={clearCanvas}
               className="p-1 rounded text-gray-500 hover:text-gray-700"
-              title="Effacer"
+              title="Effacer tout"
             >
               <RotateCcw className="w-4 h-4" />
             </button>
             
             {enableOCR && (
               <button
+                type="button"
                 onClick={refineHandwriting}
                 disabled={isProcessing}
                 className="flex items-center space-x-1 px-2 py-1 bg-purple-100 text-purple-700 rounded text-sm hover:bg-purple-200 transition-all disabled:opacity-50"
