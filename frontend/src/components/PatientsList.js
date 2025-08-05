@@ -209,7 +209,14 @@ const PatientsListComponent = ({ user }) => {
       setLoading(false);
       setSearchLoading(false);
     }
-  }, []);
+  }, [patientsPerPage]); // Add patientsPerPage to dependencies
+
+  // FONCTION POUR CHANGER LE NOMBRE DE PATIENTS PAR PAGE
+  const changePatientsPerPage = (newLimit) => {
+    setPatientsPerPage(newLimit);
+    setCurrentPage(1); // Reset to first page
+    fetchPatients(1, debouncedSearchTerm, newLimit);
+  };
 
   // Check URL params for pre-selected patient
   useEffect(() => {
