@@ -9,7 +9,12 @@ const HandwritingField = ({
   rows = 6,
   enableOCR = true,
   medicalContext = false,
-  onFormInteraction = () => {} // Callback pour contrôler la prévention des soumissions de formulaire
+  onFormInteraction = () => {}, // Callback pour contrôler la prévention des soumissions de formulaire
+  // NOUVEAUX PROPS POUR GÉRER LES DONNÉES MANUSCRITES
+  handwritingData = "", // Base64 image data du canvas
+  onHandwritingDataChange = () => {}, // Callback pour sauvegarder les données du canvas
+  currentMode = "typing", // Mode initial depuis la base de données
+  onModeChange = () => {} // Callback pour sauvegarder le mode
 }) => {
   const [mode, setMode] = useState('typing'); // 'typing' | 'handwriting'
   const [isProcessing, setIsProcessing] = useState(false);
