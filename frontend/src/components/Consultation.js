@@ -1716,6 +1716,7 @@ const Consultation = ({ user }) => {
                           rows={3}
                           medicalContext={true}
                           enableOCR={true}
+                          onFormInteraction={setPreventFormSubmission}
                         />
                       </div>
 
@@ -1732,6 +1733,7 @@ const Consultation = ({ user }) => {
                           medicalContext={true}
                           enableOCR={true}
                           className="bg-striped-paper"
+                          onFormInteraction={setPreventFormSubmission}
                         />
                       </div>
 
