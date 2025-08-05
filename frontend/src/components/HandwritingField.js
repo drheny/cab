@@ -188,10 +188,9 @@ const HandwritingField = ({
   };
 
   const toggleMode = (e) => {
-    // Multiple layers of event prevention
+    // Proper event prevention for React SyntheticEvent
     e.preventDefault();
     e.stopPropagation();
-    e.stopImmediatePropagation();
     
     console.log('🔄 HandwritingField toggleMode called - preventing form submission');
     
