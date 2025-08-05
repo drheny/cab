@@ -278,7 +278,7 @@ const HandwritingField = ({
             onTouchEnd={stopDrawing}
             style={{ 
               zIndex: mode === 'handwriting' ? 10 : -1,
-              cursor: 'crosshair'
+              cursor: isErasing ? 'crosshair' : 'crosshair'
             }}
           />
         )}
