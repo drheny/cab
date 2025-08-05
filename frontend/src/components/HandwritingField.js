@@ -226,7 +226,13 @@ const HandwritingField = ({
   const currentConfig = mode === 'handwriting' ? handwritingConfig : typingConfig;
 
   return (
-    <div className="relative">
+    <div 
+      className="relative"
+      style={{
+        // Empêcher le scroll et zoom tactile sur tout le conteneur en mode manuscrit
+        touchAction: mode === 'handwriting' ? 'none' : 'auto'
+      }}
+    >
       {/* Toggle Mode - Wrapped in non-submitting container */}
       <div 
         className="flex justify-between items-center mb-2"
