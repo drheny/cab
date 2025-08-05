@@ -141,6 +141,14 @@ const HandwritingField = ({
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Reset composite operation to default
+    ctx.globalCompositeOperation = 'source-over';
+  };
+
+  const toggleEraser = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsErasing(!isErasing);
   };
 
   const toggleMode = (e) => {
