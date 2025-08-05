@@ -165,6 +165,9 @@ const HandwritingField = ({
     e.preventDefault();
     e.stopPropagation();
     
+    // Activer la prévention de soumission du formulaire
+    onFormInteraction(true);
+    
     const newMode = mode === 'typing' ? 'handwriting' : 'typing';
     setMode(newMode);
     
@@ -178,6 +181,11 @@ const HandwritingField = ({
         }
       }, 100);
     }
+    
+    // Désactiver la prévention après un court délai
+    setTimeout(() => {
+      onFormInteraction(false);
+    }, 500);
   };
 
   const currentConfig = mode === 'handwriting' ? handwritingConfig : typingConfig;
