@@ -76,7 +76,10 @@ const HandwritingField = ({
   };
 
   // OCR et auto-raffinement IA
-  const refineHandwriting = async () => {
+  const refineHandwriting = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (!canvasRef.current) return;
 
     setIsProcessing(true);
