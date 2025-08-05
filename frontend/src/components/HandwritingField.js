@@ -120,11 +120,17 @@ const HandwritingField = ({
     }
 
     setIsProcessing(true);
+    
     try {
       const canvas = canvasRef.current;
       const imageData = canvas.toDataURL('image/png');
       
-      // Appel API OCR + Refinement IA médical
+      console.log('🎨 Début du raffinement IA...');
+      
+      // Appel API OCR + Refinement IA médical avec timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 secondes timeout
+      
       const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/ai/refine-handwriting`, {
         method: 'POST',
         headers: {
@@ -135,26 +141,43 @@ const HandwritingField = ({
           currentText: value,
           medicalContext,
           language: 'fr'
-        })
+        }),
+        signal: controller.signal
       });
 
-      const result = await response.json();
+      clearTimeout(timeoutId);
       
-      if (result.success) {
-        // Mise à jour avec le texte raffiné
+      if (!response.ok) {
+        throw new Error(`Erreur HTTP: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('🤖 Résultat IA:', result);
+      
+      if (result.success && result.refinedText && result.refinedText !== value) {
+        // Mise à jour avec le texte raffiné seulement s'il y a une amélioration
         onChange(result.refinedText);
         
-        // Optionnel: conserver l'image originale
+        // Conserver l'image et métadonnées
         setHandwritingData({
           originalImage: imageData,
           extractedText: result.extractedText,
           refinedText: result.refinedText,
-          confidence: result.confidence
+          confidence: result.confidence,
+          method: result.method
         });
+        
+        console.log(`✅ Texte raffiné avec ${result.confidence}% de confiance (${result.method})`);
+      } else {
+        console.log('⚠️ Pas d\'amélioration trouvée par l\'IA');
       }
       
     } catch (error) {
-      console.error('Handwriting refinement failed:', error);
+      if (error.name === 'AbortError') {
+        console.error('⏱️ Timeout: Le raffinement IA a pris trop de temps');
+      } else {
+        console.error('❌ Échec du raffinement IA:', error);
+      }
     } finally {
       setIsProcessing(false);
       // Désactiver la prévention après traitement
