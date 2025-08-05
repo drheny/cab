@@ -336,15 +336,25 @@ const HandwritingField = ({
             onMouseMove={draw}
             onMouseUp={stopDrawing}
             onMouseLeave={stopDrawing}
-            onTouchStart={(e) => startDrawing(e.touches[0])}
+            onTouchStart={(e) => {
+              e.preventDefault(); // Empêcher le scroll de la page
+              e.stopPropagation(); // Empêcher la propagation
+              startDrawing(e.touches[0]);
+            }}
             onTouchMove={(e) => {
-              e.preventDefault();
+              e.preventDefault(); // CRITIQUE: Empêcher le scroll de la page
+              e.stopPropagation();
               draw(e.touches[0]);
             }}
-            onTouchEnd={stopDrawing}
+            onTouchEnd={(e) => {
+              e.preventDefault(); // Empêcher le scroll de la page
+              e.stopPropagation();
+              stopDrawing();
+            }}
             style={{ 
               zIndex: mode === 'handwriting' ? 10 : -1,
-              cursor: isErasing ? 'crosshair' : 'crosshair'
+              cursor: isErasing ? 'crosshair' : 'crosshair',
+              touchAction: 'none' // CRITIQUE: Désactiver complètement le scroll et zoom tactile
             }}
           />
         )}
