@@ -148,17 +148,33 @@ const HandwritingField = ({
     e.preventDefault();
     e.stopPropagation();
     
+    // Prévenir la soumission du formulaire
+    onFormInteraction(true);
+    
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     // Reset composite operation to default
     ctx.globalCompositeOperation = 'source-over';
+    
+    // Désactiver la prévention après un court délai
+    setTimeout(() => {
+      onFormInteraction(false);
+    }, 200);
   };
 
   const toggleEraser = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    // Prévenir la soumission du formulaire
+    onFormInteraction(true);
     setIsErasing(!isErasing);
+    
+    // Désactiver la prévention après un court délai
+    setTimeout(() => {
+      onFormInteraction(false);
+    }, 200);
   };
 
   const toggleMode = (e) => {
