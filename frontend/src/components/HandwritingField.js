@@ -11,9 +11,9 @@ const HandwritingField = ({
   medicalContext = false,
   onFormInteraction = () => {}, // Callback pour contrôler la prévention des soumissions de formulaire
   // NOUVEAUX PROPS POUR GÉRER LES DONNÉES MANUSCRITES
-  handwritingData = "", // Base64 image data du canvas
+  savedHandwritingData = "", // Base64 image data du canvas depuis la DB
   onHandwritingDataChange = () => {}, // Callback pour sauvegarder les données du canvas
-  currentMode = "typing", // Mode initial depuis la base de données
+  initialMode = "typing", // Mode initial depuis la base de données
   onModeChange = () => {} // Callback pour sauvegarder le mode
 }) => {
   const [mode, setMode] = useState('typing'); // 'typing' | 'handwriting'
