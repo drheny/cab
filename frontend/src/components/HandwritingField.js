@@ -258,9 +258,15 @@ const HandwritingField = ({
     // Activer la prévention de soumission du formulaire
     onFormInteraction(true);
     
+    // Sauvegarder les données du canvas avant le changement de mode
+    saveCanvasData();
+    
     const newMode = mode === 'typing' ? 'handwriting' : 'typing';
     console.log(`🔄 Switching from ${mode} to ${newMode}`);
     setMode(newMode);
+    
+    // Notifier le parent du changement de mode
+    onModeChange(newMode);
     
     // Si passage en mode manuscrit, configurer le canvas
     if (newMode === 'handwriting') {
@@ -270,6 +276,16 @@ const HandwritingField = ({
           canvas.width = canvas.offsetWidth;
           canvas.height = canvas.offsetHeight;
           console.log('🎨 Canvas configured for handwriting mode');
+          
+          // Restaurer les données sauvegardées
+          if (savedHandwritingData) {
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            img.onload = () => {
+              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            };
+            img.src = savedHandwritingData;
+          }
         }
       }, 100);
     }
