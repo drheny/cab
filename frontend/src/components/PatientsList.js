@@ -27,6 +27,8 @@ const PatientsListComponent = ({ user }) => {
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  // NOUVEAUX ÉTATS POUR LA PAGINATION PERSONNALISÉE
+  const [patientsPerPage, setPatientsPerPage] = useState(5); // Commencer par 5
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [showPatientModal, setShowPatientModal] = useState(false);
