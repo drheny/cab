@@ -339,11 +339,15 @@ const HandwritingField = ({
                 type="button"
                 onClick={refineHandwriting}
                 disabled={isProcessing}
-                className="flex items-center space-x-1 px-2 py-1 bg-purple-100 text-purple-700 rounded text-sm hover:bg-purple-200 transition-all disabled:opacity-50"
-                title="Auto-raffinement IA"
+                className={`flex items-center space-x-1 px-2 py-1 rounded text-sm transition-all ${
+                  isProcessing 
+                    ? 'bg-purple-200 text-purple-600 cursor-not-allowed' 
+                    : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                }`}
+                title="Auto-raffinement IA avec OCR"
               >
-                <Wand2 className="w-4 h-4" />
-                {isProcessing ? 'Traitement...' : 'Raffiner'}
+                <Wand2 className={`w-4 h-4 ${isProcessing ? 'animate-spin' : ''}`} />
+                {isProcessing ? 'IA traite...' : 'Raffiner IA'}
               </button>
             )}
           </div>
