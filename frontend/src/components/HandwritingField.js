@@ -228,8 +228,21 @@ const HandwritingField = ({
 
   return (
     <div className="relative">
-      {/* Toggle Mode */}
-      <div className="flex justify-between items-center mb-2">
+      {/* Toggle Mode - Wrapped in non-submitting container */}
+      <div 
+        className="flex justify-between items-center mb-2"
+        onClick={(e) => {
+          // Prevent any bubbling from this container
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+        onSubmit={(e) => {
+          // Extra safety - prevent submit events on this container
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }}
+      >
         <div className="flex space-x-2">
           <button
             type="button"
