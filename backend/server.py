@@ -13,7 +13,6 @@ import asyncio
 import bcrypt
 import jwt
 from emergentintegrations.llm.chat import LlmChat, UserMessage
-from emergentintegrations import GeminiAIService
 
 # Load environment variables
 load_dotenv()
