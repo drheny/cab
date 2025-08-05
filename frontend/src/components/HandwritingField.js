@@ -126,7 +126,10 @@ const HandwritingField = ({
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   };
 
-  const toggleMode = () => {
+  const toggleMode = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     const newMode = mode === 'typing' ? 'handwriting' : 'typing';
     setMode(newMode);
     
