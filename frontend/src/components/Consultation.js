@@ -98,6 +98,11 @@ const Consultation = ({ user }) => {
     pc: '',
     diagnostic: '',
     observation_clinique: '',
+    // NOUVELLES DONNÉES POUR ÉCRITURE MANUSCRITE
+    diagnostic_handwriting_data: '',
+    diagnostic_mode: 'typing',
+    observation_handwriting_data: '',
+    observation_mode: 'typing',
     relance_telephonique: false,
     date_relance: '',
     duree: 0,
