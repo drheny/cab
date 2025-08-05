@@ -558,6 +558,11 @@ const Consultation = ({ user }) => {
       pc: consultation.pc || '',
       diagnostic: consultation.diagnostic || consultation.traitement || '', // fallback ancien format
       observation_clinique: consultation.observation_clinique || consultation.observations || '', // fallback ancien format
+      // DONNÉES D'ÉCRITURE MANUSCRITE
+      diagnostic_handwriting_data: consultation.diagnostic_handwriting_data || '',
+      diagnostic_mode: consultation.diagnostic_mode || 'typing',
+      observation_handwriting_data: consultation.observation_handwriting_data || '',
+      observation_mode: consultation.observation_mode || 'typing',
       relance_telephonique: consultation.relance_date ? true : false,
       date_relance: consultation.relance_date || '',
       duree: consultation.duree || 0,
