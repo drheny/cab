@@ -718,6 +718,9 @@ class BackendTester:
         # Test 8: Admin Users Endpoint
         self.test_admin_users_endpoint()
         
+        # Test 9: Handwriting Optimization Feature (NEW)
+        self.test_handwriting_optimization()
+        
         return self.generate_report()
     
     def generate_report(self):
