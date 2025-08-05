@@ -638,45 +638,106 @@ const PatientsListComponent = ({ user }) => {
         {patientsListContent}
       </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between mt-6">
-          <div className="text-sm text-gray-700">
-            Affichage {((currentPage - 1) * 10) + 1} à {Math.min(currentPage * 10, totalCount)} sur {totalCount} patients
+      {/* Pagination et contrôles d'affichage */}
+      <div className="mt-6 space-y-4">
+        {/* Contrôles du nombre d'entrées par page */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <span className="text-sm text-gray-700">Afficher :</span>
+            <div className="flex items-center space-x-2">
+              {[5, 10, 25, 50].map(limit => (
+                <button
+                  key={limit}
+                  onClick={() => changePatientsPerPage(limit)}
+                  className={`px-3 py-1 text-sm rounded-lg border transition-colors ${
+                    patientsPerPage === limit
+                      ? 'bg-primary-500 text-white border-primary-500'
+                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  {limit}
+                </button>
+              ))}
+              <button
+                onClick={() => changePatientsPerPage(totalCount)}
+                className={`px-3 py-1 text-sm rounded-lg border transition-colors ${
+                  patientsPerPage === totalCount
+                    ? 'bg-primary-500 text-white border-primary-500'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                }`}
+                disabled={totalCount === 0}
+              >
+                Tout
+              </button>
+            </div>
+            <span className="text-sm text-gray-500">patients par page</span>
           </div>
-          <div className="flex items-center space-x-2">
+          
+          <div className="text-sm text-gray-700">
+            Affichage {((currentPage - 1) * patientsPerPage) + 1} à {Math.min(currentPage * patientsPerPage, totalCount)} sur {totalCount} patients
+          </div>
+        </div>
+
+        {/* Navigation des pages */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center space-x-2">
             <button
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              onClick={() => {
+                const newPage = Math.max(1, currentPage - 1);
+                setCurrentPage(newPage);
+                fetchPatients(newPage, debouncedSearchTerm, patientsPerPage);
+              }}
               disabled={currentPage === 1}
               className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <div className="flex items-center space-x-1">
-              {[...Array(totalPages)].map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentPage(index + 1)}
-                  className={`px-3 py-1 rounded-lg text-sm ${
-                    currentPage === index + 1
-                      ? 'bg-primary-500 text-white'
-                      : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  {index + 1}
-                </button>
-              ))}
+              {[...Array(Math.min(totalPages, 10))].map((_, index) => {
+                // Show first 3, last 3, and current page with ellipsis
+                const pageNum = index + 1;
+                const showPage = pageNum <= 3 || pageNum > totalPages - 3 || 
+                                Math.abs(pageNum - currentPage) <= 1;
+                
+                if (!showPage) {
+                  if (pageNum === 4 || pageNum === totalPages - 3) {
+                    return <span key={index} className="px-2 py-1 text-gray-400">...</span>;
+                  }
+                  return null;
+                }
+                
+                return (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      setCurrentPage(pageNum);
+                      fetchPatients(pageNum, debouncedSearchTerm, patientsPerPage);
+                    }}
+                    className={`px-3 py-1 rounded-lg text-sm ${
+                      currentPage === pageNum
+                        ? 'bg-primary-500 text-white'
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
             </div>
             <button
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              onClick={() => {
+                const newPage = Math.min(totalPages, currentPage + 1);
+                setCurrentPage(newPage);
+                fetchPatients(newPage, debouncedSearchTerm, patientsPerPage);
+              }}
               disabled={currentPage === totalPages}
               className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Add/Edit Patient Modal */}
       {showModal && (
