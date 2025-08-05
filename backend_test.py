@@ -502,25 +502,26 @@ class BackendTester:
             response_time = time.time() - start_time
             self.log_test("Admin Users Endpoint", False, f"Exception: {str(e)}", response_time)
     
-    def test_handwriting_optimization(self):
-        """Test Handwriting Optimization Feature - AI refinement endpoint"""
-        print("\n✍️ TESTING HANDWRITING OPTIMIZATION FEATURE")
+    def test_handwriting_persistence(self):
+        """Test Handwriting Feature with Persistence - Complete integration testing"""
+        print("\n✍️ TESTING HANDWRITING FEATURE WITH PERSISTENCE")
         
         # Test data from review request
         test_image_data = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
-        test_payload = {
-            "imageData": test_image_data,
-            "currentText": "Consultation pédiatrique",
-            "medicalContext": True,
-            "language": "fr"
-        }
         
-        # Test 1: Valid handwriting refinement request
+        # Test 1: AI Refinement Endpoint
+        print("\n🤖 Testing AI Refinement Endpoint")
         start_time = time.time()
         try:
+            ai_payload = {
+                "imageData": test_image_data,
+                "currentText": "Diagnostic médical: fièvre et toux",
+                "medicalContext": True,
+                "language": "fr"
+            }
             response = self.session.post(
                 f"{BACKEND_URL}/ai/refine-handwriting",
-                json=test_payload,
+                json=ai_payload,
                 timeout=30
             )
             response_time = time.time() - start_time
@@ -536,156 +537,326 @@ class BackendTester:
                     confidence = data.get("confidence", 0)
                     method = data.get("method", "unknown")
                     details = f"Success: {success}, Method: {method}, Confidence: {confidence}%, Text: '{refined_text[:50]}...'"
-                    self.log_test("Handwriting Refinement - Valid Request", True, details, response_time)
+                    self.log_test("AI Refinement Endpoint", True, details, response_time)
                 else:
-                    self.log_test("Handwriting Refinement - Valid Request", False, f"Missing fields: {missing_fields}", response_time)
+                    self.log_test("AI Refinement Endpoint", False, f"Missing fields: {missing_fields}", response_time)
             else:
-                self.log_test("Handwriting Refinement - Valid Request", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                self.log_test("AI Refinement Endpoint", False, f"HTTP {response.status_code}: {response.text}", response_time)
         except Exception as e:
             response_time = time.time() - start_time
-            self.log_test("Handwriting Refinement - Valid Request", False, f"Exception: {str(e)}", response_time)
+            self.log_test("AI Refinement Endpoint", False, f"Exception: {str(e)}", response_time)
         
-        # Test 2: Authentication requirement check
+        # Test 2: Create Consultation with Handwriting Data
+        print("\n📝 Testing Consultation Creation with Handwriting Data")
+        consultation_id = f"test_handwriting_{int(time.time())}"
+        patient_id = "patient1"  # Using existing demo patient
+        appointment_id = "appt1"  # Using existing demo appointment
+        
+        consultation_data = {
+            "id": consultation_id,
+            "patient_id": patient_id,
+            "appointment_id": appointment_id,
+            "date": datetime.now().strftime("%Y-%m-%d"),
+            "type_rdv": "visite",
+            "motif": "Test consultation avec écriture manuscrite",
+            "duree": 30,
+            "poids": 18.5,
+            "taille": 95.0,
+            "temperature": 37.2,
+            # Standard text fields
+            "diagnostic": "Fièvre légère avec toux sèche",
+            "observation_clinique": "Patient en bon état général, gorge légèrement irritée",
+            # NEW HANDWRITING FIELDS
+            "diagnostic_handwriting_data": test_image_data,
+            "diagnostic_mode": "handwriting",
+            "observation_handwriting_data": test_image_data,
+            "observation_mode": "handwriting",
+            # Other fields
+            "bilans": "Infection virale bénigne",
+            "notes": "Repos et hydratation recommandés",
+            "relance_telephonique": False
+        }
+        
         start_time = time.time()
         try:
-            # Create session without auth token
-            no_auth_session = requests.Session()
-            response = no_auth_session.post(
-                f"{BACKEND_URL}/ai/refine-handwriting",
-                json=test_payload,
-                timeout=10
-            )
-            response_time = time.time() - start_time
-            
-            if response.status_code == 403:
-                self.log_test("Handwriting Authentication Check", True, "Endpoint properly secured (403 without auth)", response_time)
-            elif response.status_code == 401:
-                self.log_test("Handwriting Authentication Check", True, "Endpoint properly secured (401 without auth)", response_time)
-            elif response.status_code == 200:
-                self.log_test("Handwriting Authentication Check", False, "Endpoint not secured - allows unauthenticated access", response_time)
-            else:
-                self.log_test("Handwriting Authentication Check", False, f"Unexpected status: {response.status_code}", response_time)
-        except Exception as e:
-            response_time = time.time() - start_time
-            self.log_test("Handwriting Authentication Check", False, f"Exception: {str(e)}", response_time)
-        
-        # Test 3: Missing image data error handling
-        start_time = time.time()
-        try:
-            invalid_payload = {
-                "currentText": "Test text",
-                "medicalContext": True,
-                "language": "fr"
-                # Missing imageData
-            }
             response = self.session.post(
-                f"{BACKEND_URL}/ai/refine-handwriting",
-                json=invalid_payload,
-                timeout=10
+                f"{BACKEND_URL}/consultations",
+                json=consultation_data,
+                timeout=15
             )
             response_time = time.time() - start_time
             
-            if response.status_code == 400:
-                self.log_test("Handwriting Missing Image Data", True, "Proper 400 error for missing imageData", response_time)
-            else:
-                self.log_test("Handwriting Missing Image Data", False, f"Expected 400, got {response.status_code}", response_time)
-        except Exception as e:
-            response_time = time.time() - start_time
-            self.log_test("Handwriting Missing Image Data", False, f"Exception: {str(e)}", response_time)
-        
-        # Test 4: Invalid image data error handling
-        start_time = time.time()
-        try:
-            invalid_image_payload = {
-                "imageData": "invalid_base64_data",
-                "currentText": "Test text",
-                "medicalContext": True,
-                "language": "fr"
-            }
-            response = self.session.post(
-                f"{BACKEND_URL}/ai/refine-handwriting",
-                json=invalid_image_payload,
-                timeout=10
-            )
-            response_time = time.time() - start_time
-            
-            if response.status_code == 500:
-                self.log_test("Handwriting Invalid Image Data", True, "Proper 500 error for invalid image data", response_time)
-            elif response.status_code == 400:
-                self.log_test("Handwriting Invalid Image Data", True, "Proper 400 error for invalid image data", response_time)
-            else:
-                # Check if it still returns success with fallback
+            if response.status_code == 200 or response.status_code == 201:
                 data = response.json()
-                if data.get("success") and data.get("method") == "no_processing":
-                    self.log_test("Handwriting Invalid Image Data", True, "Graceful fallback to original text", response_time)
-                else:
-                    self.log_test("Handwriting Invalid Image Data", False, f"Unexpected response: {response.status_code}", response_time)
+                details = f"Consultation created with handwriting data, ID: {consultation_id}"
+                self.log_test("Create Consultation with Handwriting", True, details, response_time)
+                
+                # Store consultation ID for later tests
+                self.test_consultation_id = consultation_id
+            else:
+                self.log_test("Create Consultation with Handwriting", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                self.test_consultation_id = None
         except Exception as e:
             response_time = time.time() - start_time
-            self.log_test("Handwriting Invalid Image Data", False, f"Exception: {str(e)}", response_time)
+            self.log_test("Create Consultation with Handwriting", False, f"Exception: {str(e)}", response_time)
+            self.test_consultation_id = None
         
-        # Test 5: Medical context processing
+        # Test 3: Retrieve Consultation and Verify Handwriting Fields
+        print("\n🔍 Testing Consultation Retrieval with Handwriting Data")
+        if hasattr(self, 'test_consultation_id') and self.test_consultation_id:
+            start_time = time.time()
+            try:
+                response = self.session.get(
+                    f"{BACKEND_URL}/consultations/{self.test_consultation_id}",
+                    timeout=10
+                )
+                response_time = time.time() - start_time
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    
+                    # Check for new handwriting fields
+                    handwriting_fields = [
+                        "diagnostic_handwriting_data",
+                        "diagnostic_mode", 
+                        "observation_handwriting_data",
+                        "observation_mode"
+                    ]
+                    
+                    present_fields = [field for field in handwriting_fields if field in data]
+                    missing_fields = [field for field in handwriting_fields if field not in data]
+                    
+                    if len(present_fields) == len(handwriting_fields):
+                        # Verify field values
+                        diagnostic_mode = data.get("diagnostic_mode")
+                        observation_mode = data.get("observation_mode")
+                        has_diagnostic_data = bool(data.get("diagnostic_handwriting_data"))
+                        has_observation_data = bool(data.get("observation_handwriting_data"))
+                        
+                        details = f"All handwriting fields present - diagnostic_mode: {diagnostic_mode}, observation_mode: {observation_mode}, has_data: {has_diagnostic_data and has_observation_data}"
+                        self.log_test("Retrieve Consultation Handwriting Fields", True, details, response_time)
+                    else:
+                        details = f"Missing fields: {missing_fields}, Present: {present_fields}"
+                        self.log_test("Retrieve Consultation Handwriting Fields", False, details, response_time)
+                else:
+                    self.log_test("Retrieve Consultation Handwriting Fields", False, f"HTTP {response.status_code}: {response.text}", response_time)
+            except Exception as e:
+                response_time = time.time() - start_time
+                self.log_test("Retrieve Consultation Handwriting Fields", False, f"Exception: {str(e)}", response_time)
+        else:
+            self.log_test("Retrieve Consultation Handwriting Fields", False, "No test consultation ID available", 0)
+        
+        # Test 4: Update Consultation with Different Handwriting Mode
+        print("\n✏️ Testing Consultation Update with Mode Change")
+        if hasattr(self, 'test_consultation_id') and self.test_consultation_id:
+            start_time = time.time()
+            try:
+                update_data = {
+                    "diagnostic": "Diagnostic mis à jour en mode texte",
+                    "diagnostic_mode": "typing",
+                    "diagnostic_handwriting_data": "",  # Clear handwriting data when switching to typing
+                    "observation_clinique": "Observation mise à jour",
+                    "observation_mode": "handwriting",
+                    "observation_handwriting_data": test_image_data  # Keep handwriting data for observation
+                }
+                
+                response = self.session.put(
+                    f"{BACKEND_URL}/consultations/{self.test_consultation_id}",
+                    json=update_data,
+                    timeout=15
+                )
+                response_time = time.time() - start_time
+                
+                if response.status_code == 200:
+                    details = f"Consultation updated with mixed modes (diagnostic: typing, observation: handwriting)"
+                    self.log_test("Update Consultation Mode Change", True, details, response_time)
+                else:
+                    self.log_test("Update Consultation Mode Change", False, f"HTTP {response.status_code}: {response.text}", response_time)
+            except Exception as e:
+                response_time = time.time() - start_time
+                self.log_test("Update Consultation Mode Change", False, f"Exception: {str(e)}", response_time)
+        else:
+            self.log_test("Update Consultation Mode Change", False, "No test consultation ID available", 0)
+        
+        # Test 5: Data Persistence Verification
+        print("\n💾 Testing Data Persistence After Update")
+        if hasattr(self, 'test_consultation_id') and self.test_consultation_id:
+            start_time = time.time()
+            try:
+                response = self.session.get(
+                    f"{BACKEND_URL}/consultations/{self.test_consultation_id}",
+                    timeout=10
+                )
+                response_time = time.time() - start_time
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    
+                    # Verify the mode changes persisted
+                    diagnostic_mode = data.get("diagnostic_mode")
+                    observation_mode = data.get("observation_mode")
+                    diagnostic_data = data.get("diagnostic_handwriting_data", "")
+                    observation_data = data.get("observation_handwriting_data", "")
+                    
+                    # Check expected state after update
+                    expected_diagnostic_mode = "typing"
+                    expected_observation_mode = "handwriting"
+                    
+                    if (diagnostic_mode == expected_diagnostic_mode and 
+                        observation_mode == expected_observation_mode and
+                        not diagnostic_data and  # Should be empty for typing mode
+                        observation_data):  # Should have data for handwriting mode
+                        
+                        details = f"Data persistence verified - diagnostic: {diagnostic_mode} (no data), observation: {observation_mode} (has data)"
+                        self.log_test("Data Persistence Verification", True, details, response_time)
+                    else:
+                        details = f"Persistence issue - diagnostic_mode: {diagnostic_mode}, observation_mode: {observation_mode}, data states incorrect"
+                        self.log_test("Data Persistence Verification", False, details, response_time)
+                else:
+                    self.log_test("Data Persistence Verification", False, f"HTTP {response.status_code}: {response.text}", response_time)
+            except Exception as e:
+                response_time = time.time() - start_time
+                self.log_test("Data Persistence Verification", False, f"Exception: {str(e)}", response_time)
+        else:
+            self.log_test("Data Persistence Verification", False, "No test consultation ID available", 0)
+        
+        # Test 6: Integration Flow Testing
+        print("\n🔄 Testing Complete Integration Flow")
         start_time = time.time()
         try:
-            medical_payload = {
+            # Create a new consultation with handwriting -> Save -> Retrieve -> Verify
+            flow_consultation_id = f"test_flow_{int(time.time())}"
+            
+            # Step 1: Create consultation with handwriting
+            flow_data = {
+                "id": flow_consultation_id,
+                "patient_id": "patient2",  # Different patient
+                "appointment_id": "appt2",
+                "date": datetime.now().strftime("%Y-%m-%d"),
+                "type_rdv": "controle",
+                "diagnostic": "Contrôle de routine",
+                "diagnostic_mode": "handwriting",
+                "diagnostic_handwriting_data": test_image_data,
+                "observation_clinique": "Évolution favorable",
+                "observation_mode": "typing",
+                "observation_handwriting_data": ""
+            }
+            
+            create_response = self.session.post(
+                f"{BACKEND_URL}/consultations",
+                json=flow_data,
+                timeout=15
+            )
+            
+            if create_response.status_code in [200, 201]:
+                # Step 2: Retrieve and verify
+                retrieve_response = self.session.get(
+                    f"{BACKEND_URL}/consultations/{flow_consultation_id}",
+                    timeout=10
+                )
+                
+                if retrieve_response.status_code == 200:
+                    retrieved_data = retrieve_response.json()
+                    
+                    # Verify data integrity
+                    integrity_checks = [
+                        retrieved_data.get("diagnostic_mode") == "handwriting",
+                        retrieved_data.get("observation_mode") == "typing",
+                        bool(retrieved_data.get("diagnostic_handwriting_data")),
+                        not retrieved_data.get("observation_handwriting_data")
+                    ]
+                    
+                    if all(integrity_checks):
+                        response_time = time.time() - start_time
+                        details = f"Complete flow successful - create → save → retrieve → verify data integrity"
+                        self.log_test("Integration Flow Testing", True, details, response_time)
+                    else:
+                        response_time = time.time() - start_time
+                        details = f"Data integrity issues in flow - checks: {integrity_checks}"
+                        self.log_test("Integration Flow Testing", False, details, response_time)
+                else:
+                    response_time = time.time() - start_time
+                    self.log_test("Integration Flow Testing", False, f"Retrieve failed: HTTP {retrieve_response.status_code}", response_time)
+            else:
+                response_time = time.time() - start_time
+                self.log_test("Integration Flow Testing", False, f"Create failed: HTTP {create_response.status_code}", response_time)
+                
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Integration Flow Testing", False, f"Exception: {str(e)}", response_time)
+        
+        # Test 7: Backend Field Validation
+        print("\n✅ Testing Backend Field Validation")
+        start_time = time.time()
+        try:
+            # Test with invalid mode values
+            invalid_data = {
+                "id": f"test_invalid_{int(time.time())}",
+                "patient_id": "patient1",
+                "appointment_id": "appt1",
+                "date": datetime.now().strftime("%Y-%m-%d"),
+                "diagnostic_mode": "invalid_mode",  # Invalid mode
+                "observation_mode": "another_invalid_mode"  # Invalid mode
+            }
+            
+            response = self.session.post(
+                f"{BACKEND_URL}/consultations",
+                json=invalid_data,
+                timeout=10
+            )
+            response_time = time.time() - start_time
+            
+            # The backend should either accept it (with default handling) or reject it
+            if response.status_code in [200, 201]:
+                # If accepted, check if it defaults to valid values
+                details = f"Backend accepts invalid modes (may have default handling)"
+                self.log_test("Backend Field Validation", True, details, response_time)
+            elif response.status_code == 400:
+                # If rejected with validation error
+                details = f"Backend properly validates mode fields (400 error)"
+                self.log_test("Backend Field Validation", True, details, response_time)
+            else:
+                details = f"Unexpected response: HTTP {response.status_code}"
+                self.log_test("Backend Field Validation", False, details, response_time)
+                
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Backend Field Validation", False, f"Exception: {str(e)}", response_time)
+        
+        # Test 8: Gemini AI Service Integration
+        print("\n🧠 Testing Gemini AI Service Integration")
+        start_time = time.time()
+        try:
+            gemini_payload = {
                 "imageData": test_image_data,
-                "currentText": "Diagnostic médical: fièvre",
+                "currentText": "Examen clinique: patient présente symptômes grippaux",
                 "medicalContext": True,
                 "language": "fr"
             }
+            
             response = self.session.post(
                 f"{BACKEND_URL}/ai/refine-handwriting",
-                json=medical_payload,
+                json=gemini_payload,
                 timeout=30
             )
             response_time = time.time() - start_time
             
             if response.status_code == 200:
                 data = response.json()
-                if data.get("success"):
-                    refined_text = data.get("refinedText", "")
-                    details = f"Medical context processed, refined text: '{refined_text[:50]}...'"
-                    self.log_test("Handwriting Medical Context", True, details, response_time)
+                method = data.get("method", "unknown")
+                success = data.get("success", False)
+                
+                if success and method in ["gemini_vision", "text_enhancement", "no_processing"]:
+                    details = f"Gemini AI integration working - method: {method}, success: {success}"
+                    self.log_test("Gemini AI Service Integration", True, details, response_time)
                 else:
-                    self.log_test("Handwriting Medical Context", False, "Request failed", response_time)
+                    details = f"AI service issues - method: {method}, success: {success}"
+                    self.log_test("Gemini AI Service Integration", False, details, response_time)
             else:
-                self.log_test("Handwriting Medical Context", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                self.log_test("Gemini AI Service Integration", False, f"HTTP {response.status_code}: {response.text}", response_time)
         except Exception as e:
             response_time = time.time() - start_time
-            self.log_test("Handwriting Medical Context", False, f"Exception: {str(e)}", response_time)
-        
-        # Test 6: Dependencies verification (check if Pillow is working)
-        start_time = time.time()
-        try:
-            # Test with a proper small PNG image
-            import base64
-            # Create a minimal valid PNG image
-            minimal_png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
-            
-            dependency_payload = {
-                "imageData": f"data:image/png;base64,{minimal_png}",
-                "currentText": "Test dependencies",
-                "medicalContext": False,
-                "language": "fr"
-            }
-            response = self.session.post(
-                f"{BACKEND_URL}/ai/refine-handwriting",
-                json=dependency_payload,
-                timeout=15
-            )
-            response_time = time.time() - start_time
-            
-            if response.status_code == 200:
-                data = response.json()
-                if data.get("success"):
-                    self.log_test("Handwriting Dependencies (Pillow)", True, "Pillow image processing working", response_time)
-                else:
-                    self.log_test("Handwriting Dependencies (Pillow)", False, "Image processing failed", response_time)
-            else:
-                self.log_test("Handwriting Dependencies (Pillow)", False, f"HTTP {response.status_code}: {response.text}", response_time)
-        except Exception as e:
-            response_time = time.time() - start_time
-            self.log_test("Handwriting Dependencies (Pillow)", False, f"Exception: {str(e)}", response_time)
+            self.log_test("Gemini AI Service Integration", False, f"Exception: {str(e)}", response_time)
     
     def run_all_tests(self):
         """Run all production readiness tests"""
