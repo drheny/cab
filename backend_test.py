@@ -502,6 +502,191 @@ class BackendTester:
             response_time = time.time() - start_time
             self.log_test("Admin Users Endpoint", False, f"Exception: {str(e)}", response_time)
     
+    def test_handwriting_optimization(self):
+        """Test Handwriting Optimization Feature - AI refinement endpoint"""
+        print("\n✍️ TESTING HANDWRITING OPTIMIZATION FEATURE")
+        
+        # Test data from review request
+        test_image_data = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+        test_payload = {
+            "imageData": test_image_data,
+            "currentText": "Consultation pédiatrique",
+            "medicalContext": True,
+            "language": "fr"
+        }
+        
+        # Test 1: Valid handwriting refinement request
+        start_time = time.time()
+        try:
+            response = self.session.post(
+                f"{BACKEND_URL}/ai/refine-handwriting",
+                json=test_payload,
+                timeout=30
+            )
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["success", "refinedText", "extractedText", "confidence"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if not missing_fields:
+                    success = data.get("success", False)
+                    refined_text = data.get("refinedText", "")
+                    confidence = data.get("confidence", 0)
+                    method = data.get("method", "unknown")
+                    details = f"Success: {success}, Method: {method}, Confidence: {confidence}%, Text: '{refined_text[:50]}...'"
+                    self.log_test("Handwriting Refinement - Valid Request", True, details, response_time)
+                else:
+                    self.log_test("Handwriting Refinement - Valid Request", False, f"Missing fields: {missing_fields}", response_time)
+            else:
+                self.log_test("Handwriting Refinement - Valid Request", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Handwriting Refinement - Valid Request", False, f"Exception: {str(e)}", response_time)
+        
+        # Test 2: Authentication requirement check
+        start_time = time.time()
+        try:
+            # Create session without auth token
+            no_auth_session = requests.Session()
+            response = no_auth_session.post(
+                f"{BACKEND_URL}/ai/refine-handwriting",
+                json=test_payload,
+                timeout=10
+            )
+            response_time = time.time() - start_time
+            
+            if response.status_code == 403:
+                self.log_test("Handwriting Authentication Check", True, "Endpoint properly secured (403 without auth)", response_time)
+            elif response.status_code == 401:
+                self.log_test("Handwriting Authentication Check", True, "Endpoint properly secured (401 without auth)", response_time)
+            elif response.status_code == 200:
+                self.log_test("Handwriting Authentication Check", False, "Endpoint not secured - allows unauthenticated access", response_time)
+            else:
+                self.log_test("Handwriting Authentication Check", False, f"Unexpected status: {response.status_code}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Handwriting Authentication Check", False, f"Exception: {str(e)}", response_time)
+        
+        # Test 3: Missing image data error handling
+        start_time = time.time()
+        try:
+            invalid_payload = {
+                "currentText": "Test text",
+                "medicalContext": True,
+                "language": "fr"
+                # Missing imageData
+            }
+            response = self.session.post(
+                f"{BACKEND_URL}/ai/refine-handwriting",
+                json=invalid_payload,
+                timeout=10
+            )
+            response_time = time.time() - start_time
+            
+            if response.status_code == 400:
+                self.log_test("Handwriting Missing Image Data", True, "Proper 400 error for missing imageData", response_time)
+            else:
+                self.log_test("Handwriting Missing Image Data", False, f"Expected 400, got {response.status_code}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Handwriting Missing Image Data", False, f"Exception: {str(e)}", response_time)
+        
+        # Test 4: Invalid image data error handling
+        start_time = time.time()
+        try:
+            invalid_image_payload = {
+                "imageData": "invalid_base64_data",
+                "currentText": "Test text",
+                "medicalContext": True,
+                "language": "fr"
+            }
+            response = self.session.post(
+                f"{BACKEND_URL}/ai/refine-handwriting",
+                json=invalid_image_payload,
+                timeout=10
+            )
+            response_time = time.time() - start_time
+            
+            if response.status_code == 500:
+                self.log_test("Handwriting Invalid Image Data", True, "Proper 500 error for invalid image data", response_time)
+            elif response.status_code == 400:
+                self.log_test("Handwriting Invalid Image Data", True, "Proper 400 error for invalid image data", response_time)
+            else:
+                # Check if it still returns success with fallback
+                data = response.json()
+                if data.get("success") and data.get("method") == "no_processing":
+                    self.log_test("Handwriting Invalid Image Data", True, "Graceful fallback to original text", response_time)
+                else:
+                    self.log_test("Handwriting Invalid Image Data", False, f"Unexpected response: {response.status_code}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Handwriting Invalid Image Data", False, f"Exception: {str(e)}", response_time)
+        
+        # Test 5: Medical context processing
+        start_time = time.time()
+        try:
+            medical_payload = {
+                "imageData": test_image_data,
+                "currentText": "Diagnostic médical: fièvre",
+                "medicalContext": True,
+                "language": "fr"
+            }
+            response = self.session.post(
+                f"{BACKEND_URL}/ai/refine-handwriting",
+                json=medical_payload,
+                timeout=30
+            )
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("success"):
+                    refined_text = data.get("refinedText", "")
+                    details = f"Medical context processed, refined text: '{refined_text[:50]}...'"
+                    self.log_test("Handwriting Medical Context", True, details, response_time)
+                else:
+                    self.log_test("Handwriting Medical Context", False, "Request failed", response_time)
+            else:
+                self.log_test("Handwriting Medical Context", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Handwriting Medical Context", False, f"Exception: {str(e)}", response_time)
+        
+        # Test 6: Dependencies verification (check if Pillow is working)
+        start_time = time.time()
+        try:
+            # Test with a proper small PNG image
+            import base64
+            # Create a minimal valid PNG image
+            minimal_png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+            
+            dependency_payload = {
+                "imageData": f"data:image/png;base64,{minimal_png}",
+                "currentText": "Test dependencies",
+                "medicalContext": False,
+                "language": "fr"
+            }
+            response = self.session.post(
+                f"{BACKEND_URL}/ai/refine-handwriting",
+                json=dependency_payload,
+                timeout=15
+            )
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("success"):
+                    self.log_test("Handwriting Dependencies (Pillow)", True, "Pillow image processing working", response_time)
+                else:
+                    self.log_test("Handwriting Dependencies (Pillow)", False, "Image processing failed", response_time)
+            else:
+                self.log_test("Handwriting Dependencies (Pillow)", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Handwriting Dependencies (Pillow)", False, f"Exception: {str(e)}", response_time)
+    
     def run_all_tests(self):
         """Run all production readiness tests"""
         print("🚀 STARTING FINAL POST-CLEANUP PRODUCTION READINESS TEST")
