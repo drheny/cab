@@ -132,6 +132,8 @@ const HandwritingField = ({
 
   const stopDrawing = () => {
     setIsDrawing(false);
+    // Sauvegarder les données du canvas après chaque trait
+    setTimeout(saveCanvasData, 100);
   };
 
   // OCR et auto-raffinement IA
