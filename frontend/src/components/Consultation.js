@@ -51,6 +51,9 @@ const Consultation = ({ user }) => {
     mode: 'create', // 'create', 'view', 'edit'
     consultationId: null
   });
+
+  // Flag pour empêcher la soumission du formulaire lors des interactions avec HandwritingField
+  const [preventFormSubmission, setPreventFormSubmission] = useState(false);
   
   // États du modal de visualisation
   const [viewModal, setViewModal] = useState({
