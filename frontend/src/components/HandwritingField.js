@@ -13,6 +13,7 @@ const HandwritingField = ({
   const [mode, setMode] = useState('typing'); // 'typing' | 'handwriting'
   const [isProcessing, setIsProcessing] = useState(false);
   const [handwritingData, setHandwritingData] = useState(null);
+  const [isErasing, setIsErasing] = useState(false); // New eraser mode
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
 
