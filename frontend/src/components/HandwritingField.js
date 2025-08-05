@@ -75,8 +75,13 @@ const HandwritingField = ({
     
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX || e.pageX) - rect.left;
-    const y = (e.clientY || e.pageY) - rect.top;
+    
+    // Gérer à la fois mouse et touch events
+    const clientX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : e.pageX);
+    const clientY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : e.pageY);
+    
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
     
     const ctx = canvas.getContext('2d');
     ctx.lineTo(x, y);
