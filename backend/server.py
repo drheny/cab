@@ -278,6 +278,11 @@ class Consultation(BaseModel):
     # Champs médicaux actuels
     diagnostic: Optional[str] = ""
     observation_clinique: Optional[str] = ""
+    # NOUVEAUX CHAMPS POUR ÉCRITURE MANUSCRITE
+    diagnostic_handwriting_data: Optional[str] = ""  # Base64 image du canvas
+    diagnostic_mode: Optional[str] = "typing"  # "typing" ou "handwriting"
+    observation_handwriting_data: Optional[str] = ""  # Base64 image du canvas
+    observation_mode: Optional[str] = "typing"  # "typing" ou "handwriting"
     bilans: Optional[str] = ""  # Kept for compatibility
     notes: Optional[str] = ""
     relance_telephonique: Optional[bool] = False
