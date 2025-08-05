@@ -1619,6 +1619,13 @@ const Consultation = ({ user }) => {
                   {/* Formulaire de consultation */}
                   <form onSubmit={(e) => {
                     e.preventDefault();
+                    
+                    // Empêcher la soumission si on est en train d'interagir avec HandwritingField
+                    if (preventFormSubmission) {
+                      console.log('🚫 Form submission prevented - HandwritingField interaction');
+                      return false;
+                    }
+                    
                     sauvegarderConsultation();
                   }}>
                     <div className="space-y-6">
