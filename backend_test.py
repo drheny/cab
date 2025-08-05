@@ -889,8 +889,8 @@ class BackendTester:
         # Test 8: Admin Users Endpoint
         self.test_admin_users_endpoint()
         
-        # Test 9: Handwriting Optimization Feature (NEW)
-        self.test_handwriting_optimization()
+        # Test 9: Handwriting Feature with Persistence (NEW)
+        self.test_handwriting_persistence()
         
         return self.generate_report()
     
