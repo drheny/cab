@@ -175,7 +175,7 @@ const PatientsListComponent = ({ user }) => {
     setShowModal(true);
   };
 
-  const fetchPatients = useCallback(async (page = 1, search = '') => {
+  const fetchPatients = useCallback(async (page = 1, search = '', limit = patientsPerPage) => {
     try {
       setSearchLoading(Boolean(search));
       
@@ -187,7 +187,7 @@ const PatientsListComponent = ({ user }) => {
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/patients`, {
         params: {
           page,
-          limit: 10,
+          limit,
           search: formattedSearch || undefined,
           _t: timestamp // Force fresh data, prevent browser caching
         }
