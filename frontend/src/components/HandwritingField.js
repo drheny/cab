@@ -101,7 +101,13 @@ const HandwritingField = ({
     e.preventDefault();
     e.stopPropagation();
     
-    if (!canvasRef.current) return;
+    // Prévenir la soumission du formulaire
+    onFormInteraction(true);
+    
+    if (!canvasRef.current) {
+      onFormInteraction(false);
+      return;
+    }
 
     setIsProcessing(true);
     try {
@@ -141,6 +147,10 @@ const HandwritingField = ({
       console.error('Handwriting refinement failed:', error);
     } finally {
       setIsProcessing(false);
+      // Désactiver la prévention après traitement
+      setTimeout(() => {
+        onFormInteraction(false);
+      }, 200);
     }
   };
 
