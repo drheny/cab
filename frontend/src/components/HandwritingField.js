@@ -178,6 +178,7 @@ const HandwritingField = ({
       <div className="flex justify-between items-center mb-2">
         <div className="flex space-x-2">
           <button
+            type="button"
             onClick={toggleMode}
             className={`flex items-center space-x-1 px-3 py-1 rounded-lg text-sm transition-all ${
               mode === 'typing' 
@@ -190,6 +191,7 @@ const HandwritingField = ({
           </button>
           
           <button
+            type="button"
             onClick={toggleMode}
             className={`flex items-center space-x-1 px-3 py-1 rounded-lg text-sm transition-all ${
               mode === 'handwriting' 
