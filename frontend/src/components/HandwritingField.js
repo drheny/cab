@@ -8,7 +8,8 @@ const HandwritingField = ({
   className = "",
   rows = 6,
   enableOCR = true,
-  medicalContext = false 
+  medicalContext = false,
+  onFormInteraction = () => {} // Callback pour contrôler la prévention des soumissions de formulaire
 }) => {
   const [mode, setMode] = useState('typing'); // 'typing' | 'handwriting'
   const [isProcessing, setIsProcessing] = useState(false);
