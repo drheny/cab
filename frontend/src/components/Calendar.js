@@ -1025,7 +1025,23 @@ const Calendar = ({ user }) => {
       {/* List View - Workflow Optimisé - Sections réorganisées */}
       {viewMode === 'list' && (
         <div className="space-y-6">
-          {/* 1. Salle d'attente (en haut) */}
+          {/* 1. RDV Programmés */}
+          <WorkflowSection
+            title="📅 RDV Programmés"
+            appointments={groupedAppointments.absent}
+            sectionType="programme"
+            onStatusUpdate={handleStatusUpdate}
+            onTypeToggle={handleTypeToggle}
+            onPaymentUpdate={handlePaymentUpdate}
+            onEdit={openModal}
+            onDelete={handleDeleteAppointment}
+            onViewPatient={viewPatientDetails}
+            onOpenPaymentModal={handleOpenPaymentModal}
+            onWhatsApp={openWhatsAppModal}
+            user={user}
+          />
+          
+          {/* 2. Salle d'attente */}
           <WorkflowSection
             title="🟢 Salle d'attente"
             appointments={groupedAppointments.attente}
@@ -1044,40 +1060,7 @@ const Calendar = ({ user }) => {
             user={user}
           />
           
-          {/* 2. RDV Programmés */}
-          <WorkflowSection
-            title="📅 RDV Programmés"
-            appointments={groupedAppointments.absent}
-            sectionType="programme"
-            onStatusUpdate={handleStatusUpdate}
-            onTypeToggle={handleTypeToggle}
-            onPaymentUpdate={handlePaymentUpdate}
-            onEdit={openModal}
-            onDelete={handleDeleteAppointment}
-            onViewPatient={viewPatientDetails}
-            onOpenPaymentModal={handleOpenPaymentModal}
-            onWhatsApp={openWhatsAppModal}
-            user={user}
-          />
-          
-          {/* 3. En retard */}
-          <WorkflowSection
-            title="🟠 En retard"
-            appointments={groupedAppointments.retard}
-            sectionType="retard"
-            onStatusUpdate={handleStatusUpdate}
-            onTypeToggle={handleTypeToggle}
-            onPaymentUpdate={handlePaymentUpdate}
-            onStartConsultation={handleStartConsultation}
-            onEdit={openModal}
-            onDelete={handleDeleteAppointment}
-            onViewPatient={viewPatientDetails}
-            onOpenPaymentModal={handleOpenPaymentModal}
-            onWhatsApp={openWhatsAppModal}
-            user={user}
-          />
-          
-          {/* 4. En consultation */}
+          {/* 3. En consultation */}
           <WorkflowSection
             title="🔵 En consultation"
             appointments={groupedAppointments.en_cours}
@@ -1095,7 +1078,7 @@ const Calendar = ({ user }) => {
             user={user}
           />
           
-          {/* 5. Terminé (en bas) */}
+          {/* 4. Terminé */}
           <WorkflowSection
             title="✅ Terminé"
             appointments={groupedAppointments.termine}
@@ -1104,11 +1087,29 @@ const Calendar = ({ user }) => {
             onTypeToggle={handleTypeToggle}
             onPaymentUpdate={handlePaymentUpdate}
             onEdit={openModal}
+            onEditConsultation={ouvrirModalConsultation}
             onDelete={handleDeleteAppointment}
             onViewPatient={viewPatientDetails}
             onOpenPaymentModal={handleOpenPaymentModal}
             onWhatsApp={openWhatsAppModal}
             isCompleted={true}
+            user={user}
+          />
+          
+          {/* 5. En retard */}
+          <WorkflowSection
+            title="🟠 En retard"
+            appointments={groupedAppointments.retard}
+            sectionType="retard"
+            onStatusUpdate={handleStatusUpdate}
+            onTypeToggle={handleTypeToggle}
+            onPaymentUpdate={handlePaymentUpdate}
+            onStartConsultation={handleStartConsultation}
+            onEdit={openModal}
+            onDelete={handleDeleteAppointment}
+            onViewPatient={viewPatientDetails}
+            onOpenPaymentModal={handleOpenPaymentModal}
+            onWhatsApp={openWhatsAppModal}
             user={user}
           />
           
