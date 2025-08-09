@@ -872,15 +872,15 @@ class BackendTester:
         print("\n" + "=" * 80)
         
         if failed_tests == 0:
-            print("🎉 ALL TESTS PASSED - SYSTEM IS PRODUCTION READY!")
-            print("✅ Post-cleanup verification successful")
-            print("✅ All critical functionality working correctly")
-            print("✅ Performance within acceptable limits")
-            print("✅ Ready for deployment")
+            print("🎉 ALL TESTS PASSED - CALENDAR AND PAYMENT FUNCTIONALITY WORKING!")
+            print("✅ Calendar sections order verification successful")
+            print("✅ Payment toggle logic working correctly")
+            print("✅ Backend payment API functioning properly")
+            print("✅ All specific review requirements met")
         else:
             print("⚠️  SOME TESTS FAILED - REVIEW REQUIRED")
-            print("❌ Post-cleanup verification found issues")
-            print("🔧 Fix failing tests before production deployment")
+            print("❌ Calendar and payment functionality issues found")
+            print("🔧 Fix failing tests before deployment")
         
         return {
             "total_tests": total_tests,
