@@ -81,7 +81,8 @@ const PaymentModal = ({
       ...prev,
       type_rdv: newType,
       montant: newType === 'visite' ? 65 : 0, // Auto-adjust amount
-      paye: newType === 'controle' ? true : prev.paye // Contrôles are automatically paid (free)
+      paye: newType === 'controle' ? false : prev.paye, // Contrôles are not "paid" - they are free
+      gratuit: newType === 'controle' ? true : false // Mark contrôles as free/gratuit
     }));
   };
 
