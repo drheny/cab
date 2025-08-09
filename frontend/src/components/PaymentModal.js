@@ -71,7 +71,8 @@ const PaymentModal = ({
         type_paiement: 'espece', // Toujours espèces
         assure: appointment.assure || false,
         notes: '',
-        type_rdv: appointment.type_rdv || 'visite' // Initialize with current type
+        type_rdv: appointment.type_rdv || 'visite', // Initialize with current type
+        gratuit: appointment.type_rdv === 'controle' // Mark contrôles as free
       });
     }
   }, [isOpen, appointment]);
