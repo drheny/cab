@@ -15,7 +15,7 @@ load_dotenv('/app/frontend/.env')
 class CheckUsersDB:
     def __init__(self):
         # Use the correct backend URL from environment
-        backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://ae9700da-fec8-4e1e-ab51-a779f23a5093.preview.emergentagent.com')
+        backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://69e517e2-0a64-4c23-ba42-4956319035e9.preview.emergentagent.com')
         self.base_url = backend_url
         print(f"🔗 Checking users database at: {self.base_url}")
         
