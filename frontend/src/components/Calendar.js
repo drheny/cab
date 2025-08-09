@@ -1914,6 +1914,7 @@ const WorkflowSection = ({
   onOpenConsultation,
   onRoomAssignment,
   onEdit, 
+  onEditConsultation,
   onDelete, 
   onViewPatient,
   onPatientReorder,
