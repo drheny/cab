@@ -2270,7 +2270,10 @@ const WorkflowCard = React.memo(({
             )}
 
             {/* Marqueur durée d'attente stockée pour patients en cours et terminés */}
-            {(sectionType === 'en_cours' || sectionType === 'termine') && appointment.duree_attente && (
+            {(sectionType === 'en_cours' || sectionType === 'termine') && 
+             appointment.duree_attente && 
+             appointment.duree_attente > 0 && 
+             formatStoredWaitingTime(appointment.duree_attente) && (
               <div className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium border mt-1 ${
                 getStoredWaitingTimeStyle(appointment.duree_attente).bgColor
               } ${getStoredWaitingTimeStyle(appointment.duree_attente).textColor} ${getStoredWaitingTimeStyle(appointment.duree_attente).borderColor}`}>
