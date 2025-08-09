@@ -853,7 +853,7 @@ class BackendTester:
         failed_tests = total_tests - passed_tests
         
         print("\n" + "=" * 80)
-        print("📋 FINAL POST-CLEANUP PRODUCTION READINESS TEST REPORT")
+        print("📋 CALENDAR AND PAYMENT FUNCTIONALITY TEST REPORT")
         print("=" * 80)
         print(f"⏱️  Total execution time: {total_time:.2f} seconds")
         print(f"📊 Total tests: {total_tests}")
