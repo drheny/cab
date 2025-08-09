@@ -24,8 +24,7 @@ const PaymentModal = ({
     type_paiement: 'espece', // Toujours espèces
     assure: false,
     notes: '',
-    type_rdv: 'visite', // Added to allow changing consultation type
-    gratuit: false // Added for marking consultations as free
+    type_rdv: 'visite' // Added to allow changing consultation type
   });
   
   const [loading, setLoading] = useState(false);
