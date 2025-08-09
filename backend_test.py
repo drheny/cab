@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 """
-FINAL POST-CLEANUP PRODUCTION READINESS TEST
+CALENDAR AND PAYMENT FUNCTIONALITY TESTING
 Backend API Testing Suite for Cabinet Médical
 
-This test suite verifies that all critical functionality still works after complete code cleanup and optimization.
+This test suite focuses on testing the specific calendar and payment functionality 
+mentioned in the review request:
+1. Calendar sections order verification
+2. Edit button behavior testing
+3. Payment toggle logic testing (Visite to Controle Gratuit)
+4. Backend payment API endpoint testing
 """
 
 import requests
