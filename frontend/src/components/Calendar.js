@@ -2093,7 +2093,7 @@ const WorkflowCard = React.memo(({
 
   // Fonction pour obtenir le style de la durée d'attente stockée
   const getStoredWaitingTimeStyle = (minutes) => {
-    if (!minutes) return null;
+    if (!minutes || minutes <= 0) return null;
     
     if (minutes < 15) {
       return {
