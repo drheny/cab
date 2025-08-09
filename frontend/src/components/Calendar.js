@@ -2078,7 +2078,7 @@ const WorkflowCard = React.memo(({
 
   // Fonction pour formatter la durée d'attente stockée
   const formatStoredWaitingTime = (minutes) => {
-    if (!minutes || minutes === 0) return null;
+    if (!minutes || minutes <= 0) return null;
     if (minutes === 1) return '1 min d\'attente';
     if (minutes < 60) return `${minutes} min d\'attente`;
     
