@@ -655,7 +655,13 @@ const Calendar = ({ user }) => {
   const handlePaymentUpdate = useCallback(async (appointmentId, paymentData) => {
     setAppointments(prevAppointments =>
       prevAppointments.map(apt =>
-        apt.id === appointmentId ? { ...apt, paye: paymentData.paye } : apt
+        apt.id === appointmentId ? { 
+          ...apt, 
+          paye: paymentData.paye,
+          type_rdv: paymentData.type_rdv || apt.type_rdv,
+          montant_paye: paymentData.montant,
+          assure: paymentData.assure
+        } : apt
       )
     );
 
