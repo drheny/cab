@@ -1967,6 +1967,7 @@ const WorkflowSection = ({
               onOpenConsultation={onOpenConsultation}
               onRoomAssignment={onRoomAssignment}
               onEdit={onEdit}
+              onEditConsultation={onEditConsultation}
               onDelete={onDelete}
               onViewPatient={onViewPatient}
               onPatientReorder={onPatientReorder}
