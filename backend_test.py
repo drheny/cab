@@ -597,7 +597,7 @@ class BackendTester:
                             expected_fields = {
                                 "paye": False,
                                 "type_rdv": "visite",
-                                "montant_paye": 65.0,
+                                "montant": 65.0,
                                 "assure": False
                             }
                             
