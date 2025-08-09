@@ -1257,8 +1257,12 @@ class BackendTester:
         }
 
 if __name__ == "__main__":
-    print("🏥 Cabinet Médical - Calendar and Payment Functionality Testing")
-    print("Testing specific calendar sections order and payment toggle logic")
+    print("🏥 Cabinet Médical - Specific Bug Fixes Testing")
+    print("Testing specific bug fixes that were just implemented:")
+    print("1. Payment Status Real-time Update Bug Fix")
+    print("2. Zero Display Bug Fix")
+    print("3. Payment API Endpoint Testing")
+    print("4. Backend Payment Logic Verification")
     print(f"Backend URL: {BACKEND_URL}")
     print(f"Test Credentials: {TEST_CREDENTIALS['username']}")
     print()
