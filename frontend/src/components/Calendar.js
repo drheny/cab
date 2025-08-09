@@ -2404,9 +2404,17 @@ const WorkflowCard = React.memo(({
 
           {/* Bouton Edit */}
           <button
-            onClick={() => onEdit(appointment)}
+            onClick={() => {
+              // For terminated consultations, open consultation edit modal
+              if (sectionType === 'termine' && onEditConsultation) {
+                onEditConsultation(appointment);
+              } else {
+                // For all other sections, open appointment edit modal
+                onEdit(appointment);
+              }
+            }}
             className="p-1 text-blue-600 hover:bg-blue-100 rounded transition-colors"
-            title="Modifier"
+            title={sectionType === 'termine' ? "Modifier la consultation" : "Modifier le rendez-vous"}
           >
             <Edit className="w-4 h-4" />
           </button>
