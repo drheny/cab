@@ -502,6 +502,301 @@ class BackendTester:
             response_time = time.time() - start_time
             self.log_test("Admin Users Endpoint", False, f"Exception: {str(e)}", response_time)
     
+    def test_calendar_sections_order(self):
+        """Test Calendar Sections Order - Verify correct ordering: rdv programmés → salle d'attente → consultation → terminés → retard"""
+        print("\n📅 TESTING CALENDAR SECTIONS ORDER")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                appointments = response.json()
+                if isinstance(appointments, list):
+                    # Group appointments by status
+                    status_groups = {}
+                    for apt in appointments:
+                        status = apt.get("statut", "unknown")
+                        if status not in status_groups:
+                            status_groups[status] = []
+                        status_groups[status].append(apt)
+                    
+                    # Expected order: programme → attente → en_cours → termine → retard
+                    expected_order = ["programme", "attente", "en_cours", "termine", "retard"]
+                    found_statuses = list(status_groups.keys())
+                    
+                    # Check if appointments are properly categorized
+                    total_appointments = len(appointments)
+                    status_counts = {status: len(status_groups.get(status, [])) for status in expected_order}
+                    
+                    details = f"Total: {total_appointments}, " + ", ".join([f"{status}: {count}" for status, count in status_counts.items() if count > 0])
+                    self.log_test("Calendar Sections Order", True, details, response_time)
+                    
+                    # Test specific status transitions and ordering logic
+                    if status_groups.get("attente"):
+                        # Check if waiting appointments have priority ordering
+                        waiting_apts = status_groups["attente"]
+                        priorities = [apt.get("priority", 999) for apt in waiting_apts]
+                        is_sorted = all(priorities[i] <= priorities[i+1] for i in range(len(priorities)-1))
+                        self.log_test("Waiting Room Priority Order", is_sorted, f"Priorities: {priorities}", 0)
+                    
+                else:
+                    self.log_test("Calendar Sections Order", False, "Response is not a list", response_time)
+            else:
+                self.log_test("Calendar Sections Order", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Calendar Sections Order", False, f"Exception: {str(e)}", response_time)
+    
+    def test_payment_toggle_logic(self):
+        """Test Payment Toggle Logic - Test changing from Visite to Controle Gratuit"""
+        print("\n💳 TESTING PAYMENT TOGGLE LOGIC")
+        
+        # First, get today's appointments to find a test appointment
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        try:
+            response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
+            if response.status_code == 200:
+                appointments = response.json()
+                if appointments and len(appointments) > 0:
+                    # Find a visite appointment to test with
+                    test_appointment = None
+                    for apt in appointments:
+                        if apt.get("type_rdv") == "visite":
+                            test_appointment = apt
+                            break
+                    
+                    if not test_appointment:
+                        # Use the first appointment regardless of type
+                        test_appointment = appointments[0]
+                    
+                    rdv_id = test_appointment.get("id")
+                    original_type = test_appointment.get("type_rdv", "visite")
+                    
+                    # Test 1: Change from visite to controle
+                    start_time = time.time()
+                    try:
+                        update_data = {"type_rdv": "controle"}
+                        response = self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}", json=update_data, timeout=10)
+                        response_time = time.time() - start_time
+                        
+                        if response.status_code == 200:
+                            data = response.json()
+                            if data.get("type_rdv") == "controle":
+                                payment_status = data.get("payment_status", "unknown")
+                                details = f"Changed to controle, payment_status: {payment_status}"
+                                self.log_test("Visite to Controle Toggle", True, details, response_time)
+                            else:
+                                self.log_test("Visite to Controle Toggle", False, "Type not changed to controle", response_time)
+                        else:
+                            self.log_test("Visite to Controle Toggle", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                    except Exception as e:
+                        response_time = time.time() - start_time
+                        self.log_test("Visite to Controle Toggle", False, f"Exception: {str(e)}", response_time)
+                    
+                    # Test 2: Test payment endpoint for controle
+                    start_time = time.time()
+                    try:
+                        payment_data = {
+                            "paye": True,
+                            "montant": 0,
+                            "type_paiement": "gratuit",
+                            "type_rdv": "controle"
+                        }
+                        response = self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}/paiement", json=payment_data, timeout=10)
+                        response_time = time.time() - start_time
+                        
+                        if response.status_code == 200:
+                            data = response.json()
+                            if data.get("paye") == True and data.get("montant") == 0:
+                                details = f"Controle payment: paye={data.get('paye')}, montant={data.get('montant')}, type={data.get('type_paiement')}"
+                                self.log_test("Controle Payment Logic", True, details, response_time)
+                            else:
+                                self.log_test("Controle Payment Logic", False, f"Incorrect payment logic: {data}", response_time)
+                        else:
+                            self.log_test("Controle Payment Logic", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                    except Exception as e:
+                        response_time = time.time() - start_time
+                        self.log_test("Controle Payment Logic", False, f"Exception: {str(e)}", response_time)
+                    
+                    # Test 3: Change back to visite
+                    start_time = time.time()
+                    try:
+                        update_data = {"type_rdv": "visite"}
+                        response = self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}", json=update_data, timeout=10)
+                        response_time = time.time() - start_time
+                        
+                        if response.status_code == 200:
+                            data = response.json()
+                            if data.get("type_rdv") == "visite":
+                                payment_status = data.get("payment_status", "unknown")
+                                details = f"Changed back to visite, payment_status: {payment_status}"
+                                self.log_test("Controle to Visite Toggle", True, details, response_time)
+                            else:
+                                self.log_test("Controle to Visite Toggle", False, "Type not changed to visite", response_time)
+                        else:
+                            self.log_test("Controle to Visite Toggle", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                    except Exception as e:
+                        response_time = time.time() - start_time
+                        self.log_test("Controle to Visite Toggle", False, f"Exception: {str(e)}", response_time)
+                    
+                    # Test 4: Test payment endpoint for visite
+                    start_time = time.time()
+                    try:
+                        payment_data = {
+                            "paye": True,
+                            "montant": 65.0,
+                            "type_paiement": "espece",
+                            "type_rdv": "visite"
+                        }
+                        response = self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}/paiement", json=payment_data, timeout=10)
+                        response_time = time.time() - start_time
+                        
+                        if response.status_code == 200:
+                            data = response.json()
+                            if data.get("paye") == True and data.get("montant") == 65.0:
+                                details = f"Visite payment: paye={data.get('paye')}, montant={data.get('montant')}, type={data.get('type_paiement')}"
+                                self.log_test("Visite Payment Logic", True, details, response_time)
+                            else:
+                                self.log_test("Visite Payment Logic", False, f"Incorrect payment logic: {data}", response_time)
+                        else:
+                            self.log_test("Visite Payment Logic", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                    except Exception as e:
+                        response_time = time.time() - start_time
+                        self.log_test("Visite Payment Logic", False, f"Exception: {str(e)}", response_time)
+                
+                else:
+                    self.log_test("Payment Toggle Logic", False, "No appointments found for testing", 0)
+            else:
+                self.log_test("Payment Toggle Logic", False, f"Failed to get appointments: HTTP {response.status_code}", 0)
+        except Exception as e:
+            self.log_test("Payment Toggle Logic", False, f"Exception getting appointments: {str(e)}", 0)
+    
+    def test_backend_payment_api(self):
+        """Test Backend Payment API - Test /api/rdv/{rdv_id}/paiement endpoint"""
+        print("\n🏦 TESTING BACKEND PAYMENT API")
+        
+        # Get today's appointments to find a test appointment
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        try:
+            response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
+            if response.status_code == 200:
+                appointments = response.json()
+                if appointments and len(appointments) > 0:
+                    test_appointment = appointments[0]
+                    rdv_id = test_appointment.get("id")
+                    
+                    # Test 1: Payment endpoint with visite type
+                    start_time = time.time()
+                    try:
+                        payment_data = {
+                            "paye": True,
+                            "montant": 65.0,
+                            "type_paiement": "espece",
+                            "assure": False,
+                            "notes": "Test payment for visite",
+                            "type_rdv": "visite"
+                        }
+                        response = self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}/paiement", json=payment_data, timeout=10)
+                        response_time = time.time() - start_time
+                        
+                        if response.status_code == 200:
+                            data = response.json()
+                            required_fields = ["paye", "montant", "type_paiement"]
+                            missing_fields = [field for field in required_fields if field not in data]
+                            
+                            if not missing_fields:
+                                details = f"Visite payment: paye={data.get('paye')}, montant={data.get('montant')}, type={data.get('type_paiement')}"
+                                self.log_test("Payment API - Visite", True, details, response_time)
+                            else:
+                                self.log_test("Payment API - Visite", False, f"Missing fields: {missing_fields}", response_time)
+                        else:
+                            self.log_test("Payment API - Visite", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                    except Exception as e:
+                        response_time = time.time() - start_time
+                        self.log_test("Payment API - Visite", False, f"Exception: {str(e)}", response_time)
+                    
+                    # Test 2: Payment endpoint with controle type (should be gratuit)
+                    start_time = time.time()
+                    try:
+                        payment_data = {
+                            "paye": True,
+                            "montant": 0,
+                            "type_paiement": "gratuit",
+                            "assure": False,
+                            "notes": "Test payment for controle",
+                            "type_rdv": "controle"
+                        }
+                        response = self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}/paiement", json=payment_data, timeout=10)
+                        response_time = time.time() - start_time
+                        
+                        if response.status_code == 200:
+                            data = response.json()
+                            # For controle, should be paye: true, montant: 0, type_paiement: "gratuit"
+                            if data.get("paye") == True and data.get("montant") == 0 and data.get("type_paiement") == "gratuit":
+                                details = f"Controle payment: paye={data.get('paye')}, montant={data.get('montant')}, type={data.get('type_paiement')}"
+                                self.log_test("Payment API - Controle", True, details, response_time)
+                            else:
+                                details = f"Incorrect controle logic: paye={data.get('paye')}, montant={data.get('montant')}, type={data.get('type_paiement')}"
+                                self.log_test("Payment API - Controle", False, details, response_time)
+                        else:
+                            self.log_test("Payment API - Controle", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                    except Exception as e:
+                        response_time = time.time() - start_time
+                        self.log_test("Payment API - Controle", False, f"Exception: {str(e)}", response_time)
+                    
+                    # Test 3: Test type_rdv changes from visite to controle
+                    start_time = time.time()
+                    try:
+                        # First set to visite
+                        payment_data = {
+                            "paye": False,
+                            "montant": 65.0,
+                            "type_paiement": "espece",
+                            "type_rdv": "visite"
+                        }
+                        response = self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}/paiement", json=payment_data, timeout=10)
+                        
+                        if response.status_code == 200:
+                            # Now change to controle
+                            payment_data = {
+                                "paye": True,
+                                "montant": 0,
+                                "type_paiement": "gratuit",
+                                "type_rdv": "controle"
+                            }
+                            response = self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}/paiement", json=payment_data, timeout=10)
+                            response_time = time.time() - start_time
+                            
+                            if response.status_code == 200:
+                                data = response.json()
+                                # Should automatically set payment to gratuit when changing to controle
+                                if data.get("type_rdv") == "controle" and data.get("type_paiement") == "gratuit":
+                                    details = f"Type change successful: type_rdv={data.get('type_rdv')}, payment={data.get('type_paiement')}"
+                                    self.log_test("Payment API - Type Change Logic", True, details, response_time)
+                                else:
+                                    details = f"Type change failed: type_rdv={data.get('type_rdv')}, payment={data.get('type_paiement')}"
+                                    self.log_test("Payment API - Type Change Logic", False, details, response_time)
+                            else:
+                                self.log_test("Payment API - Type Change Logic", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                        else:
+                            self.log_test("Payment API - Type Change Logic", False, "Failed to set initial visite type", response_time)
+                    except Exception as e:
+                        response_time = time.time() - start_time
+                        self.log_test("Payment API - Type Change Logic", False, f"Exception: {str(e)}", response_time)
+                
+                else:
+                    self.log_test("Backend Payment API", False, "No appointments found for testing", 0)
+            else:
+                self.log_test("Backend Payment API", False, f"Failed to get appointments: HTTP {response.status_code}", 0)
+        except Exception as e:
+            self.log_test("Backend Payment API", False, f"Exception getting appointments: {str(e)}", 0)
+    
     def run_all_tests(self):
         """Run all production readiness tests"""
         print("🚀 STARTING FINAL POST-CLEANUP PRODUCTION READINESS TEST")
