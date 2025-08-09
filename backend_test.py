@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 """
-CALENDAR AND PAYMENT FUNCTIONALITY TESTING
+SPECIFIC BUG FIXES TESTING
 Backend API Testing Suite for Cabinet Médical
 
-This test suite focuses on testing the specific calendar and payment functionality 
-mentioned in the review request:
-1. Calendar sections order verification
-2. Edit button behavior testing
-3. Payment toggle logic testing (Visite to Controle Gratuit)
-4. Backend payment API endpoint testing
+This test suite focuses on testing the specific bug fixes that were just implemented:
+1. Payment Status Real-time Update Bug Fix
+2. "0" Display Bug Fix  
+3. Payment API Endpoint Testing
+4. Backend Payment Logic Verification
 """
 
 import requests
