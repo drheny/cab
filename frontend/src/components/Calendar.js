@@ -1997,6 +1997,7 @@ const WorkflowCard = React.memo(({
   onOpenConsultation,
   onRoomAssignment,
   onEdit, 
+  onEditConsultation,
   onDelete, 
   onViewPatient,
   onPatientReorder,
