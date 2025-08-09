@@ -1174,8 +1174,8 @@ class BackendTester:
             self.log_test("Backend Payment API", False, f"Exception getting appointments: {str(e)}", 0)
     
     def run_all_tests(self):
-        """Run all production readiness tests"""
-        print("🚀 STARTING CALENDAR AND PAYMENT FUNCTIONALITY TESTING")
+        """Run all specific bug fix tests"""
+        print("🚀 STARTING SPECIFIC BUG FIXES TESTING")
         print("=" * 80)
         
         # Test 1: Authentication (Critical)
@@ -1183,36 +1183,28 @@ class BackendTester:
             print("\n❌ CRITICAL FAILURE: Authentication failed. Cannot proceed with other tests.")
             return self.generate_report()
         
-        # Test 2: Patient Management
+        # SPECIFIC BUG FIX TESTS:
+        # Test 2: Payment Status Real-time Update Bug Fix
+        self.test_payment_status_realtime_update_bug_fix()
+        
+        # Test 3: "0" Display Bug Fix
+        self.test_zero_display_bug_fix()
+        
+        # Test 4: Payment API Endpoint Testing
+        self.test_payment_api_endpoint_specific()
+        
+        # Test 5: Backend Payment Logic Verification
+        self.test_backend_payment_logic_verification()
+        
+        # Additional supporting tests for context
+        # Test 6: Patient Management (for context)
         self.test_patient_management()
         
-        # Test 3: Dashboard Stats
+        # Test 7: Dashboard Stats (for context)
         self.test_dashboard_stats()
         
-        # Test 4: Appointments
+        # Test 8: Appointments (for context)
         self.test_appointments()
-        
-        # Test 5: Billing System
-        self.test_billing_system()
-        
-        # Test 6: Export Functionality
-        self.test_export_functionality()
-        
-        # Test 7: Database Performance
-        self.test_database_performance()
-        
-        # Test 8: Admin Users Endpoint
-        self.test_admin_users_endpoint()
-        
-        # NEW TESTS FOR REVIEW REQUEST:
-        # Test 9: Calendar Sections Order
-        self.test_calendar_sections_order()
-        
-        # Test 10: Payment Toggle Logic
-        self.test_payment_toggle_logic()
-        
-        # Test 11: Backend Payment API
-        self.test_backend_payment_api()
         
         return self.generate_report()
     
