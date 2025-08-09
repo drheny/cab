@@ -799,7 +799,7 @@ class BackendTester:
     
     def run_all_tests(self):
         """Run all production readiness tests"""
-        print("🚀 STARTING FINAL POST-CLEANUP PRODUCTION READINESS TEST")
+        print("🚀 STARTING CALENDAR AND PAYMENT FUNCTIONALITY TESTING")
         print("=" * 80)
         
         # Test 1: Authentication (Critical)
@@ -827,6 +827,16 @@ class BackendTester:
         
         # Test 8: Admin Users Endpoint
         self.test_admin_users_endpoint()
+        
+        # NEW TESTS FOR REVIEW REQUEST:
+        # Test 9: Calendar Sections Order
+        self.test_calendar_sections_order()
+        
+        # Test 10: Payment Toggle Logic
+        self.test_payment_toggle_logic()
+        
+        # Test 11: Backend Payment API
+        self.test_backend_payment_api()
         
         return self.generate_report()
     
