@@ -12,7 +12,7 @@ load_dotenv('/app/frontend/.env')
 class AppointmentCreationTest(unittest.TestCase):
     def setUp(self):
         # Use the correct backend URL from environment
-        backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://0698237d-0754-4aa4-881e-3c8e5387d3e6.preview.emergentagent.com')
+        backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://ae9700da-fec8-4e1e-ab51-a779f23a5093.preview.emergentagent.com')
         self.base_url = backend_url
         print(f"Testing backend at: {self.base_url}")
     

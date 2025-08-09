@@ -10,7 +10,7 @@ import time
 from datetime import datetime, timedelta
 
 # Configuration
-BACKEND_URL = "https://0698237d-0754-4aa4-881e-3c8e5387d3e6.preview.emergentagent.com/api"
+BACKEND_URL = "https://ae9700da-fec8-4e1e-ab51-a779f23a5093.preview.emergentagent.com/api"
 TEST_CREDENTIALS = {
     "username": "medecin",
     "password": "medecin123"
