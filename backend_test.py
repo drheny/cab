@@ -893,8 +893,8 @@ class BackendTester:
         }
 
 if __name__ == "__main__":
-    print("🏥 Cabinet Médical - Final Post-Cleanup Production Readiness Test")
-    print("Testing backend API endpoints after complete code cleanup and optimization")
+    print("🏥 Cabinet Médical - Calendar and Payment Functionality Testing")
+    print("Testing specific calendar sections order and payment toggle logic")
     print(f"Backend URL: {BACKEND_URL}")
     print(f"Test Credentials: {TEST_CREDENTIALS['username']}")
     print()
