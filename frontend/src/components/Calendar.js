@@ -2281,6 +2281,11 @@ const WorkflowCard = React.memo(({
                 <span>{formatStoredWaitingTime(appointment.duree_attente)}</span>
               </div>
             )}
+
+            {/* DEBUG: Log duree_attente values to console */}
+            {(sectionType === 'en_cours' || sectionType === 'termine') && 
+             appointment.duree_attente !== undefined && 
+             console.log(`DEBUG Patient ${appointment.patient?.nom}: duree_attente=${appointment.duree_attente}, formatted=${formatStoredWaitingTime(appointment.duree_attente)}`)}
           </div>
         </div>
 
