@@ -1503,8 +1503,8 @@ class BackendTester:
             self.log_test("Zero Investigation - Lina Alami Specific", False, f"Exception: {str(e)}", 0)
 
     def run_all_tests(self):
-        """Run all specific bug fix tests"""
-        print("🚀 STARTING COMPREHENSIVE BACKEND TESTING - ZERO DISPLAY BUG INVESTIGATION")
+        """Run all specific bug fix tests with focus on duree_attente"""
+        print("🚀 STARTING COMPREHENSIVE BACKEND TESTING - DUREE_ATTENTE BUG FIX FOCUS")
         print("=" * 80)
         
         # Test 1: Authentication (Critical)
@@ -1512,33 +1512,34 @@ class BackendTester:
             print("\n❌ CRITICAL FAILURE: Authentication failed. Cannot proceed with other tests.")
             return self.generate_report()
         
-        # PRIORITY: Zero Display Bug Investigation
+        # PRIORITY: Zero Display Bug Investigation and Fix Testing
         print("\n" + "=" * 80)
-        print("🔍 PRIORITY: ZERO DISPLAY BUG INVESTIGATION")
+        print("🔍 PRIORITY: DUREE_ATTENTE ZERO DISPLAY BUG TESTING")
         print("=" * 80)
+        
+        # Core duree_attente bug fix tests
+        self.test_zero_display_bug_fix()
+        self.test_duree_attente_status_transitions()
         self.test_zero_display_bug_investigation()
         
         # SPECIFIC BUG FIX TESTS:
         # Test 2: Payment Status Real-time Update Bug Fix
         self.test_payment_status_realtime_update_bug_fix()
         
-        # Test 3: "0" Display Bug Fix
-        self.test_zero_display_bug_fix()
-        
-        # Test 4: Payment API Endpoint Testing
+        # Test 3: Payment API Endpoint Testing
         self.test_payment_api_endpoint_specific()
         
-        # Test 5: Backend Payment Logic Verification
+        # Test 4: Backend Payment Logic Verification
         self.test_backend_payment_logic_verification()
         
         # Additional supporting tests for context
-        # Test 6: Patient Management (for context)
+        # Test 5: Patient Management (for context)
         self.test_patient_management()
         
-        # Test 7: Dashboard Stats (for context)
+        # Test 6: Dashboard Stats (for context)
         self.test_dashboard_stats()
         
-        # Test 8: Appointments (for context)
+        # Test 7: Appointments (for context)
         self.test_appointments()
         
         return self.generate_report()
