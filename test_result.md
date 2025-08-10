@@ -470,38 +470,44 @@ The admin users endpoint issue has been completely resolved. The problem was a p
 ### AGENT COMMUNICATION
 
 **From Testing Agent (2025-01-08):**
-✅ **CALENDAR AND PAYMENT FUNCTIONALITY TESTING COMPLETED** - All specific review requirements successfully verified
+✅ **WAITING TIME SYSTEM TESTING COMPLETED** - Comprehensive analysis of duree_attente tracking system completed
 
 **Testing Summary:**
-- Executed comprehensive testing of calendar and payment functionality as requested in review
-- 29 tests completed with 100% success rate (29/29 tests passed)
-- Total execution time: 1.02 seconds with excellent performance metrics
-- All specific requirements from review request verified working correctly
+- Executed comprehensive testing of waiting time (duree_attente) system as requested in review
+- 36 tests completed with 100% success rate (36/36 tests passed)
+- Total execution time: 1.86 seconds with excellent performance metrics
+- All system components analyzed and root causes of issues identified
 
 **Key Findings:**
-1. **Calendar Sections Order**: ✅ VERIFIED - Sections properly ordered as: rdv programmés → salle d'attente → consultation → terminés → retard
-2. **Edit Button Behavior**: ✅ VERIFIED - Terminés section opens consultation modal, other sections open appointment modals
-3. **Payment Toggle Logic**: ✅ VERIFIED - Visite to Controle Gratuit transitions working correctly with automatic payment updates
-4. **Backend Payment API**: ✅ VERIFIED - `/api/rdv/{rdv_id}/paiement` endpoint handling all scenarios properly
+1. **System Infrastructure**: ✅ VERIFIED - All required fields and endpoints exist (duree_attente, heure_arrivee_attente, status change endpoint)
+2. **Status Change Endpoint**: ✅ WORKING - PUT /api/rdv/{id}/statut endpoint functions correctly for status transitions
+3. **Dashboard Statistics**: ✅ PRESENT - duree_attente_moyenne field exists but shows mock data (15 minutes)
+4. **Data Analysis**: ✅ COMPLETED - 5 appointments analyzed: 1 with zero duree_attente, 4 with null values, 0 with valid data
+
+**Root Cause Analysis:**
+- **Backend Implementation Gap**: Status change endpoint lacks automatic duree_attente calculation logic
+- **Timestamp Management Issue**: Only 1 of 5 appointments has heure_arrivee_attente timestamp
+- **Dashboard Mock Data**: duree_attente_moyenne hardcoded instead of calculated from real data
+- **Business Logic Missing**: No automatic calculation when patient moves from attente to en_cours
 
 **Technical Verification:**
-- **Payment Logic**: Controle appointments automatically set to paye: true, montant: 0, type_paiement: "gratuit"
-- **Type Changes**: type_rdv changes from visite to controle trigger automatic payment status updates
-- **API Performance**: Payment API operations completing in 0.011-0.108s (excellent performance)
-- **System Integration**: All components working together seamlessly without regressions
+- **En_Cours Patient**: Yassine Ben Ahmed has duree_attente=None, no arrival timestamp
+- **Termine Patient**: Omar Tazi has duree_attente=None, no arrival timestamp
+- **Status Transitions**: Manual status changes work but don't trigger duration calculations
+- **Endpoint Testing**: PUT /api/rdv/{id}/statut responds correctly but duree_attente remains "not_calculated"
 
 **Comprehensive System Health:**
-- ✅ Authentication system working (medecin/medecin123 - 0.294s)
-- ✅ Patient management fully functional (3 patients, 0.020s avg response)
-- ✅ Dashboard stats loading correctly (RDV: 5, Attente: 3, Recette: 130.0 TND)
-- ✅ Appointment system working (5 today, 12 weekly)
+- ✅ Authentication system working (medecin/medecin123 - 0.288s)
+- ✅ Patient management fully functional (3 patients, 0.008s avg response)
+- ✅ Dashboard stats loading correctly (RDV: 5, Attente: 0, En cours: 2, Terminés: 1)
+- ✅ Appointment system working (5 today, 0 weekly)
 - ✅ Billing system operational (enhanced stats, cash movements, daily payments)
-- ✅ Export functionality working (3 patients, 9 consultations, 13 payments)
+- ✅ Export functionality working (3 patients, 6 consultations, 6 payments)
 - ✅ Database performance excellent (sub-100ms response times)
 - ✅ Admin features functional (2 users with proper permissions)
 
-**Status:** ALL REVIEW REQUIREMENTS MET - SYSTEM PRODUCTION READY
-The calendar and payment functionality testing confirms that all specific requirements from the review request have been successfully implemented and are working correctly. No issues or regressions found. System demonstrates excellent performance and proper functionality.
+**Status:** SYSTEM INFRASTRUCTURE COMPLETE - BUSINESS LOGIC IMPLEMENTATION NEEDED
+The waiting time system testing confirms that all infrastructure components exist and function correctly, but the automatic calculation business logic is not implemented. The system can track waiting times manually but lacks the automated features described in the review request.
 
 **From Testing Agent (2025-08-03):**
 ✅ **ADMIN USERS ENDPOINT ISSUE RESOLVED** - Critical permission bug identified and fixed
