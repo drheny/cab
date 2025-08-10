@@ -343,7 +343,59 @@ class CriticalWaitingTimeDebugger:
             response_time = time.time() - start_time
             self.log_test("Dashboard Duree_Attente_Moyenne", False, f"Exception: {str(e)}", response_time)
 
-    def test_status_change_endpoint_availability(self):
+    def test_current_appointments_data_analysis(self):
+        """Analyze current appointments data structure to find the root cause"""
+        print("\n🔍 ANALYZING CURRENT APPOINTMENTS DATA STRUCTURE")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                appointments = response.json()
+                if appointments and len(appointments) > 0:
+                    print(f"    📊 Found {len(appointments)} appointments for today")
+                    
+                    # Analyze each appointment's duree_attente field
+                    for i, apt in enumerate(appointments):
+                        patient_info = apt.get("patient", {})
+                        patient_name = f"{patient_info.get('prenom', '')} {patient_info.get('nom', '')}"
+                        
+                        duree_attente = apt.get("duree_attente")
+                        heure_arrivee = apt.get("heure_arrivee_attente")
+                        statut = apt.get("statut")
+                        heure = apt.get("heure")
+                        
+                        # Detailed analysis
+                        if duree_attente is None:
+                            details = f"Patient '{patient_name}' ({statut}) - duree_attente=None, heure_arrivee='{heure_arrivee}', heure='{heure}'"
+                            self.log_test(f"Data Analysis - {patient_name} (NULL duree_attente)", True, details, 0)
+                        elif duree_attente == 0:
+                            details = f"Patient '{patient_name}' ({statut}) - duree_attente=0, heure_arrivee='{heure_arrivee}', heure='{heure}'"
+                            self.log_test(f"Data Analysis - {patient_name} (ZERO duree_attente)", True, details, 0)
+                        else:
+                            details = f"Patient '{patient_name}' ({statut}) - duree_attente={duree_attente} min, heure_arrivee='{heure_arrivee}', heure='{heure}'"
+                            self.log_test(f"Data Analysis - {patient_name} (VALID duree_attente)", True, details, 0)
+                    
+                    # Summary statistics
+                    total_appointments = len(appointments)
+                    null_duree = len([apt for apt in appointments if apt.get("duree_attente") is None])
+                    zero_duree = len([apt for apt in appointments if apt.get("duree_attente") == 0])
+                    valid_duree = len([apt for apt in appointments if apt.get("duree_attente", 0) > 0])
+                    
+                    summary = f"Total: {total_appointments}, Null: {null_duree}, Zero: {zero_duree}, Valid: {valid_duree}"
+                    self.log_test("Data Analysis Summary", True, summary, response_time)
+                    
+                else:
+                    self.log_test("Current Appointments Data Analysis", False, "No appointments found", response_time)
+            else:
+                self.log_test("Current Appointments Data Analysis", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Current Appointments Data Analysis", False, f"Exception: {str(e)}", response_time)
         """Test Status Change Endpoint Availability - Check if PUT /api/rdv/{id}/statut exists"""
         print("\n🔗 TESTING STATUS CHANGE ENDPOINT AVAILABILITY")
         
