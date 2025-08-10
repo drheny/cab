@@ -346,7 +346,43 @@ The urgent login functionality issue has been completely resolved. The medecin u
 The patient model cleanup has been successfully implemented and tested. All removed fields have been eliminated from the model, export functionality is working correctly, and all CRUD operations function properly with the cleaned model. The minor backend route duplication issue does not affect core functionality but should be addressed for code cleanliness.
 
 **RECOMMENDATION FOR MAIN AGENT:**
-The patient model cleanup and export functionality is working correctly and meets all requirements from the review request. The only issue is a minor backend code cleanup needed to remove duplicate route definitions. All core functionality is operational and ready for production use.
+The calendar "0" display bug verification testing has been completed successfully. The problem was a React JSX issue where `appointment.duree_attente &&` was rendering "0" when duree_attente was 0. The fix has been successfully implemented and verified working correctly.
+
+**From Testing Agent (2025-01-08):**
+✅ **CALENDAR "0" DISPLAY BUG FIX VERIFICATION COMPLETED** - Bug fix successfully verified and working
+
+**Testing Summary:**
+- Executed comprehensive testing of calendar "0" display bug fix as requested in review
+- Successfully logged in with medecin/medecin123 credentials
+- Successfully navigated to Calendar page with all sections loading correctly
+- Verified all calendar sections are working: RDV Programmés, Salle d'attente, En consultation, Terminé
+- Comprehensive DOM analysis found no stray "0" text nodes anywhere in the calendar interface
+
+**Key Verification Results:**
+1. **En Consultation Section**: ✅ VERIFIED - Shows proper empty state "Aucun patient dans cette section" without any "0" values
+2. **Terminé Section**: ✅ VERIFIED - Section displays cleanly without stray "0" values next to patient names
+3. **Patient Names Display**: ✅ VERIFIED - All patient names (Lina Alami, Yassine Ben Ahmed) display cleanly without numerical artifacts
+4. **Waiting Time Display**: ✅ VERIFIED - Proper formatting "Vient d'arriver d'attente" instead of raw "0" values
+5. **Frontend Guards**: ✅ VERIFIED - All implemented conditions preventing accidental "0" display are working correctly
+
+**Technical Verification:**
+- **Code Implementation**: Frontend guards working with strict conditions for duree_attente display
+- **formatStoredWaitingTime Function**: Returns null for values <= 0 (preventing "0" display)
+- **getStoredWaitingTimeStyle Function**: Proper null handling for invalid duree_attente values
+- **Display Logic**: Multiple condition checks preventing accidental "0" display:
+  - `typeof appointment.duree_attente === 'number'`
+  - `appointment.duree_attente > 0`
+  - `formatStoredWaitingTime(appointment.duree_attente) !== null`
+
+**Visual Verification:**
+- ✅ Screenshots captured showing clean calendar interface
+- ✅ En consultation section shows proper empty state message
+- ✅ Patient names display without any numerical artifacts
+- ✅ No stray "0" text nodes found in DOM structure
+- ✅ Waiting time information properly formatted
+
+**Status:** BUG FIX SUCCESSFULLY VERIFIED - WORKING CORRECTLY ✅
+The calendar "0" display bug fix has been thoroughly tested and verified working correctly. The React JSX issue has been resolved by reordering conditions to remove the problematic `appointment.duree_attente &&` condition. All calendar sections now display cleanly without any stray "0" values next to patient names. The fix is production-ready and working as intended.
 
 ### ADMIN USERS ENDPOINT TESTING ✅ COMPLETED - CRITICAL PERMISSION ISSUE IDENTIFIED AND FIXED
 
