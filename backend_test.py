@@ -1,34 +1,34 @@
 #!/usr/bin/env python3
 """
-CRITICAL WAITING TIME INCONSISTENCY FIX TESTING
+CRITICAL WAITING TIME WORKFLOW DEBUGGING
 Backend API Testing Suite for Cabinet Médical
 
-FOCUS: Test the critical waiting time inconsistency fix implemented by main agent:
+CRITICAL DEBUGGING: The user manually tested the workflow and the badge still doesn't appear! 
+Despite all previous tests showing success, the real user workflow is broken.
 
-**Backend Fix (server.py):**
-- Added proper type validation and conversion for heure_arrivee_attente
-- Convert to string before processing: `str(heure_arrivee_raw)`
-- Added type checking and better error handling
-- Enhanced debug logging to show data types
+**User's Manual Test:**
+1. Put patient in "salle d'attente" 
+2. Wait 1 minute
+3. Move patient to "en consultation"
+4. Badge with waiting time does NOT appear
 
-**Frontend Fix (Calendar.js):**
-- Added try-catch block around date calculations
-- Added validation for valid dates using `isNaN(arriveeTime.getTime())`
-- Added console logging for debugging
-- Set default minimum 1 minute if calculation fails
+**IMMEDIATE DEBUG NEEDED:**
+1. **Check real-time appointment data**: Get current appointments and check their exact duree_attente values
+2. **Test the exact status change**: Move a patient from "attente" to "en_cours" and check if duree_attente gets calculated
+3. **Verify backend response**: Check what the PUT /api/rdv/{id}/statut endpoint actually returns
+4. **Check data persistence**: After status change, verify if duree_attente is stored in database
+5. **Debug the calculation**: Check if the backend calculation logic is actually running
 
-**Test the Critical User Workflow:**
-1. **Find a patient in "attente" status** 
-2. **Move patient to "en_cours"** using PUT /api/rdv/{id}/statut
-3. **Verify duree_attente is calculated correctly** - should be >= 1 minute
-4. **Check that debug messages appear** showing successful type conversion and calculation
-5. **Test multiple patients** to ensure consistency
+**CRITICAL QUESTIONS:**
+- Is duree_attente being calculated and stored when status changes from "attente" to "en_cours"?
+- Is the frontend getting the correct updated data after the API call?
+- Are there any errors in the backend calculation logic?
+- Is the heure_arrivee_attente properly set when patient moves to "attente"?
 
-**Key Focus:**
-- Verify the data type error `"'>' not supported between instances of 'str' and 'int'"` is resolved
-- Confirm duree_attente calculation works consistently for all patients
-- Check that debug messages show proper type handling
-- Ensure waiting time appears in frontend when patients are moved manually
+**This is a REAL USER WORKFLOW BUG** - Previous automated tests might have missed something. 
+I need to debug the actual data flow during manual patient movement.
+
+Focus on finding the exact point where the duree_attente calculation/storage is failing in the real workflow.
 """
 
 import requests
