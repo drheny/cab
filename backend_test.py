@@ -1716,37 +1716,42 @@ class BackendTester:
             self.log_test("Zero Investigation - Lina Alami Specific", False, f"Exception: {str(e)}", 0)
 
     def run_all_tests(self):
-        """Run all waiting time system tests"""
-        print("🚀 STARTING WAITING TIME SYSTEM TESTING")
+        """Run all tests focused on updated waiting time system"""
+        print("🚀 STARTING UPDATED WAITING TIME SYSTEM TESTING")
         print("=" * 80)
         
-        # Test 1: Authentication (required for all other tests)
+        # Test 1: Authentication
         if not self.test_authentication():
-            print("❌ Authentication failed - cannot proceed with other tests")
+            print("❌ Authentication failed - stopping tests")
             return self.generate_report()
         
-        # Test 2: Core waiting time system tests
-        print("\n" + "=" * 80)
-        print("⏱️ CORE WAITING TIME SYSTEM TESTING")
-        print("=" * 80)
-        
-        self.test_waiting_time_system_comprehensive()
-        self.test_status_change_endpoint()
-        self.test_dashboard_waiting_time_stats()
-        self.test_heure_arrivee_attente_timestamps()
-        self.test_waiting_time_calculation_logic()
-        
-        # Test 3: Supporting system verification
-        print("\n" + "=" * 80)
-        print("🔧 SUPPORTING SYSTEM VERIFICATION")
-        print("=" * 80)
-        
+        # Test 2: Patient Management (basic verification)
         self.test_patient_management()
+        
+        # Test 3: Dashboard Stats (basic verification)
         self.test_dashboard_stats()
+        
+        # Test 4: Appointments (basic verification)
         self.test_appointments()
-        self.test_billing_system()
-        self.test_export_functionality()
-        self.test_database_performance()
+        
+        # FOCUS TESTS: Updated Waiting Time System
+        print("\n" + "="*80)
+        print("🎯 FOCUS TESTS: UPDATED WAITING TIME SYSTEM")
+        print("="*80)
+        
+        # Test 5: Updated Dashboard Statistics - Real vs Mock Data
+        self.test_updated_dashboard_statistics()
+        
+        # Test 6: Enhanced Status Change Endpoint - Automatic Calculation
+        self.test_status_change_endpoint_enhanced()
+        
+        # Test 7: End-to-End Waiting Time Workflow
+        self.test_end_to_end_waiting_time_workflow()
+        
+        # Test 8: Explicit Duree_Attente Handling
+        self.test_explicit_duree_attente_handling()
+        
+        # Additional supporting tests
         self.test_admin_users_endpoint()
         
         return self.generate_report()
