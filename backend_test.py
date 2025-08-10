@@ -2061,7 +2061,7 @@ class BackendTester:
         failed_tests = total_tests - passed_tests
         
         print("\n" + "=" * 80)
-        print("📋 WAITING TIME SYSTEM TEST REPORT")
+        print("📋 UPDATED WAITING TIME SYSTEM TEST REPORT")
         print("=" * 80)
         print(f"⏱️  Total execution time: {total_time:.2f} seconds")
         print(f"📊 Total tests: {total_tests}")
@@ -2080,16 +2080,15 @@ class BackendTester:
         print("\n" + "=" * 80)
         
         if failed_tests == 0:
-            print("🎉 WAITING TIME SYSTEM WORKING CORRECTLY!")
-            print("✅ Duree_Attente Data Structure - VERIFIED")
-            print("✅ Status Change Endpoints - TESTED")
-            print("✅ Dashboard Statistics - VERIFIED")
-            print("✅ Timestamp Management - VERIFIED")
-            print("✅ Calculation Logic - TESTED")
+            print("🎉 UPDATED WAITING TIME SYSTEM WORKING CORRECTLY!")
+            print("✅ Dashboard Statistics - Real calculation instead of mock data")
+            print("✅ Status Change Endpoint - Automatic duree_attente calculation")
+            print("✅ End-to-End Workflow - Complete waiting time tracking")
+            print("✅ Explicit Duration Handling - Respects provided values")
         else:
-            print("⚠️  WAITING TIME SYSTEM HAS ISSUES")
+            print("⚠️  UPDATED WAITING TIME SYSTEM HAS ISSUES")
             print("❌ Review failed tests and identify problems")
-            print("🔧 Focus on status transitions and duree_attente calculation")
+            print("🔧 Focus on dashboard calculation and status transitions")
         
         return {
             "total_tests": total_tests,
