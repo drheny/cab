@@ -2022,6 +2022,7 @@ const WorkflowSection = ({
               onWhatsApp={onWhatsApp}
               isCompleted={isCompleted}
               user={user}
+              getWaitingTimeBadgeColor={getWaitingTimeBadgeColor}
             />
           ))
         )}
