@@ -1759,7 +1759,7 @@ class BackendTester:
         failed_tests = total_tests - passed_tests
         
         print("\n" + "=" * 80)
-        print("📋 SPECIFIC BUG FIXES TEST REPORT")
+        print("📋 WAITING TIME SYSTEM TEST REPORT")
         print("=" * 80)
         print(f"⏱️  Total execution time: {total_time:.2f} seconds")
         print(f"📊 Total tests: {total_tests}")
@@ -1778,16 +1778,16 @@ class BackendTester:
         print("\n" + "=" * 80)
         
         if failed_tests == 0:
-            print("🎉 ALL BUG FIXES WORKING CORRECTLY!")
-            print("✅ Payment Status Real-time Update Bug Fix - WORKING")
-            print("✅ Zero Display Bug Fix - WORKING")
-            print("✅ Payment API Endpoint - WORKING")
-            print("✅ Backend Payment Logic - WORKING")
-            print("✅ All specific bug fixes verified")
+            print("🎉 WAITING TIME SYSTEM WORKING CORRECTLY!")
+            print("✅ Duree_Attente Data Structure - VERIFIED")
+            print("✅ Status Change Endpoints - TESTED")
+            print("✅ Dashboard Statistics - VERIFIED")
+            print("✅ Timestamp Management - VERIFIED")
+            print("✅ Calculation Logic - TESTED")
         else:
-            print("⚠️  SOME BUG FIXES STILL HAVE ISSUES")
-            print("❌ Review failed tests and fix remaining issues")
-            print("🔧 Focus on payment logic and real-time updates")
+            print("⚠️  WAITING TIME SYSTEM HAS ISSUES")
+            print("❌ Review failed tests and identify problems")
+            print("🔧 Focus on status transitions and duree_attente calculation")
         
         return {
             "total_tests": total_tests,
