@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """
-UPDATED WAITING TIME SYSTEM TESTING
+CRITICAL WAITING TIME WORKFLOW DEBUGGING
 Backend API Testing Suite for Cabinet Médical
 
-This test suite focuses on testing the updated waiting time tracking system:
-1. Dashboard Statistics: Test if duree_attente_moyenne shows real calculated values instead of mock "15"
-2. Status Change Endpoint: Test PUT /api/rdv/{id}/statut to change status from "attente" to "en_cours" 
-3. Automatic Calculation: Verify duree_attente is automatically calculated when heure_arrivee_attente exists
-4. End-to-End Workflow: Set appointment to "attente" with heure_arrivee_attente, change to "en_cours", verify calculation
+FOCUS: Debug the exact user workflow issue where waiting time is NOT appearing next to patient names
+when moved from waiting room to "en cours" or "terminés" sections.
+
+Critical Investigation Points:
+1. Real Data Examination: Check current appointments and their EXACT duree_attente values
+2. Status Change Debugging: Test the EXACT sequence: patient to "attente" → patient to "en_cours"  
+3. Data Flow Investigation: Check if PUT /api/rdv/{id}/statut properly updates duree_attente
+4. Real User Workflow Simulation: Find a real appointment and move it through the exact user workflow
 """
 
 import requests
