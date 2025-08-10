@@ -1722,7 +1722,7 @@ const Consultation = ({ user }) => {
                           rows={12}
                           medicalContext={true}
                           enableOCR={true}
-                          className="bg-striped-paper"
+                          disableHandwriting={true}
                         />
                       </div>
 
