@@ -1783,31 +1783,41 @@ async def update_rdv_statut(rdv_id: str, status_data: dict):
             current_appointment = appointments_collection.find_one({"id": rdv_id}, {"_id": 0})
             if current_appointment and current_appointment.get("heure_arrivee_attente"):
                 try:
-                    heure_arrivee_str = current_appointment["heure_arrivee_attente"]
-                    print(f"DEBUG: Parsing heure_arrivee_attente: {heure_arrivee_str}")
+                    heure_arrivee_raw = current_appointment["heure_arrivee_attente"]
+                    print(f"DEBUG: Parsing heure_arrivee_attente: {heure_arrivee_raw} (type: {type(heure_arrivee_raw)})")
                     
-                    # Handle different timestamp formats
-                    if "T" in heure_arrivee_str:
+                    # Convert to string if not already
+                    heure_arrivee_str = str(heure_arrivee_raw) if heure_arrivee_raw is not None else ""
+                    
+                    if not heure_arrivee_str:
+                        print("DEBUG: Empty heure_arrivee_attente, skipping calculation")
+                        pass
+                    elif "T" in heure_arrivee_str:
                         # ISO format: 2023-08-09T15:30:00.000Z
                         arrivee_time = datetime.fromisoformat(heure_arrivee_str.replace("Z", "+00:00"))
-                    else:
+                        current_time = datetime.now()
+                        duree_calculee = int((current_time - arrivee_time).total_seconds() / 60)  # en minutes
+                        calculated_duration = max(1, duree_calculee)  # Minimum 1 minute pour éviter 0
+                        update_data["duree_attente"] = calculated_duration
+                        print(f"DEBUG: ISO format - Calculated duree_attente: {calculated_duration} minutes")
+                    elif ":" in heure_arrivee_str:
                         # Time only format: 15:30
                         today = datetime.now().date()
                         time_parts = heure_arrivee_str.split(":")
                         hour = int(time_parts[0])
                         minute = int(time_parts[1]) if len(time_parts) > 1 else 0
                         arrivee_time = datetime.combine(today, datetime.min.time().replace(hour=hour, minute=minute))
+                        current_time = datetime.now()
+                        duree_calculee = int((current_time - arrivee_time).total_seconds() / 60)  # en minutes
+                        calculated_duration = max(1, duree_calculee)  # Minimum 1 minute pour éviter 0
+                        update_data["duree_attente"] = calculated_duration
+                        print(f"DEBUG: Time format - Calculated duree_attente: {calculated_duration} minutes")
+                    else:
+                        print(f"DEBUG: Unrecognized timestamp format: {heure_arrivee_str}")
                     
-                    current_time = datetime.now()
-                    duree_calculee = int((current_time - arrivee_time).total_seconds() / 60)  # en minutes
-                    calculated_duration = max(1, duree_calculee)  # Minimum 1 minute pour éviter 0
-                    update_data["duree_attente"] = calculated_duration
-                    
-                    print(f"DEBUG: Calculated duree_attente: {calculated_duration} minutes")
-                    
-                except (ValueError, TypeError) as e:
+                except (ValueError, TypeError, AttributeError) as e:
                     # Si erreur de parsing, laisser duree_attente à sa valeur actuelle
-                    print(f"DEBUG: Error parsing timestamp: {e}")
+                    print(f"DEBUG: Error parsing timestamp {heure_arrivee_raw}: {e}")
                     pass
     
     if salle:
