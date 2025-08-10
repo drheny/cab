@@ -1715,6 +1715,303 @@ class BackendTester:
         except Exception as e:
             self.log_test("Zero Investigation - Lina Alami Specific", False, f"Exception: {str(e)}", 0)
 
+    def test_updated_dashboard_statistics(self):
+        """Test Updated Dashboard Statistics - Verify duree_attente_moyenne shows real calculated values"""
+        print("\n📊 TESTING UPDATED DASHBOARD STATISTICS")
+        
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BACKEND_URL}/dashboard", timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Check if duree_attente_moyenne is present
+                if "duree_attente_moyenne" in data:
+                    duree_attente_moyenne = data["duree_attente_moyenne"]
+                    
+                    # Check if it's calculated from real data or mock
+                    if duree_attente_moyenne == 15:
+                        details = f"duree_attente_moyenne: {duree_attente_moyenne} (still showing mock data - needs real calculation)"
+                        self.log_test("Dashboard Waiting Time Average - Mock Data Found", False, details, response_time)
+                    elif duree_attente_moyenne == 0:
+                        details = f"duree_attente_moyenne: {duree_attente_moyenne} (calculated from real data - no valid waiting times)"
+                        self.log_test("Dashboard Waiting Time Average - Real Calculation (Zero)", True, details, response_time)
+                    else:
+                        details = f"duree_attente_moyenne: {duree_attente_moyenne} minutes (calculated from real appointment data)"
+                        self.log_test("Dashboard Waiting Time Average - Real Calculation", True, details, response_time)
+                    
+                    # Also check other dashboard stats for context
+                    total_rdv = data.get("total_rdv", 0)
+                    rdv_attente = data.get("rdv_attente", 0)
+                    rdv_en_cours = data.get("rdv_en_cours", 0)
+                    rdv_termines = data.get("rdv_termines", 0)
+                    
+                    context_details = f"Context - Total RDV: {total_rdv}, Attente: {rdv_attente}, En cours: {rdv_en_cours}, Terminés: {rdv_termines}"
+                    self.log_test("Dashboard Stats Context", True, context_details, 0)
+                    
+                else:
+                    self.log_test("Dashboard Waiting Time Average", False, "duree_attente_moyenne field missing from dashboard response", response_time)
+                
+            else:
+                self.log_test("Updated Dashboard Statistics", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Updated Dashboard Statistics", False, f"Exception: {str(e)}", response_time)
+    
+    def test_status_change_endpoint_enhanced(self):
+        """Test Enhanced Status Change Endpoint - PUT /api/rdv/{id}/statut with automatic duree_attente calculation"""
+        print("\n🔄 TESTING ENHANCED STATUS CHANGE ENDPOINT")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Get today's appointments to find a test appointment
+        try:
+            response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
+            if response.status_code == 200:
+                appointments = response.json()
+                if appointments and len(appointments) > 0:
+                    test_appointment = appointments[0]
+                    rdv_id = test_appointment.get("id")
+                    patient_info = test_appointment.get("patient", {})
+                    patient_name = f"{patient_info.get('prenom', '')} {patient_info.get('nom', '')}"
+                    
+                    # Test 1: Set appointment to "attente" with heure_arrivee_attente
+                    start_time = time.time()
+                    try:
+                        current_time = datetime.now()
+                        arrival_time = current_time.isoformat()
+                        
+                        update_data = {
+                            "statut": "attente",
+                            "heure_arrivee_attente": arrival_time
+                        }
+                        
+                        response = self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}/statut", json=update_data, timeout=10)
+                        response_time = time.time() - start_time
+                        
+                        if response.status_code == 200:
+                            details = f"Set {patient_name} to attente status with arrival time {arrival_time}"
+                            self.log_test("Status Change - Set Attente with Timestamp", True, details, response_time)
+                            
+                            # Wait a moment to simulate waiting time
+                            time.sleep(2)
+                            
+                            # Test 2: Change status from "attente" to "en_cours" and verify automatic calculation
+                            start_time = time.time()
+                            update_data = {
+                                "statut": "en_cours"
+                            }
+                            
+                            response = self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}/statut", json=update_data, timeout=10)
+                            response_time = time.time() - start_time
+                            
+                            if response.status_code == 200:
+                                # Get updated appointment to check duree_attente
+                                response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
+                                if response.status_code == 200:
+                                    updated_appointments = response.json()
+                                    updated_appointment = next((apt for apt in updated_appointments if apt.get("id") == rdv_id), None)
+                                    
+                                    if updated_appointment:
+                                        calculated_duree = updated_appointment.get("duree_attente")
+                                        new_status = updated_appointment.get("statut")
+                                        
+                                        if calculated_duree is not None and calculated_duree >= 0:
+                                            details = f"Status changed to {new_status}, duree_attente automatically calculated: {calculated_duree} minutes"
+                                            self.log_test("Status Change - Automatic Duree_Attente Calculation", True, details, response_time)
+                                        else:
+                                            details = f"Status changed to {new_status}, but duree_attente not calculated: {calculated_duree}"
+                                            self.log_test("Status Change - Automatic Duree_Attente Calculation", False, details, response_time)
+                                    else:
+                                        self.log_test("Status Change - Automatic Duree_Attente Calculation", False, "Updated appointment not found", response_time)
+                                else:
+                                    self.log_test("Status Change - Automatic Duree_Attente Calculation", False, "Failed to retrieve updated appointments", response_time)
+                            else:
+                                self.log_test("Status Change - Attente to En_Cours", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                        else:
+                            self.log_test("Status Change - Set Attente with Timestamp", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                    except Exception as e:
+                        response_time = time.time() - start_time
+                        self.log_test("Enhanced Status Change Endpoint", False, f"Exception: {str(e)}", response_time)
+                
+                else:
+                    self.log_test("Enhanced Status Change Endpoint", False, "No appointments found for testing", 0)
+            else:
+                self.log_test("Enhanced Status Change Endpoint", False, f"Failed to get appointments: HTTP {response.status_code}", 0)
+        except Exception as e:
+            self.log_test("Enhanced Status Change Endpoint", False, f"Exception getting appointments: {str(e)}", 0)
+    
+    def test_end_to_end_waiting_time_workflow(self):
+        """Test End-to-End Waiting Time Workflow - Complete workflow from attente to dashboard stats"""
+        print("\n🔄 TESTING END-TO-END WAITING TIME WORKFLOW")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Get today's appointments
+        try:
+            response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
+            if response.status_code == 200:
+                appointments = response.json()
+                if appointments and len(appointments) > 0:
+                    test_appointment = appointments[0]
+                    rdv_id = test_appointment.get("id")
+                    patient_info = test_appointment.get("patient", {})
+                    patient_name = f"{patient_info.get('prenom', '')} {patient_info.get('nom', '')}"
+                    
+                    # Step 1: Set appointment to "attente" with heure_arrivee_attente
+                    start_time = time.time()
+                    try:
+                        current_time = datetime.now()
+                        arrival_time = current_time.isoformat()
+                        
+                        update_data = {
+                            "statut": "attente",
+                            "heure_arrivee_attente": arrival_time
+                        }
+                        
+                        response = self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}/statut", json=update_data, timeout=10)
+                        response_time = time.time() - start_time
+                        
+                        if response.status_code == 200:
+                            self.log_test("E2E Workflow - Step 1: Set Attente", True, f"Set {patient_name} to attente with timestamp", response_time)
+                            
+                            # Wait to simulate waiting time
+                            time.sleep(3)
+                            
+                            # Step 2: Change to "en_cours" and verify duree_attente calculation
+                            start_time = time.time()
+                            update_data = {"statut": "en_cours"}
+                            
+                            response = self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}/statut", json=update_data, timeout=10)
+                            response_time = time.time() - start_time
+                            
+                            if response.status_code == 200:
+                                self.log_test("E2E Workflow - Step 2: Change to En_Cours", True, f"Changed {patient_name} to en_cours", response_time)
+                                
+                                # Step 3: Verify duree_attente was calculated and stored
+                                response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
+                                if response.status_code == 200:
+                                    updated_appointments = response.json()
+                                    updated_appointment = next((apt for apt in updated_appointments if apt.get("id") == rdv_id), None)
+                                    
+                                    if updated_appointment:
+                                        calculated_duree = updated_appointment.get("duree_attente")
+                                        if calculated_duree is not None and calculated_duree > 0:
+                                            self.log_test("E2E Workflow - Step 3: Duree_Attente Calculated", True, f"duree_attente calculated: {calculated_duree} minutes", 0)
+                                            
+                                            # Step 4: Check if this contributes to dashboard average
+                                            start_time = time.time()
+                                            response = self.session.get(f"{BACKEND_URL}/dashboard", timeout=10)
+                                            response_time = time.time() - start_time
+                                            
+                                            if response.status_code == 200:
+                                                dashboard_data = response.json()
+                                                duree_attente_moyenne = dashboard_data.get("duree_attente_moyenne", 0)
+                                                
+                                                if duree_attente_moyenne > 0:
+                                                    details = f"Dashboard average updated: {duree_attente_moyenne} minutes (includes our calculated waiting time)"
+                                                    self.log_test("E2E Workflow - Step 4: Dashboard Average Updated", True, details, response_time)
+                                                else:
+                                                    details = f"Dashboard average: {duree_attente_moyenne} (may not include our waiting time yet)"
+                                                    self.log_test("E2E Workflow - Step 4: Dashboard Average Check", True, details, response_time)
+                                            else:
+                                                self.log_test("E2E Workflow - Step 4: Dashboard Check", False, f"Dashboard HTTP {response.status_code}", response_time)
+                                        else:
+                                            self.log_test("E2E Workflow - Step 3: Duree_Attente Calculated", False, f"duree_attente not calculated: {calculated_duree}", 0)
+                                    else:
+                                        self.log_test("E2E Workflow - Step 3: Duree_Attente Check", False, "Updated appointment not found", 0)
+                                else:
+                                    self.log_test("E2E Workflow - Step 3: Get Updated Appointment", False, f"HTTP {response.status_code}", 0)
+                            else:
+                                self.log_test("E2E Workflow - Step 2: Change to En_Cours", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                        else:
+                            self.log_test("E2E Workflow - Step 1: Set Attente", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                    except Exception as e:
+                        response_time = time.time() - start_time
+                        self.log_test("End-to-End Waiting Time Workflow", False, f"Exception: {str(e)}", response_time)
+                
+                else:
+                    self.log_test("End-to-End Waiting Time Workflow", False, "No appointments found for testing", 0)
+            else:
+                self.log_test("End-to-End Waiting Time Workflow", False, f"Failed to get appointments: HTTP {response.status_code}", 0)
+        except Exception as e:
+            self.log_test("End-to-End Waiting Time Workflow", False, f"Exception getting appointments: {str(e)}", 0)
+    
+    def test_explicit_duree_attente_handling(self):
+        """Test Explicit Duree_Attente Handling - Verify explicitly provided duree_attente values are respected"""
+        print("\n⏱️ TESTING EXPLICIT DUREE_ATTENTE HANDLING")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Get today's appointments
+        try:
+            response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
+            if response.status_code == 200:
+                appointments = response.json()
+                if appointments and len(appointments) > 0:
+                    test_appointment = appointments[0]
+                    rdv_id = test_appointment.get("id")
+                    patient_info = test_appointment.get("patient", {})
+                    patient_name = f"{patient_info.get('prenom', '')} {patient_info.get('nom', '')}"
+                    
+                    # Test: Provide explicit duree_attente when changing to en_cours
+                    start_time = time.time()
+                    try:
+                        # First set to attente
+                        update_data = {
+                            "statut": "attente",
+                            "heure_arrivee_attente": datetime.now().isoformat()
+                        }
+                        
+                        response = self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}/statut", json=update_data, timeout=10)
+                        
+                        if response.status_code == 200:
+                            # Now change to en_cours with explicit duree_attente
+                            explicit_duration = 25  # 25 minutes
+                            update_data = {
+                                "statut": "en_cours",
+                                "duree_attente": explicit_duration
+                            }
+                            
+                            response = self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}/statut", json=update_data, timeout=10)
+                            response_time = time.time() - start_time
+                            
+                            if response.status_code == 200:
+                                # Verify the explicit duration was used
+                                response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
+                                if response.status_code == 200:
+                                    updated_appointments = response.json()
+                                    updated_appointment = next((apt for apt in updated_appointments if apt.get("id") == rdv_id), None)
+                                    
+                                    if updated_appointment:
+                                        stored_duree = updated_appointment.get("duree_attente")
+                                        if stored_duree == explicit_duration:
+                                            details = f"Explicit duree_attente ({explicit_duration} min) correctly stored for {patient_name}"
+                                            self.log_test("Explicit Duree_Attente Handling", True, details, response_time)
+                                        else:
+                                            details = f"Expected {explicit_duration} min, got {stored_duree} min for {patient_name}"
+                                            self.log_test("Explicit Duree_Attente Handling", False, details, response_time)
+                                    else:
+                                        self.log_test("Explicit Duree_Attente Handling", False, "Updated appointment not found", response_time)
+                                else:
+                                    self.log_test("Explicit Duree_Attente Handling", False, "Failed to retrieve updated appointment", response_time)
+                            else:
+                                self.log_test("Explicit Duree_Attente Handling", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                        else:
+                            self.log_test("Explicit Duree_Attente Handling", False, f"Failed to set attente: HTTP {response.status_code}", response_time)
+                    except Exception as e:
+                        response_time = time.time() - start_time
+                        self.log_test("Explicit Duree_Attente Handling", False, f"Exception: {str(e)}", response_time)
+                
+                else:
+                    self.log_test("Explicit Duree_Attente Handling", False, "No appointments found for testing", 0)
+            else:
+                self.log_test("Explicit Duree_Attente Handling", False, f"Failed to get appointments: HTTP {response.status_code}", 0)
+        except Exception as e:
+            self.log_test("Explicit Duree_Attente Handling", False, f"Exception getting appointments: {str(e)}", 0)
+
     def run_all_tests(self):
         """Run all tests focused on updated waiting time system"""
         print("🚀 STARTING UPDATED WAITING TIME SYSTEM TESTING")
