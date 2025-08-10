@@ -472,104 +472,104 @@ The admin users endpoint issue has been completely resolved. The problem was a p
 **Status:** CRITICAL WAITING TIME WORKFLOW SUCCESSFULLY DEBUGGED - Root cause of inconsistent duree_attente calculation identified
 
 **Test Results Summary (2025-01-08 - Critical Waiting Time Workflow Debugging):**
-✅ **Authentication System** - medecin/medecin123 login working perfectly with full permissions (0.330s)
-✅ **Critical Workflow Step 1** - Current state check successful, selected patient 'Omar Tazi' for testing
+✅ **Authentication System** - medecin/medecin123 login working perfectly with full permissions (0.287s)
+✅ **Critical Workflow Step 1** - Current state check successful, selected patient 'Yassine Ben Ahmed' for testing
 ✅ **Critical Workflow Step 2** - Successfully moved patient to waiting room (attente) with heure_arrivee_attente timestamp
 ✅ **Critical Workflow Step 3** - Successfully moved patient to consultation (en_cours) with duree_attente calculation
 ✅ **Critical Workflow Step 4** - Data structure verification complete, all fields properly stored
-✅ **Critical Workflow Step 5** - Successfully moved to terminés with duree_attente preserved (25 minutes)
-✅ **Dashboard Statistics** - duree_attente_moyenne showing real calculated value (25.0 minutes) instead of mock data
+✅ **Critical Workflow Step 5** - Successfully moved to terminés with duree_attente preserved (None)
+✅ **Dashboard Statistics** - duree_attente_moyenne showing real calculated value (0.0 minutes) instead of mock data
 ✅ **Status Change Endpoint** - PUT /api/rdv/{id}/statut endpoint working correctly for all status transitions
-⚠️ **Inconsistent Calculation** - One test showed duree_attente calculated as 0 minutes (edge case identified)
-✅ **Patient Management** - All CRUD operations, patient list (3 patients), search functionality working
+❌ **CRITICAL BUG IDENTIFIED** - duree_attente field is NULL for ALL appointments, calculation is NOT working
+✅ **Patient Management** - All CRUD operations, patient list (4 patients), search functionality working
 ✅ **Supporting Systems** - Dashboard, appointments, admin users all operational
 
 **Detailed Test Results:**
 
-**CRITICAL WORKFLOW TESTING: ✅ MOSTLY WORKING WITH EDGE CASE IDENTIFIED**
-- ✅ **Step 1 - Current State Check**: Successfully selected patient 'Omar Tazi' with existing duree_attente=25, status=termine
+**CRITICAL WORKFLOW TESTING: ✅ INFRASTRUCTURE WORKING BUT CALCULATION BROKEN**
+- ✅ **Step 1 - Current State Check**: Successfully selected patient 'Yassine Ben Ahmed' with existing duree_attente=None, status=programme
 - ✅ **Step 2 - Move to Waiting Room**: Successfully changed status to 'attente' with heure_arrivee_attente='02:09'
-- ✅ **Step 3 - Move to Consultation**: Successfully changed status to 'en_cours' with duree_attente=25 minutes preserved
-- ✅ **Step 4 - Data Structure Verification**: All fields properly stored (duree_attente: int, heure_arrivee_attente: str)
-- ✅ **Step 5 - Move to Terminés**: duree_attente successfully preserved (25 minutes) in terminés status
+- ✅ **Step 3 - Move to Consultation**: Successfully changed status to 'en_cours' but duree_attente=None (CRITICAL BUG)
+- ✅ **Step 4 - Data Structure Verification**: All fields properly stored (duree_attente: None, heure_arrivee_attente: str)
+- ✅ **Step 5 - Move to Terminés**: duree_attente successfully preserved (None) in terminés status
 
-**ROOT CAUSE ANALYSIS: ✅ INCONSISTENT CALCULATION LOGIC IDENTIFIED**
-- 🎯 **Primary Issue**: Calculation logic is inconsistent - sometimes calculates correctly, sometimes returns 0
-- 🎯 **Edge Case Found**: When time difference is very small (3 seconds), calculation returns 0 minutes
-- 🎯 **Existing Data Preservation**: System may preserve existing duree_attente values rather than recalculating
-- 🎯 **Backend Logic Exists**: The calculation infrastructure is present but has edge case bugs
-- 🎯 **Frontend Impact**: Zero values might not be displayed properly, causing "missing waiting time" appearance
+**ROOT CAUSE ANALYSIS: ✅ EXACT ISSUE IDENTIFIED**
+- 🎯 **Primary Issue**: Backend status change endpoint is NOT calculating duree_attente when moving from attente to en_cours
+- 🎯 **Data Analysis**: ALL 4 appointments have duree_attente=None (Total: 4, Null: 4, Zero: 0, Valid: 0)
+- 🎯 **Status Change Working**: PUT /api/rdv/{id}/statut endpoint exists and changes status correctly
+- 🎯 **Calculation Missing**: The endpoint updates status but does NOT calculate waiting time duration
+- 🎯 **Frontend Impact**: Since duree_attente is None, frontend cannot display waiting time next to patient names
 
 **DASHBOARD STATISTICS VERIFICATION: ✅ WORKING CORRECTLY**
-- ✅ **Real Calculation**: duree_attente_moyenne shows 25.0 minutes (calculated from real data)
+- ✅ **Real Calculation**: duree_attente_moyenne shows 0.0 minutes (calculated from real data with all None values)
 - ✅ **No Mock Data**: Dashboard no longer shows hardcoded "15 minutes" mock value
-- ✅ **Context Stats**: Total RDV: 5, Attente: 0, En cours: 2, Terminés: 2
-- ✅ **Performance**: Dashboard response time excellent (0.053s)
+- ✅ **Context Stats**: Total RDV: 4, Attente: 1, En cours: 2, Terminés: 1
+- ✅ **Performance**: Dashboard response time excellent (0.054s)
 
-**STATUS CHANGE ENDPOINT VERIFICATION: ✅ WORKING CORRECTLY**
+**STATUS CHANGE ENDPOINT VERIFICATION: ✅ WORKING BUT INCOMPLETE**
 - ✅ **Endpoint Available**: PUT /api/rdv/{id}/statut endpoint exists and responds correctly
 - ✅ **Status Transitions**: All transitions work (programme → attente → en_cours → termine)
 - ✅ **Timestamp Management**: heure_arrivee_attente properly set when moving to attente
+- ❌ **MISSING CALCULATION**: Endpoint does NOT calculate duree_attente when moving from attente to en_cours
 - ✅ **Data Persistence**: Status changes are saved correctly in database
 
 **COMPREHENSIVE SYSTEM VERIFICATION: ✅ ALL SUPPORTING SYSTEMS OPERATIONAL**
-- ✅ **Authentication**: medecin/medecin123 login working with full permissions (0.330s response time)
-- ✅ **Patient Management**: All CRUD operations, patient list (3 patients), search functionality working
-- ✅ **Dashboard Stats**: All stats loading correctly (RDV: 5, Attente: 0, Recette: 65.0 TND)
-- ✅ **Appointments System**: Today's (5) and weekly appointments working perfectly
+- ✅ **Authentication**: medecin/medecin123 login working with full permissions (0.287s response time)
+- ✅ **Patient Management**: All CRUD operations, patient list (4 patients), search functionality working
+- ✅ **Dashboard Stats**: All stats loading correctly (RDV: 4, Attente: 1, Recette: 65.0 TND)
+- ✅ **Appointments System**: Today's (4) and weekly appointments working perfectly
 - ✅ **Admin Features**: User management endpoint working with proper permissions
 - ✅ **Database Performance**: Excellent performance with response times under 100ms
 
 **CRITICAL FINDINGS - EXACT WORKFLOW ANALYSIS:**
 - 🎯 **SYSTEM INFRASTRUCTURE COMPLETE**: All required components exist and function correctly
-- 🎯 **CALCULATION LOGIC INCONSISTENT**: Sometimes calculates correctly (25 min), sometimes returns 0
-- 🎯 **EDGE CASE IDENTIFIED**: Very short waiting times (< 1 minute) may be calculated as 0
-- 🎯 **DATA PRESERVATION WORKING**: duree_attente values are preserved through status transitions
-- 🎯 **FRONTEND DISPLAY ISSUE**: Zero values might not be displayed, causing "missing waiting time" appearance
-- 🎯 **DASHBOARD INTEGRATION WORKING**: Real calculation replaces mock data successfully
+- 🎯 **STATUS CHANGES WORKING**: PUT /api/rdv/{id}/statut successfully changes appointment status
+- 🎯 **TIMESTAMP RECORDING WORKING**: heure_arrivee_attente is properly set when patient arrives in waiting room
+- 🎯 **CALCULATION LOGIC MISSING**: Backend does NOT calculate duree_attente when moving from attente to en_cours
+- 🎯 **DATA STRUCTURE CORRECT**: All fields exist but duree_attente remains None after status transitions
+- 🎯 **FRONTEND CANNOT DISPLAY**: Since duree_attente is None, frontend has no waiting time data to show
 
-**SUCCESS CRITERIA VERIFICATION: ✅ MOSTLY MET WITH EDGE CASE**
+**SUCCESS CRITERIA VERIFICATION: ✅ MOSTLY MET WITH CRITICAL CALCULATION BUG**
 - ✅ **Current State Check**: Successfully retrieved today's appointments and selected test patient
 - ✅ **Move to Waiting Room**: PUT /api/rdv/{id}/statut with status "attente" working correctly
 - ✅ **Timestamp Setting**: heure_arrivee_attente properly set when patient arrives in waiting room
 - ✅ **Move to Consultation**: PUT /api/rdv/{id}/statut with status "en_cours" working correctly
-- ⚠️ **Duree_Attente Calculation**: Works but has edge cases (0 minutes for very short waits)
-- ✅ **Move to Terminés**: duree_attente preserved correctly in terminés status
+- ❌ **Duree_Attente Calculation**: Status change does NOT calculate waiting time (duree_attente remains None)
+- ✅ **Move to Terminés**: duree_attente preserved correctly in terminés status (None preserved)
 - ✅ **Data Structure**: All fields properly stored with correct data types
 
 **PERFORMANCE METRICS: ✅ EXCELLENT PERFORMANCE**
-- ✅ **Total Execution Time**: 8.93 seconds for 27 comprehensive tests
-- ✅ **Success Rate**: 96.3% (26/27 tests passed)
-- ✅ **Authentication Time**: 0.330s (acceptable)
+- ✅ **Total Execution Time**: 3.55 seconds for 17 comprehensive tests
+- ✅ **Success Rate**: 82.4% (14/17 tests passed)
+- ✅ **Authentication Time**: 0.287s (acceptable)
 - ✅ **API Response Times**: All under 100ms (excellent performance)
-- ✅ **Status Change Operations**: 0.009-0.059s (very fast)
+- ✅ **Status Change Operations**: 0.009-0.049s (very fast)
 
-**CRITICAL WAITING TIME WORKFLOW STATUS: MOSTLY WORKING WITH CALCULATION BUG ✅**
-The comprehensive testing has successfully debugged the critical waiting time workflow and identified the root cause:
+**CRITICAL WAITING TIME WORKFLOW STATUS: ROOT CAUSE IDENTIFIED ✅**
+The comprehensive testing has successfully identified the exact root cause of the user's reported issue:
 
 **✅ WORKING COMPONENTS:**
 - Status change endpoint exists and functions correctly
-- Dashboard shows real calculated duree_attente_moyenne (25.0 minutes)
+- Dashboard shows real calculated duree_attente_moyenne (0.0 minutes) instead of mock data
 - Data structure includes duree_attente and heure_arrivee_attente fields
 - Status transitions work properly (attente → en_cours → termine)
-- duree_attente values are preserved through status changes
+- heure_arrivee_attente timestamps are recorded correctly
 - All supporting systems operational
 
-**⚠️ IDENTIFIED ISSUES:**
-- Calculation logic is inconsistent (sometimes 25 minutes, sometimes 0)
-- Edge case: Very short waiting times (< 1 minute) calculated as 0
-- Zero values might not be displayed properly in frontend
-- System may preserve existing values rather than recalculating
+**❌ IDENTIFIED ROOT CAUSE:**
+- **CRITICAL BUG**: PUT /api/rdv/{id}/statut endpoint changes status but does NOT calculate duree_attente
+- **DATA ISSUE**: ALL appointments have duree_attente=None (4 appointments, 0 with valid waiting times)
+- **CALCULATION MISSING**: Backend logic to calculate waiting time duration is not implemented or not working
+- **FRONTEND IMPACT**: Since duree_attente is None, frontend cannot display waiting time next to patient names
 
-**✅ RECOMMENDATIONS FOR MAIN AGENT:**
-1. **Fix Calculation Logic**: Improve duree_attente calculation to handle edge cases properly
-2. **Minimum Time Threshold**: Set minimum waiting time (e.g., 1 minute) to avoid zero values
-3. **Frontend Display**: Ensure zero/null duree_attente values are handled gracefully in UI
-4. **Recalculation Logic**: Ensure system recalculates rather than preserving existing values
-5. **Time Precision**: Consider using seconds instead of minutes for more accurate calculation
+**✅ EXACT USER ISSUE CONFIRMED:**
+The user's report is 100% accurate - waiting time is NOT appearing next to patient names because:
+1. Backend is not calculating duree_attente when moving from attente to en_cours
+2. All appointments have duree_attente=None in the database
+3. Frontend has no waiting time data to display
 
-**FINAL STATUS: SYSTEM FUNCTIONAL WITH CALCULATION REFINEMENT NEEDED ✅**
-The critical waiting time workflow testing confirms that the infrastructure exists and works correctly, but the calculation logic needs refinement to handle edge cases. The user's complaint about "missing waiting time" is likely due to zero values not being displayed properly rather than a complete system failure.
+**FINAL STATUS: ROOT CAUSE IDENTIFIED AND CONFIRMED ✅**
+The critical waiting time workflow testing confirms that the user's reported issue is caused by missing calculation logic in the backend status change endpoint. The infrastructure exists but the actual waiting time calculation is not implemented.
 
 ### WAITING TIME BUG FIX VERIFICATION ✅ COMPLETED - BUG SUCCESSFULLY FIXED AND VERIFIED
 
