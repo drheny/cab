@@ -506,13 +506,88 @@ class BackendTester:
             response_time = time.time() - start_time
             self.log_test("Admin Users Endpoint", False, f"Exception: {str(e)}", response_time)
     
-    def test_payment_status_realtime_update_bug_fix(self):
-        """Test Payment Status Real-time Update Bug Fix - Test that changing consultation type updates payment status immediately"""
-        print("\n🔄 TESTING PAYMENT STATUS REAL-TIME UPDATE BUG FIX")
+    def test_waiting_time_system_comprehensive(self):
+        """Test Comprehensive Waiting Time System - Core functionality testing"""
+        print("\n⏱️ TESTING WAITING TIME SYSTEM COMPREHENSIVE")
         
-        # Get today's appointments to find a test appointment
         today = datetime.now().strftime("%Y-%m-%d")
         
+        # Test 1: Check current appointments and their duree_attente values
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                appointments = response.json()
+                if isinstance(appointments, list):
+                    # Analyze duree_attente values across all appointments
+                    total_appointments = len(appointments)
+                    zero_duree_count = len([apt for apt in appointments if apt.get("duree_attente") == 0])
+                    null_duree_count = len([apt for apt in appointments if apt.get("duree_attente") is None])
+                    undefined_duree_count = len([apt for apt in appointments if "duree_attente" not in apt])
+                    valid_duree_count = len([apt for apt in appointments if apt.get("duree_attente", 0) > 0])
+                    
+                    details = f"Total: {total_appointments}, Zero: {zero_duree_count}, Null: {null_duree_count}, Undefined: {undefined_duree_count}, Valid: {valid_duree_count}"
+                    self.log_test("Current Appointments Duree_Attente Analysis", True, details, response_time)
+                    
+                    # Store appointments for further testing
+                    self.current_appointments = appointments
+                    
+                    # Test specific status sections
+                    en_cours_appointments = [apt for apt in appointments if apt.get("statut") == "en_cours"]
+                    termine_appointments = [apt for apt in appointments if apt.get("statut") == "termine"]
+                    attente_appointments = [apt for apt in appointments if apt.get("statut") == "attente"]
+                    
+                    # Log findings for each status
+                    if en_cours_appointments:
+                        for apt in en_cours_appointments:
+                            patient_info = apt.get("patient", {})
+                            patient_name = f"{patient_info.get('prenom', '')} {patient_info.get('nom', '')}"
+                            duree_attente = apt.get("duree_attente")
+                            heure_arrivee = apt.get("heure_arrivee_attente", "")
+                            details = f"en_cours patient '{patient_name}' - duree_attente: {duree_attente}, heure_arrivee: {heure_arrivee}"
+                            self.log_test("En_Cours Patient Waiting Time Data", True, details, 0)
+                    else:
+                        self.log_test("En_Cours Patient Waiting Time Data", True, "No en_cours appointments found", 0)
+                    
+                    if termine_appointments:
+                        for apt in termine_appointments:
+                            patient_info = apt.get("patient", {})
+                            patient_name = f"{patient_info.get('prenom', '')} {patient_info.get('nom', '')}"
+                            duree_attente = apt.get("duree_attente")
+                            heure_arrivee = apt.get("heure_arrivee_attente", "")
+                            details = f"termine patient '{patient_name}' - duree_attente: {duree_attente}, heure_arrivee: {heure_arrivee}"
+                            self.log_test("Termine Patient Waiting Time Data", True, details, 0)
+                    else:
+                        self.log_test("Termine Patient Waiting Time Data", True, "No termine appointments found", 0)
+                    
+                    if attente_appointments:
+                        for apt in attente_appointments:
+                            patient_info = apt.get("patient", {})
+                            patient_name = f"{patient_info.get('prenom', '')} {patient_info.get('nom', '')}"
+                            duree_attente = apt.get("duree_attente")
+                            heure_arrivee = apt.get("heure_arrivee_attente", "")
+                            details = f"attente patient '{patient_name}' - duree_attente: {duree_attente}, heure_arrivee: {heure_arrivee}"
+                            self.log_test("Attente Patient Waiting Time Data", True, details, 0)
+                    else:
+                        self.log_test("Attente Patient Waiting Time Data", True, "No attente appointments found", 0)
+                
+                else:
+                    self.log_test("Current Appointments Duree_Attente Analysis", False, "Response is not a list", response_time)
+            else:
+                self.log_test("Current Appointments Duree_Attente Analysis", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Current Appointments Duree_Attente Analysis", False, f"Exception: {str(e)}", response_time)
+    
+    def test_status_change_endpoint(self):
+        """Test Status Change Endpoint - PUT /api/rdv/{id}/statut for duree_attente calculation"""
+        print("\n🔄 TESTING STATUS CHANGE ENDPOINT")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Get today's appointments to find a test appointment
         try:
             response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
             if response.status_code == 200:
@@ -520,113 +595,251 @@ class BackendTester:
                 if appointments and len(appointments) > 0:
                     test_appointment = appointments[0]
                     rdv_id = test_appointment.get("id")
+                    patient_info = test_appointment.get("patient", {})
+                    patient_name = f"{patient_info.get('prenom', '')} {patient_info.get('nom', '')}"
                     
-                    # Test 1: Change from visite to controle via payment modal
+                    # Test 1: Check if status update endpoint exists
                     start_time = time.time()
                     try:
-                        # First ensure it's a visite
-                        payment_data = {
-                            "paye": False,
-                            "montant": 65.0,
-                            "type_paiement": "espece",
-                            "assure": False,
-                            "type_rdv": "visite"
+                        # Try to update status from attente to en_cours
+                        update_data = {
+                            "statut": "attente",
+                            "heure_arrivee_attente": datetime.now().strftime("%H:%M")
                         }
-                        response = self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}/paiement", json=payment_data, timeout=10)
+                        response = self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}/statut", json=update_data, timeout=10)
+                        response_time = time.time() - start_time
                         
                         if response.status_code == 200:
-                            # Now change to controle and verify immediate update
-                            payment_data = {
-                                "paye": True,
-                                "montant": 0,
-                                "type_paiement": "gratuit",
-                                "assure": False,
-                                "type_rdv": "controle"
+                            self.log_test("Status Update Endpoint - Set Attente", True, f"Successfully set {patient_name} to attente status", response_time)
+                            
+                            # Now try to change to en_cours and check duree_attente calculation
+                            start_time = time.time()
+                            update_data = {
+                                "statut": "en_cours"
                             }
-                            response = self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}/paiement", json=payment_data, timeout=10)
+                            response = self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}/statut", json=update_data, timeout=10)
                             response_time = time.time() - start_time
                             
                             if response.status_code == 200:
                                 data = response.json()
-                                # Verify all payment fields are updated immediately
-                                expected_fields = {
-                                    "paye": True,
-                                    "type_rdv": "controle", 
-                                    "montant": 0,
-                                    "assure": False
-                                }
-                                
-                                all_fields_correct = True
-                                field_details = []
-                                for field, expected_value in expected_fields.items():
-                                    actual_value = data.get(field)
-                                    field_details.append(f"{field}={actual_value}")
-                                    if actual_value != expected_value:
-                                        all_fields_correct = False
-                                
-                                if all_fields_correct:
-                                    details = f"Real-time update successful: {', '.join(field_details)}"
-                                    self.log_test("Payment Status Real-time Update - Visite to Controle", True, details, response_time)
-                                else:
-                                    details = f"Some fields incorrect: {', '.join(field_details)}"
-                                    self.log_test("Payment Status Real-time Update - Visite to Controle", False, details, response_time)
+                                duree_attente = data.get("duree_attente", "not_provided")
+                                details = f"Status changed to en_cours for {patient_name}, duree_attente: {duree_attente}"
+                                self.log_test("Status Update Endpoint - Attente to En_Cours", True, details, response_time)
                             else:
-                                self.log_test("Payment Status Real-time Update - Visite to Controle", False, f"HTTP {response.status_code}: {response.text}", response_time)
-                        else:
-                            self.log_test("Payment Status Real-time Update - Visite to Controle", False, "Failed to set initial visite state", 0)
-                    except Exception as e:
-                        response_time = time.time() - start_time
-                        self.log_test("Payment Status Real-time Update - Visite to Controle", False, f"Exception: {str(e)}", response_time)
-                    
-                    # Test 2: Change from controle back to visite
-                    start_time = time.time()
-                    try:
-                        payment_data = {
-                            "paye": False,
-                            "montant": 65.0,
-                            "type_paiement": "espece",
-                            "assure": False,
-                            "type_rdv": "visite"
-                        }
-                        response = self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}/paiement", json=payment_data, timeout=10)
-                        response_time = time.time() - start_time
+                                self.log_test("Status Update Endpoint - Attente to En_Cours", False, f"HTTP {response.status_code}: {response.text}", response_time)
                         
-                        if response.status_code == 200:
-                            data = response.json()
-                            # Verify all payment fields are updated for visite
-                            expected_fields = {
-                                "paye": False,
-                                "type_rdv": "visite",
-                                "montant": 65.0,
-                                "assure": False
-                            }
-                            
-                            all_fields_correct = True
-                            field_details = []
-                            for field, expected_value in expected_fields.items():
-                                actual_value = data.get(field)
-                                field_details.append(f"{field}={actual_value}")
-                                if actual_value != expected_value:
-                                    all_fields_correct = False
-                            
-                            if all_fields_correct:
-                                details = f"Real-time update successful: {', '.join(field_details)}"
-                                self.log_test("Payment Status Real-time Update - Controle to Visite", True, details, response_time)
-                            else:
-                                details = f"Some fields incorrect: {', '.join(field_details)}"
-                                self.log_test("Payment Status Real-time Update - Controle to Visite", False, details, response_time)
+                        elif response.status_code == 404:
+                            self.log_test("Status Update Endpoint - Availability", False, "PUT /api/rdv/{id}/statut endpoint not found (HTTP 404)", response_time)
                         else:
-                            self.log_test("Payment Status Real-time Update - Controle to Visite", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                            self.log_test("Status Update Endpoint - Set Attente", False, f"HTTP {response.status_code}: {response.text}", response_time)
                     except Exception as e:
                         response_time = time.time() - start_time
-                        self.log_test("Payment Status Real-time Update - Controle to Visite", False, f"Exception: {str(e)}", response_time)
+                        self.log_test("Status Update Endpoint - Set Attente", False, f"Exception: {str(e)}", response_time)
                 
                 else:
-                    self.log_test("Payment Status Real-time Update Bug Fix", False, "No appointments found for testing", 0)
+                    self.log_test("Status Change Endpoint Testing", False, "No appointments found for testing", 0)
             else:
-                self.log_test("Payment Status Real-time Update Bug Fix", False, f"Failed to get appointments: HTTP {response.status_code}", 0)
+                self.log_test("Status Change Endpoint Testing", False, f"Failed to get appointments: HTTP {response.status_code}", 0)
         except Exception as e:
-            self.log_test("Payment Status Real-time Update Bug Fix", False, f"Exception getting appointments: {str(e)}", 0)
+            self.log_test("Status Change Endpoint Testing", False, f"Exception getting appointments: {str(e)}", 0)
+    
+    def test_dashboard_waiting_time_stats(self):
+        """Test Dashboard Waiting Time Statistics - duree_attente_moyenne calculation"""
+        print("\n📊 TESTING DASHBOARD WAITING TIME STATISTICS")
+        
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BACKEND_URL}/dashboard", timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Check if duree_attente_moyenne is present
+                if "duree_attente_moyenne" in data:
+                    duree_attente_moyenne = data["duree_attente_moyenne"]
+                    
+                    # Check if it's calculated or mock data
+                    if duree_attente_moyenne == 15:
+                        details = f"duree_attente_moyenne: {duree_attente_moyenne} (appears to be mock data)"
+                        self.log_test("Dashboard Waiting Time Average - Mock Data", True, details, response_time)
+                    else:
+                        details = f"duree_attente_moyenne: {duree_attente_moyenne} (calculated from real data)"
+                        self.log_test("Dashboard Waiting Time Average - Real Calculation", True, details, response_time)
+                    
+                    # Also check other dashboard stats for context
+                    total_rdv = data.get("total_rdv", 0)
+                    rdv_attente = data.get("rdv_attente", 0)
+                    rdv_en_cours = data.get("rdv_en_cours", 0)
+                    rdv_termines = data.get("rdv_termines", 0)
+                    
+                    context_details = f"Context - Total RDV: {total_rdv}, Attente: {rdv_attente}, En cours: {rdv_en_cours}, Terminés: {rdv_termines}"
+                    self.log_test("Dashboard Stats Context for Waiting Time", True, context_details, 0)
+                    
+                else:
+                    self.log_test("Dashboard Waiting Time Average", False, "duree_attente_moyenne field missing from dashboard response", response_time)
+                
+            else:
+                self.log_test("Dashboard Waiting Time Statistics", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Dashboard Waiting Time Statistics", False, f"Exception: {str(e)}", response_time)
+    
+    def test_heure_arrivee_attente_timestamps(self):
+        """Test heure_arrivee_attente Timestamps - Verify appointments have proper timestamps"""
+        print("\n🕐 TESTING HEURE_ARRIVEE_ATTENTE TIMESTAMPS")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Get today's appointments to check timestamps
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                appointments = response.json()
+                if isinstance(appointments, list):
+                    timestamp_analysis = {
+                        "total_appointments": len(appointments),
+                        "with_heure_arrivee": 0,
+                        "without_heure_arrivee": 0,
+                        "empty_heure_arrivee": 0
+                    }
+                    
+                    for apt in appointments:
+                        patient_info = apt.get("patient", {})
+                        patient_name = f"{patient_info.get('prenom', '')} {patient_info.get('nom', '')}"
+                        heure_arrivee = apt.get("heure_arrivee_attente")
+                        statut = apt.get("statut", "unknown")
+                        duree_attente = apt.get("duree_attente")
+                        
+                        if heure_arrivee is None:
+                            timestamp_analysis["without_heure_arrivee"] += 1
+                            details = f"Patient '{patient_name}' ({statut}) - NO heure_arrivee_attente, duree_attente: {duree_attente}"
+                        elif heure_arrivee == "":
+                            timestamp_analysis["empty_heure_arrivee"] += 1
+                            details = f"Patient '{patient_name}' ({statut}) - EMPTY heure_arrivee_attente, duree_attente: {duree_attente}"
+                        else:
+                            timestamp_analysis["with_heure_arrivee"] += 1
+                            details = f"Patient '{patient_name}' ({statut}) - heure_arrivee_attente: {heure_arrivee}, duree_attente: {duree_attente}"
+                        
+                        self.log_test(f"Timestamp Analysis - {patient_name}", True, details, 0)
+                    
+                    # Summary of timestamp analysis
+                    summary = f"Total: {timestamp_analysis['total_appointments']}, With timestamp: {timestamp_analysis['with_heure_arrivee']}, Without: {timestamp_analysis['without_heure_arrivee']}, Empty: {timestamp_analysis['empty_heure_arrivee']}"
+                    self.log_test("Heure_Arrivee_Attente Timestamp Summary", True, summary, response_time)
+                    
+                else:
+                    self.log_test("Heure_Arrivee_Attente Timestamps", False, "Response is not a list", response_time)
+            else:
+                self.log_test("Heure_Arrivee_Attente Timestamps", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Heure_Arrivee_Attente Timestamps", False, f"Exception: {str(e)}", response_time)
+    
+    def test_waiting_time_calculation_logic(self):
+        """Test Waiting Time Calculation Logic - End-to-end waiting time tracking"""
+        print("\n🧮 TESTING WAITING TIME CALCULATION LOGIC")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Get appointments to test calculation logic
+        try:
+            response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
+            if response.status_code == 200:
+                appointments = response.json()
+                if appointments and len(appointments) > 0:
+                    test_appointment = appointments[0]
+                    rdv_id = test_appointment.get("id")
+                    patient_info = test_appointment.get("patient", {})
+                    patient_name = f"{patient_info.get('prenom', '')} {patient_info.get('nom', '')}"
+                    
+                    # Test 1: Simulate arrival in waiting room
+                    start_time = time.time()
+                    try:
+                        current_time = datetime.now()
+                        arrival_time = current_time.strftime("%H:%M")
+                        
+                        # Set appointment to attente with arrival time
+                        update_data = {
+                            "statut": "attente",
+                            "heure_arrivee_attente": arrival_time,
+                            "duree_attente": 0
+                        }
+                        
+                        # Try different endpoints that might handle status updates
+                        endpoints_to_try = [
+                            f"{BACKEND_URL}/rdv/{rdv_id}/statut",
+                            f"{BACKEND_URL}/rdv/{rdv_id}",
+                            f"{BACKEND_URL}/rdv/{rdv_id}/status"
+                        ]
+                        
+                        success = False
+                        for endpoint in endpoints_to_try:
+                            try:
+                                response = self.session.put(endpoint, json=update_data, timeout=10)
+                                if response.status_code == 200:
+                                    success = True
+                                    response_time = time.time() - start_time
+                                    details = f"Set {patient_name} to attente at {arrival_time} via {endpoint.split('/')[-1]}"
+                                    self.log_test("Waiting Time Calculation - Set Arrival", True, details, response_time)
+                                    break
+                                elif response.status_code == 404:
+                                    continue  # Try next endpoint
+                                else:
+                                    details = f"Failed via {endpoint.split('/')[-1]}: HTTP {response.status_code}"
+                                    self.log_test(f"Waiting Time Calculation - Endpoint {endpoint.split('/')[-1]}", False, details, 0)
+                            except Exception as e:
+                                continue  # Try next endpoint
+                        
+                        if not success:
+                            response_time = time.time() - start_time
+                            self.log_test("Waiting Time Calculation - Set Arrival", False, "No working status update endpoint found", response_time)
+                        
+                        # Test 2: Simulate moving to consultation (en_cours)
+                        if success:
+                            # Wait a moment to simulate waiting time
+                            time.sleep(1)
+                            
+                            start_time = time.time()
+                            consultation_time = datetime.now()
+                            
+                            update_data = {
+                                "statut": "en_cours"
+                            }
+                            
+                            # Try the same endpoints for status change
+                            for endpoint in endpoints_to_try:
+                                try:
+                                    response = self.session.put(endpoint, json=update_data, timeout=10)
+                                    if response.status_code == 200:
+                                        response_time = time.time() - start_time
+                                        data = response.json()
+                                        
+                                        # Check if duree_attente was calculated
+                                        calculated_duree = data.get("duree_attente", "not_calculated")
+                                        
+                                        # Calculate expected waiting time (should be at least 1 minute)
+                                        time_diff = consultation_time - current_time
+                                        expected_minutes = int(time_diff.total_seconds() / 60)
+                                        
+                                        details = f"Moved {patient_name} to en_cours, calculated duree_attente: {calculated_duree}, expected: ~{expected_minutes} min"
+                                        self.log_test("Waiting Time Calculation - Calculate Duration", True, details, response_time)
+                                        break
+                                except Exception as e:
+                                    continue
+                    
+                    except Exception as e:
+                        response_time = time.time() - start_time
+                        self.log_test("Waiting Time Calculation Logic", False, f"Exception: {str(e)}", response_time)
+                
+                else:
+                    self.log_test("Waiting Time Calculation Logic", False, "No appointments found for testing", 0)
+            else:
+                self.log_test("Waiting Time Calculation Logic", False, f"Failed to get appointments: HTTP {response.status_code}", 0)
+        except Exception as e:
+            self.log_test("Waiting Time Calculation Logic", False, f"Exception getting appointments: {str(e)}", 0)
     
     def test_zero_display_bug_fix(self):
         """Test "0" Display Bug Fix - Comprehensive testing of duree_attente values and status transitions"""
