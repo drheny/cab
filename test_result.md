@@ -22483,3 +22483,44 @@ The WhatsApp number update functionality is working perfectly. All scenarios fro
 No backend fixes required - all critical functionality operational."
 
 ### Incorporate User Feedback
+
+
+### USER'S SPECIFIC BUG REPRODUCTION AND ROOT CAUSE ANALYSIS ✅ COMPLETED - BUG SUCCESSFULLY REPRODUCED AND ROOT CAUSE IDENTIFIED
+
+**Status:** USER'S SPECIFIC BUG SUCCESSFULLY REPRODUCED AND ROOT CAUSE IDENTIFIED - Critical backend logic issue found and analyzed
+
+**Test Results Summary (2025-01-08 - User's Specific Bug Reproduction):**
+✅ **Authentication System** - medecin/medecin123 login working perfectly with full permissions
+✅ **Exact User Sequence** - Successfully reproduced user's exact 15-second bug sequence
+✅ **Bug Reproduction** - CONFIRMED: duree_attente remains 0 instead of calculating real waiting time
+✅ **Root Cause Identified** - Backend logic treats duree_attente=0 as "already calculated" instead of "needs calculation"
+✅ **Technical Analysis** - Identified specific code location and logic flaw in backend calculation
+✅ **API Response Analysis** - API correctly returns duree_attente=0 but should calculate real duration
+✅ **Database Analysis** - Database correctly stores duree_attente=0 but value is incorrect
+✅ **Timing Verification** - Real waiting time was 15 seconds, should result in 1 minute minimum
+✅ **Consistency Check** - API and Database are consistent (both show 0) but both are wrong
+
+**ROOT CAUSE ANALYSIS: ✅ CRITICAL BACKEND LOGIC BUG IDENTIFIED**
+- 🔍 **Backend Code Location**: /app/backend/server.py lines 1789-1831
+- 🐛 **Logic Error**: `if existing_duree_attente is None:` treats duree_attente=0 as "already calculated"
+- 🐛 **Problem**: Patient had duree_attente=0 (not None), so system preserved 0 instead of calculating
+- 🐛 **Expected Behavior**: duree_attente=0 should be treated as "needs calculation", not "already calculated"
+
+**TECHNICAL SOLUTION IDENTIFIED:**
+```python
+# Current problematic code (line 1789):
+if existing_duree_attente is None:
+
+# Should be changed to:
+if existing_duree_attente is None or existing_duree_attente == 0:
+```
+
+**BUG CONFIRMED:**
+- User's report: "Le compteur se remet encore à zéro quand on passe de 'salle d'attente' à 'en consultation'"
+- Test result: duree_attente remained 0 instead of calculating 15-second wait as 1 minute
+- Root cause: Backend logic treats duree_attente=0 as "already calculated" instead of "needs calculation"
+
+agent_communication:
+    -agent: "testing"
+    -message: "USER'S SPECIFIC BUG REPRODUCTION COMPLETED - BUG SUCCESSFULLY REPRODUCED AND ROOT CAUSE IDENTIFIED: Successfully reproduced the user's exact 15-second bug sequence. CONFIRMED: duree_attente remains 0 instead of calculating real waiting time. ROOT CAUSE IDENTIFIED: Backend logic treats duree_attente=0 as 'already calculated' instead of 'needs calculation' (line 1789: if existing_duree_attente is None). TECHNICAL SOLUTION: Change condition to 'if existing_duree_attente is None or existing_duree_attente == 0:'. Patient 'Lina Alami' had duree_attente=0, moved to attente (heure_arrivee_attente set), waited 15 seconds, moved to en_cours but duree_attente remained 0 instead of calculating 1 minute. API and Database consistent but both incorrect. Bug confirmed: 'Le compteur se remet encore à zéro quand on passe de salle d'attente à en consultation'."
+
