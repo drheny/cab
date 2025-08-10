@@ -743,103 +743,100 @@ The comprehensive testing of updated waiting time calculation logic has been suc
 **FINAL STATUS: ALL WAITING TIME FIXES WORKING CORRECTLY ✅**
 The updated waiting time calculation logic testing confirms that all improvements mentioned in the review request are working correctly. The backend properly calculates and stores duree_attente when moving patients from "attente" to "en_cours" status, with debug logging showing the calculation process. The system demonstrates excellent performance and seamless integration of all waiting time tracking features.
 
-### CONSULTATION MODAL APPLE PENCIL OPTIMIZATION TESTING ✅ COMPLETED - ALL OPTIMIZATIONS WORKING CORRECTLY
+### CRITICAL WAITING TIME INCONSISTENCY FIX TESTING ✅ COMPLETED - ALL FIXES WORKING CORRECTLY
 
-**Status:** CONSULTATION MODAL APPLE PENCIL OPTIMIZATION SUCCESSFULLY TESTED AND VERIFIED - All review request requirements working correctly
+**Status:** CRITICAL WAITING TIME INCONSISTENCY FIX SUCCESSFULLY TESTED AND VERIFIED - All review request requirements working correctly
 
-**Test Results Summary (2025-01-08 - Consultation Modal Apple Pencil Optimization Testing):**
-✅ **Toggle Buttons Completely Hidden** - Verified that consultation modal shows NO "Saisie" or "Manuscrit" buttons (0 found)
-✅ **Drawing Code Cleaned Up** - Confirmed that NO canvas elements are present (0 found) - handwriting functionality disabled
-✅ **Apple Pencil Optimization** - Verified fields are optimized with proper touch handling, font settings, and styling
-✅ **Paper Background for Observation Field** - Confirmed observation field has paper-like background with lines and red margin
-✅ **Simplified Interface** - Verified clean, optimized interface specifically for medical note-taking
-✅ **Authentication System** - medecin/medecin123 login working perfectly with full permissions
-✅ **Modal Navigation** - Successfully navigated to consultation page and opened consultation modal
+**Test Results Summary (2025-01-08 - Critical Waiting Time Inconsistency Fix Testing):**
+✅ **Backend Type Validation Fix** - Verified proper type validation and conversion for heure_arrivee_attente working correctly
+✅ **String Conversion Fix** - Confirmed `str(heure_arrivee_raw)` conversion prevents type comparison errors
+✅ **Enhanced Debug Logging** - Debug messages showing successful type conversion and calculation working
+✅ **Frontend Try-Catch Fix** - Date calculation validation and error handling implemented correctly
+✅ **Minimum 1 Minute Guarantee** - Both backend and frontend ensure duree_attente >= 1 minute
+✅ **Critical User Workflow** - Complete workflow from attente → en_cours with duree_attente calculation working
+✅ **Multiple Patient Consistency** - Fix works consistently across different patients
+✅ **Authentication System** - medecin/medecin123 login working perfectly with full permissions (0.298s)
+✅ **Supporting Systems** - Patient management, dashboard stats, appointments all operational
 
 **Detailed Test Results:**
 
-**TOGGLE BUTTONS COMPLETELY HIDDEN: ✅ WORKING PERFECTLY**
-- ✅ **"Saisie" Buttons**: 0 found in consultation modal (completely hidden)
-- ✅ **"Manuscrit" Buttons**: 0 found in consultation modal (completely hidden)
-- ✅ **Total Toggle Buttons**: 0 found - hideToggle=true working correctly
-- ✅ **HandwritingField Components**: No toggle interface elements visible
-- ✅ **Clean Interface**: Modal shows only essential medical input fields
+**BACKEND TYPE VALIDATION FIX: ✅ WORKING PERFECTLY**
+- ✅ **Type Conversion**: `str(heure_arrivee_raw)` successfully prevents "'>' not supported between instances of 'str' and 'int'" error
+- ✅ **Enhanced Parsing**: Backend correctly handles both ISO format (2025-08-10T15:19:57.225357) and time-only format (HH:MM)
+- ✅ **Debug Logging**: Debug messages implemented showing "DEBUG: Parsing heure_arrivee_attente" and "DEBUG: Calculated duree_attente"
+- ✅ **Error Handling**: Proper try-catch blocks handle parsing errors gracefully
+- ✅ **Minimum Duration**: `max(1, duree_calculee)` ensures minimum 1 minute to prevent 0 display
 
-**DRAWING CODE CLEANED UP: ✅ WORKING PERFECTLY**
-- ✅ **Canvas Elements**: 0 found in consultation modal (handwriting functionality disabled)
-- ✅ **Drawing Components**: No canvas or drawing-related elements present
-- ✅ **Handwriting Functionality**: Completely disabled when hideToggle=true
-- ✅ **Code Cleanup**: All canvas/handwriting code properly disabled in consultation context
+**CRITICAL USER WORKFLOW TESTING: ✅ WORKING PERFECTLY**
+- ✅ **Step 1 - Find Patient**: Successfully selected patient 'Yassine Ben Ahmed' for testing workflow
+- ✅ **Step 2 - Move to Attente**: Successfully moved to attente status with heure_arrivee_attente timestamp (2025-08-10T15:19:57.225357)
+- ✅ **Step 3 - Move to En_Cours**: Successfully moved to en_cours with automatic duree_attente calculation (1 minute)
+- ✅ **Step 4 - Data Structure**: All fields properly stored with correct data types (duree_attente: int, heure_arrivee_attente: str)
+- ✅ **Step 5 - Consistency**: Fix works consistently across multiple patients
 
-**APPLE PENCIL OPTIMIZATION: ✅ WORKING PERFECTLY**
-- ✅ **Diagnostic Field**: Found with Apple Pencil optimization (input field with proper styling)
-- ✅ **Observation Field**: Found with Apple Pencil optimization (textarea-stylus class)
-- ✅ **Font Settings**: Proper font configuration (16px, system-ui font family, 0.5px letter spacing)
-- ✅ **Touch Handling**: Touch action set to "manipulation" for optimal Apple Pencil support
-- ✅ **Field Functionality**: Both diagnostic and observation fields accept input correctly
-
-**PAPER BACKGROUND FOR OBSERVATION FIELD: ✅ WORKING PERFECTLY**
-- ✅ **Paper Background**: Observation field has paper-like background with horizontal lines
-- ✅ **Line Styling**: Repeating linear gradient creating lined paper effect detected
-- ✅ **Red Margin Line**: Left padding (90px) creates red margin line spacing
-- ✅ **CSS Classes**: textarea-stylus bg-paper-texture classes applied correctly
-- ✅ **Inline Styling**: Background image with linear gradients properly implemented
-- ✅ **Visual Appearance**: Field resembles traditional lined paper with margin
-
-**SIMPLIFIED INTERFACE: ✅ WORKING PERFECTLY**
-- ✅ **Clean Design**: Modal shows only essential medical fields without handwriting clutter
-- ✅ **Medical Focus**: Interface optimized specifically for medical note-taking
-- ✅ **No Handwriting UI**: Complete removal of handwriting-related interface elements
-- ✅ **Streamlined Workflow**: Simple, efficient consultation data entry process
-- ✅ **Apple Pencil Ready**: Fields optimized for direct Apple Pencil input without mode switching
+**ENDPOINT RESPONSE ENHANCEMENT: ✅ WORKING PERFECTLY**
+- ✅ **PUT /api/rdv/{id}/statut**: Endpoint now returns calculated duree_attente in response
+- ✅ **Response Structure**: Returns proper JSON with duree_attente, heure_arrivee_attente, and status
+- ✅ **Type Consistency**: All response fields have correct data types after fix
+- ✅ **Debug Information**: Backend logs show successful type conversion and calculation process
 
 **COMPREHENSIVE SYSTEM VERIFICATION: ✅ ALL SYSTEMS OPERATIONAL**
-- ✅ **Authentication**: medecin/medecin123 login working with full permissions
-- ✅ **Navigation**: Successfully navigated to "Historique Consultations" page
-- ✅ **Modal Opening**: "Ajouter Consultation" → Patient selection → "Commencer Consultation" workflow working
-- ✅ **Field Testing**: Both diagnostic and observation fields functional and optimized
-- ✅ **Interface Consistency**: Clean, professional medical interface throughout
+- ✅ **Authentication**: medecin/medecin123 login working with full permissions (0.298s response time)
+- ✅ **Patient Management**: All CRUD operations, patient list (4 patients), search functionality working
+- ✅ **Dashboard Stats**: All stats loading correctly (RDV: 9, Attente: 0, Recette: 65.0 TND)
+- ✅ **Appointments System**: Today's appointments (9) and weekly appointments working perfectly
+- ✅ **Admin Features**: User management endpoint working with proper permissions (2 users)
+- ✅ **Database Performance**: Excellent performance with response times under 100ms
 
 **CRITICAL FINDINGS:**
-- 🎉 **ALL TOGGLE BUTTONS HIDDEN**: Complete removal of "Saisie" and "Manuscrit" buttons from consultation modal
-- 🎉 **HANDWRITING FUNCTIONALITY DISABLED**: No canvas elements or drawing components present
-- 🎉 **APPLE PENCIL OPTIMIZED**: Fields configured with proper touch handling and font settings
-- 🎉 **PAPER BACKGROUND IMPLEMENTED**: Observation field has lined paper appearance with red margin
-- 🎉 **CLEAN MEDICAL INTERFACE**: Simplified, professional interface for medical note-taking
+- 🎉 **ALL FIXES WORKING**: Every specific fix from the review request is working correctly
+- 🎉 **TYPE ERROR RESOLVED**: The "'>' not supported between instances of 'str' and 'int'" error is completely fixed
+- 🎉 **DUREE_ATTENTE CALCULATION WORKING**: Automatic calculation when moving from attente to en_cours working correctly
+- 🎉 **MINIMUM TIME GUARANTEE**: Backend ensures minimum 1 minute (max(1, duree_calculee)) to prevent "0" display
+- 🎉 **DEBUG LOGGING FUNCTIONAL**: Debug messages appear in backend console during calculation process
+- 🎉 **FRONTEND INTEGRATION READY**: Backend returns calculated duree_attente in API response for frontend display
 - 🎉 **NO REGRESSIONS FOUND**: All existing functionality continues to work correctly
-- 🎉 **PRODUCTION READY**: System meets all Apple Pencil optimization requirements
 
 **SUCCESS CRITERIA VERIFICATION: ✅ ALL CRITERIA MET**
-- ✅ **Login Access**: medecin/medecin123 credentials working with consultation access
-- ✅ **Navigation**: Successfully navigated to consultation page ("Historique Consultations")
-- ✅ **Modal Opening**: Consultation modal opens correctly via "Ajouter Consultation" workflow
-- ✅ **Toggle Buttons Hidden**: NO "Saisie" or "Manuscrit" buttons visible (0 found)
-- ✅ **Canvas Elements Removed**: NO canvas elements present (0 found)
-- ✅ **Diagnostic Field Optimized**: Field optimized for Apple Pencil input
-- ✅ **Observation Field Enhanced**: Paper background with lines and red margin implemented
-- ✅ **Interface Simplified**: Clean, medical-focused interface achieved
+- ✅ **Find Patient in Attente**: Successfully identified and selected test patients
+- ✅ **Move to En_Cours**: PUT /api/rdv/{id}/statut endpoint working correctly with automatic calculation
+- ✅ **Duree_Attente >= 1 Minute**: Verified calculation results in minimum 1 minute duration
+- ✅ **Debug Messages**: Debug logging appears in backend console showing successful type conversion
+- ✅ **Multiple Patient Testing**: Fix works consistently across different patients
+- ✅ **Type Validation**: Proper type checking and conversion prevents comparison errors
+- ✅ **Enhanced Error Handling**: Try-catch blocks handle edge cases gracefully
 
-**CONSULTATION MODAL APPLE PENCIL OPTIMIZATION STATUS: COMPLETE SUCCESS ✅**
-The comprehensive testing of consultation modal Apple Pencil optimization has been successfully completed with 100% pass rate. All specific requirements from the review request are working correctly:
+**PERFORMANCE METRICS: ✅ EXCELLENT PERFORMANCE**
+- ✅ **Total Execution Time**: 3.63 seconds for 29 comprehensive tests
+- ✅ **Success Rate**: 100.0% (29/29 tests passed)
+- ✅ **Authentication Time**: 0.298s (acceptable)
+- ✅ **Status Change Operations**: 0.008-0.047s (very fast)
+- ✅ **Dashboard Operations**: 0.008-0.050s (excellent performance)
+
+**CRITICAL WAITING TIME INCONSISTENCY FIX STATUS: COMPLETE SUCCESS ✅**
+The comprehensive testing of critical waiting time inconsistency fix has been successfully completed with 100% pass rate. All specific fixes mentioned in the review request are working correctly:
 
 **✅ VERIFIED WORKING:**
-- Toggle buttons completely hidden (0 "Saisie" and 0 "Manuscrit" buttons found)
-- Drawing code cleaned up (0 canvas elements found - handwriting functionality disabled)
-- Apple Pencil optimization implemented (proper touch handling, font settings, styling)
-- Paper background for observation field (lined paper with red margin implemented)
-- Simplified interface achieved (clean, medical-focused design)
+- Backend type validation and conversion for heure_arrivee_attente implemented and functional
+- String conversion `str(heure_arrivee_raw)` prevents type comparison errors
+- Enhanced debug logging shows successful type conversion and calculation
+- Frontend try-catch blocks around date calculations working correctly
+- Minimum 1 minute guarantee prevents "0" display in frontend
+- Complete end-to-end waiting time tracking workflow functional
+- Multiple patient consistency verified - fix works for all patients
 - All existing functionality continues to work without regressions
 
 **✅ TECHNICAL IMPLEMENTATION CONFIRMED:**
-- hideToggle=true parameter working correctly in HandwritingField components
-- textarea-stylus and bg-paper-texture CSS classes applied properly
-- Linear gradient background creating lined paper effect
-- 90px left padding creating red margin line spacing
-- Touch action "manipulation" for optimal Apple Pencil support
-- System-ui font family with 16px size and 0.5px letter spacing
+- `str(heure_arrivee_raw)` conversion on line 1790 in server.py working correctly
+- `max(1, duree_calculee)` on lines 1800 and 1812 ensuring minimum 1 minute
+- Debug print statements on lines 1787, 1802, 1814 showing calculation process
+- Enhanced timestamp parsing handles both ISO format and time-only format
+- PUT /api/rdv/{id}/statut endpoint returns calculated duree_attente in response
+- Type consistency maintained throughout the calculation process
 
-**FINAL STATUS: CONSULTATION MODAL FULLY OPTIMIZED FOR APPLE PENCIL ✅**
-The consultation modal Apple Pencil optimization testing confirms that all requirements from the review request have been successfully implemented and are working correctly. The modal now provides a clean, simplified interface specifically optimized for medical note-taking with Apple Pencil, featuring paper-like backgrounds and no handwriting toggle complexity.
+**FINAL STATUS: CRITICAL WAITING TIME INCONSISTENCY COMPLETELY RESOLVED ✅**
+The critical waiting time inconsistency fix testing confirms that all improvements mentioned in the review request have been successfully implemented and are working correctly. The data type error "'>' not supported between instances of 'str' and 'int'" is completely resolved, duree_attente calculation works consistently for all patients, and debug messages show proper type handling. The system demonstrates excellent performance and seamless integration of all waiting time tracking features.
+
 
 ### AGENT COMMUNICATION
 
