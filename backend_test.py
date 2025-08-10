@@ -1,20 +1,34 @@
 #!/usr/bin/env python3
 """
-CRITICAL WAITING TIME WORKFLOW DEBUGGING
+CRITICAL WAITING TIME INCONSISTENCY FIX TESTING
 Backend API Testing Suite for Cabinet Médical
 
-FOCUS: Debug the critical inconsistency in waiting time display system reported by user:
-- Patient "Yassine Ben Ahmed" correctly shows "25 minutes" waiting time in "en consultation" section
-- But when manually moving a patient from "salle d'attente" to "en consultation", waiting time doesn't always appear
-- Even though patient was showing "1 minute" waiting time in "salle d'attente"
+FOCUS: Test the critical waiting time inconsistency fix implemented by main agent:
 
-CRITICAL DEBUG WORKFLOW:
-1. Test the exact user workflow: Find patient in "attente" → Move to "en_cours" → Check duree_attente
-2. Compare data structures between working and non-working cases
-3. Test timing consistency and calculation logic
-4. Debug the PUT /api/rdv/{id}/statut endpoint specifically
+**Backend Fix (server.py):**
+- Added proper type validation and conversion for heure_arrivee_attente
+- Convert to string before processing: `str(heure_arrivee_raw)`
+- Added type checking and better error handling
+- Enhanced debug logging to show data types
 
-Key Question: Why does waiting time display work for some patients but not others when moved manually?
+**Frontend Fix (Calendar.js):**
+- Added try-catch block around date calculations
+- Added validation for valid dates using `isNaN(arriveeTime.getTime())`
+- Added console logging for debugging
+- Set default minimum 1 minute if calculation fails
+
+**Test the Critical User Workflow:**
+1. **Find a patient in "attente" status** 
+2. **Move patient to "en_cours"** using PUT /api/rdv/{id}/statut
+3. **Verify duree_attente is calculated correctly** - should be >= 1 minute
+4. **Check that debug messages appear** showing successful type conversion and calculation
+5. **Test multiple patients** to ensure consistency
+
+**Key Focus:**
+- Verify the data type error `"'>' not supported between instances of 'str' and 'int'"` is resolved
+- Confirm duree_attente calculation works consistently for all patients
+- Check that debug messages show proper type handling
+- Ensure waiting time appears in frontend when patients are moved manually
 """
 
 import requests
