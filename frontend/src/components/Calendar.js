@@ -234,6 +234,39 @@ const Calendar = ({ user }) => {
     }
   }, [formData, selectedAppointment, API_BASE_URL, resetForm, fetchData]);
 
+  // Fonction pour déterminer la couleur du badge selon la durée d'attente
+  const getWaitingTimeBadgeColor = useCallback((waitingTimeMinutes) => {
+    if (waitingTimeMinutes < 15) {
+      // Moins de 15 min : vert
+      return {
+        background: 'bg-green-100',
+        text: 'text-green-800',
+        border: 'border-green-200'
+      };
+    } else if (waitingTimeMinutes < 30) {
+      // 15 à 30 min : bleu
+      return {
+        background: 'bg-blue-100',
+        text: 'text-blue-800', 
+        border: 'border-blue-200'
+      };
+    } else if (waitingTimeMinutes < 60) {
+      // 30 à 60 min : orange
+      return {
+        background: 'bg-orange-100',
+        text: 'text-orange-800',
+        border: 'border-orange-200'
+      };
+    } else {
+      // Plus de 60 min : rouge
+      return {
+        background: 'bg-red-100',
+        text: 'text-red-800',
+        border: 'border-red-200'
+      };
+    }
+  }, []);
+
   const handleDeleteAppointment = useCallback(async (appointmentId) => {
     if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce rendez-vous ?')) return;
 
