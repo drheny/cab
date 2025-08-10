@@ -3695,11 +3695,11 @@ class BackendTester:
             self.log_test("Step 1 - Current State Check", False, f"Exception: {str(e)}", response_time)
 
     def run_all_tests(self):
-        """Run all tests focused on frontend API response data handling"""
-        print("🚀 STARTING FRONTEND API RESPONSE DATA HANDLING TESTING")
+        """Run all tests focused on critical waiting time bug fix"""
+        print("🚀 STARTING CRITICAL WAITING TIME BUG FIX TESTING")
         print("=" * 80)
-        print("🔄 TESTING: Updated frontend logic for handling backend response data")
-        print("🎯 FOCUS: Verify API response includes duree_attente and frontend can update immediately")
+        print("🚨 TESTING: Critical bug fix for waiting time duration calculation")
+        print("🎯 FOCUS: Verify real duration (3min, 5min) instead of forced 1 minute")
         print("=" * 80)
         
         # Test 1: Authentication (required for all other tests)
@@ -3707,13 +3707,13 @@ class BackendTester:
             print("❌ Authentication failed - cannot proceed with other tests")
             return self.generate_report()
         
-        # PRIORITY TEST: Frontend API Response Data Handling
+        # PRIORITY TEST: Critical Waiting Time Bug Fix
         print("\n" + "="*80)
-        print("🎯 PRIORITY TEST: FRONTEND API RESPONSE DATA HANDLING")
+        print("🚨 PRIORITY TEST: CRITICAL WAITING TIME BUG FIX")
         print("="*80)
         
-        # Test the updated frontend logic for handling API response data
-        self.test_frontend_api_response_data_handling()
+        # Test the critical bug fix for waiting time duration
+        self.test_critical_waiting_time_bug_fix()
         
         # SUPPORTING TESTS: System Verification
         print("\n" + "="*80)
