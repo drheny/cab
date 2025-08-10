@@ -396,6 +396,8 @@ class CriticalWaitingTimeDebugger:
         except Exception as e:
             response_time = time.time() - start_time
             self.log_test("Current Appointments Data Analysis", False, f"Exception: {str(e)}", response_time)
+    
+    def test_status_change_endpoint_availability(self):
         """Test Status Change Endpoint Availability - Check if PUT /api/rdv/{id}/statut exists"""
         print("\n🔗 TESTING STATUS CHANGE ENDPOINT AVAILABILITY")
         
