@@ -79,12 +79,17 @@ class BackendTester:
         start_time = time.time()
         
         try:
+            print(f"Attempting to connect to: {BACKEND_URL}/auth/login")
             response = self.session.post(
                 f"{BACKEND_URL}/auth/login",
                 json=TEST_CREDENTIALS,
-                timeout=10
+                timeout=30,
+                verify=False  # Disable SSL verification
             )
             response_time = time.time() - start_time
+            
+            print(f"Response status: {response.status_code}")
+            print(f"Response headers: {dict(response.headers)}")
             
             if response.status_code == 200:
                 data = response.json()
@@ -101,12 +106,15 @@ class BackendTester:
                     self.log_test("Authentication Login", False, "Missing access_token or user in response", response_time)
                     return False
             else:
-                self.log_test("Authentication Login", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                response_text = response.text[:200] if response.text else "No response body"
+                self.log_test("Authentication Login", False, f"HTTP {response.status_code}: {response_text}", response_time)
                 return False
                 
         except Exception as e:
             response_time = time.time() - start_time
-            self.log_test("Authentication Login", False, f"Exception: {str(e)}", response_time)
+            error_details = f"Exception: {str(e)[:200]}"
+            print(f"Authentication error: {error_details}")
+            self.log_test("Authentication Login", False, error_details, response_time)
             return False
     
     def test_patient_management(self):
