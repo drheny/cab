@@ -1880,6 +1880,17 @@ async def update_rdv_statut(rdv_id: str, status_data: dict):
             update_data["duree_attente"] = existing_duree_attente
             print(f"DEBUG: Preserving duree_attente ({existing_duree_attente} min) when completing consultation")
     
+    # NOUVEAU : Préserver duree_attente pour tous les autres statuts s'il existe déjà
+    # (sauf si on vient de le calculer ci-dessus)
+    if "duree_attente" not in update_data:
+        current_appointment_for_preservation = appointments_collection.find_one({"id": rdv_id}, {"_id": 0})
+        if (current_appointment_for_preservation and 
+            current_appointment_for_preservation.get("duree_attente") is not None):
+            # Préserver duree_attente existant pour tous les changements de statut
+            existing_duree_attente = current_appointment_for_preservation["duree_attente"]
+            update_data["duree_attente"] = existing_duree_attente
+            print(f"DEBUG: General preservation - Preserving duree_attente ({existing_duree_attente} min) for status change to {statut}")
+    
     if salle:
         valid_salles = ["", "salle1", "salle2"]
         if salle in valid_salles:
