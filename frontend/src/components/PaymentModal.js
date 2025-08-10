@@ -183,7 +183,7 @@ const PaymentModal = ({
                   disabled={!canModifyPayment}
                   className="mr-2"
                 />
-                <span className="text-sm text-gray-700">Visite (65 TND)</span>
+                <span className="text-sm text-gray-700">Visite</span>
               </label>
               <label className="flex items-center">
                 <input
