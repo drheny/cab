@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 """
-UPDATED WAITING TIME CALCULATION LOGIC TESTING
+CRITICAL WAITING TIME WORKFLOW DEBUGGING
 Backend API Testing Suite for Cabinet Médical
 
-FOCUS: Test the updated waiting time calculation logic with debug logging and improved timestamp parsing.
-The backend has been updated to handle both ISO format and time-only format timestamps.
+FOCUS: Debug the critical inconsistency in waiting time display system reported by user:
+- Patient "Yassine Ben Ahmed" correctly shows "25 minutes" waiting time in "en consultation" section
+- But when manually moving a patient from "salle d'attente" to "en consultation", waiting time doesn't always appear
+- Even though patient was showing "1 minute" waiting time in "salle d'attente"
 
-Test the Exact User Workflow:
-1. Get an appointment and move it to "attente" - verify heure_arrivee_attente is set
-2. Move the same appointment to "en_cours" - check backend logs for debug messages and verify duree_attente calculation
-3. Check the final appointment data - verify duree_attente field is properly set
-4. Test dashboard statistics - check if dashboard shows calculated average instead of 0
+CRITICAL DEBUG WORKFLOW:
+1. Test the exact user workflow: Find patient in "attente" → Move to "en_cours" → Check duree_attente
+2. Compare data structures between working and non-working cases
+3. Test timing consistency and calculation logic
+4. Debug the PUT /api/rdv/{id}/statut endpoint specifically
 
-Key Focus: Confirm backend is now properly calculating and storing duree_attente when changing status 
-from "attente" to "en_cours". Look for debug log messages tracking the calculation process.
+Key Question: Why does waiting time display work for some patients but not others when moved manually?
 """
 
 import requests
