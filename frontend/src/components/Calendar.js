@@ -1967,7 +1967,8 @@ const WorkflowSection = ({
   onOpenPaymentModal,
   onWhatsApp,
   isCompleted = false,
-  user
+  user,
+  getWaitingTimeBadgeColor
 }) => {
   const getSectionColor = () => {
     switch (sectionType) {
