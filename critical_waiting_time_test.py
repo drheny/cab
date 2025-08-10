@@ -457,6 +457,7 @@ class CriticalWaitingTimeDebugger:
             return
         
         # Critical waiting time workflow tests
+        self.test_current_appointments_data_analysis()
         self.test_critical_waiting_time_workflow_debugging()
         self.test_dashboard_duree_attente_moyenne_real_calculation()
         self.test_status_change_endpoint_availability()
