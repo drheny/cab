@@ -968,7 +968,29 @@ The comprehensive waiting time bug fix testing confirms that all requirements fr
 
 agent_communication:
     -agent: "testing"
-    -message: "COMPREHENSIVE WAITING TIME BUG FIX TESTING COMPLETED - ALL REQUIREMENTS VERIFIED WORKING: The exact workflow from the review request has been successfully tested. duree_attente is calculated correctly the first time and PRESERVED on subsequent moves to en_cours (not recalculated). Debug messages show 'preserving existing value to prevent reset bug' as requested. Real duration calculation working (0, 1, 2+ minutes) instead of forced minimum. User's reported bug of waiting time resetting to 1 min is completely resolved. All 13 tests passed with 100% success rate in 10.47 seconds. System is production-ready and working perfectly."king properly. Real user workflow verified working. Frontend can now update appointment state immediately with backend response data. Minor issues: heure_arrivee_attente not in API response and duree_attente not preserved when moving to terminés (both don't affect core functionality). Success rate: 92.3% (24/26 tests passed). The updated frontend logic should resolve the user's manual workflow issue."
+    -message: "COMPREHENSIVE WAITING TIME BUG FIX TESTING COMPLETED - ALL REQUIREMENTS VERIFIED WORKING: The exact workflow from the review request has been successfully tested. duree_attente is calculated correctly the first time and PRESERVED on subsequent moves to en_cours (not recalculated). Debug messages show 'preserving existing value to prevent reset bug' as requested. Real duration calculation working (0, 1, 2+ minutes) instead of forced minimum. User's reported bug of waiting time resetting to 1 min is completely resolved. All 13 tests passed with 100% success rate in 10.47 seconds. System is production-ready and working perfectly."
+
+## WAITING TIME BUG RESOLUTION SUMMARY
+
+**USER PROBLEM:** "Badge of waiting time is reset to 1 min when patient passes from waiting room to other section"
+
+**ROOT CAUSE IDENTIFIED:** The backend was recalculating `duree_attente` every time a patient moved to "en_cours" status, causing the waiting time to be recalculated based on the original `heure_arrivee_attente` timestamp instead of preserving the first calculation.
+
+**SOLUTION IMPLEMENTED:**
+1. **Prevention of Recalculation**: Added logic to check if `duree_attente` already exists before calculating
+2. **Value Preservation**: If `duree_attente` is already calculated, preserve the existing value
+3. **Status Transition Preservation**: Extended preservation logic to "termine" status
+4. **Debug Logging**: Added clear debug messages to track preservation behavior
+
+**BUG FIX VERIFIED WORKING:**
+- ✅ `duree_attente` calculated correctly on first move from "attente" to "en_cours"
+- ✅ `duree_attente` PRESERVED (not recalculated) on subsequent status changes
+- ✅ Debug messages confirm "preserving existing value to prevent reset bug"
+- ✅ Values maintained across all status transitions including "termine"
+- ✅ Real duration calculation (0, 1, 2+ minutes) instead of forced minimum
+- ✅ 100% test success rate (13/13 tests passed)
+
+**RESULT:** User's reported waiting time reset bug is completely resolved. The system now maintains consistent waiting time values regardless of how many times patients move between sections.king properly. Real user workflow verified working. Frontend can now update appointment state immediately with backend response data. Minor issues: heure_arrivee_attente not in API response and duree_attente not preserved when moving to terminés (both don't affect core functionality). Success rate: 92.3% (24/26 tests passed). The updated frontend logic should resolve the user's manual workflow issue."
     -agent: "testing"
     -message: "WAITING TIME BUG COMPREHENSIVE TESTING COMPLETED - USER'S BUG REPORT THOROUGHLY INVESTIGATED: Tested the specific workflow 'Badge of waiting time is reset to 1 min when patient passes from waiting room to other section' with multiple scenarios. FINDINGS: 1) Short waits (5s): duree_attente = 0 minutes (correct), 2) Medium waits (65s): duree_attente = 1 minute (correct), 3) Long waits (130s): duree_attente = 2 minutes (correct). The backend calculation logic is working correctly and NOT forcing values to 1 minute. duree_attente is properly preserved across status changes (attente → en_cours → termine). API responses include duree_attente field. Database storage is consistent. CONCLUSION: The user's reported bug appears to have been FIXED or may occur under different conditions not tested. The waiting time calculation system is functioning correctly as of this testing session."
 
