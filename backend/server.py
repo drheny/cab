@@ -1833,7 +1833,18 @@ async def update_rdv_statut(rdv_id: str, status_data: dict):
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Appointment not found")
     
-    return {"message": "Status updated successfully", "statut": statut}
+    # Return the updated appointment data including calculated duree_attente
+    response_data = {"message": "Status updated successfully", "statut": statut}
+    
+    # Include duree_attente in response if it was calculated
+    if "duree_attente" in update_data:
+        response_data["duree_attente"] = update_data["duree_attente"]
+    
+    # Include heure_arrivee_attente in response if it was set
+    if "heure_arrivee_attente" in update_data:
+        response_data["heure_arrivee_attente"] = update_data["heure_arrivee_attente"]
+    
+    return response_data
 
 @app.put("/api/rdv/{rdv_id}/salle")
 async def update_rdv_salle(rdv_id: str, salle: str):
