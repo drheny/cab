@@ -2258,6 +2258,9 @@ const WorkflowCard = React.memo(({
               {appointment.patient?.prenom} {appointment.patient?.nom}
             </button>
             
+            {/* DEBUG: Prevent any accidental display of duree_attente */}
+            {/* Only show waiting time markers when properly formatted */}
+            
             {/* Marqueur d'attente raffiné pour patients en attente */}
             {sectionType === 'attente' && (
               <div className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium border mt-1 ${
