@@ -3364,8 +3364,11 @@ class BackendTester:
             self.log_test("Step 1 - Current State Check", False, f"Exception: {str(e)}", response_time)
 
     def run_all_tests(self):
-        """Run all tests focused on critical waiting time inconsistency fix"""
-        print("🚀 STARTING CRITICAL WAITING TIME INCONSISTENCY FIX TESTING")
+        """Run all tests focused on critical waiting time workflow debugging"""
+        print("🚀 STARTING CRITICAL WAITING TIME WORKFLOW DEBUGGING")
+        print("=" * 80)
+        print("🚨 USER REPORTED: Badge still doesn't appear despite previous tests showing success!")
+        print("🔍 DEBUGGING: Real user workflow - salle d'attente → wait 1 minute → en consultation")
         print("=" * 80)
         
         # Test 1: Authentication (required for all other tests)
@@ -3373,14 +3376,15 @@ class BackendTester:
             print("❌ Authentication failed - cannot proceed with other tests")
             return self.generate_report()
         
-        # PRIORITY TEST: Critical Waiting Time Inconsistency Fix
+        # PRIORITY TEST: Critical User Workflow Debugging
         print("\n" + "="*80)
-        print("🚨 PRIORITY TEST: CRITICAL WAITING TIME INCONSISTENCY FIX")
+        print("🚨 PRIORITY TEST: CRITICAL USER WORKFLOW DEBUGGING")
         print("="*80)
         
-        # Test the EXACT fix from review request
-        self.test_critical_waiting_time_inconsistency_fix()
-        self.test_debug_logging_verification()
+        # Test the EXACT user workflow that's failing
+        self.test_critical_user_workflow_debugging()
+        self.test_backend_status_change_endpoint_detailed()
+        self.test_dashboard_duree_attente_moyenne_real_calculation()
         
         # SUPPORTING TESTS: System Verification
         print("\n" + "="*80)
@@ -3396,16 +3400,7 @@ class BackendTester:
         # Test 4: Appointments (basic verification)
         self.test_appointments()
         
-        # Test 5: Waiting Time System Comprehensive
-        self.test_waiting_time_system_comprehensive()
-        
-        # Test 6: Status Change Endpoint
-        self.test_status_change_endpoint()
-        
-        # Test 7: Dashboard Waiting Time Stats
-        self.test_dashboard_waiting_time_stats()
-        
-        # Additional supporting tests
+        # Test 5: Admin Users Endpoint
         self.test_admin_users_endpoint()
         
         return self.generate_report()
