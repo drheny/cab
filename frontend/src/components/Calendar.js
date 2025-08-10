@@ -2050,7 +2050,8 @@ const WorkflowCard = React.memo(({
   onOpenPaymentModal,
   onWhatsApp,
   isCompleted,
-  user
+  user,
+  getWaitingTimeBadgeColor
 }) => {
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
