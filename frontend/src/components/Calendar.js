@@ -321,7 +321,7 @@ const Calendar = ({ user }) => {
     if (appointment && appointment.heure_arrivee_attente) {
       const arriveeTime = new Date(appointment.heure_arrivee_attente);
       const currentTime = new Date();
-      dureeAttente = Math.floor((currentTime - arriveeTime) / (1000 * 60)); // Durée en minutes
+      dureeAttente = Math.max(1, Math.floor((currentTime - arriveeTime) / (1000 * 60))); // Minimum 1 minute
     }
 
     setAppointments(prevAppointments =>
