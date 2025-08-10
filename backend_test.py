@@ -1716,44 +1716,38 @@ class BackendTester:
             self.log_test("Zero Investigation - Lina Alami Specific", False, f"Exception: {str(e)}", 0)
 
     def run_all_tests(self):
-        """Run all specific bug fix tests with focus on duree_attente"""
-        print("🚀 STARTING COMPREHENSIVE BACKEND TESTING - DUREE_ATTENTE BUG FIX FOCUS")
+        """Run all waiting time system tests"""
+        print("🚀 STARTING WAITING TIME SYSTEM TESTING")
         print("=" * 80)
         
-        # Test 1: Authentication (Critical)
+        # Test 1: Authentication (required for all other tests)
         if not self.test_authentication():
-            print("\n❌ CRITICAL FAILURE: Authentication failed. Cannot proceed with other tests.")
+            print("❌ Authentication failed - cannot proceed with other tests")
             return self.generate_report()
         
-        # PRIORITY: Zero Display Bug Investigation and Fix Testing
+        # Test 2: Core waiting time system tests
         print("\n" + "=" * 80)
-        print("🔍 PRIORITY: DUREE_ATTENTE ZERO DISPLAY BUG TESTING")
+        print("⏱️ CORE WAITING TIME SYSTEM TESTING")
         print("=" * 80)
         
-        # Core duree_attente bug fix tests
-        self.test_zero_display_bug_fix()
-        self.test_duree_attente_status_transitions()
-        self.test_zero_display_bug_investigation()
+        self.test_waiting_time_system_comprehensive()
+        self.test_status_change_endpoint()
+        self.test_dashboard_waiting_time_stats()
+        self.test_heure_arrivee_attente_timestamps()
+        self.test_waiting_time_calculation_logic()
         
-        # SPECIFIC BUG FIX TESTS:
-        # Test 2: Payment Status Real-time Update Bug Fix
-        self.test_payment_status_realtime_update_bug_fix()
+        # Test 3: Supporting system verification
+        print("\n" + "=" * 80)
+        print("🔧 SUPPORTING SYSTEM VERIFICATION")
+        print("=" * 80)
         
-        # Test 3: Payment API Endpoint Testing
-        self.test_payment_api_endpoint_specific()
-        
-        # Test 4: Backend Payment Logic Verification
-        self.test_backend_payment_logic_verification()
-        
-        # Additional supporting tests for context
-        # Test 5: Patient Management (for context)
         self.test_patient_management()
-        
-        # Test 6: Dashboard Stats (for context)
         self.test_dashboard_stats()
-        
-        # Test 7: Appointments (for context)
         self.test_appointments()
+        self.test_billing_system()
+        self.test_export_functionality()
+        self.test_database_performance()
+        self.test_admin_users_endpoint()
         
         return self.generate_report()
     
