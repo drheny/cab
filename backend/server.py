@@ -1774,8 +1774,22 @@ async def update_rdv_statut(rdv_id: str, status_data: dict):
             update_data["heure_arrivee_attente"] = datetime.now().isoformat()
     
     # Si on passe en consultation, sauvegarder la durée d'attente
-    if statut == "en_cours" and duree_attente is not None:
-        update_data["duree_attente"] = duree_attente
+    if statut == "en_cours":
+        if duree_attente is not None:
+            # Durée fournie explicitement par le frontend
+            update_data["duree_attente"] = duree_attente
+        else:
+            # Calculer automatiquement la durée d'attente si possible
+            current_appointment = appointments_collection.find_one({"id": rdv_id}, {"_id": 0})
+            if current_appointment and current_appointment.get("heure_arrivee_attente"):
+                try:
+                    arrivee_time = datetime.fromisoformat(current_appointment["heure_arrivee_attente"].replace("Z", "+00:00"))
+                    current_time = datetime.now()
+                    duree_calculee = int((current_time - arrivee_time).total_seconds() / 60)  # en minutes
+                    update_data["duree_attente"] = max(0, duree_calculee)  # Assurer une durée positive
+                except (ValueError, TypeError):
+                    # Si erreur de parsing, laisser duree_attente à sa valeur actuelle
+                    pass
     
     if salle:
         valid_salles = ["", "salle1", "salle2"]
