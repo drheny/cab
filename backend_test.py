@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-WAITING TIME (DUREE_ATTENTE) SYSTEM TESTING
+UPDATED WAITING TIME SYSTEM TESTING
 Backend API Testing Suite for Cabinet Médical
 
-This test suite focuses on testing the waiting time tracking system:
-1. Track waiting time when patient moves from "attente" to "en_cours"
-2. Display duree_attente for patients in "en_cours" and "terminés" sections
-3. Statistics - dashboard average waiting time calculation
-4. Verify heure_arrivee_attente timestamps for calculation
+This test suite focuses on testing the updated waiting time tracking system:
+1. Dashboard Statistics: Test if duree_attente_moyenne shows real calculated values instead of mock "15"
+2. Status Change Endpoint: Test PUT /api/rdv/{id}/statut to change status from "attente" to "en_cours" 
+3. Automatic Calculation: Verify duree_attente is automatically calculated when heure_arrivee_attente exists
+4. End-to-End Workflow: Set appointment to "attente" with heure_arrivee_attente, change to "en_cours", verify calculation
 """
 
 import requests
