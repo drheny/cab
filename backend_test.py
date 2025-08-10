@@ -2748,7 +2748,7 @@ class BackendTester:
             self.log_test("Step 1 - Current State Check", False, f"Exception: {str(e)}", response_time)
 
     def run_all_tests(self):
-        """Run all tests focused on updated waiting time system"""
+        """Run all tests focused on critical waiting time workflow debugging"""
         print("🚀 STARTING CRITICAL WAITING TIME WORKFLOW DEBUGGING")
         print("=" * 80)
         
@@ -2763,7 +2763,10 @@ class BackendTester:
         print("="*80)
         
         # Test the EXACT workflow from review request
-        self.test_waiting_time_workflow_critical_debug()
+        self.test_critical_waiting_time_workflow_debugging()
+        self.test_compare_working_vs_nonworking_cases()
+        self.test_timing_consistency_and_race_conditions()
+        self.test_debug_calculation_logic_detailed()
         
         # Test 2: Patient Management (basic verification)
         self.test_patient_management()
@@ -2774,9 +2777,9 @@ class BackendTester:
         # Test 4: Appointments (basic verification)
         self.test_appointments()
         
-        # FOCUS TESTS: Updated Waiting Time System
+        # SUPPORTING TESTS: System Verification
         print("\n" + "="*80)
-        print("🎯 FOCUS TESTS: UPDATED WAITING TIME SYSTEM")
+        print("🔧 SUPPORTING TESTS: SYSTEM VERIFICATION")
         print("="*80)
         
         # Test 5: Updated Dashboard Statistics - Real vs Mock Data
