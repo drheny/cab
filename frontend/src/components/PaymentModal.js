@@ -282,16 +282,6 @@ const PaymentModal = ({
               />
             </div>
 
-            {/* Méthode de paiement - Toujours espèces */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Méthode de paiement
-              </label>
-              <div className="px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700">
-                💵 Espèces (TND)
-              </div>
-            </div>
-
             {/* Insurance - Simplifié */}
             <div>
               <div className="flex items-center space-x-3">
