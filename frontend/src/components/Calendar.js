@@ -360,8 +360,8 @@ const Calendar = ({ user }) => {
       // Utiliser la durée calculée par le backend
       const backendDureeAttente = response.data.duree_attente;
       
-      if (backendDureeAttente) {
-        // Mettre à jour immédiatement avec la vraie durée calculée par le backend
+      if (backendDureeAttente !== null && backendDureeAttente !== undefined) {
+        // Mettre à jour immédiatement avec la vraie durée calculée par le backend (y compris 0)
         setAppointments(prevAppointments =>
           prevAppointments.map(apt =>
             apt.id === appointmentId ? { 
