@@ -637,6 +637,48 @@ The waiting time bug fix verification testing confirms that all fixes implemente
 ### AGENT COMMUNICATION
 
 **From Testing Agent (2025-01-08):**
+🚨 **CRITICAL WAITING TIME WORKFLOW DEBUGGING COMPLETED** - Root cause identified and system thoroughly analyzed
+
+**Testing Summary:**
+- Executed comprehensive testing of the exact workflow described in review request
+- 17 tests completed with 82.4% success rate (14/17 tests passed)
+- Total execution time: 3.55 seconds with excellent performance metrics
+- Successfully identified the EXACT root cause of the user's reported issue
+
+**Key Findings:**
+1. **System Infrastructure**: ✅ COMPLETE - All required endpoints, fields, and logic exist
+2. **Status Change Endpoint**: ✅ WORKING - PUT /api/rdv/{id}/statut functions correctly for all transitions
+3. **Dashboard Statistics**: ✅ WORKING - Shows real calculated duree_attente_moyenne (0.0 minutes)
+4. **Data Persistence**: ✅ WORKING - Status changes and timestamps are saved correctly
+5. **CRITICAL BUG IDENTIFIED**: ❌ Backend does NOT calculate duree_attente when moving from attente to en_cours
+
+**Root Cause Analysis:**
+- **Exact Issue**: PUT /api/rdv/{id}/statut endpoint changes status but does NOT calculate waiting time duration
+- **Data Evidence**: ALL 4 appointments have duree_attente=None (Total: 4, Null: 4, Zero: 0, Valid: 0)
+- **User Impact**: Since duree_attente is None, frontend cannot display waiting time next to patient names
+- **Infrastructure Present**: heure_arrivee_attente timestamps are recorded correctly when patients arrive
+- **Calculation Missing**: Backend logic to calculate time difference between arrival and consultation is not implemented
+
+**Technical Verification:**
+- **Successful Status Changes**: Patient moved through attente → en_cours → termine with correct status updates
+- **Timestamp Recording**: heure_arrivee_attente properly set when moving to attente status
+- **Missing Calculation**: duree_attente remains None after moving from attente to en_cours
+- **Data Structure**: All fields exist but calculation logic is not implemented in status change endpoint
+- **Frontend Ready**: System has all necessary data structure to support waiting time display
+
+**Comprehensive System Health:**
+- ✅ Authentication system working (medecin/medecin123 - 0.287s)
+- ✅ Patient management fully functional (4 patients, excellent response times)
+- ✅ Dashboard stats loading correctly (RDV: 4, En cours: 2, Terminés: 1)
+- ✅ Appointment system working (4 today, proper status management)
+- ✅ Admin features functional (proper permissions)
+- ✅ Database performance excellent (sub-100ms response times)
+
+**Status:** EXACT ROOT CAUSE IDENTIFIED - BACKEND CALCULATION LOGIC MISSING
+The critical waiting time workflow testing confirms that the user's reported issue is 100% accurate. The backend status change endpoint successfully changes appointment status but does NOT calculate the waiting time duration (duree_attente) when moving patients from "attente" to "en_cours". This is why waiting time is not appearing next to patient names in the frontend.
+
+
+**From Testing Agent (2025-01-08):**
 ✅ **CRITICAL WAITING TIME WORKFLOW DEBUGGING COMPLETED** - Root cause identified and system thoroughly analyzed
 
 **Testing Summary:**
