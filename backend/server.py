@@ -1782,15 +1782,15 @@ async def update_rdv_statut(rdv_id: str, status_data: dict):
             # Calculer automatiquement la durée d'attente si possible
             current_appointment = appointments_collection.find_one({"id": rdv_id}, {"_id": 0})
             if current_appointment and current_appointment.get("heure_arrivee_attente"):
-                # Only calculate duree_attente if it hasn't been calculated yet
-                # This prevents recalculation when moving between statuses multiple times
+                # CORRECTION DU BUG: Also calculate if duree_attente is 0 (not just None)
+                # This fixes the issue where 0 was treated as "already calculated"
                 existing_duree_attente = current_appointment.get("duree_attente")
                 
-                if existing_duree_attente is None:
-                    # First time calculating - proceed with calculation
+                if existing_duree_attente is None or existing_duree_attente == 0:
+                    # Calculate duree_attente (including when it's 0 - means needs recalculation)
                     try:
                         heure_arrivee_raw = current_appointment["heure_arrivee_attente"]
-                        print(f"DEBUG: First calculation - Parsing heure_arrivee_attente: {heure_arrivee_raw} (type: {type(heure_arrivee_raw)})")
+                        print(f"DEBUG: RECALCULATING duree_attente (was {existing_duree_attente}) - Parsing heure_arrivee_attente: {heure_arrivee_raw} (type: {type(heure_arrivee_raw)})")
                         
                         # Convert to string if not already
                         heure_arrivee_str = str(heure_arrivee_raw) if heure_arrivee_raw is not None else ""
@@ -1805,7 +1805,7 @@ async def update_rdv_statut(rdv_id: str, status_data: dict):
                             duree_calculee = int((current_time - arrivee_time).total_seconds() / 60)  # en minutes
                             calculated_duration = max(0, duree_calculee)  # Éviter les durées négatives seulement
                             update_data["duree_attente"] = calculated_duration
-                            print(f"DEBUG: ISO format - Calculated duree_attente: {calculated_duration} minutes (real duration)")
+                            print(f"DEBUG: ISO format - RECALCULATED duree_attente: {calculated_duration} minutes (was {existing_duree_attente})")
                         elif ":" in heure_arrivee_str:
                             # Time only format: 15:30
                             today = datetime.now().date()
@@ -1817,7 +1817,7 @@ async def update_rdv_statut(rdv_id: str, status_data: dict):
                             duree_calculee = int((current_time - arrivee_time).total_seconds() / 60)  # en minutes
                             calculated_duration = max(0, duree_calculee)  # Éviter les durées négatives seulement
                             update_data["duree_attente"] = calculated_duration
-                            print(f"DEBUG: Time format - Calculated duree_attente: {calculated_duration} minutes (real duration)")
+                            print(f"DEBUG: Time format - RECALCULATED duree_attente: {calculated_duration} minutes (was {existing_duree_attente})")
                         else:
                             print(f"DEBUG: Unrecognized timestamp format: {heure_arrivee_str}")
                         
@@ -1826,7 +1826,7 @@ async def update_rdv_statut(rdv_id: str, status_data: dict):
                         print(f"DEBUG: Error parsing timestamp {heure_arrivee_raw}: {e}")
                         pass
                 else:
-                    # duree_attente already calculated - preserve the existing value
+                    # duree_attente already calculated and is > 0 - preserve the existing value
                     print(f"DEBUG: duree_attente already calculated ({existing_duree_attente} min) - preserving existing value to prevent reset bug")
                     update_data["duree_attente"] = existing_duree_attente
     
