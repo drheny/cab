@@ -338,15 +338,31 @@ const Calendar = ({ user }) => {
     }
 
     try {
-      // Send API request first (no optimistic update)
-      await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/statut`, { 
+      // Send API request with calculated duree_attente
+      const response = await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/statut`, { 
         statut: 'en_cours',
         duree_attente: dureeAttente
       });
       
+      console.log('API Response:', response.data);
+      
+      // If backend calculated a different duree_attente, use that value
+      const backendDureeAttente = response.data.duree_attente || dureeAttente;
+      
+      // Update the specific appointment immediately with backend data
+      setAppointments(prevAppointments =>
+        prevAppointments.map(apt =>
+          apt.id === appointmentId ? { 
+            ...apt, 
+            statut: 'en_cours',
+            duree_attente: backendDureeAttente
+          } : apt
+        )
+      );
+      
       toast.success('Consultation démarrée');
       
-      // Refresh data from backend to get the actual updated appointment data
+      // Also refresh all data to ensure consistency
       await fetchData();
       
     } catch (error) {
