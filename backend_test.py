@@ -3782,12 +3782,12 @@ class BackendTester:
         }
 
 if __name__ == "__main__":
-    print("🏥 Cabinet Médical - Updated Waiting Time System Testing")
-    print("Testing the updated waiting time (duree_attente) tracking system:")
-    print("1. Dashboard Statistics: Real calculation instead of mock '15' minutes")
-    print("2. Status Change Endpoint: Automatic duree_attente calculation from attente to en_cours")
-    print("3. End-to-End Workflow: Complete waiting time tracking and dashboard integration")
-    print("4. Explicit Duration Handling: Respects explicitly provided duree_attente values")
+    print("🏥 Cabinet Médical - Critical Waiting Time Bug Fix Testing")
+    print("Testing the critical bug fix for waiting time duration calculation:")
+    print("1. Real Duration Calculation: Shows actual waiting time (3min, 5min) instead of forced 1 minute")
+    print("2. Backend API Response: Includes calculated duree_attente field for frontend")
+    print("3. Database Persistence: Real duration stored correctly in database")
+    print("4. Status Transitions: Proper workflow from attente → en_cours → terminés")
     print(f"Backend URL: {BACKEND_URL}")
     print(f"Test Credentials: {TEST_CREDENTIALS['username']}")
     print()
