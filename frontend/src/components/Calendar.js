@@ -2280,7 +2280,7 @@ const WorkflowCard = React.memo(({
             </div>
             
             {/* Badge d'attente simplifié pour patients en attente */}
-            {sectionType === 'attente' && waitingTime && waitingTime > 0 && (
+            {sectionType === 'attente' && waitingTime !== null && waitingTime !== undefined && typeof waitingTime === 'number' && waitingTime >= 0 && (
               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200 mt-1">
                 <Clock className="w-3 h-3 mr-1" />
                 {waitingTime} min
