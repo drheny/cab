@@ -1706,6 +1706,7 @@ const Consultation = ({ user }) => {
                           rows={3}
                           medicalContext={true}
                           enableOCR={true}
+                          disableHandwriting={true}
                         />
                       </div>
 
