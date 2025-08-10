@@ -353,7 +353,6 @@ const Calendar = ({ user }) => {
       console.error('Error starting consultation:', error);
       toast.error('Erreur lors du démarrage de la consultation');
     }
-    }
   }, [API_BASE_URL, fetchData, appointments]);
 
   // Fonctions pour gérer les modals de consultation multi-instances
