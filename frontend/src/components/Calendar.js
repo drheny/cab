@@ -1071,14 +1071,16 @@ const Calendar = ({ user }) => {
       {/* List View - Workflow Optimisé - Sections réorganisées */}
       {viewMode === 'list' && (
         <div className="space-y-6">
-          {/* 1. RDV Programmés */}
+          {/* 1. En consultation */}
           <WorkflowSection
-            title="📅 RDV Programmés"
-            appointments={groupedAppointments.absent}
-            sectionType="programme"
+            title="🔵 En consultation"
+            appointments={groupedAppointments.en_cours}
+            sectionType="en_cours"
             onStatusUpdate={handleStatusUpdate}
             onTypeToggle={handleTypeToggle}
             onPaymentUpdate={handlePaymentUpdate}
+            onFinishConsultation={handleFinishConsultation}
+            onOpenConsultation={ouvrirModalConsultation}
             onEdit={openModal}
             onDelete={handleDeleteAppointment}
             onViewPatient={viewPatientDetails}
@@ -1108,16 +1110,14 @@ const Calendar = ({ user }) => {
             getWaitingTimeBadgeColor={getWaitingTimeBadgeColor}
           />
           
-          {/* 3. En consultation */}
+          {/* 3. RDV Programmés */}
           <WorkflowSection
-            title="🔵 En consultation"
-            appointments={groupedAppointments.en_cours}
-            sectionType="en_cours"
+            title="📅 RDV Programmés"
+            appointments={groupedAppointments.absent}
+            sectionType="programme"
             onStatusUpdate={handleStatusUpdate}
             onTypeToggle={handleTypeToggle}
             onPaymentUpdate={handlePaymentUpdate}
-            onFinishConsultation={handleFinishConsultation}
-            onOpenConsultation={ouvrirModalConsultation}
             onEdit={openModal}
             onDelete={handleDeleteAppointment}
             onViewPatient={viewPatientDetails}
@@ -1127,7 +1127,25 @@ const Calendar = ({ user }) => {
             getWaitingTimeBadgeColor={getWaitingTimeBadgeColor}
           />
           
-          {/* 4. Terminé */}
+          {/* 4. En retard */}
+          <WorkflowSection
+            title="🟠 En retard"
+            appointments={groupedAppointments.retard}
+            sectionType="retard"
+            onStatusUpdate={handleStatusUpdate}
+            onTypeToggle={handleTypeToggle}
+            onPaymentUpdate={handlePaymentUpdate}
+            onStartConsultation={handleStartConsultation}
+            onEdit={openModal}
+            onDelete={handleDeleteAppointment}
+            onViewPatient={viewPatientDetails}
+            onOpenPaymentModal={handleOpenPaymentModal}
+            onWhatsApp={openWhatsAppModal}
+            user={user}
+            getWaitingTimeBadgeColor={getWaitingTimeBadgeColor}
+          />
+          
+          {/* 5. Terminé */}
           <WorkflowSection
             title="✅ Terminé"
             appointments={groupedAppointments.termine}
@@ -1142,24 +1160,6 @@ const Calendar = ({ user }) => {
             onOpenPaymentModal={handleOpenPaymentModal}
             onWhatsApp={openWhatsAppModal}
             isCompleted={true}
-            user={user}
-            getWaitingTimeBadgeColor={getWaitingTimeBadgeColor}
-          />
-          
-          {/* 5. En retard */}
-          <WorkflowSection
-            title="🟠 En retard"
-            appointments={groupedAppointments.retard}
-            sectionType="retard"
-            onStatusUpdate={handleStatusUpdate}
-            onTypeToggle={handleTypeToggle}
-            onPaymentUpdate={handlePaymentUpdate}
-            onStartConsultation={handleStartConsultation}
-            onEdit={openModal}
-            onDelete={handleDeleteAppointment}
-            onViewPatient={viewPatientDetails}
-            onOpenPaymentModal={handleOpenPaymentModal}
-            onWhatsApp={openWhatsAppModal}
             user={user}
             getWaitingTimeBadgeColor={getWaitingTimeBadgeColor}
           />
