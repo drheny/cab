@@ -314,55 +314,37 @@ const Calendar = ({ user }) => {
 
   // Démarrer consultation (attente → en_cours)
   const handleStartConsultation = useCallback(async (appointmentId) => {
-    // Calculer la durée d'attente avant le changement de statut
-    const appointment = appointments.find(apt => apt.id === appointmentId);
-    let dureeAttente = 1; // Default minimum 1 minute
-    
-    if (appointment && appointment.heure_arrivee_attente) {
-      try {
-        const arriveeTime = new Date(appointment.heure_arrivee_attente);
-        const currentTime = new Date();
-        
-        // Verify dates are valid
-        if (!isNaN(arriveeTime.getTime()) && !isNaN(currentTime.getTime())) {
-          const diffInMinutes = Math.floor((currentTime - arriveeTime) / (1000 * 60));
-          dureeAttente = Math.max(1, diffInMinutes); // Minimum 1 minute
-          console.log(`Frontend calculation: ${appointment.patient?.nom} - ${diffInMinutes} minutes -> ${dureeAttente} minutes`);
-        } else {
-          console.log(`Invalid dates: arriveeTime=${arriveeTime}, currentTime=${currentTime}`);
-        }
-      } catch (error) {
-        console.log(`Error calculating waiting time: ${error}`);
-        dureeAttente = 1; // Fallback to 1 minute
-      }
-    }
-
     try {
-      // Send API request with calculated duree_attente
+      // Laisser le backend calculer la durée d'attente automatiquement
+      // Ne pas envoyer de duree_attente explicite pour que le backend fasse le calcul correct
       const response = await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/statut`, { 
-        statut: 'en_cours',
-        duree_attente: dureeAttente
+        statut: 'en_cours'
+        // Pas de duree_attente - le backend calculera automatiquement
       });
       
       console.log('API Response:', response.data);
       
-      // If backend calculated a different duree_attente, use that value
-      const backendDureeAttente = response.data.duree_attente || dureeAttente;
+      // Utiliser la durée calculée par le backend
+      const backendDureeAttente = response.data.duree_attente;
       
-      // Update the specific appointment immediately with backend data
-      setAppointments(prevAppointments =>
-        prevAppointments.map(apt =>
-          apt.id === appointmentId ? { 
-            ...apt, 
-            statut: 'en_cours',
-            duree_attente: backendDureeAttente
-          } : apt
-        )
-      );
+      if (backendDureeAttente) {
+        // Mettre à jour immédiatement avec la vraie durée calculée par le backend
+        setAppointments(prevAppointments =>
+          prevAppointments.map(apt =>
+            apt.id === appointmentId ? { 
+              ...apt, 
+              statut: 'en_cours',
+              duree_attente: backendDureeAttente
+            } : apt
+          )
+        );
+        
+        console.log(`Backend calculated waiting time: ${backendDureeAttente} minutes`);
+      }
       
       toast.success('Consultation démarrée');
       
-      // Also refresh all data to ensure consistency
+      // Refresh pour assurer la cohérence
       await fetchData();
       
     } catch (error) {
