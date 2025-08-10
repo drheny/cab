@@ -1085,6 +1085,7 @@ const Calendar = ({ user }) => {
             onOpenPaymentModal={handleOpenPaymentModal}
             onWhatsApp={openWhatsAppModal}
             user={user}
+            getWaitingTimeBadgeColor={getWaitingTimeBadgeColor}
           />
           
           {/* 2. Salle d'attente */}
@@ -1104,6 +1105,7 @@ const Calendar = ({ user }) => {
             onOpenPaymentModal={handleOpenPaymentModal}
             onWhatsApp={openWhatsAppModal}
             user={user}
+            getWaitingTimeBadgeColor={getWaitingTimeBadgeColor}
           />
           
           {/* 3. En consultation */}
@@ -1122,6 +1124,7 @@ const Calendar = ({ user }) => {
             onOpenPaymentModal={handleOpenPaymentModal}
             onWhatsApp={openWhatsAppModal}
             user={user}
+            getWaitingTimeBadgeColor={getWaitingTimeBadgeColor}
           />
           
           {/* 4. Terminé */}
@@ -1140,6 +1143,7 @@ const Calendar = ({ user }) => {
             onWhatsApp={openWhatsAppModal}
             isCompleted={true}
             user={user}
+            getWaitingTimeBadgeColor={getWaitingTimeBadgeColor}
           />
           
           {/* 5. En retard */}
@@ -1157,6 +1161,7 @@ const Calendar = ({ user }) => {
             onOpenPaymentModal={handleOpenPaymentModal}
             onWhatsApp={openWhatsAppModal}
             user={user}
+            getWaitingTimeBadgeColor={getWaitingTimeBadgeColor}
           />
           
           {/* Empty state */}
