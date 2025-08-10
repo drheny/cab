@@ -1,38 +1,35 @@
 #!/usr/bin/env python3
 """
-FRONTEND API RESPONSE DATA HANDLING TESTING
+CRITICAL WAITING TIME BUG FIX TESTING
 Backend API Testing Suite for Cabinet Médical
 
-TESTING UPDATED FRONTEND LOGIC: The frontend has been updated to properly handle API response data
-for waiting time calculation. This test verifies the specific fix applied.
+TESTING CRITICAL WAITING TIME DURATION BUG FIX: The user reported that waiting time duration 
+was always reset to 1 minute instead of showing the real duration.
 
-**Frontend Fix Applied:**
-- Added console.log to show API response data
-- Use backend-calculated duree_attente from response: `response.data.duree_attente || dureeAttente`
-- Immediately update appointment state with backend data before fetchData()
-- Both immediate update AND full refresh to ensure consistency
+**Bug Fix Applied:**
+Frontend (Calendar.js):
+- Removed frontend calculation that forced Math.max(1, diffInMinutes)
+- Frontend no longer sends explicit duree_attente - lets backend calculate
+- Uses only response.data.duree_attente from backend
+- Changed condition from > 0 to >= 0 to allow real short durations
 
-**Test the Real User Workflow:**
-1. **Find a patient** in any status  
-2. **Move to "attente"** - verify heure_arrivee_attente is set
-3. **Wait briefly** (simulate 1+ minute waiting)
-4. **Move to "en_cours"** - critical test of the fix
-5. **Check API response** - should include duree_attente field
-6. **Verify appointment state** - duree_attente should be immediately updated
-7. **Check frontend display** - badge should appear with calculated time
+Backend (server.py):
+- Changed max(1, duree_calculee) to max(0, duree_calculee) to avoid forcing 1 minute minimum
+- Allows display of real calculated duration (0, 2, 5, 10 minutes, etc.)
 
-**Critical Debug Points:**
-- Does the PUT /api/rdv/{id}/statut response include duree_attente field?
-- Is the frontend immediately updating the appointment state with backend data?
-- Is the fetchData() getting consistent data after the immediate update?
-- Does the waiting time badge appear correctly after both updates?
+**Test the Real Workflow:**
+1. **Put patient in "attente"** - verify heure_arrivee_attente
+2. **Wait 3-5 minutes** (for realistic duration > 1 minute)
+3. **Move to "en_cours"** - verify duree_attente = real duration (not forced to 1)
+4. **Verify API response** - must include real calculated duration
+5. **Verify persistence** - duration stored correctly in database
 
-**Expected Result:**
-When moving patient from "attente" to "en_cours", the badge should immediately appear with the 
-calculated waiting time (like "1 min" or "2 min") because the frontend now properly handles 
-the backend response data.
+**Critical Questions:**
+- Does backend calculate real duration (3 min, 5 min) instead of forcing 1 minute?
+- Does API response include real calculated duration?
+- Is duration stored correctly in database?
 
-This should fix the user's manual workflow issue where badges weren't appearing.
+This should resolve the bug where all waiting times showed "1 min" instead of real duration.
 """
 
 import requests
