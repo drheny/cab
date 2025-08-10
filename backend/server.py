@@ -1830,6 +1830,47 @@ async def update_rdv_statut(rdv_id: str, status_data: dict):
                     print(f"DEBUG: duree_attente already calculated ({existing_duree_attente} min) - preserving existing value to prevent reset bug")
                     update_data["duree_attente"] = existing_duree_attente
     
+    # NOUVEAU : Calculer duree_attente quand on quitte le statut "attente" (pour tous les autres statuts)
+    current_appointment = appointments_collection.find_one({"id": rdv_id}, {"_id": 0})
+    if (current_appointment and 
+        current_appointment.get("statut") == "attente" and 
+        statut != "attente" and 
+        current_appointment.get("heure_arrivee_attente") and
+        current_appointment.get("duree_attente") is None):
+        
+        # Patient quitte la salle d'attente - calculer et sauvegarder le temps d'attente
+        try:
+            heure_arrivee_raw = current_appointment["heure_arrivee_attente"]
+            print(f"DEBUG: Patient quitte salle d'attente - Calculating duree_attente: {heure_arrivee_raw}")
+            
+            # Convert to string if not already
+            heure_arrivee_str = str(heure_arrivee_raw) if heure_arrivee_raw is not None else ""
+            
+            if "T" in heure_arrivee_str:
+                # ISO format: 2023-08-09T15:30:00.000Z
+                arrivee_time = datetime.fromisoformat(heure_arrivee_str.replace("Z", "+00:00"))
+                current_time = datetime.now()
+                duree_calculee = int((current_time - arrivee_time).total_seconds() / 60)  # en minutes
+                calculated_duration = max(0, duree_calculee)  # Éviter les durées négatives seulement
+                update_data["duree_attente"] = calculated_duration
+                print(f"DEBUG: Quitte attente - Calculated duree_attente: {calculated_duration} minutes")
+            elif ":" in heure_arrivee_str:
+                # Time only format: 15:30
+                today = datetime.now().date()
+                time_parts = heure_arrivee_str.split(":")
+                hour = int(time_parts[0])
+                minute = int(time_parts[1]) if len(time_parts) > 1 else 0
+                arrivee_time = datetime.combine(today, datetime.min.time().replace(hour=hour, minute=minute))
+                current_time = datetime.now()
+                duree_calculee = int((current_time - arrivee_time).total_seconds() / 60)  # en minutes
+                calculated_duration = max(0, duree_calculee)  # Éviter les durées négatives seulement
+                update_data["duree_attente"] = calculated_duration
+                print(f"DEBUG: Quitte attente - Calculated duree_attente: {calculated_duration} minutes")
+            
+        except (ValueError, TypeError, AttributeError) as e:
+            print(f"DEBUG: Error calculating duree_attente when leaving attente: {e}")
+            pass
+    
     # If moving to "termine" status, preserve duree_attente if it exists
     if statut == "termine":
         current_appointment = appointments_collection.find_one({"id": rdv_id}, {"_id": 0})
