@@ -2280,9 +2280,6 @@ const WorkflowCard = React.memo(({
               </button>
             </div>
             
-            {/* DEBUG: Prevent any accidental display of duree_attente */}
-            {/* Only show waiting time markers when properly formatted */}
-            
             {/* Marqueur d'attente raffiné pour patients en attente */}
             {sectionType === 'attente' && (
               <div className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium border mt-1 ${
@@ -2291,20 +2288,6 @@ const WorkflowCard = React.memo(({
                 <Clock className={`w-3 h-3 ${getWaitingTimeStyle(waitingTime).iconColor}`} />
                 <span>{formatWaitingTime(waitingTime)}</span>
                 <span className="text-gray-500">d'attente</span>
-              </div>
-            )}
-
-            {/* Marqueur durée d'attente stockée pour patients en cours et terminés */}
-            {(sectionType === 'en_cours' || sectionType === 'termine') && 
-             appointment.duree_attente > 0 && 
-             typeof appointment.duree_attente === 'number' &&
-             formatStoredWaitingTime(appointment.duree_attente) && 
-             formatStoredWaitingTime(appointment.duree_attente) !== null && (
-              <div className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium border mt-1 ${
-                getStoredWaitingTimeStyle(appointment.duree_attente).bgColor
-              } ${getStoredWaitingTimeStyle(appointment.duree_attente).textColor} ${getStoredWaitingTimeStyle(appointment.duree_attente).borderColor}`}>
-                <Clock className="w-3 h-3 mr-1" />
-                <span>{formatStoredWaitingTime(appointment.duree_attente)}</span>
               </div>
             )}
           </div>
