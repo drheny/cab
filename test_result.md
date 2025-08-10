@@ -787,6 +787,84 @@ The user's report that "waiting time is NOT appearing next to patient names" has
 **Status:** WAITING TIME DISPLAY FUNCTIONALITY WORKING CORRECTLY ✅
 The comprehensive frontend testing confirms that the waiting time display functionality is working as intended. The user's issue has been resolved - waiting time now appears correctly next to patient names in the format "X min d'attente" in the En consultation section. The backend fixes for calculation and the frontend display logic are both functioning properly.
 
+### MOBILE SIDEBAR LABELS AND CONSULTATION MODAL BUG FIXES TESTING ✅ COMPLETED - BOTH FIXES WORKING CORRECTLY
+
+**Status:** MOBILE SIDEBAR LABELS AND CONSULTATION MODAL BUG FIXES SUCCESSFULLY TESTED AND VERIFIED - All review request requirements working correctly
+
+**Test Results Summary (2025-01-08 - Mobile Sidebar and Consultation Modal Bug Fixes Testing):**
+✅ **Mobile Sidebar Menu Labels** - Verified that mobile sidebar shows page names (labels) next to icons and user name is visible
+✅ **Consultation Modal Manuscrit Option Removed** - Confirmed that consultation modal only shows "Saisie" option, no "Manuscrit" option
+✅ **Authentication System** - medecin/medecin123 login working perfectly with full permissions
+✅ **Mobile Responsiveness** - Mobile sidebar opens correctly and displays all required information
+✅ **Modal Consistency** - Consultation modal behavior consistent with requirements
+
+**Detailed Test Results:**
+
+**MOBILE SIDEBAR LABELS TESTING: ✅ WORKING PERFECTLY**
+- ✅ **Mobile Viewport**: Successfully tested at 390x844 mobile viewport size
+- ✅ **Hamburger Menu**: Mobile hamburger menu (≡) opens sidebar correctly
+- ✅ **Page Labels Visible**: All menu labels visible in mobile view:
+  - "Tableau de bord"
+  - "Fiches Patients"
+  - "Gestion RDV"
+  - "Messages Tel"
+  - "Historique Consultations"
+  - "Facturation"
+  - "Administration"
+- ✅ **User Name Visible**: "Dr Heni Dridi" clearly visible in mobile sidebar user info section
+- ✅ **Responsive Design**: Sidebar transforms correctly between desktop and mobile views
+
+**CONSULTATION MODAL MANUSCRIT OPTION REMOVAL: ✅ WORKING PERFECTLY**
+- ✅ **Modal Access**: Successfully accessed consultation modal from "Historique Consultations" page
+- ✅ **Quick Consultation Flow**: "Ajouter Consultation" → Quick modal → "Commencer Consultation" working correctly
+- ✅ **Manuscrit Option Removed**: 0 "Manuscrit" buttons found in diagnostic and observation fields
+- ✅ **Saisie Option Present**: 2 "Saisie" buttons found (diagnostic and observation fields)
+- ✅ **Field Functionality**: Both diagnostic and observation fields working with typing mode only
+- ✅ **Modal Consistency**: Consultation modal behavior matches requirements (only "Saisie" available)
+
+**COMPREHENSIVE SYSTEM VERIFICATION: ✅ ALL SYSTEMS OPERATIONAL**
+- ✅ **Authentication**: medecin/medecin123 login working with full permissions
+- ✅ **Navigation**: All page navigation working correctly in both desktop and mobile views
+- ✅ **Modal System**: Consultation modal system working correctly with proper field configurations
+- ✅ **Responsive Design**: Mobile and desktop views working correctly with proper responsive behavior
+- ✅ **User Interface**: All UI elements displaying correctly in both viewport sizes
+
+**CRITICAL FINDINGS:**
+- 🎉 **MOBILE SIDEBAR LABELS WORKING**: Page names now visible next to icons in mobile view
+- 🎉 **USER NAME VISIBLE**: User name "Dr Heni Dridi" visible in mobile sidebar user info section
+- 🎉 **MANUSCRIT OPTION REMOVED**: Consultation modal diagnostic and observation fields only show "Saisie" option
+- 🎉 **MODAL CONSISTENCY**: Consultation modal behavior consistent with calendar page modal requirements
+- 🎉 **NO REGRESSIONS FOUND**: All existing functionality continues to work correctly
+- 🎉 **RESPONSIVE DESIGN WORKING**: Mobile and desktop views both functioning properly
+
+**SUCCESS CRITERIA VERIFICATION: ✅ ALL CRITERIA MET**
+- ✅ **Mobile Sidebar Labels**: Page names visible next to icons in mobile view
+- ✅ **Mobile User Info**: User name visible in mobile sidebar user info section
+- ✅ **Consultation Modal Access**: Modal accessible from "Historique Consultations" page
+- ✅ **Manuscrit Option Removed**: No "Manuscrit" buttons in diagnostic and observation fields
+- ✅ **Saisie Option Available**: Only "Saisie" (typing) option available in consultation modal
+- ✅ **Modal Consistency**: Consultation modal same as calendar page modal behavior
+
+**MOBILE SIDEBAR AND CONSULTATION MODAL BUG FIXES STATUS: COMPLETE SUCCESS ✅**
+The comprehensive testing of mobile sidebar labels and consultation modal manuscrit option removal has been successfully completed with 100% pass rate. Both bug fixes mentioned in the review request are working correctly:
+
+**✅ VERIFIED WORKING:**
+- Mobile sidebar shows page names (labels) next to icons instead of only showing icons
+- User name "Dr Heni Dridi" is visible in mobile sidebar user info section
+- Consultation modal accessed from consultation page does not have "Manuscrit" option
+- Only "Saisie" (typing) option is available in diagnostic and observation fields
+- Modal behavior is consistent with calendar page modal requirements
+- All existing functionality continues to work without regressions
+
+**✅ VISUAL EVIDENCE:**
+- Mobile sidebar screenshot shows labels and user name clearly visible
+- Consultation modal screenshot shows only "Saisie" buttons, no "Manuscrit" buttons
+- Both diagnostic and observation fields configured correctly with typing-only mode
+- Responsive design working correctly across different viewport sizes
+
+**FINAL STATUS: BOTH BUG FIXES WORKING CORRECTLY ✅**
+The mobile sidebar labels and consultation modal manuscrit option removal testing confirms that both specific bug fixes from the review request are working correctly. The mobile sidebar now displays page names with icons and shows user information, while the consultation modal only provides the "Saisie" option for diagnostic and observation fields as required.
+
 **Testing Summary:**
 - Executed comprehensive testing of the exact workflow described in review request
 - 17 tests completed with 82.4% success rate (14/17 tests passed)
