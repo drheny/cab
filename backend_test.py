@@ -3761,15 +3761,15 @@ class BackendTester:
         print("\n" + "=" * 80)
         
         if failed_tests == 0:
-            print("🎉 UPDATED WAITING TIME SYSTEM WORKING CORRECTLY!")
-            print("✅ Dashboard Statistics - Real calculation instead of mock data")
-            print("✅ Status Change Endpoint - Automatic duree_attente calculation")
-            print("✅ End-to-End Workflow - Complete waiting time tracking")
-            print("✅ Explicit Duration Handling - Respects provided values")
+            print("🎉 CRITICAL WAITING TIME BUG FIX WORKING CORRECTLY!")
+            print("✅ Real Duration Calculation - Shows actual waiting time (3min, 5min) instead of forced 1 minute")
+            print("✅ Backend API Response - Includes calculated duree_attente field")
+            print("✅ Database Persistence - Real duration stored correctly")
+            print("✅ Status Transitions - Proper workflow from attente → en_cours → terminés")
         else:
-            print("⚠️  UPDATED WAITING TIME SYSTEM HAS ISSUES")
+            print("⚠️  CRITICAL WAITING TIME BUG FIX HAS ISSUES")
             print("❌ Review failed tests and identify problems")
-            print("🔧 Focus on dashboard calculation and status transitions")
+            print("🔧 Focus on duration calculation and API response data")
         
         return {
             "total_tests": total_tests,
