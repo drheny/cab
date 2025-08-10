@@ -19,8 +19,50 @@ const HandwritingField = ({
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
 
+  // Configuration optimisée pour Apple Pencil
+  const applePencilConfig = {
+    className: `textarea-stylus ${paperBackground ? 'bg-paper-texture' : 'bg-white'}`,
+    inputMode: "text",
+    autoCapitalize: "sentences",
+    spellCheck: true,
+    style: paperBackground ? {
+      backgroundImage: `
+        linear-gradient(transparent 24px, #e5e7eb 24px, #e5e7eb 25px),
+        linear-gradient(90deg, transparent 79px, #f87171 79px, #f87171 80px, transparent 80px)
+      `,
+      backgroundSize: '100% 25px, 80px 100%',
+      lineHeight: '25px',
+      paddingTop: '4px',
+      paddingLeft: '90px',
+      minHeight: `${rows * 25 + 20}px`,
+      fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      fontSize: '16px',
+      letterSpacing: '0.5px',
+      // Optimisations spécifiques pour Apple Pencil
+      touchAction: 'manipulation',
+      WebkitTouchCallout: 'none',
+      WebkitUserSelect: 'text',
+      userSelect: 'text',
+      // Support pour l'écriture manuscrite avec Apple Pencil
+      WebkitTextSizeAdjust: '100%',
+      WebkitTapHighlightColor: 'transparent'
+    } : {
+      // Configuration standard optimisée pour Apple Pencil
+      fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      fontSize: '16px',
+      letterSpacing: '0.5px',
+      lineHeight: '1.8',
+      touchAction: 'manipulation',
+      WebkitTouchCallout: 'none',
+      WebkitUserSelect: 'text',
+      userSelect: 'text',
+      WebkitTextSizeAdjust: '100%',
+      WebkitTapHighlightColor: 'transparent'
+    }
+  };
+
   // Configuration différentielle selon le mode
-  const typingConfig = {
+  const typingConfig = hideToggle ? applePencilConfig : {
     className: "textarea-stylus bg-white",
     inputMode: "text",
     autoCapitalize: "sentences",
