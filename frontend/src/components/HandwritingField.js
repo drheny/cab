@@ -86,8 +86,9 @@ const HandwritingField = ({
     }
   };
 
-  // Canvas pour capture d'écriture manuscrite
+  // Canvas pour capture d'écriture manuscrite (conservé pour compatibilité mais non utilisé si hideToggle)
   const startDrawing = (e) => {
+    if (hideToggle) return; // Désactivé si toggle caché
     setIsDrawing(true);
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
@@ -100,7 +101,7 @@ const HandwritingField = ({
   };
 
   const draw = (e) => {
-    if (!isDrawing) return;
+    if (!isDrawing || hideToggle) return; // Désactivé si toggle caché
     
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
@@ -120,9 +121,9 @@ const HandwritingField = ({
     setIsDrawing(false);
   };
 
-  // OCR et auto-raffinement IA
+  // OCR et auto-raffinement IA (désactivé si hideToggle)
   const refineHandwriting = async () => {
-    if (!canvasRef.current) return;
+    if (!canvasRef.current || hideToggle) return;
 
     setIsProcessing(true);
     try {
