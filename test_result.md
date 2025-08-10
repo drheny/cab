@@ -634,10 +634,119 @@ The comprehensive testing confirms that the waiting time bug has been successful
 **FINAL STATUS: BUG SUCCESSFULLY FIXED AND VERIFIED ✅**
 The waiting time bug fix verification testing confirms that all fixes implemented are working correctly. The En consultation section now displays waiting time properly ("25 min d'attente"), and the system ensures minimum 1 minute display through both frontend and backend fixes. The user's reported issue has been completely resolved.
 
+### UPDATED WAITING TIME CALCULATION LOGIC TESTING ✅ COMPLETED - ALL FIXES WORKING CORRECTLY
+
+**Status:** UPDATED WAITING TIME CALCULATION LOGIC SUCCESSFULLY TESTED AND VERIFIED - All debug logging and timestamp parsing improvements working correctly
+
+**Test Results Summary (2025-08-10 - Updated Waiting Time Calculation Logic Testing):**
+✅ **Debug Logging Implementation** - Verified debug print statements for parsing heure_arrivee_attente working correctly
+✅ **Enhanced Timestamp Parsing** - Confirmed backend handles both ISO format and time-only format timestamps
+✅ **Duree_Attente Calculation** - Successfully verified waiting time calculation when moving from attente to en_cours
+✅ **Status Change Endpoint** - PUT /api/rdv/{id}/statut endpoint working correctly with automatic calculation
+✅ **Dashboard Statistics** - Real calculated duree_attente_moyenne (1.0 minutes) instead of mock data
+✅ **End-to-End Workflow** - Complete waiting time tracking from attente → en_cours → terminés working
+✅ **Data Structure Verification** - All fields properly stored with correct data types (duree_attente: int, heure_arrivee_attente: str)
+✅ **Authentication System** - medecin/medecin123 login working perfectly with full permissions (0.329s)
+✅ **Patient Management** - All CRUD operations, patient list (3 patients), search functionality working
+✅ **Supporting Systems** - Dashboard, appointments, admin users all operational
+
+**Detailed Test Results:**
+
+**CRITICAL WAITING TIME WORKFLOW TESTING: ✅ ALL FIXES WORKING PERFECTLY**
+- ✅ **Step 1 - Current State Check**: Successfully selected patient 'Yassine Ben Ahmed' for testing workflow
+- ✅ **Step 2 - Move to Waiting Room**: Successfully moved patient to attente status with heure_arrivee_attente timestamp (10:22)
+- ✅ **Step 3 - Move to Consultation**: Successfully moved to en_cours with automatic duree_attente calculation (1 minute)
+- ✅ **Step 4 - Data Structure Verification**: All fields properly stored with correct data types
+- ✅ **Step 5 - Move to Terminés**: duree_attente successfully preserved (1 minute) in terminés status
+
+**DEBUG LOGGING VERIFICATION: ✅ WORKING CORRECTLY**
+- ✅ **Debug Print Statements**: Confirmed "DEBUG: Parsing heure_arrivee_attente" messages implemented in backend
+- ✅ **Calculation Debug Output**: Verified "DEBUG: Calculated duree_attente: X minutes" messages working
+- ✅ **Error Handling**: Debug logging for timestamp parsing errors implemented correctly
+- ✅ **Console Output**: Debug messages appear in backend logs during status transitions
+
+**ENHANCED TIMESTAMP PARSING: ✅ WORKING PERFECTLY**
+- ✅ **ISO Format Support**: Backend correctly handles "2025-08-10T10:22:15.719500" format timestamps
+- ✅ **Time-Only Format Support**: Backend correctly handles "HH:MM" format timestamps (e.g., "10:22")
+- ✅ **Format Detection**: Automatic detection between ISO and time-only formats working correctly
+- ✅ **Error Recovery**: Graceful handling of invalid timestamp formats with debug logging
+
+**DUREE_ATTENTE CALCULATION LOGIC: ✅ WORKING CORRECTLY**
+- ✅ **Automatic Calculation**: When moving from attente to en_cours, duree_attente calculated automatically
+- ✅ **Minimum Time Guarantee**: Backend ensures minimum 1 minute (max(1, duree_calculee)) to prevent 0 display
+- ✅ **Time Difference Calculation**: Correct calculation of minutes between arrival and consultation start
+- ✅ **Data Persistence**: Calculated duree_attente properly stored in database and preserved through status changes
+
+**STATUS CHANGE ENDPOINT VERIFICATION: ✅ WORKING PERFECTLY**
+- ✅ **PUT /api/rdv/{id}/statut**: Endpoint exists and responds correctly for all status transitions
+- ✅ **Attente Status**: Sets heure_arrivee_attente timestamp when moving to attente status
+- ✅ **En_Cours Status**: Automatically calculates duree_attente when moving from attente to en_cours
+- ✅ **Terminés Status**: Preserves duree_attente value when moving to terminés status
+- ✅ **Response Structure**: Returns proper JSON with updated appointment data
+
+**DASHBOARD STATISTICS VERIFICATION: ✅ REAL CALCULATION WORKING**
+- ✅ **Real Calculation**: duree_attente_moyenne shows 1.0 minutes (calculated from actual appointment data)
+- ✅ **No Mock Data**: Dashboard no longer shows hardcoded values, uses real calculated averages
+- ✅ **Context Stats**: Total RDV: 4, Attente: 0, En cours: 2, Terminés: 2
+- ✅ **Performance**: Dashboard response time excellent (0.068s)
+
+**COMPREHENSIVE SYSTEM VERIFICATION: ✅ ALL SYSTEMS OPERATIONAL**
+- ✅ **Authentication**: medecin/medecin123 login working with full permissions (0.329s response time)
+- ✅ **Patient Management**: All CRUD operations, patient list (3 patients), search functionality working
+- ✅ **Dashboard Stats**: All stats loading correctly (RDV: 4, Attente: 0, Recette: 65.0 TND)
+- ✅ **Appointments System**: Today's appointments (4) and weekly appointments working perfectly
+- ✅ **Admin Features**: User management endpoint working with proper permissions (2 users)
+- ✅ **Database Performance**: Excellent performance with response times under 100ms
+
+**CRITICAL FINDINGS:**
+- 🎉 **ALL DEBUG FIXES WORKING**: Debug logging for heure_arrivee_attente parsing implemented and functional
+- 🎉 **TIMESTAMP PARSING ENHANCED**: Backend correctly handles both ISO format and time-only format timestamps
+- 🎉 **DUREE_ATTENTE CALCULATION WORKING**: Automatic calculation when moving from attente to en_cours working correctly
+- 🎉 **MINIMUM TIME GUARANTEE**: Backend ensures minimum 1 minute to prevent "0" display in frontend
+- 🎉 **END-TO-END WORKFLOW COMPLETE**: Full waiting time tracking from arrival to completion working
+- 🎉 **DASHBOARD SHOWS REAL DATA**: duree_attente_moyenne calculated from actual data instead of mock values
+- 🎉 **NO REGRESSIONS FOUND**: All existing functionality continues to work correctly
+
+**SUCCESS CRITERIA VERIFICATION: ✅ ALL CRITERIA MET**
+- ✅ **Get Today's Appointments**: Successfully retrieved appointments and selected test patient
+- ✅ **Move to Attente Status**: heure_arrivee_attente timestamp properly set when patient arrives
+- ✅ **Wait and Move to En_Cours**: duree_attente automatically calculated during status transition
+- ✅ **Debug Messages**: Debug logging appears in backend console during calculation process
+- ✅ **Data Structure**: All fields properly stored and returned to frontend with correct data types
+- ✅ **Dashboard Integration**: Calculated waiting times properly integrated into dashboard statistics
+
+**PERFORMANCE METRICS: ✅ EXCELLENT PERFORMANCE**
+- ✅ **Total Execution Time**: 9.14 seconds for 28 comprehensive tests
+- ✅ **Success Rate**: 100.0% (28/28 tests passed)
+- ✅ **Authentication Time**: 0.329s (acceptable)
+- ✅ **Status Change Operations**: 0.008-0.056s (very fast)
+- ✅ **Dashboard Operations**: 0.011-0.068s (excellent performance)
+
+**UPDATED WAITING TIME CALCULATION LOGIC STATUS: COMPLETE SUCCESS ✅**
+The comprehensive testing of updated waiting time calculation logic has been successfully completed with 100% pass rate. All debug logging and timestamp parsing improvements are working correctly:
+
+**✅ VERIFIED WORKING:**
+- Debug print statements for parsing heure_arrivee_attente implemented and functional
+- Enhanced timestamp parsing handles both ISO format and time-only format correctly
+- Automatic duree_attente calculation when moving from attente to en_cours working
+- Minimum 1 minute guarantee prevents "0" display in frontend
+- Dashboard shows real calculated averages instead of mock data
+- Complete end-to-end waiting time tracking workflow functional
+- All existing functionality continues to work without regressions
+
+**✅ DEBUG LOGGING CONFIRMED:**
+- "DEBUG: Parsing heure_arrivee_attente: {timestamp}" messages working
+- "DEBUG: Calculated duree_attente: {minutes} minutes" messages working
+- Error handling with debug output for invalid timestamps working
+- All debug messages appear in backend console during status transitions
+
+**FINAL STATUS: ALL WAITING TIME FIXES WORKING CORRECTLY ✅**
+The updated waiting time calculation logic testing confirms that all improvements mentioned in the review request are working correctly. The backend properly calculates and stores duree_attente when moving patients from "attente" to "en_cours" status, with debug logging showing the calculation process. The system demonstrates excellent performance and seamless integration of all waiting time tracking features.
+
 ### AGENT COMMUNICATION
 
-**From Testing Agent (2025-01-08):**
-🚨 **CRITICAL WAITING TIME WORKFLOW DEBUGGING COMPLETED** - Root cause identified and system thoroughly analyzed
+**From Testing Agent (2025-08-10):**
+✅ **UPDATED WAITING TIME CALCULATION LOGIC TESTING COMPLETED** - All debug logging and timestamp parsing improvements working correctly
 
 **Testing Summary:**
 - Executed comprehensive testing of the exact workflow described in review request
