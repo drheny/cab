@@ -2277,7 +2277,8 @@ const WorkflowCard = React.memo(({
              appointment.duree_attente && 
              typeof appointment.duree_attente === 'number' &&
              appointment.duree_attente > 0 && 
-             formatStoredWaitingTime(appointment.duree_attente) && (
+             formatStoredWaitingTime(appointment.duree_attente) && 
+             formatStoredWaitingTime(appointment.duree_attente) !== null && (
               <div className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium border mt-1 ${
                 getStoredWaitingTimeStyle(appointment.duree_attente).bgColor
               } ${getStoredWaitingTimeStyle(appointment.duree_attente).textColor} ${getStoredWaitingTimeStyle(appointment.duree_attente).borderColor}`}>
