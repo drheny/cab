@@ -1389,6 +1389,14 @@ async def get_dashboard():
     # Get patient count
     total_patients = patients_collection.count_documents({})
     
+    # Calculate real average waiting time
+    appointments_with_waiting_time = [a for a in today_appointments if a.get("duree_attente") and a.get("duree_attente") > 0]
+    if appointments_with_waiting_time:
+        total_waiting_time = sum(a["duree_attente"] for a in appointments_with_waiting_time)
+        duree_attente_moyenne = round(total_waiting_time / len(appointments_with_waiting_time), 1)
+    else:
+        duree_attente_moyenne = 0
+    
     return {
         "total_rdv": total_rdv,
         "rdv_restants": rdv_restants,
@@ -1397,7 +1405,7 @@ async def get_dashboard():
         "rdv_termines": rdv_termines,
         "recette_jour": recette_jour,
         "total_patients": total_patients,
-        "duree_attente_moyenne": 15  # Mock data
+        "duree_attente_moyenne": duree_attente_moyenne
     }
 
 @app.get("/api/patients")
