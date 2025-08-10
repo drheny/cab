@@ -746,45 +746,46 @@ The updated waiting time calculation logic testing confirms that all improvement
 ### AGENT COMMUNICATION
 
 **From Testing Agent (2025-08-10):**
-✅ **UPDATED WAITING TIME CALCULATION LOGIC TESTING COMPLETED** - All debug logging and timestamp parsing improvements working correctly
+✅ **WAITING TIME DISPLAY VERIFICATION COMPLETED** - Frontend display functionality confirmed working correctly
 
 **Testing Summary:**
-- Executed comprehensive testing of the exact workflow described in review request
-- 28 tests completed with 100% success rate (28/28 tests passed)
-- Total execution time: 9.14 seconds with excellent performance metrics
-- Successfully verified all debug logging and timestamp parsing improvements
+- Executed comprehensive frontend testing of waiting time display as requested in review
+- Successfully logged in with medecin/medecin123 credentials
+- Successfully navigated to Calendar page with all sections loading correctly
+- Verified waiting time display functionality is working correctly
 
-**Key Findings:**
-1. **Debug Logging**: ✅ WORKING - "DEBUG: Parsing heure_arrivee_attente" and "DEBUG: Calculated duree_attente" messages implemented and functional
-2. **Timestamp Parsing**: ✅ ENHANCED - Backend correctly handles both ISO format and time-only format timestamps
-3. **Duree_Attente Calculation**: ✅ WORKING - Automatic calculation when moving from attente to en_cours working correctly
-4. **Status Change Endpoint**: ✅ WORKING - PUT /api/rdv/{id}/statut functions correctly for all transitions
-5. **Dashboard Statistics**: ✅ WORKING - Shows real calculated duree_attente_moyenne (1.0 minutes) instead of mock data
+**Key Verification Results:**
+1. **Login Access**: ✅ WORKING - medecin/medecin123 credentials working with calendar access
+2. **Calendar Navigation**: ✅ WORKING - Successfully navigated to Calendar page
+3. **Calendar Sections**: ✅ WORKING - All 5 sections found and working (RDV Programmés, Salle d'attente, En consultation, Terminé, En retard)
+4. **Waiting Time Display**: ✅ WORKING - "25 min d'attente" clearly visible next to patient names
+5. **Frontend Implementation**: ✅ WORKING - formatStoredWaitingTime function displaying waiting time correctly
 
-**Critical Workflow Verification:**
-- **Step 1**: Successfully selected patient 'Yassine Ben Ahmed' and moved to attente status
-- **Step 2**: heure_arrivee_attente timestamp properly set (10:22) when patient arrives in waiting room
-- **Step 3**: After waiting a few seconds, moved patient to en_cours status
-- **Step 4**: duree_attente automatically calculated (1 minute) and stored in database
-- **Step 5**: Debug messages confirmed appearing in backend console during calculation
-- **Step 6**: Dashboard statistics updated with real calculated average
+**Critical Finding - WAITING TIME IS DISPLAYING CORRECTLY:**
+- **✅ VERIFIED**: "25 min d'attente" is clearly visible next to "Yassine Ben Ahmed" in the "🔵 En consultation" section
+- **✅ VERIFIED**: Waiting time text appears properly formatted as expected ("X min d'attente")
+- **✅ VERIFIED**: Frontend guards and conditions are working correctly to display waiting time
+- **✅ VERIFIED**: No stray "0" values or numerical artifacts found in patient name displays
 
 **Technical Verification:**
-- **Backend Code**: Lines 1787-1806 in server.py contain the debug logging and enhanced timestamp parsing
-- **Debug Output**: "DEBUG: Parsing heure_arrivee_attente: 10:22" and "DEBUG: Calculated duree_attente: 1 minutes" working
-- **Timestamp Formats**: Both "HH:MM" and ISO formats handled correctly with automatic detection
-- **Minimum Time**: Backend ensures minimum 1 minute (max(1, duree_calculee)) to prevent 0 display
-- **Data Structure**: duree_attente stored as integer, heure_arrivee_attente as string
+- **Frontend Code**: formatStoredWaitingTime function working correctly in Calendar.js
+- **Display Logic**: Multiple condition checks preventing accidental "0" display working correctly:
+  - `typeof appointment.duree_attente === 'number'`
+  - `appointment.duree_attente > 0`
+  - `formatStoredWaitingTime(appointment.duree_attente) !== null`
+- **Visual Confirmation**: Screenshots captured showing clean calendar interface with proper waiting time display
+- **Data Structure**: Backend data includes duree_attente field properly formatted for frontend display
 
 **User Issue Resolution:**
-The user's report that "waiting time is still NOT appearing next to patient names" should now be resolved because:
-1. ✅ duree_attente is being calculated and stored in the database (verified: 1 minute calculated)
-2. ✅ Debug messages are showing up in backend console (verified: debug logging working)
-3. ✅ Timestamp parsing is working correctly (verified: both formats supported)
-4. ✅ Data structure being returned to frontend includes duree_attente field (verified: proper JSON structure)
+The user's report that "waiting time is NOT appearing next to patient names" has been RESOLVED:
+1. ✅ Backend is calculating and storing duree_attente values correctly
+2. ✅ Frontend is receiving duree_attente data from API responses
+3. ✅ formatStoredWaitingTime function is formatting the display correctly
+4. ✅ Waiting time appears next to patient names as "25 min d'attente"
+5. ✅ Display conditions are working to show waiting time in En consultation section
 
-**Status:** ALL WAITING TIME CALCULATION FIXES WORKING CORRECTLY - ISSUE RESOLVED ✅
-The comprehensive testing confirms that all improvements mentioned in the review request are working correctly. The backend now properly calculates duree_attente when moving patients from "attente" to "en_cours", with debug logging showing the calculation process. The waiting time should now appear correctly next to patient names in the frontend.
+**Status:** WAITING TIME DISPLAY FUNCTIONALITY WORKING CORRECTLY ✅
+The comprehensive frontend testing confirms that the waiting time display functionality is working as intended. The user's issue has been resolved - waiting time now appears correctly next to patient names in the format "X min d'attente" in the En consultation section. The backend fixes for calculation and the frontend display logic are both functioning properly.
 
 **Testing Summary:**
 - Executed comprehensive testing of the exact workflow described in review request
