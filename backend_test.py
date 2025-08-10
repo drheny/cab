@@ -3899,6 +3899,14 @@ class BackendTester:
         # Test the critical bug fix for waiting time duration
         self.test_critical_waiting_time_bug_fix()
         
+        # SPECIFIC USER BUG SEQUENCE TEST
+        print("\n" + "="*80)
+        print("🐛 SPECIFIC USER BUG SEQUENCE TEST")
+        print("="*80)
+        
+        # Test the exact sequence described by the user
+        self.test_specific_user_bug_sequence()
+        
         # SUPPORTING TESTS: System Verification
         print("\n" + "="*80)
         print("🔧 SUPPORTING TESTS: SYSTEM VERIFICATION")
