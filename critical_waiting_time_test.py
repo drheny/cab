@@ -194,6 +194,15 @@ class CriticalWaitingTimeDebugger:
                                         expected_minutes = max(1, int(time_diff.total_seconds() / 60))
                                         
                                         details = f"'{patient_name}' moved to {new_status}, duree_attente: {new_duree}, heure_arrivee: {new_heure_arrivee}, expected: ~{expected_minutes} min"
+                                        
+                                        # CRITICAL CHECK: Is duree_attente actually calculated?
+                                        if new_duree is None:
+                                            self.log_test("Critical Workflow Step 3 - DUREE_ATTENTE IS NULL", False, f"duree_attente is None for {patient_name} - this is the bug!", response_time)
+                                        elif new_duree == 0:
+                                            self.log_test("Critical Workflow Step 3 - DUREE_ATTENTE IS ZERO", False, f"duree_attente is 0 for {patient_name} - calculation failed!", response_time)
+                                        else:
+                                            self.log_test("Critical Workflow Step 3 - DUREE_ATTENTE CALCULATED", True, f"duree_attente calculated correctly: {new_duree} minutes", response_time)
+                                        
                                         self.log_test("Critical Workflow Step 3 - Move to Consultation", True, details, response_time)
                                         
                                         # Store for next step
