@@ -128,6 +128,9 @@ const HandwritingField = ({
   };
 
   const toggleMode = () => {
+    if (disableHandwriting && mode === 'typing') {
+      return; // Don't allow switching to handwriting mode if disabled
+    }
     const newMode = mode === 'typing' ? 'handwriting' : 'typing';
     setMode(newMode);
     
