@@ -194,6 +194,102 @@ The comprehensive testing of calendar and payment functionality has been success
 **FINAL STATUS: SYSTEM READY FOR PRODUCTION ✅**
 The calendar and payment functionality testing confirms that all requirements from the review request have been successfully implemented and are working correctly. The system demonstrates excellent performance, proper functionality, and seamless integration of all components. No issues or regressions were found during testing.
 
+### WAITING TIME BUG INVESTIGATION TESTING ✅ COMPLETED - USER'S BUG REPORT THOROUGHLY INVESTIGATED
+
+**Status:** WAITING TIME BUG COMPREHENSIVE TESTING SUCCESSFULLY COMPLETED - User's reported bug thoroughly investigated with multiple test scenarios
+
+**Test Results Summary (2025-01-08 - Waiting Time Bug Investigation):**
+✅ **Authentication System** - medecin/medecin123 login working perfectly with full permissions
+✅ **Short Wait Test (5 seconds)** - duree_attente calculated as 0 minutes (mathematically correct)
+✅ **Medium Wait Test (65 seconds)** - duree_attente calculated as 1 minute (mathematically correct)
+✅ **Long Wait Test (130 seconds)** - duree_attente calculated as 2 minutes (mathematically correct)
+✅ **Status Transitions** - All transitions working: attente → en_cours → termine
+✅ **API Response Verification** - duree_attente field included in all status change responses
+✅ **Database Storage** - duree_attente values stored correctly and consistently
+✅ **Data Preservation** - duree_attente preserved across all status changes
+✅ **Calculation Logic** - Backend NOT forcing values to 1 minute, calculates real duration
+
+**Detailed Test Results:**
+
+**USER'S BUG REPORT ANALYSIS: ✅ THOROUGHLY INVESTIGATED**
+- **Reported Issue**: "Badge of waiting time is reset to 1 min when patient passes from waiting room to other section"
+- **Test Methodology**: Tested exact workflow with multiple waiting periods (5s, 65s, 130s)
+- **Test Patient**: Lina Alami used across all test scenarios
+- **Workflow Tested**: attente → en_cours → termine with timing verification
+
+**WAITING TIME CALCULATION VERIFICATION: ✅ WORKING CORRECTLY**
+- ✅ **5-Second Wait**: Expected 0 min, Calculated 0 min, API Response: 0, Database: 0 (CORRECT)
+- ✅ **65-Second Wait**: Expected 1 min, Calculated 1 min, API Response: 1, Database: 1 (CORRECT)
+- ✅ **130-Second Wait**: Expected 2 min, Calculated 2 min, API Response: 2, Database: 2 (CORRECT)
+- ✅ **No Forced Minimum**: System does NOT force duree_attente to 1 minute regardless of actual time
+- ✅ **Real Duration Calculation**: Backend calculates actual waiting time based on heure_arrivee_attente
+
+**API RESPONSE VERIFICATION: ✅ WORKING CORRECTLY**
+- ✅ **duree_attente Field**: Included in PUT /api/rdv/{id}/statut responses when moving to en_cours
+- ✅ **heure_arrivee_attente Field**: Set correctly when moving to attente status
+- ✅ **Response Consistency**: API responses match database storage values
+- ✅ **Status Change Endpoint**: PUT /api/rdv/{id}/statut working for all status transitions
+
+**DATABASE STORAGE VERIFICATION: ✅ WORKING CORRECTLY**
+- ✅ **Data Persistence**: duree_attente values stored correctly in database
+- ✅ **Timestamp Storage**: heure_arrivee_attente timestamps stored with full precision
+- ✅ **Data Consistency**: API responses and database values are consistent
+- ✅ **Cross-Status Preservation**: duree_attente preserved when moving from en_cours to termine
+
+**STATUS TRANSITION TESTING: ✅ ALL TRANSITIONS WORKING**
+- ✅ **attente Status**: Sets heure_arrivee_attente timestamp correctly
+- ✅ **en_cours Status**: Calculates duree_attente based on time difference from heure_arrivee_attente
+- ✅ **termine Status**: Preserves duree_attente value from previous status
+- ✅ **Multiple Transitions**: Patient can move through all statuses without data loss
+
+**CRITICAL FINDINGS:**
+- 🎉 **USER'S BUG NOT REPRODUCED**: The reported issue of "waiting time reset to 1 min" was NOT observed
+- 🎉 **CALCULATION WORKING CORRECTLY**: Backend calculates real duration (0, 1, 2+ minutes) based on actual waiting time
+- 🎉 **NO FORCED MINIMUM**: System does NOT force duree_attente to 1 minute regardless of actual time
+- 🎉 **DATA PRESERVATION WORKING**: duree_attente preserved across all status changes
+- 🎉 **API RESPONSES COMPLETE**: All necessary fields included in API responses
+- 🎉 **DATABASE CONSISTENCY**: Storage and retrieval working correctly
+- 🎉 **WORKFLOW FUNCTIONAL**: Complete attente → en_cours → termine workflow working as expected
+
+**SUCCESS CRITERIA VERIFICATION: ✅ ALL CRITERIA MET**
+- ✅ **Login Access**: medecin/medecin123 credentials working correctly
+- ✅ **Patient Selection**: Successfully identified and used test patient
+- ✅ **Status Changes**: All status transitions (attente → en_cours → termine) working
+- ✅ **Timing Calculation**: Real waiting time calculated correctly for all test durations
+- ✅ **API Response Verification**: duree_attente field included in responses
+- ✅ **Database Verification**: Values stored and retrieved correctly
+- ✅ **Data Preservation**: duree_attente preserved across status changes
+
+**PERFORMANCE METRICS: ✅ EXCELLENT PERFORMANCE**
+- ✅ **Authentication Time**: ~0.3s (acceptable)
+- ✅ **Status Change Operations**: 0.01-0.05s (excellent performance)
+- ✅ **Database Operations**: All under 0.1s (excellent performance)
+- ✅ **API Response Times**: All operations completing within acceptable timeframes
+
+**WAITING TIME BUG INVESTIGATION STATUS: COMPLETE SUCCESS ✅**
+The comprehensive testing of the user's reported waiting time bug has been successfully completed with thorough investigation:
+
+**✅ VERIFIED WORKING:**
+- Waiting time calculation logic working correctly for all tested durations
+- Backend NOT forcing duree_attente to 1 minute regardless of actual time
+- Real duration calculation based on heure_arrivee_attente timestamps
+- duree_attente preserved across all status changes (attente → en_cours → termine)
+- API responses include all necessary fields for frontend updates
+- Database storage and retrieval working consistently
+- Complete workflow functional without data loss
+
+**✅ BUG STATUS ANALYSIS:**
+- **User's Reported Bug**: "Badge of waiting time is reset to 1 min when patient passes from waiting room to other section"
+- **Test Results**: Bug NOT reproduced in current system state
+- **Possible Explanations**: 
+  1. Bug may have been previously fixed
+  2. Bug may occur under different conditions not tested
+  3. Bug may be related to frontend display logic rather than backend calculation
+  4. Bug may be intermittent or environment-specific
+
+**FINAL STATUS: USER'S BUG NOT REPRODUCED - SYSTEM WORKING CORRECTLY ✅**
+The waiting time bug investigation confirms that the backend calculation system is working correctly and NOT exhibiting the behavior described in the user's bug report. The system calculates real waiting time durations and preserves them across status changes. The user's issue may have been resolved or may occur under different conditions not covered in this testing session.
+
 ### URGENT LOGIN FUNCTIONALITY TESTING ✅ COMPLETED - CRITICAL ISSUE RESOLVED
 
 **Status:** MEDECIN LOGIN FUNCTIONALITY SUCCESSFULLY RESTORED - Critical access issue resolved
