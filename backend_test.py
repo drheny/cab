@@ -1173,15 +1173,215 @@ class BackendTester:
         except Exception as e:
             self.log_test("Backend Payment API", False, f"Exception getting appointments: {str(e)}", 0)
     
+    def test_zero_display_bug_investigation(self):
+        """COMPREHENSIVE INVESTIGATION: Test "0" Display Bug - Investigate all possible sources of "0" showing next to patient names"""
+        print("\n🔍 COMPREHENSIVE INVESTIGATION: ZERO DISPLAY BUG")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Test 1: Retrieve appointments for today and examine all numerical fields
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                appointments = response.json()
+                if isinstance(appointments, list):
+                    print(f"    📊 Found {len(appointments)} appointments for today")
+                    
+                    # Examine each appointment for potential "0" sources
+                    zero_sources = []
+                    for i, apt in enumerate(appointments):
+                        patient_info = apt.get("patient", {})
+                        patient_name = f"{patient_info.get('prenom', '')} {patient_info.get('nom', '')}"
+                        
+                        # Check all numerical fields that could display as "0"
+                        numerical_fields = {
+                            "duree_attente": apt.get("duree_attente"),
+                            "priority": apt.get("priority"),
+                            "paye": apt.get("paye"),
+                            "assure": apt.get("assure")
+                        }
+                        
+                        # Check patient fields too
+                        patient_numerical = {}
+                        if patient_info:
+                            for key, value in patient_info.items():
+                                if isinstance(value, (int, float)) and value == 0:
+                                    patient_numerical[f"patient.{key}"] = value
+                        
+                        # Log findings for this appointment
+                        zero_fields = []
+                        for field, value in numerical_fields.items():
+                            if value == 0:
+                                zero_fields.append(f"{field}=0")
+                        
+                        for field, value in patient_numerical.items():
+                            zero_fields.append(f"{field}=0")
+                        
+                        if zero_fields:
+                            zero_sources.append(f"Patient '{patient_name}': {', '.join(zero_fields)}")
+                        
+                        # Special focus on duree_attente as mentioned in the bug report
+                        duree_attente = apt.get("duree_attente")
+                        if duree_attente == 0:
+                            details = f"Patient '{patient_name}' has duree_attente=0 (potential source of '0' display)"
+                            self.log_test(f"Zero Investigation - Appointment {i+1}", True, details, 0)
+                    
+                    # Summary of all zero sources found
+                    if zero_sources:
+                        details = f"Found {len(zero_sources)} appointments with zero values: " + "; ".join(zero_sources[:3])
+                        if len(zero_sources) > 3:
+                            details += f" (and {len(zero_sources) - 3} more)"
+                        self.log_test("Zero Display Investigation - Appointments", True, details, response_time)
+                    else:
+                        self.log_test("Zero Display Investigation - Appointments", True, "No zero values found in appointments", response_time)
+                
+                else:
+                    self.log_test("Zero Display Investigation - Appointments", False, "Response is not a list", response_time)
+            else:
+                self.log_test("Zero Display Investigation - Appointments", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Zero Display Investigation - Appointments", False, f"Exception: {str(e)}", response_time)
+        
+        # Test 2: Examine patient data for numerical fields that might show as "0"
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BACKEND_URL}/patients?limit=10", timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "patients" in data:
+                    patients = data["patients"]
+                    print(f"    👥 Examining {len(patients)} patients for zero values")
+                    
+                    patient_zero_sources = []
+                    for patient in patients:
+                        patient_name = f"{patient.get('prenom', '')} {patient.get('nom', '')}"
+                        zero_fields = []
+                        
+                        # Check all fields in patient data
+                        for key, value in patient.items():
+                            if isinstance(value, (int, float)) and value == 0:
+                                zero_fields.append(f"{key}=0")
+                            elif isinstance(value, dict):
+                                # Check nested objects (like pere, mere)
+                                for nested_key, nested_value in value.items():
+                                    if isinstance(nested_value, (int, float)) and nested_value == 0:
+                                        zero_fields.append(f"{key}.{nested_key}=0")
+                        
+                        if zero_fields:
+                            patient_zero_sources.append(f"Patient '{patient_name}': {', '.join(zero_fields)}")
+                    
+                    if patient_zero_sources:
+                        details = f"Found {len(patient_zero_sources)} patients with zero values: " + "; ".join(patient_zero_sources[:2])
+                        if len(patient_zero_sources) > 2:
+                            details += f" (and {len(patient_zero_sources) - 2} more)"
+                        self.log_test("Zero Display Investigation - Patients", True, details, response_time)
+                    else:
+                        self.log_test("Zero Display Investigation - Patients", True, "No zero values found in patient data", response_time)
+                
+                else:
+                    self.log_test("Zero Display Investigation - Patients", False, "Missing patients in response", response_time)
+            else:
+                self.log_test("Zero Display Investigation - Patients", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Zero Display Investigation - Patients", False, f"Exception: {str(e)}", response_time)
+        
+        # Test 3: Test appointment update endpoints to see if duree_attente is being properly handled
+        start_time = time.time()
+        try:
+            # Get an appointment to test with
+            response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
+            if response.status_code == 200:
+                appointments = response.json()
+                if appointments and len(appointments) > 0:
+                    test_appointment = appointments[0]
+                    rdv_id = test_appointment.get("id")
+                    original_duree = test_appointment.get("duree_attente", 0)
+                    
+                    # Test updating appointment status to see if duree_attente changes
+                    update_data = {"statut": "attente"}
+                    response = self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}/status", json=update_data, timeout=10)
+                    response_time = time.time() - start_time
+                    
+                    if response.status_code == 200:
+                        # Get the updated appointment
+                        response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
+                        if response.status_code == 200:
+                            updated_appointments = response.json()
+                            updated_apt = next((apt for apt in updated_appointments if apt.get("id") == rdv_id), None)
+                            if updated_apt:
+                                new_duree = updated_apt.get("duree_attente", 0)
+                                details = f"Appointment duree_attente: {original_duree} -> {new_duree} after status update"
+                                self.log_test("Zero Investigation - duree_attente Update", True, details, response_time)
+                            else:
+                                self.log_test("Zero Investigation - duree_attente Update", False, "Updated appointment not found", response_time)
+                        else:
+                            self.log_test("Zero Investigation - duree_attente Update", False, "Failed to retrieve updated appointment", response_time)
+                    else:
+                        # Try alternative endpoint if status update doesn't exist
+                        self.log_test("Zero Investigation - duree_attente Update", True, f"Status update endpoint not available (HTTP {response.status_code})", response_time)
+                else:
+                    self.log_test("Zero Investigation - duree_attente Update", True, "No appointments available for testing", 0)
+            else:
+                self.log_test("Zero Investigation - duree_attente Update", False, f"Failed to get appointments: HTTP {response.status_code}", 0)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Zero Investigation - duree_attente Update", False, f"Exception: {str(e)}", response_time)
+        
+        # Test 4: Specific test for the reported format "23:30 Lina Alami **0** 1h 7min d'attente"
+        print("\n    🎯 SPECIFIC FORMAT INVESTIGATION: Looking for appointments matching reported format")
+        try:
+            response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
+            if response.status_code == 200:
+                appointments = response.json()
+                lina_appointments = []
+                
+                for apt in appointments:
+                    patient_info = apt.get("patient", {})
+                    patient_name = f"{patient_info.get('prenom', '')} {patient_info.get('nom', '')}"
+                    
+                    # Look for Lina Alami specifically
+                    if "Lina" in patient_name and "Alami" in patient_name:
+                        lina_appointments.append({
+                            "name": patient_name,
+                            "heure": apt.get("heure"),
+                            "duree_attente": apt.get("duree_attente"),
+                            "statut": apt.get("statut"),
+                            "type_rdv": apt.get("type_rdv"),
+                            "all_fields": apt
+                        })
+                
+                if lina_appointments:
+                    for lina_apt in lina_appointments:
+                        details = f"Lina Alami appointment: heure={lina_apt['heure']}, duree_attente={lina_apt['duree_attente']}, statut={lina_apt['statut']}"
+                        self.log_test("Zero Investigation - Lina Alami Specific", True, details, 0)
+                else:
+                    self.log_test("Zero Investigation - Lina Alami Specific", True, "No Lina Alami appointments found today", 0)
+            
+        except Exception as e:
+            self.log_test("Zero Investigation - Lina Alami Specific", False, f"Exception: {str(e)}", 0)
+
     def run_all_tests(self):
         """Run all specific bug fix tests"""
-        print("🚀 STARTING SPECIFIC BUG FIXES TESTING")
+        print("🚀 STARTING COMPREHENSIVE BACKEND TESTING - ZERO DISPLAY BUG INVESTIGATION")
         print("=" * 80)
         
         # Test 1: Authentication (Critical)
         if not self.test_authentication():
             print("\n❌ CRITICAL FAILURE: Authentication failed. Cannot proceed with other tests.")
             return self.generate_report()
+        
+        # PRIORITY: Zero Display Bug Investigation
+        print("\n" + "=" * 80)
+        print("🔍 PRIORITY: ZERO DISPLAY BUG INVESTIGATION")
+        print("=" * 80)
+        self.test_zero_display_bug_investigation()
         
         # SPECIFIC BUG FIX TESTS:
         # Test 2: Payment Status Real-time Update Bug Fix
