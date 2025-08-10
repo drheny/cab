@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-SPECIFIC BUG FIXES TESTING
+WAITING TIME (DUREE_ATTENTE) SYSTEM TESTING
 Backend API Testing Suite for Cabinet Médical
 
-This test suite focuses on testing the specific bug fixes that were just implemented:
-1. Payment Status Real-time Update Bug Fix
-2. "0" Display Bug Fix  
-3. Payment API Endpoint Testing
-4. Backend Payment Logic Verification
+This test suite focuses on testing the waiting time tracking system:
+1. Track waiting time when patient moves from "attente" to "en_cours"
+2. Display duree_attente for patients in "en_cours" and "terminés" sections
+3. Statistics - dashboard average waiting time calculation
+4. Verify heure_arrivee_attente timestamps for calculation
 """
 
 import requests
