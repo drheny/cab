@@ -2296,15 +2296,12 @@ const WorkflowCard = React.memo(({
               </button>
             </div>
             
-            {/* Marqueur d'attente raffiné pour patients en attente */}
-            {sectionType === 'attente' && (
-              <div className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium border mt-1 ${
-                getWaitingTimeStyle(waitingTime).bgColor
-              } ${getWaitingTimeStyle(waitingTime).textColor} ${getWaitingTimeStyle(waitingTime).borderColor}`}>
-                <Clock className={`w-3 h-3 ${getWaitingTimeStyle(waitingTime).iconColor}`} />
-                <span>{formatWaitingTime(waitingTime)}</span>
-                <span className="text-gray-500">d'attente</span>
-              </div>
+            {/* Badge d'attente simplifié pour patients en attente */}
+            {sectionType === 'attente' && waitingTime && waitingTime > 0 && (
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200 mt-1">
+                <Clock className="w-3 h-3 mr-1" />
+                {waitingTime} min
+              </span>
             )}
           </div>
         </div>
