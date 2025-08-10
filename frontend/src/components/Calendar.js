@@ -316,12 +316,25 @@ const Calendar = ({ user }) => {
   const handleStartConsultation = useCallback(async (appointmentId) => {
     // Calculer la durée d'attente avant le changement de statut
     const appointment = appointments.find(apt => apt.id === appointmentId);
-    let dureeAttente = 0;
+    let dureeAttente = 1; // Default minimum 1 minute
     
     if (appointment && appointment.heure_arrivee_attente) {
-      const arriveeTime = new Date(appointment.heure_arrivee_attente);
-      const currentTime = new Date();
-      dureeAttente = Math.max(1, Math.floor((currentTime - arriveeTime) / (1000 * 60))); // Minimum 1 minute
+      try {
+        const arriveeTime = new Date(appointment.heure_arrivee_attente);
+        const currentTime = new Date();
+        
+        // Verify dates are valid
+        if (!isNaN(arriveeTime.getTime()) && !isNaN(currentTime.getTime())) {
+          const diffInMinutes = Math.floor((currentTime - arriveeTime) / (1000 * 60));
+          dureeAttente = Math.max(1, diffInMinutes); // Minimum 1 minute
+          console.log(`Frontend calculation: ${appointment.patient?.nom} - ${diffInMinutes} minutes -> ${dureeAttente} minutes`);
+        } else {
+          console.log(`Invalid dates: arriveeTime=${arriveeTime}, currentTime=${currentTime}`);
+        }
+      } catch (error) {
+        console.log(`Error calculating waiting time: ${error}`);
+        dureeAttente = 1; // Fallback to 1 minute
+      }
     }
 
     setAppointments(prevAppointments =>
