@@ -1,34 +1,38 @@
 #!/usr/bin/env python3
 """
-CRITICAL WAITING TIME WORKFLOW DEBUGGING
+FRONTEND API RESPONSE DATA HANDLING TESTING
 Backend API Testing Suite for Cabinet Médical
 
-CRITICAL DEBUGGING: The user manually tested the workflow and the badge still doesn't appear! 
-Despite all previous tests showing success, the real user workflow is broken.
+TESTING UPDATED FRONTEND LOGIC: The frontend has been updated to properly handle API response data
+for waiting time calculation. This test verifies the specific fix applied.
 
-**User's Manual Test:**
-1. Put patient in "salle d'attente" 
-2. Wait 1 minute
-3. Move patient to "en consultation"
-4. Badge with waiting time does NOT appear
+**Frontend Fix Applied:**
+- Added console.log to show API response data
+- Use backend-calculated duree_attente from response: `response.data.duree_attente || dureeAttente`
+- Immediately update appointment state with backend data before fetchData()
+- Both immediate update AND full refresh to ensure consistency
 
-**IMMEDIATE DEBUG NEEDED:**
-1. **Check real-time appointment data**: Get current appointments and check their exact duree_attente values
-2. **Test the exact status change**: Move a patient from "attente" to "en_cours" and check if duree_attente gets calculated
-3. **Verify backend response**: Check what the PUT /api/rdv/{id}/statut endpoint actually returns
-4. **Check data persistence**: After status change, verify if duree_attente is stored in database
-5. **Debug the calculation**: Check if the backend calculation logic is actually running
+**Test the Real User Workflow:**
+1. **Find a patient** in any status  
+2. **Move to "attente"** - verify heure_arrivee_attente is set
+3. **Wait briefly** (simulate 1+ minute waiting)
+4. **Move to "en_cours"** - critical test of the fix
+5. **Check API response** - should include duree_attente field
+6. **Verify appointment state** - duree_attente should be immediately updated
+7. **Check frontend display** - badge should appear with calculated time
 
-**CRITICAL QUESTIONS:**
-- Is duree_attente being calculated and stored when status changes from "attente" to "en_cours"?
-- Is the frontend getting the correct updated data after the API call?
-- Are there any errors in the backend calculation logic?
-- Is the heure_arrivee_attente properly set when patient moves to "attente"?
+**Critical Debug Points:**
+- Does the PUT /api/rdv/{id}/statut response include duree_attente field?
+- Is the frontend immediately updating the appointment state with backend data?
+- Is the fetchData() getting consistent data after the immediate update?
+- Does the waiting time badge appear correctly after both updates?
 
-**This is a REAL USER WORKFLOW BUG** - Previous automated tests might have missed something. 
-I need to debug the actual data flow during manual patient movement.
+**Expected Result:**
+When moving patient from "attente" to "en_cours", the badge should immediately appear with the 
+calculated waiting time (like "1 min" or "2 min") because the frontend now properly handles 
+the backend response data.
 
-Focus on finding the exact point where the duree_attente calculation/storage is failing in the real workflow.
+This should fix the user's manual workflow issue where badges weren't appearing.
 """
 
 import requests
