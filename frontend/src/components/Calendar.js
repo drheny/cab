@@ -2272,6 +2272,7 @@ const WorkflowCard = React.memo(({
             {/* Marqueur durée d'attente stockée pour patients en cours et terminés */}
             {(sectionType === 'en_cours' || sectionType === 'termine') && 
              appointment.duree_attente && 
+             typeof appointment.duree_attente === 'number' &&
              appointment.duree_attente > 0 && 
              formatStoredWaitingTime(appointment.duree_attente) && (
               <div className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium border mt-1 ${
