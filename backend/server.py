@@ -1786,7 +1786,7 @@ async def update_rdv_statut(rdv_id: str, status_data: dict):
                     arrivee_time = datetime.fromisoformat(current_appointment["heure_arrivee_attente"].replace("Z", "+00:00"))
                     current_time = datetime.now()
                     duree_calculee = int((current_time - arrivee_time).total_seconds() / 60)  # en minutes
-                    update_data["duree_attente"] = max(0, duree_calculee)  # Assurer une durée positive
+                    update_data["duree_attente"] = max(1, duree_calculee)  # Minimum 1 minute pour éviter 0
                 except (ValueError, TypeError):
                     # Si erreur de parsing, laisser duree_attente à sa valeur actuelle
                     pass
