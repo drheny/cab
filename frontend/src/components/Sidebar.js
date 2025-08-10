@@ -113,7 +113,7 @@ const Sidebar = ({ user, isOpen, onClose, phoneMessagesCount = 0 }) => {
               <div className="bg-primary-100 p-1.5 sm:p-2 rounded-full">
                 <Stethoscope className="w-3 h-3 sm:w-4 sm:h-4 text-primary-600" />
               </div>
-              <div className="hidden sm:block lg:block">
+              <div className="block">
                 <p className="font-medium text-gray-900 text-xs sm:text-sm">{user.full_name}</p>
                 <p className="text-xs text-gray-500 capitalize">{user.role}</p>
               </div>
