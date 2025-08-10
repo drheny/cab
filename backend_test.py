@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
 """
-CRITICAL WAITING TIME WORKFLOW DEBUGGING
+UPDATED WAITING TIME CALCULATION LOGIC TESTING
 Backend API Testing Suite for Cabinet Médical
 
-FOCUS: Debug the exact user workflow issue where waiting time is NOT appearing next to patient names
-when moved from waiting room to "en cours" or "terminés" sections.
+FOCUS: Test the updated waiting time calculation logic with debug logging and improved timestamp parsing.
+The backend has been updated to handle both ISO format and time-only format timestamps.
 
-Critical Investigation Points:
-1. Real Data Examination: Check current appointments and their EXACT duree_attente values
-2. Status Change Debugging: Test the EXACT sequence: patient to "attente" → patient to "en_cours"  
-3. Data Flow Investigation: Check if PUT /api/rdv/{id}/statut properly updates duree_attente
-4. Real User Workflow Simulation: Find a real appointment and move it through the exact user workflow
+Test the Exact User Workflow:
+1. Get an appointment and move it to "attente" - verify heure_arrivee_attente is set
+2. Move the same appointment to "en_cours" - check backend logs for debug messages and verify duree_attente calculation
+3. Check the final appointment data - verify duree_attente field is properly set
+4. Test dashboard statistics - check if dashboard shows calculated average instead of 0
+
+Key Focus: Confirm backend is now properly calculating and storing duree_attente when changing status 
+from "attente" to "en_cours". Look for debug log messages tracking the calculation process.
 """
 
 import requests
