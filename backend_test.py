@@ -3077,25 +3077,28 @@ class BackendTester:
             self.log_test("Step 1 - Current State Check", False, f"Exception: {str(e)}", response_time)
 
     def run_all_tests(self):
-        """Run all tests focused on critical waiting time workflow debugging"""
-        print("🚀 STARTING CRITICAL WAITING TIME WORKFLOW DEBUGGING")
+        """Run all tests focused on critical waiting time inconsistency fix"""
+        print("🚀 STARTING CRITICAL WAITING TIME INCONSISTENCY FIX TESTING")
         print("=" * 80)
         
-        # Test 1: Authentication
+        # Test 1: Authentication (required for all other tests)
         if not self.test_authentication():
-            print("❌ Authentication failed - stopping tests")
+            print("❌ Authentication failed - cannot proceed with other tests")
             return self.generate_report()
         
-        # PRIORITY TEST: Critical Waiting Time Workflow Debug
+        # PRIORITY TEST: Critical Waiting Time Inconsistency Fix
         print("\n" + "="*80)
-        print("🚨 PRIORITY TEST: CRITICAL WAITING TIME WORKFLOW DEBUG")
+        print("🚨 PRIORITY TEST: CRITICAL WAITING TIME INCONSISTENCY FIX")
         print("="*80)
         
-        # Test the EXACT workflow from review request
-        self.test_critical_waiting_time_workflow_debugging()
-        self.test_compare_working_vs_nonworking_cases()
-        self.test_timing_consistency_and_race_conditions()
-        self.test_debug_calculation_logic_detailed()
+        # Test the EXACT fix from review request
+        self.test_critical_waiting_time_inconsistency_fix()
+        self.test_debug_logging_verification()
+        
+        # SUPPORTING TESTS: System Verification
+        print("\n" + "="*80)
+        print("🔧 SUPPORTING TESTS: SYSTEM VERIFICATION")
+        print("="*80)
         
         # Test 2: Patient Management (basic verification)
         self.test_patient_management()
@@ -3106,22 +3109,14 @@ class BackendTester:
         # Test 4: Appointments (basic verification)
         self.test_appointments()
         
-        # SUPPORTING TESTS: System Verification
-        print("\n" + "="*80)
-        print("🔧 SUPPORTING TESTS: SYSTEM VERIFICATION")
-        print("="*80)
+        # Test 5: Waiting Time System Comprehensive
+        self.test_waiting_time_system_comprehensive()
         
-        # Test 5: Updated Dashboard Statistics - Real vs Mock Data
-        self.test_updated_dashboard_statistics()
+        # Test 6: Status Change Endpoint
+        self.test_status_change_endpoint()
         
-        # Test 6: Enhanced Status Change Endpoint - Automatic Calculation
-        self.test_status_change_endpoint_enhanced()
-        
-        # Test 7: End-to-End Waiting Time Workflow
-        self.test_end_to_end_waiting_time_workflow()
-        
-        # Test 8: Explicit Duree_Attente Handling
-        self.test_explicit_duree_attente_handling()
+        # Test 7: Dashboard Waiting Time Stats
+        self.test_dashboard_waiting_time_stats()
         
         # Additional supporting tests
         self.test_admin_users_endpoint()
