@@ -1830,6 +1830,15 @@ async def update_rdv_statut(rdv_id: str, status_data: dict):
                     print(f"DEBUG: duree_attente already calculated ({existing_duree_attente} min) - preserving existing value to prevent reset bug")
                     update_data["duree_attente"] = existing_duree_attente
     
+    # If moving to "termine" status, preserve duree_attente if it exists
+    if statut == "termine":
+        current_appointment = appointments_collection.find_one({"id": rdv_id}, {"_id": 0})
+        if current_appointment and current_appointment.get("duree_attente") is not None:
+            # Preserve the existing duree_attente when completing consultation
+            existing_duree_attente = current_appointment["duree_attente"]
+            update_data["duree_attente"] = existing_duree_attente
+            print(f"DEBUG: Preserving duree_attente ({existing_duree_attente} min) when completing consultation")
+    
     if salle:
         valid_salles = ["", "salle1", "salle2"]
         if salle in valid_salles:
