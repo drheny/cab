@@ -3576,7 +3576,7 @@ class BackendTester:
         failed_tests = total_tests - passed_tests
         
         print("\n" + "=" * 80)
-        print("📋 CRITICAL WAITING TIME WORKFLOW DEBUGGING REPORT")
+        print("📋 FRONTEND API RESPONSE DATA HANDLING TEST REPORT")
         print("=" * 80)
         print(f"⏱️  Total execution time: {total_time:.2f} seconds")
         print(f"📊 Total tests: {total_tests}")
