@@ -3708,6 +3708,176 @@ class BackendTester:
             response_time = time.time() - start_time
             self.log_test("Step 1 - Current State Check", False, f"Exception: {str(e)}", response_time)
 
+    def test_specific_user_bug_sequence(self):
+        """Test the EXACT sequence described by the user - waiting time reset bug"""
+        print("\n🐛 TESTING SPECIFIC USER BUG SEQUENCE - EXACT WORKFLOW")
+        print("User reported: Le compteur se remet encore à zéro quand on passe de 'salle d'attente' à 'en consultation'")
+        print("Testing EXACT sequence:")
+        print("1. Login avec medecin/medecin123")
+        print("2. Trouver un patient actuellement en consultation ou terminé")
+        print("3. Le déplacer vers 'attente' (cela devrait définir heure_arrivee_attente)")
+        print("4. Attendre exactement 15 secondes pour que du temps s'accumule")
+        print("5. Déplacer de 'attente' vers 'en_cours'")
+        print("6. VÉRIFIER IMMÉDIATEMENT: Quelle est la duree_attente stockée dans la base de données?")
+        print("7. VÉRIFIER: Quelle valeur duree_attente l'API renvoie au frontend?")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Step 1: Already authenticated (done in run_all_tests)
+        print("\n✅ STEP 1: Login avec medecin/medecin123 - Already authenticated")
+        
+        # Step 2: Find a patient currently in consultation or terminated
+        print("\n🔍 STEP 2: Trouver un patient actuellement en consultation ou terminé")
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                appointments = response.json()
+                
+                # Look for patient in "en_cours" or "termine" status
+                test_patient = None
+                for apt in appointments:
+                    if apt.get("statut") in ["en_cours", "termine"]:
+                        test_patient = apt
+                        break
+                
+                # If no en_cours/termine patient, use any patient
+                if not test_patient and appointments:
+                    test_patient = appointments[0]
+                
+                if test_patient:
+                    patient_info = test_patient.get("patient", {})
+                    patient_name = f"{patient_info.get('prenom', '')} {patient_info.get('nom', '')}"
+                    rdv_id = test_patient.get("id")
+                    current_status = test_patient.get("statut")
+                    current_duree = test_patient.get("duree_attente")
+                    
+                    details = f"Found patient: '{patient_name}' - Status: {current_status}, duree_attente: {current_duree}"
+                    self.log_test("Step 2 - Find Patient", True, details, response_time)
+                    
+                    # Step 3: Move to "attente" (should set heure_arrivee_attente)
+                    print("\n🏥 STEP 3: Le déplacer vers 'attente' (cela devrait définir heure_arrivee_attente)")
+                    start_time = time.time()
+                    
+                    # Record the exact time we move to attente
+                    attente_start_time = datetime.now()
+                    
+                    update_data = {"statut": "attente"}
+                    response = self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}/statut", json=update_data, timeout=10)
+                    response_time = time.time() - start_time
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        heure_arrivee = data.get("heure_arrivee_attente", "NOT_SET")
+                        duree_attente_after_attente = data.get("duree_attente", "NOT_PROVIDED")
+                        
+                        details = f"Moved '{patient_name}' to attente - heure_arrivee_attente: {heure_arrivee}, duree_attente: {duree_attente_after_attente}"
+                        self.log_test("Step 3 - Move to Attente", True, details, response_time)
+                        
+                        # Step 4: Wait EXACTLY 15 seconds
+                        print("\n⏰ STEP 4: Attendre exactement 15 secondes pour que du temps s'accumule")
+                        print("Waiting exactly 15 seconds...")
+                        time.sleep(15)
+                        
+                        # Step 5: Move from "attente" to "en_cours"
+                        print("\n🩺 STEP 5: Déplacer de 'attente' vers 'en_cours'")
+                        start_time = time.time()
+                        
+                        # Record the exact time we move to en_cours
+                        en_cours_start_time = datetime.now()
+                        
+                        update_data = {"statut": "en_cours"}
+                        response = self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}/statut", json=update_data, timeout=10)
+                        response_time = time.time() - start_time
+                        
+                        if response.status_code == 200:
+                            data = response.json()
+                            
+                            # Step 6 & 7: CRITICAL VERIFICATION
+                            print("\n🔍 STEP 6 & 7: VÉRIFICATION CRITIQUE - duree_attente dans API et base de données")
+                            
+                            # Check API response
+                            api_duree_attente = data.get("duree_attente", "NOT_PROVIDED")
+                            api_heure_arrivee = data.get("heure_arrivee_attente", "NOT_PROVIDED")
+                            
+                            # Calculate expected duration (should be ~15 seconds / 60 = 0 or 1 minute)
+                            time_diff = en_cours_start_time - attente_start_time
+                            expected_seconds = int(time_diff.total_seconds())
+                            expected_minutes = max(0, int(expected_seconds / 60))  # Should be 0 or 1
+                            
+                            api_details = f"API Response - duree_attente: {api_duree_attente}, heure_arrivee: {api_heure_arrivee}, expected: ~{expected_minutes} min ({expected_seconds}s)"
+                            self.log_test("Step 6 - API Response duree_attente", True, api_details, response_time)
+                            
+                            # Now check database state immediately
+                            print("\n💾 VÉRIFICATION BASE DE DONNÉES IMMÉDIATE")
+                            start_time = time.time()
+                            
+                            response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
+                            response_time = time.time() - start_time
+                            
+                            if response.status_code == 200:
+                                updated_appointments = response.json()
+                                updated_appointment = next((apt for apt in updated_appointments if apt.get("id") == rdv_id), None)
+                                
+                                if updated_appointment:
+                                    db_duree_attente = updated_appointment.get("duree_attente")
+                                    db_heure_arrivee = updated_appointment.get("heure_arrivee_attente")
+                                    db_status = updated_appointment.get("statut")
+                                    
+                                    db_details = f"Database - Status: {db_status}, duree_attente: {db_duree_attente}, heure_arrivee: {db_heure_arrivee}"
+                                    self.log_test("Step 7 - Database duree_attente", True, db_details, response_time)
+                                    
+                                    # CRITICAL BUG ANALYSIS
+                                    print("\n🚨 ANALYSE CRITIQUE DU BUG")
+                                    
+                                    # Check if duree_attente was reset to 0
+                                    if db_duree_attente == 0 and expected_minutes >= 0:
+                                        bug_details = f"BUG CONFIRMED: duree_attente reset to 0 instead of {expected_minutes} min ({expected_seconds}s)"
+                                        self.log_test("BUG ANALYSIS - Duration Reset to 0", False, bug_details, 0)
+                                    elif db_duree_attente == expected_minutes:
+                                        fix_details = f"BUG FIXED: duree_attente correctly calculated as {db_duree_attente} min"
+                                        self.log_test("BUG ANALYSIS - Duration Correctly Calculated", True, fix_details, 0)
+                                    else:
+                                        unexpected_details = f"UNEXPECTED: duree_attente is {db_duree_attente}, expected {expected_minutes} min"
+                                        self.log_test("BUG ANALYSIS - Unexpected Duration", True, unexpected_details, 0)
+                                    
+                                    # Check API vs Database consistency
+                                    if api_duree_attente == db_duree_attente:
+                                        consistency_details = f"API and Database consistent: both show {api_duree_attente} min"
+                                        self.log_test("API-Database Consistency", True, consistency_details, 0)
+                                    else:
+                                        inconsistency_details = f"INCONSISTENCY: API shows {api_duree_attente}, Database shows {db_duree_attente}"
+                                        self.log_test("API-Database Consistency", False, inconsistency_details, 0)
+                                    
+                                    # Final summary
+                                    print("\n📊 RÉSUMÉ DE L'ANALYSE")
+                                    print(f"Patient testé: {patient_name}")
+                                    print(f"Temps d'attente réel: {expected_seconds} secondes ({expected_minutes} minutes)")
+                                    print(f"API duree_attente: {api_duree_attente}")
+                                    print(f"Database duree_attente: {db_duree_attente}")
+                                    print(f"Statut final: {db_status}")
+                                    
+                                    summary_details = f"Real wait: {expected_seconds}s, API: {api_duree_attente}min, DB: {db_duree_attente}min"
+                                    self.log_test("User Bug Sequence - Complete Analysis", True, summary_details, 0)
+                                    
+                                else:
+                                    self.log_test("Step 7 - Database Verification", False, "Updated appointment not found in database", response_time)
+                            else:
+                                self.log_test("Step 7 - Database Verification", False, f"Failed to get updated appointments: HTTP {response.status_code}", response_time)
+                        else:
+                            self.log_test("Step 5 - Move to En_Cours", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                    else:
+                        self.log_test("Step 3 - Move to Attente", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                else:
+                    self.log_test("Step 2 - Find Patient", False, "No appointments found for testing", response_time)
+            else:
+                self.log_test("Step 2 - Find Patient", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("User Bug Sequence", False, f"Exception: {str(e)}", response_time)
+
     def run_all_tests(self):
         """Run all tests focused on critical waiting time bug fix"""
         print("🚀 STARTING CRITICAL WAITING TIME BUG FIX TESTING")
