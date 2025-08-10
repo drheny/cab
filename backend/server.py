@@ -1797,9 +1797,9 @@ async def update_rdv_statut(rdv_id: str, status_data: dict):
                         arrivee_time = datetime.fromisoformat(heure_arrivee_str.replace("Z", "+00:00"))
                         current_time = datetime.now()
                         duree_calculee = int((current_time - arrivee_time).total_seconds() / 60)  # en minutes
-                        calculated_duration = max(1, duree_calculee)  # Minimum 1 minute pour éviter 0
+                        calculated_duration = max(0, duree_calculee)  # Éviter les durées négatives seulement
                         update_data["duree_attente"] = calculated_duration
-                        print(f"DEBUG: ISO format - Calculated duree_attente: {calculated_duration} minutes")
+                        print(f"DEBUG: ISO format - Calculated duree_attente: {calculated_duration} minutes (real duration)")
                     elif ":" in heure_arrivee_str:
                         # Time only format: 15:30
                         today = datetime.now().date()
@@ -1809,9 +1809,9 @@ async def update_rdv_statut(rdv_id: str, status_data: dict):
                         arrivee_time = datetime.combine(today, datetime.min.time().replace(hour=hour, minute=minute))
                         current_time = datetime.now()
                         duree_calculee = int((current_time - arrivee_time).total_seconds() / 60)  # en minutes
-                        calculated_duration = max(1, duree_calculee)  # Minimum 1 minute pour éviter 0
+                        calculated_duration = max(0, duree_calculee)  # Éviter les durées négatives seulement
                         update_data["duree_attente"] = calculated_duration
-                        print(f"DEBUG: Time format - Calculated duree_attente: {calculated_duration} minutes")
+                        print(f"DEBUG: Time format - Calculated duree_attente: {calculated_duration} minutes (real duration)")
                     else:
                         print(f"DEBUG: Unrecognized timestamp format: {heure_arrivee_str}")
                     
