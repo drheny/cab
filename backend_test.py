@@ -3529,11 +3529,11 @@ class BackendTester:
             self.log_test("Step 1 - Current State Check", False, f"Exception: {str(e)}", response_time)
 
     def run_all_tests(self):
-        """Run all tests focused on critical waiting time workflow debugging"""
-        print("🚀 STARTING CRITICAL WAITING TIME WORKFLOW DEBUGGING")
+        """Run all tests focused on frontend API response data handling"""
+        print("🚀 STARTING FRONTEND API RESPONSE DATA HANDLING TESTING")
         print("=" * 80)
-        print("🚨 USER REPORTED: Badge still doesn't appear despite previous tests showing success!")
-        print("🔍 DEBUGGING: Real user workflow - salle d'attente → wait 1 minute → en consultation")
+        print("🔄 TESTING: Updated frontend logic for handling backend response data")
+        print("🎯 FOCUS: Verify API response includes duree_attente and frontend can update immediately")
         print("=" * 80)
         
         # Test 1: Authentication (required for all other tests)
@@ -3541,15 +3541,13 @@ class BackendTester:
             print("❌ Authentication failed - cannot proceed with other tests")
             return self.generate_report()
         
-        # PRIORITY TEST: Critical User Workflow Debugging
+        # PRIORITY TEST: Frontend API Response Data Handling
         print("\n" + "="*80)
-        print("🚨 PRIORITY TEST: CRITICAL USER WORKFLOW DEBUGGING")
+        print("🎯 PRIORITY TEST: FRONTEND API RESPONSE DATA HANDLING")
         print("="*80)
         
-        # Test the EXACT user workflow that's failing
-        self.test_critical_user_workflow_debugging()
-        self.test_backend_status_change_endpoint_detailed()
-        self.test_dashboard_duree_attente_moyenne_real_calculation()
+        # Test the updated frontend logic for handling API response data
+        self.test_frontend_api_response_data_handling()
         
         # SUPPORTING TESTS: System Verification
         print("\n" + "="*80)
