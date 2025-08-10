@@ -165,17 +165,19 @@ const HandwritingField = ({
             <span>Saisie</span>
           </button>
           
-          <button
-            onClick={toggleMode}
-            className={`flex items-center space-x-1 px-3 py-1 rounded-lg text-sm transition-all ${
-              mode === 'handwriting' 
-                ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-                : 'bg-gray-100 text-gray-600'
-            }`}
-          >
-            <Edit3 className="w-4 h-4" />
-            <span>Manuscrit</span>
-          </button>
+          {!disableHandwriting && (
+            <button
+              onClick={toggleMode}
+              className={`flex items-center space-x-1 px-3 py-1 rounded-lg text-sm transition-all ${
+                mode === 'handwriting' 
+                  ? 'bg-blue-100 text-blue-700 border border-blue-300' 
+                  : 'bg-gray-100 text-gray-600'
+              }`}
+            >
+              <Edit3 className="w-4 h-4" />
+              <span>Manuscrit</span>
+            </button>
+          )}
         </div>
 
         {/* Actions spécifiques au mode manuscrit */}
