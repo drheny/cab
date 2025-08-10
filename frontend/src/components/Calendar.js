@@ -2297,15 +2297,12 @@ const WorkflowCard = React.memo(({
                appointment.duree_attente !== null && 
                appointment.duree_attente !== undefined &&
                typeof appointment.duree_attente === 'number' && 
-               appointment.duree_attente >= 0 && (() => {
-                const colors = getWaitingTimeBadgeColor(appointment.duree_attente);
-                return (
-                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${colors.background} ${colors.text} border ${colors.border}`}>
-                    <Clock className="w-3 h-3 mr-1" />
-                    {appointment.duree_attente} min
-                  </span>
-                );
-               })()}
+               appointment.duree_attente >= 0 && (
+                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getWaitingTimeBadgeColor(appointment.duree_attente).background} ${getWaitingTimeBadgeColor(appointment.duree_attente).text} border ${getWaitingTimeBadgeColor(appointment.duree_attente).border}`}>
+                  <Clock className="w-3 h-3 mr-1" />
+                  {appointment.duree_attente} min
+                </span>
+              )}
               
               <button
                 onClick={() => onViewPatient(appointment.patient_id)}
