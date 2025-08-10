@@ -167,12 +167,14 @@ const HandwritingField = ({
   };
 
   const clearCanvas = () => {
+    if (hideToggle) return; // Désactivé si toggle caché
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   };
 
   const toggleMode = () => {
+    if (hideToggle) return; // Désactivé si toggle caché
     if (disableHandwriting && mode === 'typing') {
       return; // Don't allow switching to handwriting mode if disabled
     }
