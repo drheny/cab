@@ -14,7 +14,7 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Configuration
-BACKEND_URL = "https://69e517e2-0a64-4c23-ba42-4956319035e9.preview.emergentagent.com/api"
+BACKEND_URL = "https://86e1ae33-6e29-4ce5-a743-1e543eb0a6b8.preview.emergentagent.com/api"
 
 def test_waiting_time_bug_fix():
     """Test the critical waiting time bug fix"""
