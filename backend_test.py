@@ -957,7 +957,294 @@ class BackendTester:
             response_time = time.time() - start_time
             self.log_test("Zero Display Bug Fix", False, f"Exception: {str(e)}", response_time)
     
-    def test_critical_waiting_time_inconsistency_fix(self):
+    def test_critical_user_workflow_debugging(self):
+        """CRITICAL: Debug the exact user workflow that's failing - Badge not appearing"""
+        print("\n🚨 CRITICAL USER WORKFLOW DEBUGGING - Badge Not Appearing Issue")
+        print("Simulating exact user workflow: salle d'attente → wait 1 minute → en consultation")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Step 1: Get current appointments and check their exact duree_attente values
+        print("\n📋 STEP 1: Check real-time appointment data and duree_attente values")
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                appointments = response.json()
+                if appointments:
+                    # Analyze ALL appointments and their duree_attente values
+                    total_appointments = len(appointments)
+                    null_duree_count = len([apt for apt in appointments if apt.get("duree_attente") is None])
+                    zero_duree_count = len([apt for apt in appointments if apt.get("duree_attente") == 0])
+                    valid_duree_count = len([apt for apt in appointments if apt.get("duree_attente", 0) > 0])
+                    
+                    details = f"Total appointments: {total_appointments}, Null duree_attente: {null_duree_count}, Zero duree_attente: {zero_duree_count}, Valid duree_attente: {valid_duree_count}"
+                    self.log_test("Real-time Appointment Data Analysis", True, details, response_time)
+                    
+                    # Find a test patient (preferably in "programme" status to simulate full workflow)
+                    test_appointment = None
+                    for apt in appointments:
+                        if apt.get("statut") in ["programme", "attente"]:
+                            test_appointment = apt
+                            break
+                    
+                    if not test_appointment and appointments:
+                        test_appointment = appointments[0]
+                    
+                    if test_appointment:
+                        patient_info = test_appointment.get("patient", {})
+                        test_patient_name = f"{patient_info.get('prenom', '')} {patient_info.get('nom', '')}"
+                        rdv_id = test_appointment.get("id")
+                        current_status = test_appointment.get("statut")
+                        current_duree = test_appointment.get("duree_attente")
+                        current_heure_arrivee = test_appointment.get("heure_arrivee_attente")
+                        
+                        details = f"Selected test patient: '{test_patient_name}' - Status: {current_status}, duree_attente: {current_duree}, heure_arrivee: {current_heure_arrivee}"
+                        self.log_test("Test Patient Selection", True, details, 0)
+                        
+                        # Step 2: CRITICAL - Move patient to "attente" (salle d'attente) and verify heure_arrivee_attente
+                        print("\n🏥 STEP 2: Move patient to 'attente' (salle d'attente) - Verify heure_arrivee_attente setting")
+                        start_time = time.time()
+                        
+                        # Record the exact time when moving to attente
+                        attente_start_time = datetime.now()
+                        attente_time_str = attente_start_time.strftime("%H:%M")
+                        
+                        update_data = {
+                            "statut": "attente"
+                        }
+                        
+                        response = self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}/statut", json=update_data, timeout=10)
+                        response_time = time.time() - start_time
+                        
+                        if response.status_code == 200:
+                            data = response.json()
+                            returned_heure_arrivee = data.get("heure_arrivee_attente", "NOT_SET")
+                            returned_duree = data.get("duree_attente", "NOT_SET")
+                            
+                            details = f"Moved '{test_patient_name}' to attente - heure_arrivee_attente: '{returned_heure_arrivee}', duree_attente: {returned_duree}"
+                            self.log_test("Move to Attente - Backend Response", True, details, response_time)
+                            
+                            # Step 3: Wait 1 minute (simulate user workflow)
+                            print("\n⏰ STEP 3: Wait 1 minute (simulating user workflow)")
+                            print("Waiting 65 seconds to ensure measurable waiting time...")
+                            time.sleep(65)  # Wait 65 seconds to ensure > 1 minute waiting time
+                            
+                            # Step 4: CRITICAL - Move to "en_cours" (en consultation) and check duree_attente calculation
+                            print("\n🩺 STEP 4: CRITICAL - Move to 'en_cours' (en consultation) and verify duree_attente calculation")
+                            start_time = time.time()
+                            
+                            consultation_start_time = datetime.now()
+                            
+                            update_data = {
+                                "statut": "en_cours"
+                            }
+                            
+                            response = self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}/statut", json=update_data, timeout=10)
+                            response_time = time.time() - start_time
+                            
+                            if response.status_code == 200:
+                                data = response.json()
+                                calculated_duree = data.get("duree_attente", "NOT_CALCULATED")
+                                
+                                # Calculate expected waiting time
+                                time_diff = consultation_start_time - attente_start_time
+                                expected_minutes = int(time_diff.total_seconds() / 60)
+                                
+                                details = f"Moved '{test_patient_name}' to en_cours - duree_attente: {calculated_duree}, expected: ~{expected_minutes} min"
+                                
+                                # CRITICAL CHECK: Is duree_attente being calculated?
+                                if calculated_duree is None or calculated_duree == "NOT_CALCULATED":
+                                    self.log_test("CRITICAL BUG - Duree_Attente NOT Calculated", False, f"duree_attente is {calculated_duree} - calculation logic is NOT working", response_time)
+                                elif calculated_duree == 0:
+                                    self.log_test("CRITICAL BUG - Duree_Attente Zero", False, f"duree_attente calculated as 0 - should be >= 1 minute", response_time)
+                                elif isinstance(calculated_duree, (int, float)) and calculated_duree >= 1:
+                                    self.log_test("Duree_Attente Calculation Working", True, details, response_time)
+                                else:
+                                    self.log_test("CRITICAL BUG - Duree_Attente Invalid", False, f"duree_attente has invalid value: {calculated_duree} (type: {type(calculated_duree)})", response_time)
+                                
+                                # Step 5: CRITICAL - Verify data persistence in database
+                                print("\n💾 STEP 5: CRITICAL - Verify duree_attente persistence in database")
+                                start_time = time.time()
+                                
+                                response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
+                                response_time = time.time() - start_time
+                                
+                                if response.status_code == 200:
+                                    updated_appointments = response.json()
+                                    updated_appointment = next((apt for apt in updated_appointments if apt.get("id") == rdv_id), None)
+                                    
+                                    if updated_appointment:
+                                        persisted_duree = updated_appointment.get("duree_attente")
+                                        persisted_status = updated_appointment.get("statut")
+                                        persisted_heure_arrivee = updated_appointment.get("heure_arrivee_attente")
+                                        
+                                        details = f"Database persistence check - Status: {persisted_status}, duree_attente: {persisted_duree}, heure_arrivee: '{persisted_heure_arrivee}'"
+                                        
+                                        # CRITICAL CHECK: Is duree_attente stored in database?
+                                        if persisted_duree is None:
+                                            self.log_test("CRITICAL BUG - Duree_Attente NOT Stored", False, "duree_attente is None in database - not being stored", response_time)
+                                        elif persisted_duree == 0:
+                                            self.log_test("CRITICAL BUG - Duree_Attente Zero in DB", False, "duree_attente stored as 0 in database", response_time)
+                                        elif isinstance(persisted_duree, (int, float)) and persisted_duree >= 1:
+                                            self.log_test("Duree_Attente Database Persistence", True, details, response_time)
+                                        else:
+                                            self.log_test("CRITICAL BUG - Invalid Duree_Attente in DB", False, f"Invalid duree_attente in database: {persisted_duree}", response_time)
+                                        
+                                        # Step 6: Test moving to "termine" to verify duree_attente preservation
+                                        print("\n✅ STEP 6: Move to 'termine' and verify duree_attente preservation")
+                                        start_time = time.time()
+                                        
+                                        update_data = {
+                                            "statut": "termine"
+                                        }
+                                        
+                                        response = self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}/statut", json=update_data, timeout=10)
+                                        response_time = time.time() - start_time
+                                        
+                                        if response.status_code == 200:
+                                            data = response.json()
+                                            final_duree = data.get("duree_attente", "NOT_PRESERVED")
+                                            
+                                            details = f"Moved '{test_patient_name}' to termine - duree_attente preserved: {final_duree}"
+                                            
+                                            if final_duree == persisted_duree:
+                                                self.log_test("Duree_Attente Preservation in Termine", True, details, response_time)
+                                            else:
+                                                self.log_test("CRITICAL BUG - Duree_Attente Not Preserved", False, f"duree_attente changed from {persisted_duree} to {final_duree}", response_time)
+                                        else:
+                                            self.log_test("Move to Termine Status", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                                    else:
+                                        self.log_test("Database Persistence Check", False, "Updated appointment not found in database", response_time)
+                                else:
+                                    self.log_test("Database Persistence Check", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                            else:
+                                self.log_test("Move to En_Cours Status", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                        else:
+                            self.log_test("Move to Attente Status", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                    else:
+                        self.log_test("Test Patient Selection", False, "No suitable test patient found", 0)
+                else:
+                    self.log_test("Real-time Appointment Data", False, "No appointments found for testing", response_time)
+            else:
+                self.log_test("Real-time Appointment Data", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Critical User Workflow Debugging", False, f"Exception: {str(e)}", response_time)
+    
+    def test_backend_status_change_endpoint_detailed(self):
+        """Test the exact backend status change endpoint behavior"""
+        print("\n🔧 TESTING BACKEND STATUS CHANGE ENDPOINT DETAILED")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Get appointments to test with
+        try:
+            response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
+            if response.status_code == 200:
+                appointments = response.json()
+                if appointments:
+                    test_appointment = appointments[0]
+                    rdv_id = test_appointment.get("id")
+                    patient_info = test_appointment.get("patient", {})
+                    patient_name = f"{patient_info.get('prenom', '')} {patient_info.get('nom', '')}"
+                    
+                    # Test 1: Check if PUT /api/rdv/{id}/statut endpoint exists
+                    start_time = time.time()
+                    try:
+                        # Test with minimal data first
+                        update_data = {"statut": "programme"}
+                        response = self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}/statut", json=update_data, timeout=10)
+                        response_time = time.time() - start_time
+                        
+                        if response.status_code == 200:
+                            data = response.json()
+                            details = f"Endpoint exists and responds - Status: {data.get('statut', 'unknown')}"
+                            self.log_test("Status Change Endpoint Availability", True, details, response_time)
+                            
+                            # Test 2: Check what fields are returned
+                            returned_fields = list(data.keys())
+                            details = f"Returned fields: {', '.join(returned_fields)}"
+                            self.log_test("Status Change Endpoint Response Fields", True, details, 0)
+                            
+                            # Test 3: Check if duree_attente field is included
+                            if "duree_attente" in data:
+                                duree_value = data["duree_attente"]
+                                details = f"duree_attente field present with value: {duree_value} (type: {type(duree_value).__name__})"
+                                self.log_test("Status Change Endpoint - Duree_Attente Field", True, details, 0)
+                            else:
+                                self.log_test("Status Change Endpoint - Duree_Attente Field", False, "duree_attente field missing from response", 0)
+                            
+                            # Test 4: Check if heure_arrivee_attente field is included
+                            if "heure_arrivee_attente" in data:
+                                heure_value = data["heure_arrivee_attente"]
+                                details = f"heure_arrivee_attente field present with value: '{heure_value}' (type: {type(heure_value).__name__})"
+                                self.log_test("Status Change Endpoint - Heure_Arrivee_Attente Field", True, details, 0)
+                            else:
+                                self.log_test("Status Change Endpoint - Heure_Arrivee_Attente Field", False, "heure_arrivee_attente field missing from response", 0)
+                        
+                        elif response.status_code == 404:
+                            self.log_test("Status Change Endpoint Availability", False, "PUT /api/rdv/{id}/statut endpoint not found (404)", response_time)
+                        elif response.status_code == 405:
+                            self.log_test("Status Change Endpoint Availability", False, "PUT method not allowed (405) - endpoint may not support PUT", response_time)
+                        else:
+                            self.log_test("Status Change Endpoint Availability", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                    
+                    except Exception as e:
+                        response_time = time.time() - start_time
+                        self.log_test("Status Change Endpoint Availability", False, f"Exception: {str(e)}", response_time)
+                
+                else:
+                    self.log_test("Backend Status Change Endpoint Test", False, "No appointments found for testing", 0)
+            else:
+                self.log_test("Backend Status Change Endpoint Test", False, f"Failed to get appointments: HTTP {response.status_code}", 0)
+        except Exception as e:
+            self.log_test("Backend Status Change Endpoint Test", False, f"Exception: {str(e)}", 0)
+    
+    def test_dashboard_duree_attente_moyenne_real_calculation(self):
+        """Test if dashboard shows real calculated duree_attente_moyenne or mock data"""
+        print("\n📊 TESTING DASHBOARD DUREE_ATTENTE_MOYENNE - Real vs Mock Data")
+        
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BACKEND_URL}/dashboard", timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if "duree_attente_moyenne" in data:
+                    duree_attente_moyenne = data["duree_attente_moyenne"]
+                    
+                    # Check if it's the common mock value (15 minutes) or real calculation
+                    if duree_attente_moyenne == 15:
+                        details = f"duree_attente_moyenne: {duree_attente_moyenne} minutes (likely MOCK data - common default value)"
+                        self.log_test("Dashboard Duree_Attente_Moyenne - Mock Data Detection", True, details, response_time)
+                    elif duree_attente_moyenne == 0:
+                        details = f"duree_attente_moyenne: {duree_attente_moyenne} minutes (calculated from real data - no valid waiting times)"
+                        self.log_test("Dashboard Duree_Attente_Moyenne - Real Calculation (Zero)", True, details, response_time)
+                    else:
+                        details = f"duree_attente_moyenne: {duree_attente_moyenne} minutes (calculated from real data)"
+                        self.log_test("Dashboard Duree_Attente_Moyenne - Real Calculation", True, details, response_time)
+                    
+                    # Get context stats
+                    total_rdv = data.get("total_rdv", 0)
+                    rdv_attente = data.get("rdv_attente", 0)
+                    rdv_en_cours = data.get("rdv_en_cours", 0)
+                    rdv_termines = data.get("rdv_termines", 0)
+                    
+                    context_details = f"Context - Total RDV: {total_rdv}, Attente: {rdv_attente}, En cours: {rdv_en_cours}, Terminés: {rdv_termines}"
+                    self.log_test("Dashboard Context for Waiting Time Analysis", True, context_details, 0)
+                    
+                else:
+                    self.log_test("Dashboard Duree_Attente_Moyenne", False, "duree_attente_moyenne field missing from dashboard", response_time)
+            else:
+                self.log_test("Dashboard Duree_Attente_Moyenne", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Dashboard Duree_Attente_Moyenne", False, f"Exception: {str(e)}", response_time)
         """CRITICAL: Test the waiting time inconsistency fix - Backend type validation and calculation"""
         print("\n🚨 TESTING CRITICAL WAITING TIME INCONSISTENCY FIX")
         
