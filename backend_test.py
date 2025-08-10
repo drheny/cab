@@ -49,6 +49,12 @@ TEST_CREDENTIALS = {
 class BackendTester:
     def __init__(self):
         self.session = requests.Session()
+        # Disable SSL verification for testing environment
+        self.session.verify = False
+        # Disable SSL warnings
+        import urllib3
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        
         self.auth_token = None
         self.test_results = []
         self.start_time = time.time()
