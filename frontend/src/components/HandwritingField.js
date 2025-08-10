@@ -260,7 +260,7 @@ const HandwritingField = ({
         <textarea
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder={`${placeholder} - Mode ${mode === 'handwriting' ? 'manuscrit' : 'saisie'}`}
+          placeholder={hideToggle ? placeholder : `${placeholder} - Mode ${mode === 'handwriting' ? 'manuscrit' : 'saisie'}`}
           rows={rows}
           className={`${currentConfig.className} ${className}`}
           inputMode={currentConfig.inputMode}
@@ -271,8 +271,8 @@ const HandwritingField = ({
           data-gramm="false"
         />
 
-        {/* Canvas superposé pour mode manuscrit */}
-        {mode === 'handwriting' && (
+        {/* Canvas superposé pour mode manuscrit - désactivé si hideToggle */}
+        {mode === 'handwriting' && !hideToggle && (
           <canvas
             ref={canvasRef}
             className="absolute top-0 left-0 w-full h-full pointer-events-auto bg-transparent"
@@ -294,8 +294,8 @@ const HandwritingField = ({
         )}
       </div>
 
-      {/* Indicateur de traitement */}
-      {isProcessing && (
+      {/* Indicateur de traitement - désactivé si hideToggle */}
+      {isProcessing && !hideToggle && (
         <div className="absolute inset-0 bg-white bg-opacity-80 flex items-center justify-center">
           <div className="flex items-center space-x-2 text-purple-600">
             <Wand2 className="w-5 h-5 animate-pulse" />
@@ -304,8 +304,8 @@ const HandwritingField = ({
         </div>
       )}
 
-      {/* Résultats OCR (debug) */}
-      {handwritingData && (
+      {/* Résultats OCR (debug) - désactivé si hideToggle */}
+      {handwritingData && !hideToggle && (
         <div className="mt-2 p-2 bg-gray-50 rounded text-xs">
           <strong>Confiance OCR:</strong> {handwritingData.confidence}%
         </div>
