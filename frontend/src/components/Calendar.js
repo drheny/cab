@@ -2260,12 +2260,25 @@ const WorkflowCard = React.memo(({
 
           {/* Nom patient cliquable */}
           <div className="flex-1 min-w-0">
-            <button
-              onClick={() => onViewPatient(appointment.patient_id)}
-              className="font-semibold text-gray-900 hover:text-primary-600 transition-colors cursor-pointer underline text-left"
-            >
-              {appointment.patient?.prenom} {appointment.patient?.nom}
-            </button>
+            <div className="flex items-center space-x-2">
+              {/* Badge de temps d'attente - affiché pour les patients en cours et terminés */}
+              {(sectionType === 'en_cours' || sectionType === 'termine') && 
+               appointment.duree_attente && 
+               typeof appointment.duree_attente === 'number' && 
+               appointment.duree_attente > 0 && (
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                  <Clock className="w-3 h-3 mr-1" />
+                  {appointment.duree_attente} min
+                </span>
+              )}
+              
+              <button
+                onClick={() => onViewPatient(appointment.patient_id)}
+                className="font-semibold text-gray-900 hover:text-primary-600 transition-colors cursor-pointer underline text-left"
+              >
+                {appointment.patient?.prenom} {appointment.patient?.nom}
+              </button>
+            </div>
             
             {/* DEBUG: Prevent any accidental display of duree_attente */}
             {/* Only show waiting time markers when properly formatted */}
