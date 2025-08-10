@@ -2261,9 +2261,10 @@ const WorkflowCard = React.memo(({
             <div className="flex items-center space-x-2">
               {/* Badge de temps d'attente - affiché pour les patients en cours et terminés */}
               {(sectionType === 'en_cours' || sectionType === 'termine') && 
-               appointment.duree_attente && 
+               appointment.duree_attente !== null && 
+               appointment.duree_attente !== undefined &&
                typeof appointment.duree_attente === 'number' && 
-               appointment.duree_attente > 0 && (
+               appointment.duree_attente >= 0 && (
                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
                   <Clock className="w-3 h-3 mr-1" />
                   {appointment.duree_attente} min
