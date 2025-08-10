@@ -1800,12 +1800,12 @@ class BackendTester:
         }
 
 if __name__ == "__main__":
-    print("🏥 Cabinet Médical - Specific Bug Fixes Testing")
-    print("Testing specific bug fixes that were just implemented:")
-    print("1. Payment Status Real-time Update Bug Fix")
-    print("2. Zero Display Bug Fix")
-    print("3. Payment API Endpoint Testing")
-    print("4. Backend Payment Logic Verification")
+    print("🏥 Cabinet Médical - Waiting Time System Testing")
+    print("Testing the waiting time (duree_attente) tracking system:")
+    print("1. Track waiting time when patient moves from 'attente' to 'en_cours'")
+    print("2. Display duree_attente for patients in 'en_cours' and 'terminés' sections")
+    print("3. Statistics - dashboard average waiting time calculation")
+    print("4. Verify heure_arrivee_attente timestamps for calculation")
     print(f"Backend URL: {BACKEND_URL}")
     print(f"Test Credentials: {TEST_CREDENTIALS['username']}")
     print()
