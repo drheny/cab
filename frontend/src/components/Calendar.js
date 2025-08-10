@@ -337,25 +337,22 @@ const Calendar = ({ user }) => {
       }
     }
 
-    setAppointments(prevAppointments =>
-      prevAppointments.map(apt =>
-        apt.id === appointmentId ? { 
-          ...apt, 
-          statut: 'en_cours',
-          duree_attente: dureeAttente 
-        } : apt
-      )
-    );
-
     try {
+      // Send API request first (no optimistic update)
       await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/statut`, { 
         statut: 'en_cours',
         duree_attente: dureeAttente
       });
+      
       toast.success('Consultation démarrée');
-    } catch (error) {
-      toast.error('Erreur lors du démarrage de la consultation');
+      
+      // Refresh data from backend to get the actual updated appointment data
       await fetchData();
+      
+    } catch (error) {
+      console.error('Error starting consultation:', error);
+      toast.error('Erreur lors du démarrage de la consultation');
+    }
     }
   }, [API_BASE_URL, fetchData, appointments]);
 
