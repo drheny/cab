@@ -90,7 +90,7 @@ const Sidebar = ({ user, isOpen, onClose, phoneMessagesCount = 0 }) => {
                   >
                     <div className="flex items-center space-x-2 sm:space-x-3">
                       <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
-                      <span className="hidden sm:inline lg:inline">{item.label}</span>
+                      <span className="block">{item.label}</span>
                     </div>
                     
                     {/* Badge pour Messages */}
