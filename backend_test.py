@@ -2012,15 +2012,202 @@ class BackendTester:
         except Exception as e:
             self.log_test("Explicit Duree_Attente Handling", False, f"Exception getting appointments: {str(e)}", 0)
 
+    def test_waiting_time_workflow_critical_debug(self):
+        """Test the EXACT workflow from review request - Critical waiting time bug debugging"""
+        print("\n🚨 TESTING CRITICAL WAITING TIME WORKFLOW - EXACT REVIEW REQUEST SCENARIO")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Step 1: Check Current State - Get today's appointments and identify one to test with
+        print("\n📋 STEP 1: CHECK CURRENT STATE")
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                appointments = response.json()
+                if appointments and len(appointments) > 0:
+                    # Find the best appointment to test with
+                    test_appointment = appointments[0]  # Use first appointment
+                    rdv_id = test_appointment.get("id")
+                    patient_info = test_appointment.get("patient", {})
+                    patient_name = f"{patient_info.get('prenom', '')} {patient_info.get('nom', '')}"
+                    original_status = test_appointment.get("statut")
+                    original_duree_attente = test_appointment.get("duree_attente")
+                    original_heure_arrivee = test_appointment.get("heure_arrivee_attente")
+                    
+                    details = f"Selected patient '{patient_name}' (ID: {rdv_id}) - Status: {original_status}, duree_attente: {original_duree_attente}, heure_arrivee: {original_heure_arrivee}"
+                    self.log_test("Step 1 - Current State Check", True, details, response_time)
+                    
+                    # Step 2: Move to Waiting Room (salle d'attente)
+                    print("\n🏥 STEP 2: MOVE TO WAITING ROOM")
+                    start_time = time.time()
+                    try:
+                        current_time = datetime.now()
+                        arrival_time = current_time.strftime("%H:%M")
+                        
+                        # PUT /api/rdv/{id}/statut with status "attente"
+                        update_data = {
+                            "statut": "attente",
+                            "heure_arrivee_attente": arrival_time
+                        }
+                        
+                        # Try the status update endpoint
+                        response = self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}/statut", json=update_data, timeout=10)
+                        response_time = time.time() - start_time
+                        
+                        if response.status_code == 200:
+                            details = f"Successfully moved '{patient_name}' to attente status at {arrival_time}"
+                            self.log_test("Step 2 - Move to Waiting Room", True, details, response_time)
+                            
+                            # Verify heure_arrivee_attente is set properly
+                            response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
+                            if response.status_code == 200:
+                                updated_appointments = response.json()
+                                updated_appointment = next((apt for apt in updated_appointments if apt.get("id") == rdv_id), None)
+                                
+                                if updated_appointment:
+                                    new_heure_arrivee = updated_appointment.get("heure_arrivee_attente")
+                                    new_duree_attente = updated_appointment.get("duree_attente")
+                                    new_status = updated_appointment.get("statut")
+                                    
+                                    details = f"After move to attente - Status: {new_status}, heure_arrivee_attente: {new_heure_arrivee}, duree_attente: {new_duree_attente}"
+                                    self.log_test("Step 2 - Verify Arrival Data", True, details, 0)
+                                else:
+                                    self.log_test("Step 2 - Verify Arrival Data", False, "Updated appointment not found", 0)
+                            
+                            # Step 3: Wait and Move to Consultation
+                            print("\n⏰ STEP 3: WAIT AND MOVE TO CONSULTATION")
+                            print("Waiting a few seconds to simulate waiting time...")
+                            time.sleep(3)  # Wait 3 seconds to simulate waiting time
+                            
+                            start_time = time.time()
+                            try:
+                                # PUT /api/rdv/{id}/statut with status "en_cours"
+                                update_data = {
+                                    "statut": "en_cours"
+                                }
+                                
+                                response = self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}/statut", json=update_data, timeout=10)
+                                response_time = time.time() - start_time
+                                
+                                if response.status_code == 200:
+                                    details = f"Successfully moved '{patient_name}' to en_cours status"
+                                    self.log_test("Step 3 - Move to Consultation", True, details, response_time)
+                                    
+                                    # Verify that duree_attente is calculated and stored
+                                    response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
+                                    if response.status_code == 200:
+                                        final_appointments = response.json()
+                                        final_appointment = next((apt for apt in final_appointments if apt.get("id") == rdv_id), None)
+                                        
+                                        if final_appointment:
+                                            final_duree_attente = final_appointment.get("duree_attente")
+                                            final_status = final_appointment.get("statut")
+                                            final_heure_arrivee = final_appointment.get("heure_arrivee_attente")
+                                            
+                                            # This is the CRITICAL test - duree_attente should be calculated
+                                            if final_duree_attente is not None and final_duree_attente > 0:
+                                                details = f"✅ SUCCESS: duree_attente calculated = {final_duree_attente} minutes"
+                                                self.log_test("Step 3 - Duree_Attente Calculation SUCCESS", True, details, 0)
+                                            else:
+                                                details = f"❌ CRITICAL BUG: duree_attente = {final_duree_attente} (should be > 0)"
+                                                self.log_test("Step 3 - Duree_Attente Calculation FAILED", False, details, 0)
+                                            
+                                            # Step 4: Verify Data Structure
+                                            print("\n🔍 STEP 4: VERIFY DATA STRUCTURE")
+                                            appointment_data = {
+                                                "id": final_appointment.get("id"),
+                                                "patient_name": patient_name,
+                                                "statut": final_status,
+                                                "duree_attente": final_duree_attente,
+                                                "heure_arrivee_attente": final_heure_arrivee,
+                                                "data_types": {
+                                                    "duree_attente_type": type(final_duree_attente).__name__,
+                                                    "heure_arrivee_type": type(final_heure_arrivee).__name__
+                                                }
+                                            }
+                                            
+                                            details = f"Final appointment data: {json.dumps(appointment_data, indent=2)}"
+                                            self.log_test("Step 4 - Data Structure Verification", True, details, 0)
+                                            
+                                            # Test moving to "terminés" to check if waiting time persists
+                                            print("\n🏁 STEP 5: MOVE TO TERMINÉS")
+                                            start_time = time.time()
+                                            try:
+                                                update_data = {
+                                                    "statut": "termine"
+                                                }
+                                                
+                                                response = self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}/statut", json=update_data, timeout=10)
+                                                response_time = time.time() - start_time
+                                                
+                                                if response.status_code == 200:
+                                                    # Check if duree_attente is preserved in "terminés"
+                                                    response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
+                                                    if response.status_code == 200:
+                                                        termine_appointments = response.json()
+                                                        termine_appointment = next((apt for apt in termine_appointments if apt.get("id") == rdv_id), None)
+                                                        
+                                                        if termine_appointment:
+                                                            termine_duree_attente = termine_appointment.get("duree_attente")
+                                                            termine_status = termine_appointment.get("statut")
+                                                            
+                                                            if termine_duree_attente is not None and termine_duree_attente > 0:
+                                                                details = f"✅ SUCCESS: duree_attente preserved in terminés = {termine_duree_attente} minutes"
+                                                                self.log_test("Step 5 - Waiting Time in Terminés SUCCESS", True, details, response_time)
+                                                            else:
+                                                                details = f"❌ CRITICAL BUG: duree_attente lost in terminés = {termine_duree_attente}"
+                                                                self.log_test("Step 5 - Waiting Time in Terminés FAILED", False, details, response_time)
+                                                        else:
+                                                            self.log_test("Step 5 - Terminés Verification", False, "Appointment not found in terminés", response_time)
+                                                    else:
+                                                        self.log_test("Step 5 - Terminés Verification", False, f"Failed to get terminés appointments: HTTP {response.status_code}", response_time)
+                                                else:
+                                                    self.log_test("Step 5 - Move to Terminés", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                                            except Exception as e:
+                                                response_time = time.time() - start_time
+                                                self.log_test("Step 5 - Move to Terminés", False, f"Exception: {str(e)}", response_time)
+                                        else:
+                                            self.log_test("Step 3 - Final Verification", False, "Final appointment not found", 0)
+                                    else:
+                                        self.log_test("Step 3 - Final Verification", False, f"Failed to get final appointments: HTTP {response.status_code}", 0)
+                                else:
+                                    self.log_test("Step 3 - Move to Consultation", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                            except Exception as e:
+                                response_time = time.time() - start_time
+                                self.log_test("Step 3 - Move to Consultation", False, f"Exception: {str(e)}", response_time)
+                        else:
+                            self.log_test("Step 2 - Move to Waiting Room", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                    except Exception as e:
+                        response_time = time.time() - start_time
+                        self.log_test("Step 2 - Move to Waiting Room", False, f"Exception: {str(e)}", response_time)
+                else:
+                    self.log_test("Step 1 - Current State Check", False, "No appointments found for testing", response_time)
+            else:
+                self.log_test("Step 1 - Current State Check", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Step 1 - Current State Check", False, f"Exception: {str(e)}", response_time)
+
     def run_all_tests(self):
         """Run all tests focused on updated waiting time system"""
-        print("🚀 STARTING UPDATED WAITING TIME SYSTEM TESTING")
+        print("🚀 STARTING CRITICAL WAITING TIME WORKFLOW DEBUGGING")
         print("=" * 80)
         
         # Test 1: Authentication
         if not self.test_authentication():
             print("❌ Authentication failed - stopping tests")
             return self.generate_report()
+        
+        # PRIORITY TEST: Critical Waiting Time Workflow Debug
+        print("\n" + "="*80)
+        print("🚨 PRIORITY TEST: CRITICAL WAITING TIME WORKFLOW DEBUG")
+        print("="*80)
+        
+        # Test the EXACT workflow from review request
+        self.test_waiting_time_workflow_critical_debug()
         
         # Test 2: Patient Management (basic verification)
         self.test_patient_management()
