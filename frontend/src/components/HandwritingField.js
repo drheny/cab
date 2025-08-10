@@ -197,61 +197,63 @@ const HandwritingField = ({
 
   return (
     <div className="relative">
-      {/* Toggle Mode */}
-      <div className="flex justify-between items-center mb-2">
-        <div className="flex space-x-2">
-          <button
-            onClick={toggleMode}
-            className={`flex items-center space-x-1 px-3 py-1 rounded-lg text-sm transition-all ${
-              mode === 'typing' 
-                ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-                : 'bg-gray-100 text-gray-600'
-            }`}
-          >
-            <Type className="w-4 h-4" />
-            <span>Saisie</span>
-          </button>
-          
-          {!disableHandwriting && (
+      {/* Toggle Mode - Caché si hideToggle est true */}
+      {!hideToggle && (
+        <div className="flex justify-between items-center mb-2">
+          <div className="flex space-x-2">
             <button
               onClick={toggleMode}
               className={`flex items-center space-x-1 px-3 py-1 rounded-lg text-sm transition-all ${
-                mode === 'handwriting' 
+                mode === 'typing' 
                   ? 'bg-blue-100 text-blue-700 border border-blue-300' 
                   : 'bg-gray-100 text-gray-600'
               }`}
             >
-              <Edit3 className="w-4 h-4" />
-              <span>Manuscrit</span>
-            </button>
-          )}
-        </div>
-
-        {/* Actions spécifiques au mode manuscrit */}
-        {mode === 'handwriting' && (
-          <div className="flex space-x-1">
-            <button
-              onClick={clearCanvas}
-              className="p-1 rounded text-gray-500 hover:text-gray-700"
-              title="Effacer"
-            >
-              <RotateCcw className="w-4 h-4" />
+              <Type className="w-4 h-4" />
+              <span>Saisie</span>
             </button>
             
-            {enableOCR && (
+            {!disableHandwriting && (
               <button
-                onClick={refineHandwriting}
-                disabled={isProcessing}
-                className="flex items-center space-x-1 px-2 py-1 bg-purple-100 text-purple-700 rounded text-sm hover:bg-purple-200 transition-all disabled:opacity-50"
-                title="Auto-raffinement IA"
+                onClick={toggleMode}
+                className={`flex items-center space-x-1 px-3 py-1 rounded-lg text-sm transition-all ${
+                  mode === 'handwriting' 
+                    ? 'bg-blue-100 text-blue-700 border border-blue-300' 
+                    : 'bg-gray-100 text-gray-600'
+                }`}
               >
-                <Wand2 className="w-4 h-4" />
-                {isProcessing ? 'Traitement...' : 'Raffiner'}
+                <Edit3 className="w-4 h-4" />
+                <span>Manuscrit</span>
               </button>
             )}
           </div>
-        )}
-      </div>
+
+          {/* Actions spécifiques au mode manuscrit */}
+          {mode === 'handwriting' && (
+            <div className="flex space-x-1">
+              <button
+                onClick={clearCanvas}
+                className="p-1 rounded text-gray-500 hover:text-gray-700"
+                title="Effacer"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </button>
+              
+              {enableOCR && (
+                <button
+                  onClick={refineHandwriting}
+                  disabled={isProcessing}
+                  className="flex items-center space-x-1 px-2 py-1 bg-purple-100 text-purple-700 rounded text-sm hover:bg-purple-200 transition-all disabled:opacity-50"
+                  title="Auto-raffinement IA"
+                >
+                  <Wand2 className="w-4 h-4" />
+                  {isProcessing ? 'Traitement...' : 'Raffiner'}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Zone de saisie */}
       <div className="relative">
