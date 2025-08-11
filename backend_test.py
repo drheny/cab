@@ -5078,7 +5078,7 @@ if __name__ == "__main__":
     success = tester.run_specific_bug_fix_tests()
     
     # Generate summary report
-    report = tester.generate_summary_report()
+    report = tester.generate_report()
     
     # Exit with appropriate code
     sys.exit(0 if success and report["all_passed"] else 1)
