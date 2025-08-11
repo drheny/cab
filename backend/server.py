@@ -1789,6 +1789,8 @@ async def update_rdv_statut(rdv_id: str, status_data: dict):
     
     # Si on quitte l'attente vers n'importe quel autre statut, calculer et stocker duree_attente pour les statistiques
     current_appointment = appointments_collection.find_one({"id": rdv_id}, {"_id": 0})
+    calculated_duree_attente = None  # Variable pour stocker la durée calculée
+    
     if (current_appointment and 
         current_appointment.get("statut") == "attente" and 
         statut != "attente" and 
@@ -1797,7 +1799,7 @@ async def update_rdv_statut(rdv_id: str, status_data: dict):
         # Calculer duree_attente pour les statistiques quand on quitte l'attente
         try:
             heure_arrivee_raw = current_appointment["heure_arrivee_attente"]
-            print(f"DEBUG: Patient leaving attente - calculating duree_attente for stats from: {heure_arrivee_raw}")
+            print(f"DEBUG: Patient leaving attente - calculating duree_attente from: {heure_arrivee_raw}")
             
             # Parse le timestamp UTC
             if "+" in heure_arrivee_raw or heure_arrivee_raw.endswith("Z"):
@@ -1813,30 +1815,37 @@ async def update_rdv_statut(rdv_id: str, status_data: dict):
             # Calculer la différence avec le temps UTC actuel
             current_utc = datetime.now(timezone.utc)
             duree_calculee = int((current_utc - arrivee_time).total_seconds() / 60)  # en minutes
-            calculated_duration = max(0, duree_calculee)  # Éviter les durées négatives
+            calculated_duree_attente = max(0, duree_calculee)  # Éviter les durées négatives
             
-            # Stocker pour les statistiques
-            update_data["duree_attente"] = calculated_duration
-            print(f"DEBUG: Calculated and stored duree_attente for stats: {calculated_duration} minutes")
+            # Stocker pour les statistiques - TOUJOURS utiliser la valeur calculée
+            update_data["duree_attente"] = calculated_duree_attente
+            print(f"DEBUG: Calculated and stored duree_attente: {calculated_duree_attente} minutes")
             
         except (ValueError, TypeError, AttributeError) as e:
-            print(f"DEBUG: Error calculating duree_attente for stats: {e}")
+            print(f"DEBUG: Error calculating duree_attente: {e}")
             # En cas d'erreur, utiliser 0 pour les stats
+            calculated_duree_attente = 0
             update_data["duree_attente"] = 0
     
-    # Si on passe en consultation, garder heure_arrivee_attente et duree_attente
+    # Si on passe en consultation, garder heure_arrivee_attente et s'assurer que duree_attente est définie
     if statut == "en_cours":
         if current_appointment and current_appointment.get("heure_arrivee_attente"):
-            # Préserver le timestamp pour calcul temps réel frontend
+            # Préserver le timestamp 
             existing_heure_arrivee = current_appointment.get("heure_arrivee_attente")
             update_data["heure_arrivee_attente"] = existing_heure_arrivee
-            print(f"DEBUG: Patient moved to en_cours - preserving UTC heure_arrivee_attente: {existing_heure_arrivee}")
+            print(f"DEBUG: Patient moved to en_cours - preserving heure_arrivee_attente: {existing_heure_arrivee}")
             
-            # Préserver duree_attente si elle existe déjà (pour les stats)
-            existing_duree_attente = current_appointment.get("duree_attente")
-            if existing_duree_attente is not None:
-                update_data["duree_attente"] = existing_duree_attente
-                print(f"DEBUG: Preserving duree_attente for stats: {existing_duree_attente} minutes")
+            # S'assurer que duree_attente est définie - utiliser la valeur calculée ou l'existante
+            if calculated_duree_attente is not None:
+                # On vient de calculer la durée (transition depuis attente)
+                update_data["duree_attente"] = calculated_duree_attente
+                print(f"DEBUG: Using calculated duree_attente: {calculated_duree_attente} minutes")
+            else:
+                # Préserver l'existante si elle existe (transition depuis autre statut)
+                existing_duree_attente = current_appointment.get("duree_attente")
+                if existing_duree_attente is not None:
+                    update_data["duree_attente"] = existing_duree_attente
+                    print(f"DEBUG: Preserving existing duree_attente: {existing_duree_attente} minutes")
     
     # Pour tous les autres statuts, préserver heure_arrivee_attente et duree_attente
     if statut in ["termine", "programme", "absent", "retard"]:
