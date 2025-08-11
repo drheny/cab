@@ -303,8 +303,12 @@ const Calendar = ({ user }) => {
         updateData.heure_arrivee_attente = new Date().toISOString();
       }
       
-      await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/statut`, updateData);
+      const response = await axios.put(`${API_BASE_URL}/api/rdv/${appointmentId}/statut`, updateData);
       toast.success('Statut mis à jour');
+      
+      // CORRECTION: Refresh data after successful status change to get calculated duree_attente
+      await fetchData();
+      
     } catch (error) {
       toast.error('Erreur lors de la mise à jour du statut');
       await fetchData();
