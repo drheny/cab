@@ -1778,67 +1778,30 @@ async def update_rdv_statut(rdv_id: str, status_data: dict):
         else:
             update_data["heure_arrivee_attente"] = datetime.now().isoformat()
     
-    # Si on passe en consultation, sauvegarder la durée d'attente
+    # NOUVELLE APPROCHE : Stockage simple de timestamp, calcul côté frontend
+    # Plus de logique complexe de calcul côté backend
+    
+    # Si on passe en attente, simplement stocker le timestamp
+    if statut == "attente":
+        update_data["heure_arrivee_attente"] = datetime.now().isoformat()
+        print(f"DEBUG: Patient moved to attente - stored heure_arrivee_attente: {update_data['heure_arrivee_attente']}")
+    
+    # Si on passe en consultation, garder heure_arrivee_attente et laisser frontend calculer
     if statut == "en_cours":
-        if duree_attente is not None:
-            # Durée fournie explicitement par le frontend
-            update_data["duree_attente"] = duree_attente
-        else:
-            # Calculer automatiquement la durée d'attente si possible
-            current_appointment = appointments_collection.find_one({"id": rdv_id}, {"_id": 0})
-            if current_appointment and current_appointment.get("heure_arrivee_attente"):
-                # CORRECTION MAJEURE: Always calculate duree_attente when moving from attente to en_cours
-                # This ensures we get the real waiting time for the current session
-                existing_duree_attente = current_appointment.get("duree_attente")
-                
-                # Calculate duree_attente based on current heure_arrivee_attente
-                try:
-                    heure_arrivee_raw = current_appointment["heure_arrivee_attente"]
-                    print(f"DEBUG: CALCULATING duree_attente for attente→en_cours transition - heure_arrivee_attente: {heure_arrivee_raw}")
-                    
-                    # Convert to string if not already
-                    heure_arrivee_str = str(heure_arrivee_raw) if heure_arrivee_raw is not None else ""
-                    
-                    if not heure_arrivee_str:
-                        print("DEBUG: Empty heure_arrivee_attente, skipping calculation")
-                        # If no heure_arrivee_attente, preserve existing duree_attente if any
-                        if existing_duree_attente is not None:
-                            update_data["duree_attente"] = existing_duree_attente
-                            print(f"DEBUG: No heure_arrivee_attente - preserving existing duree_attente: {existing_duree_attente}")
-                    elif "T" in heure_arrivee_str:
-                        # ISO format: 2023-08-09T15:30:00.000Z
-                        arrivee_time = datetime.fromisoformat(heure_arrivee_str.replace("Z", "+00:00"))
-                        current_time = datetime.now()
-                        duree_calculee = int((current_time - arrivee_time).total_seconds() / 60)  # en minutes
-                        calculated_duration = max(0, duree_calculee)  # Éviter les durées négatives seulement
-                        update_data["duree_attente"] = calculated_duration
-                        print(f"DEBUG: ISO format - CALCULATED duree_attente: {calculated_duration} minutes for current waiting session")
-                    elif ":" in heure_arrivee_str:
-                        # Time only format: 15:30
-                        today = datetime.now().date()
-                        time_parts = heure_arrivee_str.split(":")
-                        hour = int(time_parts[0])
-                        minute = int(time_parts[1]) if len(time_parts) > 1 else 0
-                        arrivee_time = datetime.combine(today, datetime.min.time().replace(hour=hour, minute=minute))
-                        current_time = datetime.now()
-                        duree_calculee = int((current_time - arrivee_time).total_seconds() / 60)  # en minutes
-                        calculated_duration = max(0, duree_calculee)  # Éviter les durées négatives seulement
-                        update_data["duree_attente"] = calculated_duration
-                        print(f"DEBUG: Time format - CALCULATED duree_attente: {calculated_duration} minutes for current waiting session")
-                    else:
-                        print(f"DEBUG: Unrecognized timestamp format: {heure_arrivee_str}")
-                        # If can't parse heure_arrivee_attente, preserve existing duree_attente if any
-                        if existing_duree_attente is not None:
-                            update_data["duree_attente"] = existing_duree_attente
-                            print(f"DEBUG: Can't parse timestamp - preserving existing duree_attente: {existing_duree_attente}")
-                    
-                except (ValueError, TypeError, AttributeError) as e:
-                    # Si erreur de parsing, preserv existing duree_attente if any
-                    print(f"DEBUG: Error parsing timestamp {heure_arrivee_raw}: {e}")
-                    if existing_duree_attente is not None:
-                        update_data["duree_attente"] = existing_duree_attente
-                        print(f"DEBUG: Parse error - preserving existing duree_attente: {existing_duree_attente}")
-                    pass
+        current_appointment = appointments_collection.find_one({"id": rdv_id}, {"_id": 0})
+        if current_appointment and current_appointment.get("heure_arrivee_attente"):
+            # Keep the existing heure_arrivee_attente, let frontend handle calculation
+            existing_heure_arrivee = current_appointment.get("heure_arrivee_attente")
+            update_data["heure_arrivee_attente"] = existing_heure_arrivee
+            print(f"DEBUG: Patient moved to en_cours - preserving heure_arrivee_attente: {existing_heure_arrivee}")
+    
+    # Pour tous les autres statuts, préserver heure_arrivee_attente si elle existe
+    if statut in ["termine", "programme", "absent", "retard"]:
+        current_appointment = appointments_collection.find_one({"id": rdv_id}, {"_id": 0})
+        if current_appointment and current_appointment.get("heure_arrivee_attente"):
+            existing_heure_arrivee = current_appointment.get("heure_arrivee_attente")
+            update_data["heure_arrivee_attente"] = existing_heure_arrivee
+            print(f"DEBUG: Patient moved to {statut} - preserving heure_arrivee_attente: {existing_heure_arrivee}")
     
     # NOUVEAU : Calculer duree_attente quand on quitte le statut "attente" (pour tous les autres statuts)
     current_appointment = appointments_collection.find_one({"id": rdv_id}, {"_id": 0})
