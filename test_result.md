@@ -686,6 +686,10 @@ The specific duree_attente zero bug investigation confirms that the issue is in 
 **Status:** ROOT CAUSE IDENTIFIED - PRESERVATION LOGIC BUG ✅
 The waiting time display bug has been thoroughly investigated and the root cause identified. The issue is not in the calculation logic (which is correct) but in the preservation logic that prevents recalculation for patients with existing duree_attente values. The fix requires modifying the backend logic to recalculate waiting time for new waiting periods regardless of previous values.
 
+agent_communication:
+    -agent: "testing"
+    -message: "CRITICAL BUG IDENTIFIED: Waiting time badge shows preserved old values instead of real calculated time. Root cause found in backend preservation logic (lines 1794-1836 in server.py). The preservation logic prevents recalculation when duree_attente > 0, causing patients with previous waiting times to never get recalculated for new waiting periods. User's scenario: patient had duree_attente=1 from previous session, system preserves this instead of calculating real 20-second wait (should be 0 minutes). Fix needed: modify preservation logic to allow recalculation when moving from 'attente' to 'en_cours' regardless of previous duree_attente value. Calculation logic is mathematically correct - bug is purely in preservation logic."
+
 ### SPECIFIC DUREE_ATTENTE BUG FIX VERIFICATION ✅ COMPLETED - BUG FIX WORKING CORRECTLY
 
 **Status:** SPECIFIC DUREE_ATTENTE BUG FIX SUCCESSFULLY TESTED AND VERIFIED - Bug fix working correctly
