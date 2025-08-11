@@ -2220,8 +2220,9 @@ async def get_consultation_details(consultation_id: str):
                 "heure": appointment.get("heure", "") if appointment else "",
                 "motif": appointment.get("motif", "") if appointment else "",
                 "type_rdv": appointment.get("type_rdv", "") if appointment else "",
-                "duree_attente": appointment.get("duree_attente") if appointment else None,
-                "salle": appointment.get("salle", "") if appointment else ""
+                # AMÉLIORATION: Utiliser les données stockées dans la consultation (plus fiables)
+                "duree_attente": consultation.get("duree_attente"),  # Depuis consultation, pas appointment
+                "salle": consultation.get("salle", "")  # Depuis consultation, pas appointment
             }
         }
         
