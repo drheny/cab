@@ -31,7 +31,7 @@ from dateutil import parser
 import pytz
 
 # Configuration
-BACKEND_URL = "https://a657b56d-56f9-415b-a575-b3b503d7e7a0.preview.emergentagent.com/api"
+BACKEND_URL = "https://e095a16b-4f79-4d50-8576-cad954291484.preview.emergentagent.com/api"
 TEST_CREDENTIALS = {
     "username": "medecin",
     "password": "medecin123"
