@@ -1779,12 +1779,13 @@ async def update_rdv_statut(rdv_id: str, status_data: dict):
             update_data["heure_arrivee_attente"] = datetime.now().isoformat()
     
     # NOUVELLE APPROCHE : Stockage simple de timestamp, calcul côté frontend
-    # Plus de logique complexe de calcul côté backend
+    # CORRECTION CRITIQUE : Utiliser UTC timestamps pour éviter problèmes de timezone
     
-    # Si on passe en attente, simplement stocker le timestamp
+    # Si on passe en attente, stocker le timestamp UTC avec timezone
     if statut == "attente":
-        update_data["heure_arrivee_attente"] = datetime.now().isoformat()
-        print(f"DEBUG: Patient moved to attente - stored heure_arrivee_attente: {update_data['heure_arrivee_attente']}")
+        utc_now = datetime.now(timezone.utc)
+        update_data["heure_arrivee_attente"] = utc_now.isoformat()
+        print(f"DEBUG: Patient moved to attente - stored UTC heure_arrivee_attente: {update_data['heure_arrivee_attente']}")
     
     # Si on passe en consultation, garder heure_arrivee_attente et laisser frontend calculer
     if statut == "en_cours":
@@ -1793,7 +1794,7 @@ async def update_rdv_statut(rdv_id: str, status_data: dict):
             # Keep the existing heure_arrivee_attente, let frontend handle calculation
             existing_heure_arrivee = current_appointment.get("heure_arrivee_attente")
             update_data["heure_arrivee_attente"] = existing_heure_arrivee
-            print(f"DEBUG: Patient moved to en_cours - preserving heure_arrivee_attente: {existing_heure_arrivee}")
+            print(f"DEBUG: Patient moved to en_cours - preserving UTC heure_arrivee_attente: {existing_heure_arrivee}")
     
     # Pour tous les autres statuts, préserver heure_arrivee_attente si elle existe
     if statut in ["termine", "programme", "absent", "retard"]:
@@ -1801,7 +1802,7 @@ async def update_rdv_statut(rdv_id: str, status_data: dict):
         if current_appointment and current_appointment.get("heure_arrivee_attente"):
             existing_heure_arrivee = current_appointment.get("heure_arrivee_attente")
             update_data["heure_arrivee_attente"] = existing_heure_arrivee
-            print(f"DEBUG: Patient moved to {statut} - preserving heure_arrivee_attente: {existing_heure_arrivee}")
+            print(f"DEBUG: Patient moved to {statut} - preserving UTC heure_arrivee_attente: {existing_heure_arrivee}")
     
     # NOUVEAU : Calculer duree_attente quand on quitte le statut "attente" (pour tous les autres statuts)
     # SUPPRIMÉ - Plus besoin de cette logique avec la nouvelle approche timestamp + frontend calculation
