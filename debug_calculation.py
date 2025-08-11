@@ -49,7 +49,7 @@ def test_calculation_logic():
     base_time = datetime.now()
     
     for scenario in test_scenarios:
-        future_time = base_time + datetime.timedelta(seconds=scenario["seconds"])
+        future_time = base_time + timedelta(seconds=scenario["seconds"])
         time_diff = future_time - base_time
         total_seconds = time_diff.total_seconds()
         duree_calculee = int(total_seconds / 60)
