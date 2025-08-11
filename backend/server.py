@@ -287,6 +287,9 @@ class Consultation(BaseModel):
     nom_vaccin: Optional[str] = ""
     date_vaccin: Optional[str] = ""
     rappel_whatsapp_vaccin: Optional[bool] = False
+    # NOUVEAUX CHAMPS: Durée d'attente et numéro de salle
+    duree_attente: Optional[int] = None  # Durée passée en salle d'attente (en minutes)
+    salle: Optional[str] = ""  # Numéro de salle assignée
     created_at: datetime = Field(default_factory=datetime.now)
 
 class Payment(BaseModel):
