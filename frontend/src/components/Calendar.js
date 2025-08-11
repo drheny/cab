@@ -2342,15 +2342,28 @@ const WorkflowCard = React.memo(({
               </button>
             </div>
             
-            {/* Badge d'attente simplifié pour patients en attente */}
-            {sectionType === 'attente' && waitingTime !== null && waitingTime !== undefined && typeof waitingTime === 'number' && waitingTime >= 0 && (() => {
-              const colors = getWaitingTimeBadgeColor(waitingTime);
-              return (
-                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${colors.background} ${colors.text} border ${colors.border} mt-1`}>
-                  <Clock className="w-3 h-3 mr-1" />
-                  {waitingTime} min
-                </span>
-              );
+            {/* Badge d'attente en temps réel pour patients en attente */}
+            {sectionType === 'attente' && appointment.heure_arrivee_attente && (() => {
+              try {
+                const heureArrivee = new Date(appointment.heure_arrivee_attente);
+                const maintenant = new Date();
+                const diffMs = maintenant - heureArrivee;
+                const realTimeWaiting = Math.floor(diffMs / 60000); // Convert ms to minutes
+                const waitingTime = Math.max(0, realTimeWaiting);
+                
+                console.log(`Real-time waiting calculation: ${appointment.heure_arrivee_attente} → ${waitingTime} minutes`);
+                
+                const colors = getWaitingTimeBadgeColor(waitingTime);
+                return (
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${colors.background} ${colors.text} border ${colors.border} mt-1`}>
+                    <Clock className="w-3 h-3 mr-1" />
+                    {waitingTime} min
+                  </span>
+                );
+              } catch (error) {
+                console.error('Error calculating real-time waiting time:', error);
+                return null;
+              }
             })()}
           </div>
         </div>
