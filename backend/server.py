@@ -1836,7 +1836,7 @@ async def update_rdv_statut(rdv_id: str, status_data: dict):
         current_appointment.get("statut") == "attente" and 
         statut != "attente" and 
         current_appointment.get("heure_arrivee_attente") and
-        current_appointment.get("duree_attente") is None):
+        (current_appointment.get("duree_attente") is None or current_appointment.get("duree_attente") == 0)):
         
         # Patient quitte la salle d'attente - calculer et sauvegarder le temps d'attente
         try:
