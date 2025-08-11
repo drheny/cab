@@ -802,6 +802,108 @@ agent_communication:
     -agent: "testing"
     -message: "BUG FIX SUCCESSFULLY VERIFIED: The specific duree_attente '0 min' bug fix is working correctly. Tested exact workflow from review request: 1) Login medecin/medecin123 ✅ 2) Selected patient with existing duree_attente ✅ 3) Moved to attente with heure_arrivee_attente set ✅ 4) Waited 20 seconds ✅ 5) Moved to en_cours with duree_attente calculated as 0 minutes (correct for 20s < 60s) ✅ 6) API returns correct calculated value ✅. Also tested 70-second scenario: correctly calculated as 1 minute. The correction successfully removes faulty preservation logic and forces calculation based on real time. System ignores pre-existing duree_attente values and always calculates based on current heure_arrivee_attente. Both short (20s = 0 min) and long (70s = 1 min) durations work correctly. All tests passed with 100% success rate. Bug fix is production-ready."
 
+### NEW RADICAL APPROACH TESTING ⚠️ PARTIALLY IMPLEMENTED - BACKEND STILL CALCULATING
+
+**Status:** NEW RADICAL APPROACH PARTIALLY IMPLEMENTED - Backend still calculating duree_attente instead of pure timestamp approach
+
+**Test Results Summary (2025-01-08 - New Radical Approach Testing):**
+✅ **Authentication System** - medecin/medecin123 login working perfectly with full permissions (0.356s)
+✅ **ISO Timestamp Storage** - Backend correctly stores heure_arrivee_attente as ISO timestamp (2025-08-11T15:51:15.326559)
+✅ **Timestamp Preservation** - heure_arrivee_attente preserved correctly during status transitions
+✅ **Frontend Calculation Possible** - Frontend can parse ISO timestamp and calculate waiting time
+❌ **Backend Still Calculating** - Backend continues to calculate duree_attente (should be removed in new approach)
+❌ **Zero Time Issue** - Calculated time shows 0 min due to timing precision (35 seconds = 0 minutes in integer division)
+
+**Detailed Test Results:**
+
+**NEW RADICAL APPROACH IMPLEMENTATION: ⚠️ PARTIALLY WORKING**
+- ✅ **ISO Timestamp Storage**: Backend correctly stores heure_arrivee_attente as ISO format timestamp
+- ✅ **Timestamp Preservation**: heure_arrivee_attente preserved during attente → en_cours transition
+- ✅ **Frontend Calculation Ready**: Frontend can parse timestamp and calculate real-time waiting duration
+- ❌ **Backend Still Calculating**: Backend continues to calculate duree_attente in lines 1806-1845 (should be removed)
+- ❌ **API Still Returns duree_attente**: Backend API still provides duree_attente field (should be removed)
+
+**IMPLEMENTATION GAP ANALYSIS: ❌ NOT FULLY IMPLEMENTED**
+- **Expected**: Backend stores ONLY heure_arrivee_attente, NO duree_attente calculation
+- **Actual**: Backend stores heure_arrivee_attente AND still calculates duree_attente
+- **Code Location**: Lines 1806-1845 in server.py contain calculation logic that should be removed
+- **Frontend Impact**: Frontend receives both timestamp and calculated duration (mixed approach)
+
+**TIMING PRECISION ISSUE: ⚠️ INTEGER DIVISION PROBLEM**
+- **Test Scenario**: Waited 35 seconds between attente and en_cours
+- **Expected Frontend Calculation**: 35 seconds = 0 minutes (correct integer division)
+- **Issue**: Integer division (35/60 = 0) gives 0 minutes, which appears as "0 min" bug
+- **Solution**: Frontend should handle sub-minute durations or use different display logic
+
+**CRITICAL FINDINGS:**
+- 🎯 **NEW APPROACH CONCEPT CORRECT**: ISO timestamp storage and frontend calculation is the right approach
+- ⚠️ **IMPLEMENTATION INCOMPLETE**: Backend still has old calculation logic that should be removed
+- 🔧 **CODE CLEANUP NEEDED**: Lines 1806-1845 in server.py should be removed for pure timestamp approach
+- 📊 **FRONTEND READY**: Frontend can successfully parse ISO timestamps and calculate durations
+- ⏱️ **TIMING PRECISION**: Integer division causes sub-minute waits to show as 0 min (expected behavior)
+
+**SUCCESS CRITERIA VERIFICATION: ⚠️ PARTIALLY MET**
+- ✅ **Login Access**: medecin/medecin123 credentials working correctly
+- ✅ **ISO Timestamp Storage**: heure_arrivee_attente stored as ISO format
+- ✅ **Timestamp Preservation**: Preserved during status transitions
+- ✅ **Frontend Calculation**: Can calculate waiting time from timestamp
+- ❌ **Backend Calculation Removal**: Backend still calculates duree_attente
+- ❌ **Pure Timestamp Approach**: Mixed approach instead of pure timestamp
+
+**NEW RADICAL APPROACH STATUS: PARTIALLY IMPLEMENTED ⚠️**
+The new radical approach testing reveals that the concept is correct and partially implemented:
+
+**✅ WORKING CORRECTLY:**
+- ISO timestamp storage in heure_arrivee_attente field
+- Timestamp preservation during status transitions
+- Frontend can parse timestamps and calculate real-time durations
+- Authentication and API endpoints functioning properly
+
+**❌ NEEDS COMPLETION:**
+- Backend still calculates duree_attente (lines 1806-1845 should be removed)
+- API still returns duree_attente field (should be removed for pure approach)
+- Mixed approach instead of pure timestamp approach as described in review
+
+**🔧 IMPLEMENTATION RECOMMENDATIONS:**
+1. Remove duree_attente calculation logic from lines 1806-1845 in server.py
+2. Remove duree_attente from API responses (lines 1884-1885)
+3. Let frontend handle ALL waiting time calculations based on heure_arrivee_attente
+4. Consider frontend display logic for sub-minute durations (0 min issue)
+
+**FINAL STATUS: NEW APPROACH CONCEPT CORRECT, IMPLEMENTATION INCOMPLETE ⚠️**
+The new radical approach is conceptually sound and the timestamp storage/preservation is working correctly. However, the backend cleanup is incomplete - it still calculates duree_attente when it should only store timestamps. The frontend calculation logic is ready and working. Complete implementation requires removing backend calculation logic to achieve the pure timestamp approach described in the review request.
+
+**From Testing Agent (2025-01-08):**
+⚠️ **NEW RADICAL APPROACH TESTING COMPLETED** - Concept correct, implementation incomplete
+
+**Testing Summary:**
+- Executed comprehensive testing of the new radical approach for fixing "0 min" bug
+- Verified ISO timestamp storage and preservation working correctly
+- Confirmed frontend can calculate real-time durations from timestamps
+- Identified that backend still calculates duree_attente (should be removed)
+
+**Key Implementation Findings:**
+1. **Timestamp Storage**: ✅ WORKING - ISO format timestamps stored correctly
+2. **Timestamp Preservation**: ✅ WORKING - Preserved during status transitions
+3. **Frontend Calculation**: ✅ READY - Can parse timestamps and calculate durations
+4. **Backend Cleanup**: ❌ INCOMPLETE - Still calculates duree_attente (lines 1806-1845)
+5. **API Response**: ❌ MIXED - Returns both timestamp and calculated duration
+
+**Technical Analysis:**
+- **New Approach Concept**: Correct - timestamp storage + frontend calculation eliminates backend complexity
+- **Current Implementation**: Partial - has both old (calculation) and new (timestamp) approaches
+- **Code Location**: Lines 1806-1845 in server.py contain calculation logic that should be removed
+- **Frontend Ready**: Successfully tested real-time calculation from ISO timestamps
+- **Zero Min Issue**: Integer division (35s = 0 min) is mathematically correct but may need UI handling
+
+**Implementation Gap:**
+- **Expected**: Backend stores ONLY heure_arrivee_attente, NO duree_attente calculation
+- **Actual**: Backend stores heure_arrivee_attente AND calculates duree_attente
+- **Solution**: Remove calculation logic to achieve pure timestamp approach
+
+**Status:** NEW APPROACH PARTIALLY IMPLEMENTED - BACKEND CLEANUP NEEDED ⚠️
+The new radical approach is conceptually correct and the core timestamp functionality is working. The implementation needs completion by removing the backend calculation logic to achieve the pure timestamp approach described in the review request. Frontend is ready for real-time calculation.
+
 ### SPECIFIC DUREE_ATTENTE BUG FIX VERIFICATION ✅ COMPLETED - BUG FIX WORKING CORRECTLY
 
 **Status:** SPECIFIC DUREE_ATTENTE BUG FIX SUCCESSFULLY TESTED AND VERIFIED - Bug fix working correctly
