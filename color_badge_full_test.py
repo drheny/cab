@@ -17,7 +17,7 @@ from datetime import datetime, timedelta
 import sys
 
 # Configuration
-BACKEND_URL = "https://86e1ae33-6e29-4ce5-a743-1e543eb0a6b8.preview.emergentagent.com/api"
+BACKEND_URL = "https://a657b56d-56f9-415b-a575-b3b503d7e7a0.preview.emergentagent.com/api"
 TEST_CREDENTIALS = {"username": "medecin", "password": "medecin123"}
 
 class ColorBadgeFullTester:
