@@ -1269,6 +1269,28 @@ const Dashboard = ({ user }) => {
                       <span className="text-sm font-medium text-gray-700">Durée:</span>
                       <p className="text-gray-900">{selectedConsultation.duree || 0} minutes</p>
                     </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-700">Durée d'attente:</span>
+                      <p className="text-gray-900">
+                        {selectedConsultation.appointment?.duree_attente !== null && selectedConsultation.appointment?.duree_attente !== undefined 
+                          ? `${selectedConsultation.appointment.duree_attente} minutes` 
+                          : 'N/A'
+                        }
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-700">Salle d'attente:</span>
+                      <p className="text-gray-900">
+                        {selectedConsultation.appointment?.salle 
+                          ? selectedConsultation.appointment.salle === 'salle1' 
+                            ? 'Salle 1' 
+                            : selectedConsultation.appointment.salle === 'salle2'
+                            ? 'Salle 2'
+                            : selectedConsultation.appointment.salle
+                          : 'Aucune salle assignée'
+                        }
+                      </p>
+                    </div>
                   </div>
                 </div>
 
