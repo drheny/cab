@@ -1804,65 +1804,13 @@ async def update_rdv_statut(rdv_id: str, status_data: dict):
             print(f"DEBUG: Patient moved to {statut} - preserving heure_arrivee_attente: {existing_heure_arrivee}")
     
     # NOUVEAU : Calculer duree_attente quand on quitte le statut "attente" (pour tous les autres statuts)
-    current_appointment = appointments_collection.find_one({"id": rdv_id}, {"_id": 0})
-    if (current_appointment and 
-        current_appointment.get("statut") == "attente" and 
-        statut != "attente" and 
-        current_appointment.get("heure_arrivee_attente") and
-        (current_appointment.get("duree_attente") is None or current_appointment.get("duree_attente") == 0)):
-        
-        # Patient quitte la salle d'attente - calculer et sauvegarder le temps d'attente
-        try:
-            heure_arrivee_raw = current_appointment["heure_arrivee_attente"]
-            print(f"DEBUG: Patient quitte salle d'attente - Calculating duree_attente: {heure_arrivee_raw}")
-            
-            # Convert to string if not already
-            heure_arrivee_str = str(heure_arrivee_raw) if heure_arrivee_raw is not None else ""
-            
-            if "T" in heure_arrivee_str:
-                # ISO format: 2023-08-09T15:30:00.000Z
-                arrivee_time = datetime.fromisoformat(heure_arrivee_str.replace("Z", "+00:00"))
-                current_time = datetime.now()
-                duree_calculee = int((current_time - arrivee_time).total_seconds() / 60)  # en minutes
-                calculated_duration = max(0, duree_calculee)  # Éviter les durées négatives seulement
-                update_data["duree_attente"] = calculated_duration
-                print(f"DEBUG: Quitte attente - Calculated duree_attente: {calculated_duration} minutes")
-            elif ":" in heure_arrivee_str:
-                # Time only format: 15:30
-                today = datetime.now().date()
-                time_parts = heure_arrivee_str.split(":")
-                hour = int(time_parts[0])
-                minute = int(time_parts[1]) if len(time_parts) > 1 else 0
-                arrivee_time = datetime.combine(today, datetime.min.time().replace(hour=hour, minute=minute))
-                current_time = datetime.now()
-                duree_calculee = int((current_time - arrivee_time).total_seconds() / 60)  # en minutes
-                calculated_duration = max(0, duree_calculee)  # Éviter les durées négatives seulement
-                update_data["duree_attente"] = calculated_duration
-                print(f"DEBUG: Quitte attente - Calculated duree_attente: {calculated_duration} minutes")
-            
-        except (ValueError, TypeError, AttributeError) as e:
-            print(f"DEBUG: Error calculating duree_attente when leaving attente: {e}")
-            pass
+    # SUPPRIMÉ - Plus besoin de cette logique avec la nouvelle approche timestamp + frontend calculation
     
     # If moving to "termine" status, preserve duree_attente if it exists
-    if statut == "termine":
-        current_appointment = appointments_collection.find_one({"id": rdv_id}, {"_id": 0})
-        if current_appointment and current_appointment.get("duree_attente") is not None:
-            # Preserve the existing duree_attente when completing consultation
-            existing_duree_attente = current_appointment["duree_attente"]
-            update_data["duree_attente"] = existing_duree_attente
-            print(f"DEBUG: Preserving duree_attente ({existing_duree_attente} min) when completing consultation")
+    # SUPPRIMÉ - Plus besoin de cette logique avec la nouvelle approche
     
     # NOUVEAU : Préserver duree_attente pour tous les autres statuts s'il existe déjà
-    # (sauf si on vient de le calculer ci-dessus)
-    if "duree_attente" not in update_data:
-        current_appointment_for_preservation = appointments_collection.find_one({"id": rdv_id}, {"_id": 0})
-        if (current_appointment_for_preservation and 
-            current_appointment_for_preservation.get("duree_attente") is not None):
-            # Préserver duree_attente existant pour tous les changements de statut
-            existing_duree_attente = current_appointment_for_preservation["duree_attente"]
-            update_data["duree_attente"] = existing_duree_attente
-            print(f"DEBUG: General preservation - Preserving duree_attente ({existing_duree_attente} min) for status change to {statut}")
+    # SUPPRIMÉ - Plus besoin de cette logique avec la nouvelle approche
     
     if salle:
         valid_salles = ["", "salle1", "salle2"]
