@@ -360,31 +360,39 @@ const Calendar = ({ user }) => {
       // Utiliser la durée calculée par le backend
       const backendDureeAttente = response.data.duree_attente;
       
+      toast.success('Consultation démarrée');
+      
+      // CORRECTION: Refresh FIRST to get fresh data, THEN apply update if needed
+      await fetchData();
+      
+      // If backend calculated duree_attente but fetchData didn't get it, apply manually
       if (backendDureeAttente !== null && backendDureeAttente !== undefined) {
-        // Mettre à jour immédiatement avec la vraie durée calculée par le backend (y compris 0)
-        setAppointments(prevAppointments =>
-          prevAppointments.map(apt =>
-            apt.id === appointmentId ? { 
-              ...apt, 
-              statut: 'en_cours',
-              duree_attente: backendDureeAttente
-            } : apt
-          )
-        );
+        setAppointments(prevAppointments => {
+          const updated = prevAppointments.map(apt => {
+            if (apt.id === appointmentId) {
+              // Only update if the fetched data doesn't already have the duree_attente
+              if (apt.duree_attente === null || apt.duree_attente === undefined) {
+                console.log(`Applying backend duree_attente ${backendDureeAttente} to appointment ${appointmentId}`);
+                return { 
+                  ...apt, 
+                  statut: 'en_cours',
+                  duree_attente: backendDureeAttente
+                };
+              }
+            }
+            return apt;
+          });
+          return updated;
+        });
         
         console.log(`Backend calculated waiting time: ${backendDureeAttente} minutes`);
       }
-      
-      toast.success('Consultation démarrée');
-      
-      // Refresh pour assurer la cohérence
-      await fetchData();
       
     } catch (error) {
       console.error('Error starting consultation:', error);
       toast.error('Erreur lors du démarrage de la consultation');
     }
-  }, [API_BASE_URL, fetchData, appointments]);
+  }, [API_BASE_URL, fetchData]);
 
   // Fonctions pour gérer les modals de consultation multi-instances
   const ouvrirModalConsultation = (appointment) => {
