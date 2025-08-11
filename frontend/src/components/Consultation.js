@@ -1433,6 +1433,31 @@ const Consultation = ({ user }) => {
                       <span className="text-gray-600">Date :</span>
                       <span className="font-medium">{formatDate(viewModal.consultation.date)}</span>
                     </div>
+                    {/* NOUVEAU: Durée d'attente */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Durée d'attente :</span>
+                      <span className="font-medium">
+                        {viewModal.consultation.duree_attente !== null && viewModal.consultation.duree_attente !== undefined
+                          ? `${viewModal.consultation.duree_attente} minutes`
+                          : 'N/A'
+                        }
+                      </span>
+                    </div>
+                    {/* NOUVEAU: Salle d'attente */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Salle d'attente :</span>
+                      <span className="font-medium">
+                        {(() => {
+                          const salle = viewModal.consultation.salle;
+                          if (salle) {
+                            if (salle === 'salle1') return 'Salle 1';
+                            if (salle === 'salle2') return 'Salle 2';
+                            return salle;
+                          }
+                          return 'Aucune salle assignée';
+                        })()}
+                      </span>
+                    </div>
                     {viewModal.consultation.relance_date && (
                       <div className="flex items-center justify-between">
                         <span className="text-gray-600">Relance :</span>
