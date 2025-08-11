@@ -2253,6 +2253,22 @@ async def get_patient_consultations(patient_id: str):
 async def create_consultation(consultation: Consultation):
     """Create new consultation"""
     consultation_dict = consultation.dict()
+    
+    # ENRICHIR avec les données de l'appointment (duree_attente et salle)
+    if consultation.appointment_id:
+        try:
+            # Récupérer l'appointment pour obtenir duree_attente et salle
+            appointment = appointments_collection.find_one({"id": consultation.appointment_id}, {"_id": 0})
+            if appointment:
+                # Ajouter duree_attente et salle à la consultation
+                consultation_dict["duree_attente"] = appointment.get("duree_attente")
+                consultation_dict["salle"] = appointment.get("salle", "")
+                print(f"📝 Consultation enrichie avec duree_attente: {appointment.get('duree_attente')} et salle: {appointment.get('salle', 'aucune')}")
+            else:
+                print(f"⚠️ Appointment {consultation.appointment_id} non trouvé pour enrichissement")
+        except Exception as e:
+            print(f"❌ Erreur enrichissement consultation: {e}")
+    
     consultations_collection.insert_one(consultation_dict)
     
     # Mettre à jour le statut du rendez-vous à "terminé"
