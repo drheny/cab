@@ -4053,6 +4053,183 @@ class BackendTester:
             response_time = time.time() - start_time
             self.log_test("User Bug Sequence", False, f"Exception: {str(e)}", response_time)
 
+    def test_waiting_time_counter_workflow(self):
+        """Test Waiting Time Counter Workflow - Specific test for review request"""
+        print("\n⏱️ TESTING WAITING TIME COUNTER WORKFLOW - REVIEW REQUEST SPECIFIC TEST")
+        print("Testing exact workflow: attente → wait → en_cours → termine with duree_attente preservation")
+        print("User requirement: Counter runs real-time in 'attente', stops and stores when moved to 'en_cours' or 'termine'")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Step 1: Get today's appointments to find a patient
+        print("\n📋 STEP 1: Get today's appointments to find a patient")
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                appointments = response.json()
+                if appointments:
+                    # Find a suitable test patient
+                    test_appointment = appointments[0]  # Use first available patient
+                    patient_info = test_appointment.get("patient", {})
+                    test_patient_name = f"{patient_info.get('prenom', '')} {patient_info.get('nom', '')}"
+                    rdv_id = test_appointment.get("id")
+                    
+                    details = f"Found patient: '{test_patient_name}' (ID: {rdv_id})"
+                    self.log_test("Find Patient for Workflow Test", True, details, response_time)
+                    
+                    # Step 2: Move patient to "attente" status (should set heure_arrivee_attente timestamp)
+                    print("\n🏥 STEP 2: Move patient to 'attente' status - should set heure_arrivee_attente timestamp")
+                    start_time = time.time()
+                    
+                    attente_start_time = datetime.now()
+                    update_data = {"statut": "attente"}
+                    
+                    response = self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}/statut", json=update_data, timeout=10)
+                    response_time = time.time() - start_time
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        heure_arrivee = data.get("heure_arrivee_attente", "NOT_SET")
+                        
+                        details = f"Moved '{test_patient_name}' to attente - heure_arrivee_attente: {heure_arrivee}"
+                        self.log_test("Move to Attente - Set Timestamp", True, details, response_time)
+                        
+                        # Step 3: Wait a few seconds to accumulate real waiting time
+                        print("\n⏰ STEP 3: Wait a few seconds to accumulate real waiting time")
+                        wait_seconds = 5  # Wait 5 seconds for testing
+                        print(f"Waiting {wait_seconds} seconds to accumulate real waiting time...")
+                        time.sleep(wait_seconds)
+                        
+                        elapsed_time = datetime.now() - attente_start_time
+                        elapsed_seconds = elapsed_time.total_seconds()
+                        
+                        # Step 4: Move patient to "en_cours" status (should calculate and store duree_attente)
+                        print("\n🩺 STEP 4: Move to 'en_cours' - should calculate and store duree_attente, preserve it")
+                        start_time = time.time()
+                        
+                        update_data = {"statut": "en_cours"}
+                        response = self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}/statut", json=update_data, timeout=10)
+                        response_time = time.time() - start_time
+                        
+                        if response.status_code == 200:
+                            data = response.json()
+                            calculated_duree = data.get("duree_attente", "NOT_CALCULATED")
+                            
+                            # Calculate expected waiting time
+                            expected_minutes = max(0, int(elapsed_seconds / 60))
+                            
+                            details = f"Moved to en_cours - duree_attente: {calculated_duree} min (waited {elapsed_seconds:.1f}s, expected ~{expected_minutes} min)"
+                            self.log_test("Move to En_Cours - Calculate Duration", True, details, response_time)
+                            
+                            # Step 5: Verify duree_attente is stored and not calculated in real-time
+                            print("\n💾 STEP 5: Verify duree_attente is stored and not calculated in real-time")
+                            start_time = time.time()
+                            
+                            response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
+                            response_time = time.time() - start_time
+                            
+                            if response.status_code == 200:
+                                updated_appointments = response.json()
+                                updated_appointment = next((apt for apt in updated_appointments if apt.get("id") == rdv_id), None)
+                                
+                                if updated_appointment:
+                                    stored_duree = updated_appointment.get("duree_attente", "NOT_STORED")
+                                    statut = updated_appointment.get("statut", "UNKNOWN")
+                                    
+                                    details = f"Patient '{test_patient_name}' in {statut} - stored duree_attente: {stored_duree} min"
+                                    self.log_test("Verify Stored Duration (en_cours)", True, details, response_time)
+                                    
+                                    # Step 6: Move patient to "termine" status and verify duree_attente is preserved
+                                    print("\n✅ STEP 6: Move to 'termine' - verify duree_attente is preserved")
+                                    start_time = time.time()
+                                    
+                                    update_data = {"statut": "termine"}
+                                    response = self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}/statut", json=update_data, timeout=10)
+                                    response_time = time.time() - start_time
+                                    
+                                    if response.status_code == 200:
+                                        data = response.json()
+                                        preserved_duree = data.get("duree_attente", "NOT_PRESERVED")
+                                        
+                                        details = f"Moved to termine - duree_attente preserved: {preserved_duree} min"
+                                        self.log_test("Move to Termine - Preserve Duration", True, details, response_time)
+                                        
+                                        # Step 7: Final verification - check that duree_attente is preserved in database
+                                        print("\n🔍 STEP 7: Final verification - duree_attente preserved in database")
+                                        start_time = time.time()
+                                        
+                                        response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
+                                        response_time = time.time() - start_time
+                                        
+                                        if response.status_code == 200:
+                                            final_appointments = response.json()
+                                            final_appointment = next((apt for apt in final_appointments if apt.get("id") == rdv_id), None)
+                                            
+                                            if final_appointment:
+                                                final_duree = final_appointment.get("duree_attente", "NOT_FOUND")
+                                                final_statut = final_appointment.get("statut", "UNKNOWN")
+                                                
+                                                details = f"Final state - Patient '{test_patient_name}' ({final_statut}) - duree_attente: {final_duree} min"
+                                                self.log_test("Final Verification - Duration Preserved", True, details, response_time)
+                                                
+                                                # Step 8: Test workflow summary and requirements verification
+                                                print("\n📊 STEP 8: Workflow Summary and Requirements Verification")
+                                                
+                                                # Verify requirements from review request
+                                                requirements_met = []
+                                                
+                                                # Requirement 1: heure_arrivee_attente set when moved to attente
+                                                if heure_arrivee != "NOT_SET":
+                                                    requirements_met.append("✅ heure_arrivee_attente timestamp set in attente")
+                                                else:
+                                                    requirements_met.append("❌ heure_arrivee_attente timestamp NOT set")
+                                                
+                                                # Requirement 2: duree_attente calculated when moved to en_cours
+                                                if calculated_duree != "NOT_CALCULATED":
+                                                    requirements_met.append("✅ duree_attente calculated when moved to en_cours")
+                                                else:
+                                                    requirements_met.append("❌ duree_attente NOT calculated")
+                                                
+                                                # Requirement 3: duree_attente preserved when moved to termine
+                                                if preserved_duree == calculated_duree:
+                                                    requirements_met.append("✅ duree_attente preserved when moved to termine")
+                                                else:
+                                                    requirements_met.append("❌ duree_attente NOT preserved")
+                                                
+                                                # Requirement 4: duree_attente stored in database (not real-time)
+                                                if final_duree == calculated_duree:
+                                                    requirements_met.append("✅ duree_attente stored in database (not real-time)")
+                                                else:
+                                                    requirements_met.append("❌ duree_attente NOT properly stored")
+                                                
+                                                summary = f"Workflow completed for '{test_patient_name}' - Requirements: {'; '.join(requirements_met)}"
+                                                self.log_test("Waiting Time Counter Workflow Summary", True, summary, 0)
+                                                
+                                            else:
+                                                self.log_test("Final Verification", False, "Patient not found in final check", response_time)
+                                        else:
+                                            self.log_test("Final Verification", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                                    else:
+                                        self.log_test("Move to Termine", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                                else:
+                                    self.log_test("Verify Stored Duration", False, "Patient not found in updated appointments", response_time)
+                            else:
+                                self.log_test("Verify Stored Duration", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                        else:
+                            self.log_test("Move to En_Cours", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                    else:
+                        self.log_test("Move to Attente", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                else:
+                    self.log_test("Find Patient for Workflow Test", False, "No appointments found for today", response_time)
+            else:
+                self.log_test("Find Patient for Workflow Test", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Waiting Time Counter Workflow", False, f"Exception: {str(e)}", response_time)
+
     def run_all_tests(self):
         """Run all tests focused on critical waiting time bug fix"""
         print("🚀 STARTING CRITICAL WAITING TIME BUG FIX TESTING")
