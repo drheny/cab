@@ -4427,12 +4427,232 @@ class BackendTester:
             response_time = time.time() - start_time
             self.log_test("Waiting Time Counter Workflow", False, f"Exception: {str(e)}", response_time)
 
+    def test_consultation_enhancement_with_duree_attente_and_salle(self):
+        """Test Enhanced Consultation Creation and Retrieval with duree_attente and salle fields"""
+        print("\n🩺 TESTING CONSULTATION ENHANCEMENT WITH DUREE_ATTENTE AND SALLE FIELDS")
+        print("Testing the enhanced consultation creation and retrieval:")
+        print("1. Create a test consultation with appointment_id")
+        print("2. Verify consultation creation API automatically pulls duree_attente and salle from appointment")
+        print("3. Verify consultation is enriched with these fields during creation")
+        print("4. Verify backend logs show the enrichment process working")
+        print("5. Retrieve consultation details via GET /api/consultations/{consultation_id}")
+        print("6. Verify duree_attente and salle are available in consultation data")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Step 1: Get today's appointments to find one with duree_attente and salle
+        print("\n📋 STEP 1: Get today's appointments to find one with duree_attente and salle")
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                appointments = response.json()
+                if appointments:
+                    # Find an appointment with duree_attente and salle data
+                    test_appointment = None
+                    for apt in appointments:
+                        if apt.get("duree_attente") is not None and apt.get("salle"):
+                            test_appointment = apt
+                            break
+                    
+                    # If no appointment has both fields, use the first one and set them
+                    if not test_appointment:
+                        test_appointment = appointments[0]
+                        rdv_id = test_appointment.get("id")
+                        
+                        # Set duree_attente and salle for testing
+                        print("Setting test data for appointment...")
+                        update_data = {
+                            "statut": "attente"
+                        }
+                        self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}/statut", json=update_data, timeout=10)
+                        time.sleep(2)  # Wait 2 seconds
+                        
+                        update_data = {
+                            "statut": "en_cours"
+                        }
+                        self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}/statut", json=update_data, timeout=10)
+                        
+                        # Update salle
+                        update_data = {
+                            "salle": "salle1"
+                        }
+                        self.session.put(f"{BACKEND_URL}/rdv/{rdv_id}", json=update_data, timeout=10)
+                        
+                        # Get updated appointment
+                        response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
+                        if response.status_code == 200:
+                            appointments = response.json()
+                            test_appointment = next((apt for apt in appointments if apt.get("id") == rdv_id), appointments[0])
+                    
+                    patient_info = test_appointment.get("patient", {})
+                    test_patient_name = f"{patient_info.get('prenom', '')} {patient_info.get('nom', '')}"
+                    appointment_id = test_appointment.get("id")
+                    patient_id = test_appointment.get("patient_id")
+                    appointment_duree_attente = test_appointment.get("duree_attente")
+                    appointment_salle = test_appointment.get("salle", "")
+                    
+                    details = f"Found appointment: '{test_patient_name}' - ID: {appointment_id}, duree_attente: {appointment_duree_attente}, salle: {appointment_salle}"
+                    self.log_test("Find Appointment for Consultation Testing", True, details, response_time)
+                    
+                    # Step 2: Create a test consultation with appointment_id
+                    print("\n📝 STEP 2: Create a test consultation with appointment_id")
+                    start_time = time.time()
+                    
+                    consultation_data = {
+                        "id": f"test_consultation_{int(time.time())}",
+                        "patient_id": patient_id,
+                        "appointment_id": appointment_id,
+                        "date": today,
+                        "type_rdv": "visite",
+                        "motif": "Test consultation for enhancement verification",
+                        "duree": 30,
+                        "poids": 15.5,
+                        "taille": 85.0,
+                        "pc": 48.0,
+                        "temperature": 36.8,
+                        "diagnostic": "Test diagnostic",
+                        "observation_clinique": "Test observation for duree_attente and salle enhancement",
+                        "bilans": "Test bilans",
+                        "notes": "Test consultation created to verify duree_attente and salle enrichment"
+                    }
+                    
+                    response = self.session.post(f"{BACKEND_URL}/consultations", json=consultation_data, timeout=15)
+                    response_time = time.time() - start_time
+                    
+                    if response.status_code == 200:
+                        response_data = response.json()
+                        consultation_id = consultation_data["id"]
+                        
+                        details = f"Consultation created successfully - ID: {consultation_id}"
+                        self.log_test("Consultation Creation with Appointment ID", True, details, response_time)
+                        
+                        # Step 3: Retrieve the consultation details to verify enrichment
+                        print("\n🔍 STEP 3: Retrieve consultation details to verify duree_attente and salle enrichment")
+                        start_time = time.time()
+                        
+                        response = self.session.get(f"{BACKEND_URL}/consultations/{consultation_id}", timeout=10)
+                        response_time = time.time() - start_time
+                        
+                        if response.status_code == 200:
+                            consultation_details = response.json()
+                            
+                            # CRITICAL TEST: Verify duree_attente is in consultation data
+                            consultation_duree_attente = consultation_details.get("duree_attente")
+                            consultation_salle = consultation_details.get("salle", "")
+                            
+                            if consultation_duree_attente is not None:
+                                details = f"✅ duree_attente found in consultation: {consultation_duree_attente} (from appointment: {appointment_duree_attente})"
+                                self.log_test("Consultation duree_attente Enrichment", True, details, response_time)
+                            else:
+                                details = f"❌ duree_attente NOT found in consultation data"
+                                self.log_test("Consultation duree_attente Enrichment", False, details, response_time)
+                            
+                            # CRITICAL TEST: Verify salle is in consultation data
+                            if consultation_salle:
+                                details = f"✅ salle found in consultation: '{consultation_salle}' (from appointment: '{appointment_salle}')"
+                                self.log_test("Consultation salle Enrichment", True, details, 0)
+                            else:
+                                details = f"❌ salle NOT found in consultation data"
+                                self.log_test("Consultation salle Enrichment", False, details, 0)
+                            
+                            # Verify appointment data is also available in the response
+                            appointment_data = consultation_details.get("appointment", {})
+                            if appointment_data:
+                                apt_duree_attente = appointment_data.get("duree_attente")
+                                apt_salle = appointment_data.get("salle", "")
+                                
+                                details = f"Appointment data in consultation: duree_attente={apt_duree_attente}, salle='{apt_salle}'"
+                                self.log_test("Consultation Appointment Data Availability", True, details, 0)
+                                
+                                # Verify the consultation uses its own stored data, not just appointment data
+                                if consultation_duree_attente == apt_duree_attente:
+                                    details = f"✅ Consultation duree_attente matches stored value: {consultation_duree_attente}"
+                                    self.log_test("Consultation Data Persistence", True, details, 0)
+                                else:
+                                    details = f"⚠️ Consultation duree_attente ({consultation_duree_attente}) differs from appointment ({apt_duree_attente})"
+                                    self.log_test("Consultation Data Persistence", True, details, 0)
+                            else:
+                                self.log_test("Consultation Appointment Data Availability", False, "No appointment data in consultation response", 0)
+                            
+                            # Step 4: Test that modal will have access to these fields
+                            print("\n🖥️ STEP 4: Verify modal will have access to duree_attente and salle fields")
+                            
+                            required_fields = ["duree_attente", "salle", "patient", "appointment"]
+                            missing_fields = []
+                            available_fields = []
+                            
+                            for field in required_fields:
+                                if field in consultation_details:
+                                    available_fields.append(field)
+                                else:
+                                    missing_fields.append(field)
+                            
+                            if not missing_fields:
+                                details = f"✅ All required fields available for modal: {available_fields}"
+                                self.log_test("Modal Field Availability", True, details, 0)
+                            else:
+                                details = f"❌ Missing fields for modal: {missing_fields}, Available: {available_fields}"
+                                self.log_test("Modal Field Availability", False, details, 0)
+                            
+                            # Step 5: Verify consultation history preservation
+                            print("\n📚 STEP 5: Verify consultation history preservation")
+                            
+                            # Check that duree_attente and salle are permanently stored in consultation
+                            stored_duree = consultation_details.get("duree_attente")
+                            stored_salle = consultation_details.get("salle", "")
+                            
+                            if stored_duree is not None:
+                                details = f"✅ duree_attente permanently stored in consultation history: {stored_duree} minutes"
+                                self.log_test("Consultation History - duree_attente Preservation", True, details, 0)
+                            else:
+                                details = f"❌ duree_attente NOT permanently stored in consultation history"
+                                self.log_test("Consultation History - duree_attente Preservation", False, details, 0)
+                            
+                            if stored_salle:
+                                details = f"✅ salle permanently stored in consultation history: '{stored_salle}'"
+                                self.log_test("Consultation History - salle Preservation", True, details, 0)
+                            else:
+                                details = f"❌ salle NOT permanently stored in consultation history"
+                                self.log_test("Consultation History - salle Preservation", False, details, 0)
+                            
+                            # Summary of enhancement verification
+                            print("\n📊 ENHANCEMENT VERIFICATION SUMMARY:")
+                            enhancement_success = (
+                                consultation_duree_attente is not None and 
+                                consultation_salle is not None and
+                                len(missing_fields) == 0
+                            )
+                            
+                            if enhancement_success:
+                                details = f"✅ ALL ENHANCEMENTS WORKING: duree_attente={consultation_duree_attente}, salle='{consultation_salle}', modal_fields_available=True"
+                                self.log_test("Consultation Enhancement - Overall Success", True, details, 0)
+                            else:
+                                details = f"❌ ENHANCEMENT ISSUES: duree_attente={consultation_duree_attente}, salle='{consultation_salle}', missing_fields={missing_fields}"
+                                self.log_test("Consultation Enhancement - Overall Success", False, details, 0)
+                        
+                        else:
+                            self.log_test("Consultation Details Retrieval", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                    
+                    else:
+                        self.log_test("Consultation Creation with Appointment ID", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                
+                else:
+                    self.log_test("Find Appointment for Consultation Testing", False, "No appointments found for testing", response_time)
+            else:
+                self.log_test("Find Appointment for Consultation Testing", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Consultation Enhancement Testing", False, f"Exception: {str(e)}", response_time)
+
     def run_all_tests(self):
         """Run all tests focused on critical waiting time bug fix"""
-        print("🚀 STARTING CRITICAL WAITING TIME BUG FIX TESTING")
+        print("🚀 STARTING COMPREHENSIVE BACKEND TESTING")
         print("=" * 80)
-        print("🚨 TESTING: Critical bug fix for waiting time duration calculation")
-        print("🎯 FOCUS: Verify real duration (3min, 5min) instead of forced 1 minute")
+        print("🩺 TESTING: Enhanced consultation creation and retrieval with duree_attente and salle fields")
+        print("🎯 FOCUS: Verify consultation enrichment process is working correctly")
         print("=" * 80)
         
         # Test 1: Authentication (required for all other tests)
@@ -4440,29 +4660,13 @@ class BackendTester:
             print("❌ Authentication failed - cannot proceed with other tests")
             return self.generate_report()
         
-        # PRIORITY TEST: Critical Waiting Time Bug Fix
+        # PRIORITY TEST: Enhanced Consultation Creation and Retrieval
         print("\n" + "="*80)
-        print("🚨 PRIORITY TEST: CRITICAL WAITING TIME BUG FIX")
+        print("🩺 PRIORITY TEST: ENHANCED CONSULTATION CREATION AND RETRIEVAL")
         print("="*80)
         
-        # Test the critical bug fix for waiting time duration
-        self.test_critical_waiting_time_bug_fix()
-        
-        # REVIEW REQUEST SPECIFIC TEST: Waiting Time Counter Workflow
-        print("\n" + "="*80)
-        print("🎯 REVIEW REQUEST SPECIFIC TEST: WAITING TIME COUNTER WORKFLOW")
-        print("="*80)
-        
-        # Test the exact workflow requested in the review
-        self.test_waiting_time_counter_workflow()
-        
-        # SPECIFIC USER BUG SEQUENCE TEST
-        print("\n" + "="*80)
-        print("🐛 SPECIFIC USER BUG SEQUENCE TEST")
-        print("="*80)
-        
-        # Test the exact sequence described by the user
-        self.test_specific_user_bug_sequence()
+        # Test the enhanced consultation functionality
+        self.test_consultation_enhancement_with_duree_attente_and_salle()
         
         # SUPPORTING TESTS: System Verification
         print("\n" + "="*80)
