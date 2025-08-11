@@ -2311,23 +2311,15 @@ const WorkflowCard = React.memo(({
               {/* Badge de temps d'attente - affiché pour les patients en cours et terminés */}
               {(sectionType === 'en_cours' || sectionType === 'termine') && 
                appointment.duree_attente !== null && appointment.duree_attente !== undefined && appointment.duree_attente >= 0 && (() => {
-                // CORRECTION: Utiliser la valeur stockée duree_attente avec affichage intelligent des courtes durées
+                // CORRECTION: Utiliser la valeur stockée duree_attente (temps passé UNIQUEMENT dans la salle d'attente)
                 const waitingTime = appointment.duree_attente;
                 console.log(`Using stored duree_attente: ${waitingTime} minutes for appointment ${appointment.id}`);
-                
-                // Amélioration UX: Affichage intelligent pour les courtes durées
-                let displayText;
-                if (waitingTime === 0) {
-                  displayText = "< 1 min"; // Au lieu de "0 min" qui peut sembler être un reset
-                } else {
-                  displayText = `${waitingTime} min`;
-                }
                 
                 const colors = getWaitingTimeBadgeColor(waitingTime);
                 return (
                   <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${colors.background} ${colors.text} border ${colors.border}`}>
                     <Clock className="w-3 h-3 mr-1" />
-                    {displayText}
+                    {waitingTime} min
                   </span>
                 );
                })()}
