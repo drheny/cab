@@ -1586,6 +1586,11 @@ async def get_rdv_jour(date: str):
                 {"$set": {"statut": current_status, "updated_at": datetime.now()}}
             )
         
+        # CORRECTION: Ensure duree_attente is always present in API response
+        if "duree_attente" not in appointment:
+            appointment["duree_attente"] = None  # Make sure field exists even if null
+            print(f"DEBUG: Added missing duree_attente field for appointment {appointment.get('id', 'UNKNOWN')}")
+        
         # Get patient info
         patient = patients_collection.find_one({"id": appointment["patient_id"]}, {"_id": 0})
         if patient:
