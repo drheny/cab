@@ -1393,7 +1393,7 @@ async def get_dashboard():
     total_patients = patients_collection.count_documents({})
     
     # Calculate real average waiting time
-    appointments_with_waiting_time = [a for a in today_appointments if a.get("duree_attente") and a.get("duree_attente") > 0]
+    appointments_with_waiting_time = [a for a in today_appointments if a.get("duree_attente") is not None]
     if appointments_with_waiting_time:
         total_waiting_time = sum(a["duree_attente"] for a in appointments_with_waiting_time)
         duree_attente_moyenne = round(total_waiting_time / len(appointments_with_waiting_time), 1)
