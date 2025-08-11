@@ -1272,7 +1272,10 @@ const Dashboard = ({ user }) => {
                     <div>
                       <span className="text-sm font-medium text-gray-700">Durée d'attente:</span>
                       <p className="text-gray-900">
-                        {selectedConsultation.appointment?.duree_attente !== null && selectedConsultation.appointment?.duree_attente !== undefined 
+                        {/* AMÉLIORATION: Priorité aux données de consultation, fallback vers appointment */}
+                        {selectedConsultation.duree_attente !== null && selectedConsultation.duree_attente !== undefined
+                          ? `${selectedConsultation.duree_attente} minutes`
+                          : selectedConsultation.appointment?.duree_attente !== null && selectedConsultation.appointment?.duree_attente !== undefined 
                           ? `${selectedConsultation.appointment.duree_attente} minutes` 
                           : 'N/A'
                         }
@@ -1281,14 +1284,16 @@ const Dashboard = ({ user }) => {
                     <div>
                       <span className="text-sm font-medium text-gray-700">Salle d'attente:</span>
                       <p className="text-gray-900">
-                        {selectedConsultation.appointment?.salle 
-                          ? selectedConsultation.appointment.salle === 'salle1' 
-                            ? 'Salle 1' 
-                            : selectedConsultation.appointment.salle === 'salle2'
-                            ? 'Salle 2'
-                            : selectedConsultation.appointment.salle
-                          : 'Aucune salle assignée'
-                        }
+                        {/* AMÉLIORATION: Priorité aux données de consultation, fallback vers appointment */}
+                        {(() => {
+                          const salle = selectedConsultation.salle || selectedConsultation.appointment?.salle;
+                          if (salle) {
+                            if (salle === 'salle1') return 'Salle 1';
+                            if (salle === 'salle2') return 'Salle 2';
+                            return salle;
+                          }
+                          return 'Aucune salle assignée';
+                        })()}
                       </p>
                     </div>
                   </div>
