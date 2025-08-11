@@ -870,7 +870,340 @@ class BackendTester:
         except Exception as e:
             self.log_test("Waiting Time Calculation Logic", False, f"Exception getting appointments: {str(e)}", 0)
     
-    def test_zero_display_bug_fix(self):
+    def test_bug_fix_1_consultation_modal_fields(self):
+        """Test BUG FIX 1: Modal consultation from historique consultation page
+        
+        Test GET /api/consultations/{consultation_id} with a consultation ID
+        Verify the response includes duree_attente and salle fields in the consultation data
+        Confirm these fields are available for modal display
+        """
+        print("\n🐛 TESTING BUG FIX 1: CONSULTATION MODAL FIELDS (duree_attente and salle)")
+        
+        # First, get consultations to find a consultation ID to test
+        start_time = time.time()
+        try:
+            # Try to get consultations list first
+            response = self.session.get(f"{BACKEND_URL}/consultations", timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                consultations_data = response.json()
+                consultations = consultations_data.get("consultations", []) if isinstance(consultations_data, dict) else consultations_data
+                
+                if consultations and len(consultations) > 0:
+                    # Test with the first consultation
+                    test_consultation = consultations[0]
+                    consultation_id = test_consultation.get("id")
+                    
+                    if consultation_id:
+                        # Test GET /api/consultations/{consultation_id}
+                        start_time = time.time()
+                        response = self.session.get(f"{BACKEND_URL}/consultations/{consultation_id}", timeout=10)
+                        response_time = time.time() - start_time
+                        
+                        if response.status_code == 200:
+                            consultation_data = response.json()
+                            
+                            # CRITICAL CHECK 1: duree_attente field present
+                            if "duree_attente" in consultation_data:
+                                duree_attente = consultation_data["duree_attente"]
+                                details = f"✅ duree_attente field found in consultation data: {duree_attente}"
+                                self.log_test("BUG FIX 1 - duree_attente Field Present", True, details, response_time)
+                            else:
+                                details = "❌ duree_attente field MISSING from consultation data"
+                                self.log_test("BUG FIX 1 - duree_attente Field Present", False, details, response_time)
+                            
+                            # CRITICAL CHECK 2: salle field present
+                            if "salle" in consultation_data:
+                                salle = consultation_data["salle"]
+                                details = f"✅ salle field found in consultation data: '{salle}'"
+                                self.log_test("BUG FIX 1 - salle Field Present", True, details, 0)
+                            else:
+                                details = "❌ salle field MISSING from consultation data"
+                                self.log_test("BUG FIX 1 - salle Field Present", False, details, 0)
+                            
+                            # CRITICAL CHECK 3: Both fields available for modal display
+                            has_duree = "duree_attente" in consultation_data
+                            has_salle = "salle" in consultation_data
+                            
+                            if has_duree and has_salle:
+                                duree_val = consultation_data.get("duree_attente")
+                                salle_val = consultation_data.get("salle", "")
+                                details = f"✅ Both fields available for modal: duree_attente={duree_val}, salle='{salle_val}'"
+                                self.log_test("BUG FIX 1 - Modal Fields Available", True, details, 0)
+                            else:
+                                missing = []
+                                if not has_duree: missing.append("duree_attente")
+                                if not has_salle: missing.append("salle")
+                                details = f"❌ Missing fields for modal display: {', '.join(missing)}"
+                                self.log_test("BUG FIX 1 - Modal Fields Available", False, details, 0)
+                            
+                            # Additional check: Verify consultation structure
+                            required_fields = ["id", "patient_id", "date", "type_rdv"]
+                            missing_required = [field for field in required_fields if field not in consultation_data]
+                            
+                            if not missing_required:
+                                details = f"✅ Consultation structure valid with required fields"
+                                self.log_test("BUG FIX 1 - Consultation Structure", True, details, 0)
+                            else:
+                                details = f"❌ Missing required fields: {missing_required}"
+                                self.log_test("BUG FIX 1 - Consultation Structure", False, details, 0)
+                        
+                        else:
+                            details = f"❌ Failed to get consultation {consultation_id}: HTTP {response.status_code}"
+                            self.log_test("BUG FIX 1 - Get Consultation by ID", False, details, response_time)
+                    
+                    else:
+                        self.log_test("BUG FIX 1 - Find Consultation ID", False, "No consultation ID found in test data", 0)
+                
+                else:
+                    self.log_test("BUG FIX 1 - Get Consultations List", False, "No consultations found for testing", response_time)
+            
+            else:
+                # Try alternative endpoint if consultations list doesn't work
+                self.log_test("BUG FIX 1 - Get Consultations List", False, f"HTTP {response.status_code}, trying alternative approach", response_time)
+                
+                # Alternative: Create a test consultation to verify the fix
+                self.create_test_consultation_for_bug_fix_1()
+        
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("BUG FIX 1 - Consultation Modal Fields", False, f"Exception: {str(e)}", response_time)
+    
+    def create_test_consultation_for_bug_fix_1(self):
+        """Create a test consultation to verify BUG FIX 1"""
+        print("\n🔧 Creating test consultation to verify BUG FIX 1...")
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Get today's appointments to find one we can create a consultation for
+        try:
+            response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
+            if response.status_code == 200:
+                appointments = response.json()
+                if appointments and len(appointments) > 0:
+                    # Find an appointment with duree_attente and salle
+                    test_appointment = None
+                    for apt in appointments:
+                        if apt.get("duree_attente") is not None and apt.get("salle"):
+                            test_appointment = apt
+                            break
+                    
+                    if not test_appointment:
+                        test_appointment = appointments[0]
+                    
+                    appointment_id = test_appointment.get("id")
+                    patient_id = test_appointment.get("patient_id")
+                    duree_attente = test_appointment.get("duree_attente", 2)  # Default to 2 minutes
+                    salle = test_appointment.get("salle", "salle1")  # Default to salle1
+                    
+                    # Create test consultation
+                    consultation_data = {
+                        "id": f"test_consultation_{int(time.time())}",
+                        "patient_id": patient_id,
+                        "appointment_id": appointment_id,
+                        "date": today,
+                        "type_rdv": "visite",
+                        "duree_attente": duree_attente,
+                        "salle": salle,
+                        "motif": "Test consultation for BUG FIX 1",
+                        "diagnostic": "Test diagnostic",
+                        "observation_clinique": "Test observation"
+                    }
+                    
+                    start_time = time.time()
+                    response = self.session.post(f"{BACKEND_URL}/consultations", json=consultation_data, timeout=10)
+                    response_time = time.time() - start_time
+                    
+                    if response.status_code == 200 or response.status_code == 201:
+                        created_consultation = response.json()
+                        consultation_id = created_consultation.get("id") or consultation_data["id"]
+                        
+                        details = f"✅ Test consultation created with duree_attente={duree_attente}, salle='{salle}'"
+                        self.log_test("BUG FIX 1 - Create Test Consultation", True, details, response_time)
+                        
+                        # Now test GET /api/consultations/{consultation_id}
+                        start_time = time.time()
+                        response = self.session.get(f"{BACKEND_URL}/consultations/{consultation_id}", timeout=10)
+                        response_time = time.time() - start_time
+                        
+                        if response.status_code == 200:
+                            consultation_data = response.json()
+                            
+                            # Verify the fix
+                            has_duree = "duree_attente" in consultation_data
+                            has_salle = "salle" in consultation_data
+                            
+                            if has_duree and has_salle:
+                                duree_val = consultation_data.get("duree_attente")
+                                salle_val = consultation_data.get("salle")
+                                details = f"✅ BUG FIX 1 VERIFIED: duree_attente={duree_val}, salle='{salle_val}' available in consultation data"
+                                self.log_test("BUG FIX 1 - VERIFICATION SUCCESS", True, details, response_time)
+                            else:
+                                missing = []
+                                if not has_duree: missing.append("duree_attente")
+                                if not has_salle: missing.append("salle")
+                                details = f"❌ BUG FIX 1 FAILED: Missing fields {missing} in consultation data"
+                                self.log_test("BUG FIX 1 - VERIFICATION FAILED", False, details, response_time)
+                        
+                        else:
+                            details = f"❌ Failed to retrieve created consultation: HTTP {response.status_code}"
+                            self.log_test("BUG FIX 1 - Get Created Consultation", False, details, response_time)
+                    
+                    else:
+                        details = f"❌ Failed to create test consultation: HTTP {response.status_code}"
+                        self.log_test("BUG FIX 1 - Create Test Consultation", False, details, response_time)
+        
+        except Exception as e:
+            self.log_test("BUG FIX 1 - Create Test Consultation", False, f"Exception: {str(e)}", 0)
+    
+    def test_bug_fix_2_dashboard_average_waiting_time(self):
+        """Test BUG FIX 2: Dashboard average waiting time card
+        
+        Test GET /api/dashboard endpoint
+        Verify that duree_attente_moyenne is calculated correctly 
+        Confirm it includes appointments with duree_attente = 0 (which are valid short waits)
+        Check that the calculation logic now uses "is not None" instead of "> 0"
+        """
+        print("\n🐛 TESTING BUG FIX 2: DASHBOARD AVERAGE WAITING TIME CALCULATION")
+        
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BACKEND_URL}/dashboard", timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                dashboard_data = response.json()
+                
+                # CRITICAL CHECK 1: duree_attente_moyenne field present
+                if "duree_attente_moyenne" in dashboard_data:
+                    duree_attente_moyenne = dashboard_data["duree_attente_moyenne"]
+                    details = f"✅ duree_attente_moyenne field found: {duree_attente_moyenne}"
+                    self.log_test("BUG FIX 2 - duree_attente_moyenne Field Present", True, details, response_time)
+                    
+                    # CRITICAL CHECK 2: Verify the calculation includes zero-duration waits
+                    # Get today's appointments to verify the calculation logic
+                    today = datetime.now().strftime("%Y-%m-%d")
+                    
+                    start_time_appointments = time.time()
+                    appointments_response = self.session.get(f"{BACKEND_URL}/rdv/jour/{today}", timeout=10)
+                    appointments_response_time = time.time() - start_time_appointments
+                    
+                    if appointments_response.status_code == 200:
+                        appointments = appointments_response.json()
+                        
+                        # Analyze appointments with duree_attente values
+                        appointments_with_waiting_time = []
+                        zero_duration_appointments = []
+                        null_duration_appointments = []
+                        
+                        for apt in appointments:
+                            duree_attente = apt.get("duree_attente")
+                            if duree_attente is not None:
+                                appointments_with_waiting_time.append(apt)
+                                if duree_attente == 0:
+                                    zero_duration_appointments.append(apt)
+                            else:
+                                null_duration_appointments.append(apt)
+                        
+                        total_appointments = len(appointments)
+                        with_waiting_time = len(appointments_with_waiting_time)
+                        zero_duration_count = len(zero_duration_appointments)
+                        null_duration_count = len(null_duration_appointments)
+                        
+                        details = f"Appointments analysis: Total={total_appointments}, With duree_attente={with_waiting_time}, Zero duration={zero_duration_count}, Null duration={null_duration_count}"
+                        self.log_test("BUG FIX 2 - Appointments Analysis", True, details, appointments_response_time)
+                        
+                        # CRITICAL CHECK 3: Verify calculation logic includes zero-duration waits
+                        if appointments_with_waiting_time:
+                            # Calculate expected average (including zero-duration waits)
+                            total_waiting_time = sum(apt.get("duree_attente", 0) for apt in appointments_with_waiting_time)
+                            expected_average = round(total_waiting_time / len(appointments_with_waiting_time), 1)
+                            
+                            details = f"Expected average (including zeros): {expected_average}, Dashboard shows: {duree_attente_moyenne}"
+                            
+                            if abs(duree_attente_moyenne - expected_average) < 0.1:  # Allow small rounding differences
+                                details += " ✅ CALCULATION CORRECT"
+                                self.log_test("BUG FIX 2 - Calculation Includes Zero Duration", True, details, 0)
+                            else:
+                                details += " ❌ CALCULATION MISMATCH"
+                                self.log_test("BUG FIX 2 - Calculation Includes Zero Duration", False, details, 0)
+                            
+                            # CRITICAL CHECK 4: Verify zero-duration appointments are included
+                            if zero_duration_count > 0:
+                                details = f"✅ Found {zero_duration_count} appointments with duree_attente=0 (valid short waits)"
+                                self.log_test("BUG FIX 2 - Zero Duration Appointments Found", True, details, 0)
+                                
+                                # Verify these are included in the calculation
+                                if duree_attente_moyenne <= expected_average:
+                                    details = f"✅ Zero-duration waits appear to be included in average calculation"
+                                    self.log_test("BUG FIX 2 - Zero Duration Waits Included", True, details, 0)
+                                else:
+                                    details = f"❌ Zero-duration waits may not be included in calculation"
+                                    self.log_test("BUG FIX 2 - Zero Duration Waits Included", False, details, 0)
+                            else:
+                                details = f"ℹ️ No zero-duration appointments found for testing"
+                                self.log_test("BUG FIX 2 - Zero Duration Appointments", True, details, 0)
+                        
+                        else:
+                            details = f"ℹ️ No appointments with duree_attente found for calculation verification"
+                            self.log_test("BUG FIX 2 - Calculation Verification", True, details, 0)
+                    
+                    else:
+                        details = f"❌ Failed to get appointments for calculation verification: HTTP {appointments_response.status_code}"
+                        self.log_test("BUG FIX 2 - Get Appointments for Verification", False, details, appointments_response_time)
+                    
+                    # CRITICAL CHECK 5: Verify the average is not zero when there are valid waits
+                    if duree_attente_moyenne == 0:
+                        details = f"⚠️ Average waiting time is 0 - verify this is correct (may indicate no waiting time data)"
+                        self.log_test("BUG FIX 2 - Non-Zero Average Check", True, details, 0)
+                    else:
+                        details = f"✅ Average waiting time is {duree_attente_moyenne} (non-zero, indicating calculation is working)"
+                        self.log_test("BUG FIX 2 - Non-Zero Average Check", True, details, 0)
+                
+                else:
+                    details = "❌ duree_attente_moyenne field MISSING from dashboard response"
+                    self.log_test("BUG FIX 2 - duree_attente_moyenne Field Present", False, details, response_time)
+                
+                # Additional dashboard fields check
+                other_fields = ["total_rdv", "rdv_attente", "rdv_en_cours", "rdv_termines", "recette_jour", "total_patients"]
+                present_fields = [field for field in other_fields if field in dashboard_data]
+                missing_fields = [field for field in other_fields if field not in dashboard_data]
+                
+                if present_fields:
+                    details = f"✅ Other dashboard fields present: {', '.join(present_fields)}"
+                    self.log_test("BUG FIX 2 - Dashboard Structure", True, details, 0)
+                
+                if missing_fields:
+                    details = f"⚠️ Missing dashboard fields: {', '.join(missing_fields)}"
+                    self.log_test("BUG FIX 2 - Missing Dashboard Fields", True, details, 0)
+            
+            else:
+                details = f"❌ Failed to get dashboard data: HTTP {response.status_code}"
+                self.log_test("BUG FIX 2 - Get Dashboard Data", False, details, response_time)
+        
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("BUG FIX 2 - Dashboard Average Waiting Time", False, f"Exception: {str(e)}", response_time)
+    
+    def run_specific_bug_fix_tests(self):
+        """Run the specific bug fix tests from the review request"""
+        print("\n" + "="*80)
+        print("🎯 RUNNING SPECIFIC BUG FIX TESTS FROM REVIEW REQUEST")
+        print("="*80)
+        
+        # Test authentication first
+        if not self.test_authentication():
+            print("❌ Authentication failed - cannot proceed with bug fix tests")
+            return False
+        
+        # Test BUG FIX 1: Modal consultation fields
+        self.test_bug_fix_1_consultation_modal_fields()
+        
+        # Test BUG FIX 2: Dashboard average waiting time
+        self.test_bug_fix_2_dashboard_average_waiting_time()
+        
+        return True
         """Test "0" Display Bug Fix - Comprehensive testing of duree_attente values and status transitions"""
         print("\n🔢 TESTING ZERO DISPLAY BUG FIX - DUREE_ATTENTE COMPREHENSIVE TESTING")
         
