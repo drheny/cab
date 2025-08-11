@@ -4251,6 +4251,14 @@ class BackendTester:
         # Test the critical bug fix for waiting time duration
         self.test_critical_waiting_time_bug_fix()
         
+        # REVIEW REQUEST SPECIFIC TEST: Waiting Time Counter Workflow
+        print("\n" + "="*80)
+        print("🎯 REVIEW REQUEST SPECIFIC TEST: WAITING TIME COUNTER WORKFLOW")
+        print("="*80)
+        
+        # Test the exact workflow requested in the review
+        self.test_waiting_time_counter_workflow()
+        
         # SPECIFIC USER BUG SEQUENCE TEST
         print("\n" + "="*80)
         print("🐛 SPECIFIC USER BUG SEQUENCE TEST")
