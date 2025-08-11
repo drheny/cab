@@ -1,35 +1,28 @@
 #!/usr/bin/env python3
 """
-CRITICAL WAITING TIME BUG FIX TESTING
+SPECIFIC BUG FIXES TESTING - Review Request Focus
 Backend API Testing Suite for Cabinet Médical
 
-TESTING CRITICAL WAITING TIME DURATION BUG FIX: The user reported that waiting time duration 
-was always reset to 1 minute instead of showing the real duration.
+TESTING TWO SPECIFIC BUG FIXES FROM REVIEW REQUEST:
 
-**Bug Fix Applied:**
-Frontend (Calendar.js):
-- Removed frontend calculation that forced Math.max(1, diffInMinutes)
-- Frontend no longer sends explicit duree_attente - lets backend calculate
-- Uses only response.data.duree_attente from backend
-- Changed condition from > 0 to >= 0 to allow real short durations
+**BUG 1: Modal consultation from historique consultation page**
+- Test GET /api/consultations/{consultation_id} with a consultation ID
+- Verify the response includes duree_attente and salle fields in the consultation data
+- Confirm these fields are available for modal display
 
-Backend (server.py):
-- Changed max(1, duree_calculee) to max(0, duree_calculee) to avoid forcing 1 minute minimum
-- Allows display of real calculated duration (0, 2, 5, 10 minutes, etc.)
+**BUG 2: Dashboard average waiting time card**
+- Test GET /api/dashboard endpoint
+- Verify that duree_attente_moyenne is calculated correctly 
+- Confirm it includes appointments with duree_attente = 0 (which are valid short waits)
+- Check that the calculation logic now uses "is not None" instead of "> 0"
 
-**Test the Real Workflow:**
-1. **Put patient in "attente"** - verify heure_arrivee_attente
-2. **Wait 3-5 minutes** (for realistic duration > 1 minute)
-3. **Move to "en_cours"** - verify duree_attente = real duration (not forced to 1)
-4. **Verify API response** - must include real calculated duration
-5. **Verify persistence** - duration stored correctly in database
+**Expected fixes:**
+- Modal consultation should now have access to duree_attente and salle fields directly from consultation data
+- Dashboard average waiting time should now correctly calculate average including zero-duration waits (< 1 minute waits are valid)
 
-**Critical Questions:**
-- Does backend calculate real duration (3 min, 5 min) instead of forcing 1 minute?
-- Does API response include real calculated duration?
-- Is duration stored correctly in database?
-
-This should resolve the bug where all waiting times showed "1 min" instead of real duration.
+**User's specific issues:**
+1. "Le modal voir consultation qu on ouvre de la page historique consultation ne montre pas dans son resumé ni la duree d attente ni la salle affecté"
+2. "la carte temps d attente moyen dans dashboard page ne donne pas le temps d attente moyen"
 """
 
 import requests
