@@ -1273,7 +1273,9 @@ const Dashboard = ({ user }) => {
                       <span className="text-sm font-medium text-gray-700">Durée d'attente:</span>
                       <p className="text-gray-900">
                         {selectedConsultation.appointment?.duree_attente !== null && selectedConsultation.appointment?.duree_attente !== undefined 
-                          ? `${selectedConsultation.appointment.duree_attente} minutes` 
+                          ? selectedConsultation.appointment.duree_attente === 0 
+                            ? "< 1 minute" 
+                            : `${selectedConsultation.appointment.duree_attente} minutes`
                           : 'N/A'
                         }
                       </p>
