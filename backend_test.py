@@ -5061,18 +5061,24 @@ class BackendTester:
         }
 
 if __name__ == "__main__":
-    print("🏥 Cabinet Médical - Critical Waiting Time Bug Fix Testing")
-    print("Testing the critical bug fix for waiting time duration calculation:")
-    print("1. Real Duration Calculation: Shows actual waiting time (3min, 5min) instead of forced 1 minute")
-    print("2. Backend API Response: Includes calculated duree_attente field for frontend")
-    print("3. Database Persistence: Real duration stored correctly in database")
-    print("4. Status Transitions: Proper workflow from attente → en_cours → terminés")
+    print("🏥 Cabinet Médical - Specific Bug Fixes Testing")
+    print("Testing the two specific bug fixes from review request:")
+    print("1. BUG FIX 1: Modal consultation from historique consultation page")
+    print("   - Test GET /api/consultations/{consultation_id} includes duree_attente and salle fields")
+    print("2. BUG FIX 2: Dashboard average waiting time card")
+    print("   - Test GET /api/dashboard calculates duree_attente_moyenne correctly")
+    print("   - Verify it includes appointments with duree_attente = 0 (valid short waits)")
     print(f"Backend URL: {BACKEND_URL}")
     print(f"Test Credentials: {TEST_CREDENTIALS['username']}")
     print()
     
     tester = BackendTester()
-    report = tester.run_all_tests()
+    
+    # Run specific bug fix tests
+    success = tester.run_specific_bug_fix_tests()
+    
+    # Generate summary report
+    report = tester.generate_summary_report()
     
     # Exit with appropriate code
-    sys.exit(0 if report["all_passed"] else 1)
+    sys.exit(0 if success and report["all_passed"] else 1)
