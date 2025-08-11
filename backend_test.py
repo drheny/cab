@@ -33,7 +33,7 @@ import sys
 import os
 
 # Configuration
-BACKEND_URL = "http://localhost:8001/api"
+BACKEND_URL = "https://a657b56d-56f9-415b-a575-b3b503d7e7a0.preview.emergentagent.com/api"
 TEST_CREDENTIALS = {
     "username": "medecin",
     "password": "medecin123"
